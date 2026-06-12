@@ -181,7 +181,39 @@
         <div class="comparison-grid" id="comparisonGrid"></div>
       </div>
 
-
+      <!-- Last Records Preview -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Son Kayıtlar</h2>
+          <span class="badge" id="lastRecordsBadge">0 kayıt</span>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateDashboard">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Henüz kayıt yok. "Yeni Kayıt" butonuna tıklayarak başlayın.</p>
+          </div>
+          <table class="data-table" id="lastRecordsTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Üretilen Yemek</th>
+                <th>%10 Fire</th>
+                <th>Turnike Geçiş</th>
+                <th>Pers. Sayısı</th>
+                <th>Toplam Geçiş</th>
+                <th>Porsiyon (gr)</th>
+                <th>Atık (kg)</th>
+                <th>Öğrenci Sayısı</th>
+                <th>Yemek Türü</th>
+              </tr>
+            </thead>
+            <tbody id="lastRecordsTbody"></tbody>
+          </table>
+        </div>
+      </div>
 
     </div>
 
