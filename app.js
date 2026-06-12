@@ -162,11 +162,15 @@ function saveGSheetUrl() {
   if (url) testGSheetConnection();
 }
 
-function saveGSheetDishUrl() {
-  const url = document.getElementById('gsheetDishUrl').value.trim();
-  gsheetConfig.dishUrl = url;
+function saveAllUrls() {
+  const url1 = document.getElementById('gsheetUrl').value.trim();
+  const url2 = document.getElementById('gsheetDishUrl').value.trim();
+  gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
+  gsheetConfig.dishUrl = url2;
   try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
-  showToast('Yemek Listesi URL kaydedildi.', 'success');
+  updateSyncUI();
+  showToast('URL' + (url2 ? 'ler' : '') + ' kaydedildi.', 'success');
+  if (url1) testGSheetConnection();
 }
 
 function updateSyncUI() {
