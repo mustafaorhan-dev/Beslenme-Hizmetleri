@@ -270,7 +270,8 @@ async function syncFromGSheets() {
           toplam: Number(r.toplam) || 0,
           porsiyon: Number(r.porsiyon) || 0,
           atik: Number(r.atik) || 0,
-          ogrenci: Number(r.ogrenci) || 0
+          ogrenci: Number(r.ogrenci) || 0,
+          yemek_adi: r.yemek_adi || ''
         }));
       if (cloudRecords.length === 0) {
         showToast('Google Sheet\'te kayıt bulunamadı.', 'error');
@@ -460,28 +461,55 @@ function renderSparklines() {
 function renderWasteDetail() {
   const tbody = document.getElementById('wasteTbody');
   const table = document.getElementById('wasteTable');
-  const empty = document.getElementById('emptyStateWaste');
+  const empty = document.getElementById('emptyWasteDetail');
+  const summary = document.getElementById('wasteSummary');
   if (!tbody) return;
   if (records.length === 0) {
     if (table) table.style.display = 'none';
     if (empty) empty.style.display = 'flex';
+    if (summary) summary.style.display = 'none';
     return;
   }
   if (table) table.style.display = 'table';
   if (empty) empty.style.display = 'none';
-  const sorted = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-  tbody.innerHTML = sorted.map(r => {
-    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-    const oran = r.yemek > 0 ? ((r.atik / r.yemek) * 100).toFixed(2) : '0.00';
-    const carbon = calcDailyCarbon(r.atik);
-    return `<tr>
-      <td>${dateStr}</td>
-      <td>${r.yemek.toLocaleString('tr-TR')}</td>
-      <td class="td-atik">${r.atik.toFixed(2)} kg</td>
+  if (summary) summary.style.display = 'grid';
+  // Group by yemek_adi
+  const groups = {};
+  records.forEach(r => {
+    const key = r.yemek_adi || 'Belirtilmemiş';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  const totalYemek = records.reduce((s, r) => s + r.yemek, 0);
+  let html = '';
+  let maxAtik = -Infinity, maxMeal = '', minAtik = Infinity, minMeal = '';
+  for (const [meal, recs] of Object.entries(groups)) {
+    const count = recs.length;
+    const totalAtik = recs.reduce((s, r) => s + r.atik, 0);
+    const avgAtik = totalAtik / count;
+    const atikVals = recs.map(r => r.atik);
+    const gMin = Math.min(...atikVals);
+    const gMax = Math.max(...atikVals);
+    const mealYemek = recs.reduce((s, r) => s + r.yemek, 0);
+    const oran = totalYemek > 0 ? (mealYemek / totalYemek * 100).toFixed(1) : '0';
+    if (totalAtik > maxAtik) { maxAtik = totalAtik; maxMeal = meal; }
+    if (totalAtik < minAtik) { minAtik = totalAtik; minMeal = meal; }
+    html += `<tr>
+      <td><span class="meal-badge">${meal}</span></td>
+      <td>${count}</td>
+      <td class="td-atik">${totalAtik.toFixed(2)} kg</td>
+      <td>${avgAtik.toFixed(2)} kg</td>
+      <td>${gMin.toFixed(2)} kg</td>
+      <td>${gMax.toFixed(2)} kg</td>
       <td>%${oran}</td>
-      <td>${carbon.toFixed(2)} kg</td>
     </tr>`;
-  }).join('');
+  }
+  tbody.innerHTML = html;
+  // Update summary cards
+  document.getElementById('wasteMealCount').textContent = Object.keys(groups).length;
+  document.getElementById('wasteTopMeal').textContent = maxMeal ? `${maxMeal} (${maxAtik.toFixed(1)} kg)` : '—';
+  document.getElementById('wasteLeastMeal').textContent = minMeal ? `${minMeal} (${minAtik.toFixed(1)} kg)` : '—';
+  document.getElementById('wasteDays').textContent = records.length;
   drawWasteChart();
 }
 function drawWasteChart() {
@@ -644,6 +672,7 @@ function closeModal() {
 
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
+  if (e.target === document.getElementById('targetsOverlay')) closeTargetsPanel();
 }
 
 function populateForm(rec) {
@@ -1142,7 +1171,6 @@ function buildRow(r, showActions) {
     ${checkbox}
     <td>${dateStr}</td>
     <td>${r.yemek.toLocaleString('tr-TR')}</td>
-    <td>${mealBadge}</td>
     <td>${r.fire.toLocaleString('tr-TR')}</td>
     <td>${r.turnike.toLocaleString('tr-TR')}</td>
     <td>${r.personel.toLocaleString('tr-TR')}</td>
@@ -1150,6 +1178,7 @@ function buildRow(r, showActions) {
     <td>${r.porsiyon.toLocaleString('tr-TR')}</td>
     <td class="td-atik">${r.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td>${r.ogrenci.toLocaleString('tr-TR')}</td>
+    <td>${mealBadge}</td>
     ${actions}
   </tr>`;
 }
@@ -1888,7 +1917,7 @@ function showToast(msg, type = 'success') {
 
 // ─── KEYBOARD ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
+  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); closeTargetsPanel(); }
 
   // Ctrl+N: Yeni kayıt
   if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
@@ -1909,4 +1938,7 @@ document.addEventListener('keydown', e => {
   // ? : Kısayol yardımı
   if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
     e.preventDefault();
-
+    const el = document.getElementById('shortcutsHelp');
+    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+  }
+});
