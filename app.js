@@ -624,6 +624,7 @@ function filterRecords() {
     return matchQuery && matchStart && matchEnd;
   });
 
+  filteredRecords = sortRecords(filteredRecords);
   currentPage = 1;
   renderRecordsTable();
 }
@@ -634,7 +635,34 @@ function clearFilters() {
   document.getElementById('filterEnd').value = '';
   filteredRecords = [...records];
   currentPage = 1;
+  sortField = 'tarih'; sortDir = -1;
   renderRecordsTable();
+}
+
+// ─── SORT ──────────────────────────────────────────────────────────────────────
+let sortField = 'tarih';
+let sortDir = -1; // -1 = desc, 1 = asc
+function toggleSort(field) {
+  if (sortField === field) sortDir *= -1;
+  else { sortField = field; sortDir = -1; }
+  renderRecordsTable();
+}
+function sortRecords(arr) {
+  const sorted = [...arr].sort((a, b) => {
+    let va = a[sortField], vb = b[sortField];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+  return sorted;
+}
+function renderSortIndicators() {
+  document.querySelectorAll('#recordsTable th[data-field]').forEach(th => {
+    const f = th.dataset.field;
+    th.innerHTML = th.innerHTML.replace(/ ?[▲▼]?$/, '') + (f === sortField ? (sortDir === -1 ? ' ▼' : ' ▲') : '');
+  });
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -891,8 +919,27 @@ function renderAll() {
   renderRecordsTable();
   renderReport();
   renderSparklines();
+  renderComparison();
 }
 
+function getTrend(current, arr, field) {
+  if (arr.length < 2) return null;
+  const mid = Math.floor(arr.length / 2);
+  const recent = arr.slice(0, mid);
+  const earlier = arr.slice(mid);
+  if (recent.length === 0 || earlier.length === 0) return null;
+  const avgRecent = recent.reduce((s, r) => s + r[field], 0) / recent.length;
+  const avgEarlier = earlier.reduce((s, r) => s + r[field], 0) / earlier.length;
+  if (avgEarlier === 0) return null;
+  return ((avgRecent - avgEarlier) / avgEarlier) * 100;
+}
+function renderTrend(elId, pct, reverse) {
+  const el = document.getElementById(elId);
+  if (!el || pct === null) { if (el) el.textContent = ''; return; }
+  const up = reverse ? pct < 0 : pct > 0;
+  const cls = up ? '#ef4444' : '#10b981';
+  el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? '▲' : '▼'} %${Math.abs(pct).toFixed(1)}</span>`;
+}
 function renderKPIs() {
   const n = records.length;
   document.getElementById('kpiTotalRecords').textContent = n;
@@ -901,13 +948,49 @@ function renderKPIs() {
     document.getElementById('kpiAvgAtik').textContent = '0';
     document.getElementById('kpiLastGecis').textContent = '0';
     document.getElementById('kpiTotalAtik').textContent = '0';
+    renderTrend('trendAvgAtik', null);
+    renderTrend('trendTotalAtik', null);
     return;
   }
 
   const totalAtik = records.reduce((s, r) => s + r.atik, 0);
-  document.getElementById('kpiAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const avgAtik = totalAtik / n;
+  document.getElementById('kpiAvgAtik').textContent = avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   document.getElementById('kpiLastGecis').textContent = records[0].toplam.toLocaleString('tr-TR');
   document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
+  renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
+}
+
+function renderComparison() {
+  const card = document.getElementById('comparisonCard');
+  const grid = document.getElementById('comparisonGrid');
+  const badge = document.getElementById('comparisonBadge');
+  if (records.length < 4) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const mid = Math.floor(records.length / 2);
+  const first = records.slice(mid);
+  const second = records.slice(0, mid);
+  const sum = (arr, f) => arr.reduce((s, r) => s + r[f], 0);
+  const avg = (arr, f) => arr.length ? sum(arr, f) / arr.length : 0;
+  const items = [
+    { label: 'Ort. Atık (kg)', f1: avg(first, 'atik'), f2: avg(second, 'atik'), unit: ' kg', lower: true },
+    { label: 'Ort. Üretim', f1: avg(first, 'yemek'), f2: avg(second, 'yemek'), unit: '', lower: false },
+    { label: 'Ort. Geçiş', f1: avg(first, 'toplam'), f2: avg(second, 'toplam'), unit: '', lower: false },
+  ];
+  badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
+  grid.innerHTML = items.map(it => {
+    const diff = it.f2 - it.f1;
+    const pct = it.f1 ? (diff / it.f1) * 100 : 0;
+    const good = it.lower ? diff < 0 : diff > 0;
+    return `<div class="comparison-item">
+      <span class="comparison-label">${it.label}</span>
+      <span class="comparison-old">${it.f1.toFixed(1)}${it.unit}</span>
+      <span class="comparison-arrow">→</span>
+      <span class="comparison-new">${it.f2.toFixed(1)}${it.unit}</span>
+      <span class="comparison-diff" style="color:${good ? '#10b981' : '#ef4444'};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}${it.unit}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderLastRecordsTable() {
@@ -955,6 +1038,7 @@ function renderRecordsTable() {
     selectAll.indeterminate = page.some(r => selectedIds.has(r.id)) && !allSelected;
   }
 
+  renderSortIndicators();
   updateBulkBar();
   renderPagination();
 }

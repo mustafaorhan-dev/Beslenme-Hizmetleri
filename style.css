@@ -1260,6 +1260,18 @@ body {
   height: 40px !important;
 }
 
+/* ---- KPI TREND ---- */
+.kpi-trend { display: block; margin-top: 0.15rem; min-height: 1rem; line-height: 1; }
+
+/* ---- COMPARISON ---- */
+.comparison-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+.comparison-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-card); font-size: 0.82rem; }
+.comparison-label { width: 130px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
+.comparison-old { color: var(--text-muted); min-width: 60px; text-align: right; }
+.comparison-arrow { color: var(--text-muted); }
+.comparison-new { color: var(--text-primary); font-weight: 600; min-width: 60px; text-align: right; }
+.comparison-diff { min-width: 70px; text-align: right; }
+
 /* ---- MEAL BADGE ---- */
 .meal-badge { display: inline-block; font-size: 0.7rem; background: rgba(99,102,241,0.12); color: var(--accent-blue); border: 1px solid rgba(99,102,241,0.2); border-radius: 999px; padding: 0.1rem 0.5rem; font-weight: 600; white-space: nowrap; }
 

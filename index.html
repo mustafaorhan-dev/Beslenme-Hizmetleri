@@ -140,6 +140,7 @@
           <div class="kpi-body">
             <span class="kpi-label">Ort. Atık (kg)</span>
             <span class="kpi-value" id="kpiAvgAtik">0.00</span>
+            <span class="kpi-trend" id="trendAvgAtik"></span>
           </div>
           <div class="kpi-sparkline" id="sparklineAvgAtik"></div>
         </div>
@@ -159,9 +160,19 @@
           <div class="kpi-body">
             <span class="kpi-label">Toplam Atık (kg)</span>
             <span class="kpi-value" id="kpiTotalAtik">0.00</span>
+            <span class="kpi-trend" id="trendTotalAtik"></span>
           </div>
           <div class="kpi-sparkline" id="sparklineTotalAtik"></div>
         </div>
+      </div>
+
+      <!-- Period Comparison -->
+      <div class="section-card" id="comparisonCard" style="display:none">
+        <div class="section-header">
+          <h2>Dönem Karşılaştırma</h2>
+          <span class="badge" id="comparisonBadge"></span>
+        </div>
+        <div class="comparison-grid" id="comparisonGrid"></div>
       </div>
 
       <!-- Last Records Preview -->
@@ -242,16 +253,16 @@
             <thead>
               <tr>
                 <th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" title="Tümünü seç/kaldır" /></th>
-                <th>Tarih</th>
-                <th>Üretilen Yemek</th>
-                <th>%10 Fire</th>
-                <th>Turnike Geçiş</th>
-                <th>Pers. Sayısı</th>
-                <th>Toplam Geçiş</th>
-                <th>Porsiyon (gr)</th>
-                <th>Atık (kg)</th>
-                <th>Öğrenci Sayısı</th>
-                <th>Yemek Türü</th>
+                <th data-field="tarih" onclick="toggleSort('tarih')" style="cursor:pointer">Tarih</th>
+                <th data-field="yemek" onclick="toggleSort('yemek')" style="cursor:pointer">Üretilen Yemek</th>
+                <th data-field="fire" onclick="toggleSort('fire')" style="cursor:pointer">%10 Fire</th>
+                <th data-field="turnike" onclick="toggleSort('turnike')" style="cursor:pointer">Turnike Geçiş</th>
+                <th data-field="personel" onclick="toggleSort('personel')" style="cursor:pointer">Pers. Sayısı</th>
+                <th data-field="toplam" onclick="toggleSort('toplam')" style="cursor:pointer">Toplam Geçiş</th>
+                <th data-field="porsiyon" onclick="toggleSort('porsiyon')" style="cursor:pointer">Porsiyon (gr)</th>
+                <th data-field="atik" onclick="toggleSort('atik')" style="cursor:pointer">Atık (kg)</th>
+                <th data-field="ogrenci" onclick="toggleSort('ogrenci')" style="cursor:pointer">Öğrenci Sayısı</th>
+                <th data-field="yemek_adi" onclick="toggleSort('yemek_adi')" style="cursor:pointer">Yemek Türü</th>
                 <th>İşlem</th>
               </tr>
             </thead>
