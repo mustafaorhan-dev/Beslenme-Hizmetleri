@@ -2026,7 +2026,7 @@ function renderMenu() {
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
         const val = d.data.yemekler[ci] || '';
-        return `<td><input type="text" id="m${ci}_${di}" value="${val}" placeholder="${label}" /></td>`;
+        return `<td><textarea id="m${ci}_${di}" placeholder="${label}" rows="3">${val}</textarea></td>`;
       }).join('')}
     </tr>`;
   }).join('') + `<tr>

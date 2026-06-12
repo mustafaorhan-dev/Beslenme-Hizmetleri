@@ -1313,7 +1313,8 @@ body {
 }
 .menu-table td { padding: 0.3rem 0.4rem; vertical-align: middle; }
 .menu-table td:first-child { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
-.menu-table input {
+.menu-table input,
+.menu-table textarea {
   width: 100%;
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -1324,8 +1325,12 @@ body {
   padding: 0.4rem 0.5rem;
   outline: none;
   transition: border-color var(--transition);
+  box-sizing: border-box;
+  resize: vertical;
 }
-.menu-table input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(34,211,238,0.1); }
+.menu-table input:focus,
+.menu-table textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(34,211,238,0.1); }
+.menu-table textarea { line-height: 1.4; min-height: 50px; }
 .menu-table input.kisi-input { text-align: center; font-weight: 600; }
 .menu-hint {
   display: flex;
