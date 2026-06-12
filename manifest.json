@@ -1,0 +1,22 @@
+{
+  "name": "Atık Kontrol Sistemi",
+  "short_name": "Atık Kontrol",
+  "description": "Yemekhane atık kontrol ve üretim takip paneli",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0a0f1e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%2322d3ee' opacity='0.15'/%3E%3Cpath d='M16 12h16l-2 4H18l-2-4z' fill='%2322d3ee'/%3E%3Cpath d='M14 16h20v2H14v-2z' fill='%2322d3ee' opacity='0.7'/%3E%3Cpath d='M15 18l2 18h14l2-18H15z' fill='%2322d3ee' opacity='0.5'/%3E%3Cpath d='M20 22v10M24 22v10M28 22v10' stroke='%2322d3ee' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "48x48",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='88' fill='%2322d3ee' opacity='0.15'/%3E%3Cpath d='M64 48h64l-8 16H72l-8-16z' fill='%2322d3ee'/%3E%3Cpath d='M56 64h80v8H56v-8z' fill='%2322d3ee' opacity='0.7'/%3E%3Cpath d='M60 72l8 72h56l8-72H60z' fill='%2322d3ee' opacity='0.5'/%3E%3Cpath d='M80 88v40M96 88v40M112 88v40' stroke='%2322d3ee' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

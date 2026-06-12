@@ -1643,3 +1643,423 @@ document.addEventListener('keydown', e => {
     if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
   }
 });
+t tipW = meta.tip.offsetWidth || 120;
+      if (tipX + tipW > W - 8) tipX = e.clientX - rect.left - tipW - 8;
+      meta.tip.style.left = tipX + 'px';
+      meta.tip.style.top = tipY + 'px';
+      meta.tip.style.display = 'block';
+    });
+    canvas.addEventListener('mouseleave', function() {
+      const meta = chartMetaMap.get(this.id);
+      if (meta) meta.tip.style.display = 'none';
+    });
+  }
+}
+
+function drawLineChart(canvasId, labels, datasets) {
+  const ctx = getCanvasCtx(canvasId);
+  if (!ctx) return;
+  const W = ctx.canvas._w;
+  const H = ctx.canvas._h;
+  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Gather all values
+  const allVals = datasets.flatMap(d => d.data);
+  const minV = Math.min(...allVals, 0);
+  const maxV = Math.max(...allVals, 1);
+  const range = maxV - minV || 1;
+
+  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
+
+  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
+  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
+
+  // Grid
+  const gridLines = 5;
+  ctx.strokeStyle = getGridColor();
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = pad.top + (i / gridLines) * cH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+
+    const val = maxV - (i / gridLines) * range;
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.6)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(val >= 100 ? 0 : 1), pad.left - 6, y + 4);
+  }
+
+  // Datasets
+  datasets.forEach(ds => {
+    if (ds.data.length === 0) return;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, ds.color + '30');
+    grad.addColorStop(1, ds.color + '00');
+
+    ctx.beginPath();
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(toX(ds.data.length - 1), H - pad.bottom);
+    ctx.lineTo(toX(0), H - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = ds.color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Dots
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = ds.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0a0f1e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  });
+
+  // X labels
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(labels.length / 10));
+  // Yıl ortalamak için grup bul
+  const yearGroups = {};
+  labels.forEach((l, i) => {
+    const parts = l.split('/');
+    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+      yearGroups[parts[1]].push(i);
+    }
+  });
+  labels.forEach((l, i) => {
+    if (i % step === 0 || i === labels.length - 1) {
+      const x = toX(i);
+      const parts = l.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+        ctx.fillText(parts[0], x, H - pad.bottom + 12);
+      } else {
+        ctx.fillText(l, x, H - pad.bottom + 16);
+      }
+    }
+  });
+  // Yılları ortala
+  ctx.font = '8px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+  ctx.textAlign = 'center';
+  for (const [year, indices] of Object.entries(yearGroups)) {
+    const firstX = toX(indices[0]);
+    const lastX = toX(indices[indices.length - 1]);
+    const cx = (firstX + lastX) / 2;
+    ctx.fillText(year, cx, H - pad.bottom + 24);
+  }
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+
+  // Legend
+  const legendX = pad.left;
+  const legendY = 8;
+  datasets.forEach((ds, i) => {
+    const x = legendX + i * 130;
+    ctx.fillStyle = ds.color;
+    ctx.fillRect(x, legendY, 20, 3);
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(226,232,240,0.8)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ds.label, x + 24, legendY + 6);
+  });
+}
+
+function drawBarChart(canvasId, labels, datasets) {
+  const ctx = getCanvasCtx(canvasId);
+  if (!ctx) return;
+  const W = ctx.canvas._w;
+  const H = ctx.canvas._h;
+  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const allVals = datasets.flatMap(d => d.data);
+  const maxV = Math.max(...allVals, 1);
+  const n = labels.length;
+  const numDs = datasets.length;
+  const groupW = cW / n;
+  const barW = Math.max(4, (groupW * 0.85) / numDs);
+  const barGap = barW * 0.12;
+
+  function toY(v) { return pad.top + cH - (v / maxV) * cH; }
+
+  // Grid
+  const gridLines = 5;
+  ctx.strokeStyle = getGridColor();
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = pad.top + (i / gridLines) * cH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+
+    const val = maxV - (i / gridLines) * maxV;
+    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
+  }
+
+  // Bars
+  datasets.forEach((ds, di) => {
+    ds.data.forEach((v, gi) => {
+      const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
+      const x = groupStart + di * (barW + barGap);
+      const y = toY(v);
+      const barH = pad.top + cH - y;
+
+      // Gölge + gradient
+      ctx.shadowColor = ds.color + '40';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+
+      const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+      grad.addColorStop(0, ds.color);
+      grad.addColorStop(1, darkenColor(ds.color, 25));
+      ctx.fillStyle = grad;
+
+      const r = Math.min(6, barW / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + barW - r, y);
+      ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+      ctx.lineTo(x + barW, y + barH);
+      ctx.lineTo(x, y + barH);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gölge sıfırla
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Parlak üst çizgi
+      ctx.fillStyle = hexToRgba(ds.color, 0.35);
+      ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
+
+      // Değeri çubuğun içine yaz
+      if (barW >= 10) { 
+        ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
+        const textVal = v !== undefined ? fmt(v) : '—';
+        
+        let fontSize = 13;
+        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+        let textWidth = ctx.measureText(textVal).width;
+
+        // Yatay sığmıyorsa fontu küçült (minimum 9px'e kadar)
+        while (textWidth > barW - 2 && fontSize > 9) {
+          fontSize--;
+          ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+          textWidth = ctx.measureText(textVal).width;
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+
+        // Hafif gölge efekti ile yazı
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1;
+
+        // Eğer çubuk yeterince yüksekse içine, kısaysa dışına üstüne yaz
+        if (barH > fontSize + 10) {
+          ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
+        } else {
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
+          ctx.fillText(textVal, x + barW / 2, y - 6);
+        }
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+      }
+    });
+  });
+
+  // X labels
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(labels.length / 10));
+  // Yıl ortalamak için grup bul
+  const yearGroups = {};
+  labels.forEach((l, i) => {
+    const parts = l.split('/');
+    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+      yearGroups[parts[1]].push(i);
+    }
+  });
+  labels.forEach((l, i) => {
+    if (i % step === 0 || i === labels.length - 1) {
+      const x = pad.left + i * groupW + groupW / 2;
+      const parts = l.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+        ctx.fillText(parts[0], x, H - pad.bottom + 12);
+      } else {
+        ctx.fillText(l, x, H - pad.bottom + 16);
+      }
+    }
+  });
+  // Yılları ortala
+  ctx.font = '8px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+  ctx.textAlign = 'center';
+  for (const [year, indices] of Object.entries(yearGroups)) {
+    const firstX = pad.left + indices[0] * groupW + groupW / 2;
+    const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
+    const cx = (firstX + lastX) / 2;
+    ctx.fillText(year, cx, H - pad.bottom + 24);
+  }
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+
+  // Legend
+  datasets.forEach((ds, i) => {
+    const x = pad.left + i * 130;
+    const y = 10;
+    // Yuvarlak işaret
+    ctx.beginPath();
+    ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
+    ctx.fillStyle = ds.color;
+    ctx.fill();
+    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ds.label, x + 18, y + 9);
+  });
+}
+
+// Redraw charts on window resize
+window.addEventListener('resize', () => {
+  if (document.getElementById('content-charts').classList.contains('active')) {
+    drawAllCharts();
+  }
+});
+
+// ─── EXPORT CSV ────────────────────────────────────────────────────────────────
+function exportData() {
+  if (records.length === 0) {
+    showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
+    return;
+  }
+
+  const headers = [
+    'Tarih',
+    'Üretilen Yemek Sayısı',
+    '%10 Fire',
+    'Turnike Geçiş Sayısı',
+    'Yemekhanede Çalışan Personel Sayısı',
+    'Toplam Geçiş',
+    'Porsiyon Miktarı (gr)',
+    'Atık Miktarı (kg)',
+    'Yemek Hiz. Yar. Öğr. Sayısı',
+    'Yemek Türü'
+  ];
+
+  const rows = records.map(r => [
+    r.tarih,
+    r.yemek,
+    r.fire,
+    r.turnike,
+    r.personel,
+    r.toplam,
+    r.porsiyon,
+    r.atik,
+    r.ogrenci,
+    r.yemek_adi || ''
+  ].map(v => `"${v}"`).join(';'));
+
+  const bom = '\uFEFF';
+  const csvContent = bom + [headers.join(';'), ...rows].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV dosyası indirildi.', 'success');
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const icon = type === 'success'
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ─── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
+
+  // Ctrl+N: Yeni kayıt
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    if (!document.getElementById('modalOverlay').classList.contains('open')) openModal();
+  }
+  // Ctrl+F: Arama kutusuna odaklan
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) { searchInput.focus(); searchInput.select(); }
+  }
+  // Ctrl+E: CSV dışa aktar
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    exportData();
+  }
+  // ? : Kısayol yardımı
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
+    e.preventDefault();
+    const el = document.getElementById('shortcutsHelp');
+    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+  }
+});

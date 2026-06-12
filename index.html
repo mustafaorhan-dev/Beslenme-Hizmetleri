@@ -586,3 +586,172 @@
   <script src="app.js"></script>
 </body>
 </html>
+L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="targets-body">
+        <p class="targets-desc">Günlük ve haftalık atık hedefleri belirleyerek performansınızı takip edin.</p>
+        <div class="targets-grid">
+          <div class="target-group">
+            <label for="targetGunlukAtik">Günlük Maks. Atık (kg)</label>
+            <input type="number" id="targetGunlukAtik" min="0" step="0.1" placeholder="20" />
+          </div>
+          <div class="target-group">
+            <label for="targetHaftalikAtik">Haftalık Maks. Atık (kg)</label>
+            <input type="number" id="targetHaftalikAtik" min="0" step="0.1" placeholder="100" />
+          </div>
+          <div class="target-group">
+            <label for="targetAtikOrani">Maks. Atık Oranı (%)</label>
+            <input type="number" id="targetAtikOrani" min="0" max="100" step="0.1" placeholder="5" />
+          </div>
+          <div class="target-group">
+            <label for="targetKarbon">Günlük Maks. CO₂ (kg)</label>
+            <input type="number" id="targetKarbon" min="0" step="0.1" placeholder="50" />
+          </div>
+        </div>
+        <div class="targets-compliance" id="targetsCompliance">
+          <div class="compliance-item" id="compGunlukAtik">
+            <span class="compliance-icon">—</span>
+            <span>Günlük Atık Hedefi</span>
+          </div>
+          <div class="compliance-item" id="compHaftalikAtik">
+            <span class="compliance-icon">—</span>
+            <span>Haftalık Atık Hedefi</span>
+          </div>
+          <div class="compliance-item" id="compAtikOrani">
+            <span class="compliance-icon">—</span>
+            <span>Atık Oranı Hedefi</span>
+          </div>
+          <div class="compliance-item" id="compKarbon">
+            <span class="compliance-icon">—</span>
+            <span>Karbon Hedefi</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="targets-status" id="targetsStatus"></span>
+        <button class="btn btn-ghost" onclick="closeTargetsPanel()">Kapat</button>
+        <button class="btn btn-primary" onclick="saveTargets()">Hedefleri Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SHORTCUTS HELP ===== -->
+  <div class="shortcuts-overlay" id="shortcutsHelp" onclick="if(event.target===this)this.style.display='none'">
+    <div class="shortcuts-panel">
+      <div class="shortcuts-header">
+        <h2>Klavye Kısayolları</h2>
+        <button class="modal-close" onclick="document.getElementById('shortcutsHelp').style.display='none'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="shortcuts-body">
+        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>N</kbd><span>Yeni kayıt ekle</span></div>
+        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Arama kutusuna odaklan</span></div>
+        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>E</kbd><span>CSV dışa aktar</span></div>
+        <div class="shortcut-row"><kbd>Esc</kbd><span>Formu / paneli kapat</span></div>
+        <div class="shortcut-row"><kbd>?</kbd><span>Bu yardımı göster/gizle</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Yeni Kayıt Ekle</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="entryForm" onsubmit="saveRecord(event)">
+        <div class="form-grid">
+          <div class="form-left">
+            <div class="form-group form-group-full">
+              <label for="fTarih">Tarih <span class="required">*</span></label>
+              <input type="date" id="fTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="fYemek">Üretilen Yemek Sayısı <span class="required">*</span></label>
+              <input type="number" id="fYemek" min="0" step="1" placeholder="0" required oninput="autoCalc()" />
+            </div>
+            <div class="form-group">
+              <label for="fTurnike">Turnike Geçiş Sayısı <span class="required">*</span></label>
+              <input type="number" id="fTurnike" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" />
+            </div>
+            <div class="form-group">
+              <label for="fPersonel">Yemekhanede Çalışan Personel Sayısı <span class="required">*</span></label>
+              <input type="number" id="fPersonel" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" />
+            </div>
+            <div class="form-group">
+              <label for="fPorsiyon">Porsiyon Miktarı (gr) <span class="required">*</span></label>
+              <input type="number" id="fPorsiyon" min="0" step="1" placeholder="0" required oninput="autoCalcAtik()" />
+            </div>
+            <div class="form-group">
+              <label for="fOgrenci">Yemek Hiz. Yar. Öğr. Sayısı <span class="required">*</span></label>
+              <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required />
+            </div>
+            <div class="form-group form-group-full">
+              <label for="fYemekAdi">Yemek Türü</label>
+              <select id="fYemekAdi">
+                <option value="">— Seçiniz (isteğe bağlı) —</option>
+                <option value="Çorba">Çorba</option>
+                <option value="Ana Yemek">Ana Yemek</option>
+                <option value="Yardımcı Yemek">Yardımcı Yemek</option>
+                <option value="Tatlı">Tatlı</option>
+                <option value="Ekmek">Ekmek</option>
+                <option value="Salata">Salata</option>
+                <option value="İçecek">İçecek</option>
+                <option value="Genel">Genel</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-right">
+            <div class="form-section-label">Otomatik Hesaplamalar</div>
+            <div class="form-group">
+              <label for="fFire">
+                %10 Fire
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fFire" min="0" step="0.01" placeholder="0" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fToplam">
+                Toplam Geçiş
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fToplam" min="0" step="1" placeholder="0" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fAtik">
+                Atık Miktarı (kg)
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fAtik" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">İptal</button>
+          <button type="submit" class="btn btn-primary" id="formSubmitBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Kaydet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
