@@ -2293,6 +2293,66 @@ function shiftMenuWeek(dir) {
   renderMenu();
 }
 
+function exportMenuPDF() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+
+  const allData = loadWeeklyMenu();
+  const weekData = allData[weekKey] || {};
+  const days = GUNLER.map((gun, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    const dayData = weekData[key] || { yemekler: ['','','','',''], kisi: 0 };
+    return { gun, key, data: dayData };
+  });
+
+  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+
+  let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Menü ${weekKey}</title>
+    <style>
+      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 2cm; color: #1a1a1a; }
+      h2 { text-align: center; font-size: 18pt; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+      th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; vertical-align: top; }
+      th { background: #f0f0f0; font-weight: 600; text-align: center; }
+      td:first-child { font-weight: 600; white-space: nowrap; }
+      .footer { text-align: center; margin-top: 20px; font-size: 9pt; color: #666; }
+    </style>
+  </head><body>
+    <h2>${weekKey} HAFTALIK MENÜ LİSTESİ</h2>
+    <table>
+      <thead><tr>
+        <th style="width:100px">Çeşit</th>
+        ${days.map(d => `<th>${d.gun}<br><span style="font-weight:400;font-size:9pt;color:#666">${d.key}</span></th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${cesitler.map((label, ci) => `<tr>
+          <td><strong>${label}</strong></td>
+          ${days.map(d => {
+            const val = d.data.yemekler[ci] || '';
+            return `<td style="white-space:pre-line">${escapeHtml(val)}</td>`;
+          }).join('')}
+        </tr>`).join('')}
+        <tr>
+          <td><strong>Kişi Sayısı</strong></td>
+          ${days.map(d => `<td style="text-align:center">${d.data.kisi || 0}</td>`).join('')}
+        </tr>
+      </tbody>
+    </table>
+    <div class="footer">Bu belge otomatik oluşturulmuştur.</div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 500);
+}
+
 function renderMenu() {
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
