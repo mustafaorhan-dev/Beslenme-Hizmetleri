@@ -7,11 +7,13 @@
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'atik_kontrol_data';
 const GSHEET_CONFIG_KEY = 'atik_kontrol_gsheet_config';
+const TARGETS_KEY = 'atik_kontrol_targets';
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7LL_FMxaZa9F2wKSHHhCTws-fzLX89wA_1_xjoMW_OkI5-5xYTNDUstENow/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null };
+let targets = { maxAtik: 50, maxOran: 5, minGecis: 300 };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 (function initTheme() {
@@ -63,10 +65,13 @@ function setChartYear(year) {
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadGSheetConfig();
+  loadTargets();
   setCurrentDate();
   renderAll();
   drawAllCharts();
   updateSyncUI();
+  renderSparklines();
+  renderCompliance();
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
   }
@@ -307,6 +312,262 @@ async function testGSheetConnection() {
   }
 }
 
+// ─── TARGETS ─────────────────────────────────────────────────────────────────
+function loadTargets() {
+  try {
+    const raw = localStorage.getItem(TARGETS_KEY);
+    if (raw) targets = JSON.parse(raw);
+  } catch (_) {}
+}
+function saveTargets() {
+  localStorage.setItem(TARGETS_KEY, JSON.stringify(targets));
+}
+function openTargetsPanel() {
+  loadTargets();
+  document.getElementById('targetMaxAtik').value = targets.maxAtik;
+  document.getElementById('targetMaxOran').value = targets.maxOran;
+  document.getElementById('targetMinGecis').value = targets.minGecis;
+  document.getElementById('targetsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTargetsPanel() {
+  document.getElementById('targetsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function saveTargetsFromForm() {
+  targets.maxAtik = parseFloat(document.getElementById('targetMaxAtik').value) || 50;
+  targets.maxOran = parseFloat(document.getElementById('targetMaxOran').value) || 5;
+  targets.minGecis = parseInt(document.getElementById('targetMinGecis').value) || 300;
+  saveTargets();
+  renderCompliance();
+  closeTargetsPanel();
+  showToast('Hedefler kaydedildi.', 'success');
+}
+function renderCompliance() {
+  const container = document.getElementById('complianceContainer');
+  if (!container || records.length === 0) { if (container) container.innerHTML = ''; return; }
+  const n = records.length;
+  const totalAtik = records.reduce((s,r) => s+r.atik, 0);
+  const avgAtik = totalAtik / n;
+  const totalYemek = records.reduce((s,r) => s+r.yemek, 0);
+  const oran = totalYemek > 0 ? (totalAtik / totalYemek * 100) : 0;
+  const avgGecis = records.reduce((s,r) => s+r.toplam, 0) / n;
+  const okAtik = avgAtik <= targets.maxAtik;
+  const okOran = oran <= targets.maxOran;
+  const okGecis = avgGecis >= targets.minGecis;
+  const pct = [okAtik, okOran, okGecis].filter(Boolean).length / 3 * 100;
+  container.innerHTML = `
+    <div class="compliance-summary">
+      <span class="compliance-pct" style="color:${pct >= 66 ? '#10b981' : pct >= 33 ? '#f59e0b' : '#ef4444'}">%${Math.round(pct)}</span>
+      <span>Hedef uyumu</span>
+    </div>
+    <div class="compliance-item ${okAtik ? 'ok' : 'fail'}">
+      <span>Ort. Atık ≤ ${targets.maxAtik} kg</span>
+      <span>${avgAtik.toFixed(1)} kg ${okAtik ? '✓' : '✗'}</span>
+    </div>
+    <div class="compliance-item ${okOran ? 'ok' : 'fail'}">
+      <span>Atık Oranı ≤ %${targets.maxOran}</span>
+      <span>%${oran.toFixed(2)} ${okOran ? '✓' : '✗'}</span>
+    </div>
+    <div class="compliance-item ${okGecis ? 'ok' : 'fail'}">
+      <span>Ort. Geçiş ≥ ${targets.minGecis}</span>
+      <span>${Math.round(avgGecis)} ${okGecis ? '✓' : '✗'}</span>
+    </div>`;
+}
+function setCompliance() {
+  loadTargets();
+  renderCompliance();
+}
+
+// ─── CARBON FOOTPRINT ────────────────────────────────────────────────────────
+function calcCarbonFootprint(totalAtikKg) {
+  return totalAtikKg * 2.5;
+}
+function calcDailyCarbon(atikKg) {
+  return atikKg * 2.5;
+}
+
+// ─── PREDICTION ──────────────────────────────────────────────────────────────
+function predictNextWaste() {
+  if (records.length < 3) return null;
+  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  const n = sorted.length;
+  const indices = sorted.map((_, i) => i);
+  const atikValues = sorted.map(r => r.atik);
+  const meanX = (n - 1) / 2;
+  const meanY = atikValues.reduce((s, v) => s + v, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - meanX) * (atikValues[i] - meanY);
+    den += (i - meanX) ** 2;
+  }
+  const slope = den !== 0 ? num / den : 0;
+  const intercept = meanY - slope * meanX;
+  return { next: slope * n + intercept, slope, intercept, n };
+}
+function getLast7AvgWaste() {
+  const last7 = records.slice(0, Math.min(7, records.length));
+  if (last7.length === 0) return 0;
+  return last7.reduce((s, r) => s + r.atik, 0) / last7.length;
+}
+
+// ─── SPARKLINES ──────────────────────────────────────────────────────────────
+function drawSparkline(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || data.length < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth || 120;
+  const h = canvas.offsetHeight || 40;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const pad = 2;
+  const cW = w - pad * 2;
+  const cH = h - pad * 2;
+  const maxVal = Math.max(...data, 1);
+  const minVal = Math.min(...data, 0);
+  const range = maxVal - minVal || 1;
+  const xStep = cW / (data.length - 1);
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = pad + i * xStep;
+    const y = pad + cH - ((v - minVal) / range) * cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.fillStyle = color + '20';
+  ctx.lineTo(pad + (data.length - 1) * xStep, pad + cH);
+  ctx.lineTo(pad, pad + cH);
+  ctx.closePath();
+  ctx.fill();
+}
+function renderSparklines() {
+  if (records.length < 2) return;
+  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  const atikData = sorted.map(r => r.atik);
+  const gecisData = sorted.map(r => r.toplam);
+  drawSparkline('sparklineAtik', atikData, '#f97316');
+  drawSparkline('sparklineGecis', gecisData, '#22c55e');
+}
+
+// ─── WASTE DETAIL ────────────────────────────────────────────────────────────
+function renderWasteDetail() {
+  const tbody = document.getElementById('wasteTbody');
+  const table = document.getElementById('wasteTable');
+  const empty = document.getElementById('emptyStateWaste');
+  if (!tbody) return;
+  if (records.length === 0) {
+    if (table) table.style.display = 'none';
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  if (table) table.style.display = 'table';
+  if (empty) empty.style.display = 'none';
+  const sorted = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  tbody.innerHTML = sorted.map(r => {
+    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+    const oran = r.yemek > 0 ? ((r.atik / r.yemek) * 100).toFixed(2) : '0.00';
+    const carbon = calcDailyCarbon(r.atik);
+    return `<tr>
+      <td>${dateStr}</td>
+      <td>${r.yemek.toLocaleString('tr-TR')}</td>
+      <td class="td-atik">${r.atik.toFixed(2)} kg</td>
+      <td>%${oran}</td>
+      <td>${carbon.toFixed(2)} kg</td>
+    </tr>`;
+  }).join('');
+  drawWasteChart();
+}
+function drawWasteChart() {
+  const canvas = document.getElementById('wasteChart');
+  if (!canvas || records.length < 2) return;
+  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  const labels = sorted.map(r => r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit' }) : '');
+  const atikData = sorted.map(r => r.atik);
+  drawLineChart('wasteChart', labels, [{ data: atikData, color: '#f97316', label: 'Atık (kg)' }]);
+  setupChartTooltip('wasteChart', labels, [{ data: atikData, color: '#f97316', label: 'Atık (kg)' }]);
+}
+function exportWasteDetail() {
+  if (records.length === 0) { showToast('Veri yok.', 'error'); return; }
+  const rows = records.map(r => [
+    r.tarih, r.yemek, r.atik, r.yemek > 0 ? ((r.atik/r.yemek)*100).toFixed(2) : '0.00',
+    calcDailyCarbon(r.atik).toFixed(2)
+  ].map(v => `"${v}"`).join(';'));
+  const bom = '\uFEFF';
+  const csv = bom + ['"Tarih";"Üretim";"Atık (kg)";"Atık Oranı %";"CO₂ (kg)"', ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `atik_detay_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('Atık detay CSV indirildi.', 'success');
+}
+
+// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (records.length === 0) {
+    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    return;
+  }
+  switchTab('report');
+  renderReport();
+  renderCompliance();
+  setTimeout(() => {
+    const totalAtik = records.reduce((s,r) => s+r.atik, 0);
+    const carbon = calcCarbonFootprint(totalAtik);
+    const pred = predictNextWaste();
+    const reportEl = document.getElementById('content-report');
+    const printWin = window.open('', '_blank', 'width=1000,height=800');
+    printWin.document.write(`<!DOCTYPE html><html><head>
+      <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+        th { background: #f1f5f9; font-weight: 600; }
+        h1 { font-size: 18px; margin-bottom: 4px; }
+        h2 { font-size: 14px; margin: 16px 0 6px; color: #475569; }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 8px; margin: 10px 0; }
+        .report-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; }
+        .report-label { font-size: 10px; color: #64748b; text-transform: uppercase; }
+        .report-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
+        .footer { margin-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+      </style>
+    </head><body>
+      <h1>Atık Kontrol Raporu</h1>
+      <p style="font-size:12px;color:#64748b">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</p>
+      <h2>Özet</h2>
+      <div class="report-grid">
+        <div class="report-item"><div class="report-label">Toplam Kayıt</div><div class="report-value">${records.length}</div></div>
+        <div class="report-item"><div class="report-label">Toplam Atık</div><div class="report-value">${totalAtik.toFixed(1)} kg</div></div>
+        <div class="report-item"><div class="report-label">Ort. Atık</div><div class="report-value">${(totalAtik/records.length).toFixed(1)} kg</div></div>
+        <div class="report-item"><div class="report-label">CO₂ Ayak İzi</div><div class="report-value">${carbon.toFixed(1)} kg</div></div>
+        ${pred ? `<div class="report-item"><div class="report-label">Tahmin (sonraki)</div><div class="report-value">${Math.max(0, pred.next).toFixed(1)} kg</div></div>` : ''}
+      </div>
+      <h2>Hedef Uyumu</h2>
+      <div style="margin:6px 0">${document.getElementById('complianceContainer') ? document.getElementById('complianceContainer').innerHTML : ''}</div>
+      <h2>Kayıtlar (son 20)</h2>
+      ${document.getElementById('reportTbody') ? (() => {
+        const rows = [...document.getElementById('reportTbody').querySelectorAll('tr')].slice(0,20);
+        const headers = [...document.querySelectorAll('#reportTable thead th')].map(th => th.textContent);
+        if (rows.length === 0) return '<p>Kayıt yok</p>';
+        let html = '<table><thead><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
+        rows.forEach(tr => { html += '<tr>' + [...tr.querySelectorAll('td')].map(td => '<td>' + td.innerHTML + '</td>').join('') + '</tr>'; });
+        return html + '</tbody></table>';
+      })() : '<p>Kayıt tablosu bulunamadı</p>'}
+      <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    </body></html>`);
+    printWin.document.close();
+    setTimeout(() => { printWin.focus(); printWin.print(); }, 500);
+  }, 400);
+}
+
 // ─── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -315,10 +576,11 @@ function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
+  if (name === 'waste') { renderWasteDetail(); drawWasteChart(); }
   // Menü seçilince sidebar'ı kapat
   closeSidebar();
   // Sayfa başlığını güncelle
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor' };
+  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', waste: 'Atık Detay' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
 
@@ -386,6 +648,7 @@ function handleOverlayClick(e) {
 
 function populateForm(rec) {
   document.getElementById('fTarih').value = rec.tarih;
+  document.getElementById('fYemekAdi').value = rec.yemek_adi || '';
   document.getElementById('fYemek').value = rec.yemek;
   document.getElementById('fFire').value = rec.fire;
   document.getElementById('fTurnike').value = rec.turnike;
@@ -456,6 +719,7 @@ function saveRecord(e) {
 
   const rec = {
     tarih: document.getElementById('fTarih').value,
+    yemek_adi: document.getElementById('fYemekAdi').value || '',
     yemek,
     fire,
     turnike,
@@ -632,9 +896,10 @@ function handleImport(e) {
           'Turnike Geçiş Sayısı': 'turnike', 'Yemekhanede Çalışan Personel Sayısı': 'personel',
           'Toplam Geçiş': 'toplam', 'Porsiyon Miktarı (gr)': 'porsiyon',
           'Atık Miktarı (kg)': 'atik', 'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci',
+          'Yemek Türü': 'yemek_adi',
           'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
           'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
-          'atik': 'atik', 'ogrenci': 'ogrenci'
+          'atik': 'atik', 'ogrenci': 'ogrenci', 'yemek_adi': 'yemek_adi'
         };
         for (let i = 1; i < lines.length; i++) {
           const vals = lines[i].split(';').map(v => v.replace(/^"|"$/g, '').trim());
@@ -721,9 +986,10 @@ function exportDataJSON() {
 
 function exportDataSettings() {
   const settings = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
-    records: records,
+    records: records.map(r => ({ ...r, yemek_adi: r.yemek_adi || '' })),
+    targets: targets,
     gsheetConfig: gsheetConfig
   };
   const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json;charset=utf-8;' });
@@ -780,6 +1046,9 @@ function renderAll() {
   renderLastRecordsTable();
   renderRecordsTable();
   renderReport();
+  renderCompliance();
+  renderSparklines();
+  renderWasteDetail();
 }
 
 function renderKPIs() {
@@ -867,10 +1136,13 @@ function buildRow(r, showActions) {
       </div>
     </td>` : '';
 
+  const mealBadge = r.yemek_adi ? `<span class="meal-badge">${r.yemek_adi}</span>` : '';
+
   return `<tr class="${selectedIds.has(r.id) ? 'row-selected' : ''}">
     ${checkbox}
     <td>${dateStr}</td>
     <td>${r.yemek.toLocaleString('tr-TR')}</td>
+    <td>${mealBadge}</td>
     <td>${r.fire.toLocaleString('tr-TR')}</td>
     <td>${r.turnike.toLocaleString('tr-TR')}</td>
     <td>${r.personel.toLocaleString('tr-TR')}</td>
@@ -1592,9 +1864,7 @@ function exportData() {
 
 // ─── PRINT ─────────────────────────────────────────────────────────────────────
 function printReport() {
-  switchTab('report');
-  renderReport();
-  setTimeout(() => window.print(), 300);
+  exportPDF();
 }
 
 // ─── TOAST ─────────────────────────────────────────────────────────────────────
@@ -1639,427 +1909,4 @@ document.addEventListener('keydown', e => {
   // ? : Kısayol yardımı
   if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
     e.preventDefault();
-    const el = document.getElementById('shortcutsHelp');
-    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-  }
-});
-t tipW = meta.tip.offsetWidth || 120;
-      if (tipX + tipW > W - 8) tipX = e.clientX - rect.left - tipW - 8;
-      meta.tip.style.left = tipX + 'px';
-      meta.tip.style.top = tipY + 'px';
-      meta.tip.style.display = 'block';
-    });
-    canvas.addEventListener('mouseleave', function() {
-      const meta = chartMetaMap.get(this.id);
-      if (meta) meta.tip.style.display = 'none';
-    });
-  }
-}
 
-function drawLineChart(canvasId, labels, datasets) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Gather all values
-  const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(...allVals, 0);
-  const maxV = Math.max(...allVals, 1);
-  const range = maxV - minV || 1;
-
-  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
-
-  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
-  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
-
-  // Grid
-  const gridLines = 5;
-  ctx.strokeStyle = getGridColor();
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= gridLines; i++) {
-    const y = pad.top + (i / gridLines) * cH;
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(W - pad.right, y);
-    ctx.stroke();
-
-    const val = maxV - (i / gridLines) * range;
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.6)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(val.toFixed(val >= 100 ? 0 : 1), pad.left - 6, y + 4);
-  }
-
-  // Datasets
-  datasets.forEach(ds => {
-    if (ds.data.length === 0) return;
-
-    // Gradient fill
-    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-    grad.addColorStop(0, ds.color + '30');
-    grad.addColorStop(1, ds.color + '00');
-
-    ctx.beginPath();
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.lineTo(toX(ds.data.length - 1), H - pad.bottom);
-    ctx.lineTo(toX(0), H - pad.bottom);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Line
-    ctx.beginPath();
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.strokeStyle = ds.color;
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // Dots
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = ds.color;
-      ctx.fill();
-      ctx.strokeStyle = '#0a0f1e';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
-  });
-
-  // X labels
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-  ctx.font = '10px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(labels.length / 10));
-  // Yıl ortalamak için grup bul
-  const yearGroups = {};
-  labels.forEach((l, i) => {
-    const parts = l.split('/');
-    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-      yearGroups[parts[1]].push(i);
-    }
-  });
-  labels.forEach((l, i) => {
-    if (i % step === 0 || i === labels.length - 1) {
-      const x = toX(i);
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        ctx.fillText(parts[0], x, H - pad.bottom + 12);
-      } else {
-        ctx.fillText(l, x, H - pad.bottom + 16);
-      }
-    }
-  });
-  // Yılları ortala
-  ctx.font = '8px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-  ctx.textAlign = 'center';
-  for (const [year, indices] of Object.entries(yearGroups)) {
-    const firstX = toX(indices[0]);
-    const lastX = toX(indices[indices.length - 1]);
-    const cx = (firstX + lastX) / 2;
-    ctx.fillText(year, cx, H - pad.bottom + 24);
-  }
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-
-  // Legend
-  const legendX = pad.left;
-  const legendY = 8;
-  datasets.forEach((ds, i) => {
-    const x = legendX + i * 130;
-    ctx.fillStyle = ds.color;
-    ctx.fillRect(x, legendY, 20, 3);
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(226,232,240,0.8)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(ds.label, x + 24, legendY + 6);
-  });
-}
-
-function drawBarChart(canvasId, labels, datasets) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const allVals = datasets.flatMap(d => d.data);
-  const maxV = Math.max(...allVals, 1);
-  const n = labels.length;
-  const numDs = datasets.length;
-  const groupW = cW / n;
-  const barW = Math.max(4, (groupW * 0.85) / numDs);
-  const barGap = barW * 0.12;
-
-  function toY(v) { return pad.top + cH - (v / maxV) * cH; }
-
-  // Grid
-  const gridLines = 5;
-  ctx.strokeStyle = getGridColor();
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= gridLines; i++) {
-    const y = pad.top + (i / gridLines) * cH;
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(W - pad.right, y);
-    ctx.stroke();
-
-    const val = maxV - (i / gridLines) * maxV;
-    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
-  }
-
-  // Bars
-  datasets.forEach((ds, di) => {
-    ds.data.forEach((v, gi) => {
-      const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
-      const x = groupStart + di * (barW + barGap);
-      const y = toY(v);
-      const barH = pad.top + cH - y;
-
-      // Gölge + gradient
-      ctx.shadowColor = ds.color + '40';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 2;
-
-      const grad = ctx.createLinearGradient(0, y, 0, y + barH);
-      grad.addColorStop(0, ds.color);
-      grad.addColorStop(1, darkenColor(ds.color, 25));
-      ctx.fillStyle = grad;
-
-      const r = Math.min(6, barW / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + barW - r, y);
-      ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-      ctx.lineTo(x + barW, y + barH);
-      ctx.lineTo(x, y + barH);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Gölge sıfırla
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetY = 0;
-
-      // Parlak üst çizgi
-      ctx.fillStyle = hexToRgba(ds.color, 0.35);
-      ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
-
-      // Değeri çubuğun içine yaz
-      if (barW >= 10) { 
-        ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
-        const textVal = v !== undefined ? fmt(v) : '—';
-        
-        let fontSize = 13;
-        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-        let textWidth = ctx.measureText(textVal).width;
-
-        // Yatay sığmıyorsa fontu küçült (minimum 9px'e kadar)
-        while (textWidth > barW - 2 && fontSize > 9) {
-          fontSize--;
-          ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-          textWidth = ctx.measureText(textVal).width;
-        }
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-
-        // Hafif gölge efekti ile yazı
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 3;
-        ctx.shadowOffsetY = 1;
-
-        // Eğer çubuk yeterince yüksekse içine, kısaysa dışına üstüne yaz
-        if (barH > fontSize + 10) {
-          ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
-        } else {
-          ctx.shadowColor = 'transparent';
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
-          ctx.fillText(textVal, x + barW / 2, y - 6);
-        }
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-      }
-    });
-  });
-
-  // X labels
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-  ctx.font = '10px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(labels.length / 10));
-  // Yıl ortalamak için grup bul
-  const yearGroups = {};
-  labels.forEach((l, i) => {
-    const parts = l.split('/');
-    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-      yearGroups[parts[1]].push(i);
-    }
-  });
-  labels.forEach((l, i) => {
-    if (i % step === 0 || i === labels.length - 1) {
-      const x = pad.left + i * groupW + groupW / 2;
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        ctx.fillText(parts[0], x, H - pad.bottom + 12);
-      } else {
-        ctx.fillText(l, x, H - pad.bottom + 16);
-      }
-    }
-  });
-  // Yılları ortala
-  ctx.font = '8px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-  ctx.textAlign = 'center';
-  for (const [year, indices] of Object.entries(yearGroups)) {
-    const firstX = pad.left + indices[0] * groupW + groupW / 2;
-    const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
-    const cx = (firstX + lastX) / 2;
-    ctx.fillText(year, cx, H - pad.bottom + 24);
-  }
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-
-  // Legend
-  datasets.forEach((ds, i) => {
-    const x = pad.left + i * 130;
-    const y = 10;
-    // Yuvarlak işaret
-    ctx.beginPath();
-    ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
-    ctx.fillStyle = ds.color;
-    ctx.fill();
-    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
-    ctx.font = '11px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(ds.label, x + 18, y + 9);
-  });
-}
-
-// Redraw charts on window resize
-window.addEventListener('resize', () => {
-  if (document.getElementById('content-charts').classList.contains('active')) {
-    drawAllCharts();
-  }
-});
-
-// ─── EXPORT CSV ────────────────────────────────────────────────────────────────
-function exportData() {
-  if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
-    return;
-  }
-
-  const headers = [
-    'Tarih',
-    'Üretilen Yemek Sayısı',
-    '%10 Fire',
-    'Turnike Geçiş Sayısı',
-    'Yemekhanede Çalışan Personel Sayısı',
-    'Toplam Geçiş',
-    'Porsiyon Miktarı (gr)',
-    'Atık Miktarı (kg)',
-    'Yemek Hiz. Yar. Öğr. Sayısı',
-    'Yemek Türü'
-  ];
-
-  const rows = records.map(r => [
-    r.tarih,
-    r.yemek,
-    r.fire,
-    r.turnike,
-    r.personel,
-    r.toplam,
-    r.porsiyon,
-    r.atik,
-    r.ogrenci,
-    r.yemek_adi || ''
-  ].map(v => `"${v}"`).join(';'));
-
-  const bom = '\uFEFF';
-  const csvContent = bom + [headers.join(';'), ...rows].join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV dosyası indirildi.', 'success');
-}
-
-// ─── TOAST ─────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-
-  const icon = type === 'success'
-    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
-
-  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease forwards';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// ─── KEYBOARD ──────────────────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
-
-  // Ctrl+N: Yeni kayıt
-  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-    e.preventDefault();
-    if (!document.getElementById('modalOverlay').classList.contains('open')) openModal();
-  }
-  // Ctrl+F: Arama kutusuna odaklan
-  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-    e.preventDefault();
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) { searchInput.focus(); searchInput.select(); }
-  }
-  // Ctrl+E: CSV dışa aktar
-  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-    e.preventDefault();
-    exportData();
-  }
-  // ? : Kısayol yardımı
-  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
-    e.preventDefault();
-    const el = document.getElementById('shortcutsHelp');
-    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-  }
-});

@@ -13,6 +13,10 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
 
@@ -87,6 +91,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span>Rapor</span>
         </button>
+        <button class="tab-btn" id="tab-waste" onclick="switchTab('waste')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>İsraf Detayı</span>
+        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="openModal()">
@@ -100,6 +108,10 @@
         <button class="tab-btn" onclick="openSyncPanel()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
           <span>Senkronize Et</span>
+        </button>
+        <button class="tab-btn" onclick="openTargetsPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <span>Hedefler</span>
         </button>
         <button class="tab-btn" onclick="quickPullFromSheets()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
@@ -134,9 +146,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <div class="kpi-body">
-            <span class="kpi-label">Ort. Atık Miktarı (kg)</span>
+            <span class="kpi-label">Ort. Atık (kg)</span>
             <span class="kpi-value" id="kpiAvgAtik">0.00</span>
           </div>
+          <div class="kpi-sparkline" id="sparklineAvgAtik"></div>
         </div>
         <div class="kpi-card" id="kpi-toplam-gecis">
           <div class="kpi-icon kpi-green">
@@ -155,6 +168,7 @@
             <span class="kpi-label">Toplam Atık (kg)</span>
             <span class="kpi-value" id="kpiTotalAtik">0.00</span>
           </div>
+          <div class="kpi-sparkline" id="sparklineTotalAtik"></div>
         </div>
       </div>
 
@@ -184,6 +198,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
+                <th>Yemek Türü</th>
               </tr>
             </thead>
             <tbody id="lastRecordsTbody"></tbody>
@@ -243,6 +258,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
+                <th>Yemek Türü</th>
                 <th>İşlem</th>
               </tr>
             </thead>
@@ -314,15 +330,81 @@
       </div>
     </div>
 
+    <!-- ===== WASTE DETAIL TAB ===== -->
+    <div class="tab-content" id="content-waste">
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Porsiyon İsrafı Detayı</h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary btn-sm" onclick="exportWasteDetail()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Dışa Aktar
+            </button>
+          </div>
+        </div>
+        <div class="waste-summary" id="wasteSummary">
+          <div class="waste-summary-item">
+            <span class="report-label">Kayıtlı Yemek Türü</span>
+            <span class="report-value" id="wasteMealCount">0</span>
+          </div>
+          <div class="waste-summary-item">
+            <span class="report-label">En Çok İsraf Edilen</span>
+            <span class="report-value" id="wasteTopMeal">—</span>
+          </div>
+          <div class="waste-summary-item">
+            <span class="report-label">En Az İsraf Edilen</span>
+            <span class="report-value" id="wasteLeastMeal">—</span>
+          </div>
+          <div class="waste-summary-item">
+            <span class="report-label">Toplam İsraflı Gün</span>
+            <span class="report-value" id="wasteDays">0</span>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyWasteDetail">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Kayıt girerken "Yemek Türü" seçerek israf detaylarını görüntüleyebilirsiniz.</p>
+          </div>
+          <table class="data-table" id="wasteTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Yemek Türü</th>
+                <th>Kayıt Sayısı</th>
+                <th>Toplam Atık (kg)</th>
+                <th>Ort. Atık (kg)</th>
+                <th>Min Atık</th>
+                <th>Maks Atık</th>
+                <th>Toplam Atık Oranı</th>
+              </tr>
+            </thead>
+            <tbody id="wasteTbody"></tbody>
+          </table>
+        </div>
+        <div class="chart-area waste-chart-area" id="wasteChartContainer" style="height:300px;margin-top:1rem">
+          <canvas id="canvasWaste"></canvas>
+          <div class="chart-empty" id="wasteChartEmpty">Yemek türü seçili kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== REPORT TAB ===== -->
     <div class="tab-content" id="content-report">
       <div class="section-card">
         <div class="section-header">
           <h2>Özet Rapor</h2>
-          <button class="btn btn-primary btn-sm" onclick="printReport()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Yazdır
-          </button>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="printReport()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Yazdır / PDF
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="exportPDF()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF Aç
+            </button>
+          </div>
         </div>
         <div class="report-grid" id="reportGrid">
           <div class="report-item">
@@ -385,6 +467,14 @@
             <span class="report-label">Geçiş Trendi (son 7 gün)</span>
             <span class="report-value" id="rTrendGecis" style="color:#10b981;font-size:1.1rem">—</span>
           </div>
+          <div class="report-item report-item-highlight" style="background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25);">
+            <span class="report-label">Karbon Ayak İzi (kg CO₂)</span>
+            <span class="report-value" id="rCarbonFootprint" style="color:#22c55e;font-size:1.1rem">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25);">
+            <span class="report-label">Atık Tahmini (Gelecek Hafta)</span>
+            <span class="report-value" id="rPrediction" style="color:#818cf8;font-size:1.1rem">—</span>
+          </div>
         </div>
 
         <div class="section-header" style="margin-top:2rem">
@@ -403,6 +493,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
+                <th>Yemek Türü</th>
               </tr>
             </thead>
             <tbody id="reportTbody"></tbody>
@@ -488,105 +579,13 @@
     </div>
   </div>
 
-  <!-- ===== SHORTCUTS HELP ===== -->
-  <div class="shortcuts-overlay" id="shortcutsHelp" onclick="if(event.target===this)this.style.display='none'">
-    <div class="shortcuts-panel">
-      <div class="shortcuts-header">
-        <h2>Klavye Kısayolları</h2>
-        <button class="modal-close" onclick="document.getElementById('shortcutsHelp').style.display='none'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="shortcuts-body">
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>N</kbd><span>Yeni kayıt ekle</span></div>
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Arama kutusuna odaklan</span></div>
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>E</kbd><span>CSV dışa aktar</span></div>
-        <div class="shortcut-row"><kbd>Esc</kbd><span>Formu / paneli kapat</span></div>
-        <div class="shortcut-row"><kbd>?</kbd><span>Bu yardımı göster/gizle</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== MODAL ===== -->
-  <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-    <div class="modal" id="modal">
+  <!-- ===== TARGETS PANEL ===== -->
+  <div class="modal-overlay" id="targetsOverlay" onclick="if(event.target===this)closeTargetsPanel()">
+    <div class="modal targets-panel">
       <div class="modal-header">
-        <h2 id="modalTitle">Yeni Kayıt Ekle</h2>
-        <button class="modal-close" onclick="closeModal()">
+        <h2>Hedef Belirleme</h2>
+        <button class="modal-close" onclick="closeTargetsPanel()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <form id="entryForm" onsubmit="saveRecord(event)">
-        <div class="form-grid">
-          <div class="form-left">
-            <div class="form-group form-group-full">
-              <label for="fTarih">Tarih <span class="required">*</span></label>
-              <input type="date" id="fTarih" required />
-            </div>
-            <div class="form-group">
-              <label for="fYemek">Üretilen Yemek Sayısı <span class="required">*</span></label>
-              <input type="number" id="fYemek" min="0" step="1" placeholder="0" required oninput="autoCalc()" />
-            </div>
-            <div class="form-group">
-              <label for="fTurnike">Turnike Geçiş Sayısı <span class="required">*</span></label>
-              <input type="number" id="fTurnike" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" />
-            </div>
-            <div class="form-group">
-              <label for="fPersonel">Yemekhanede Çalışan Personel Sayısı <span class="required">*</span></label>
-              <input type="number" id="fPersonel" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" />
-            </div>
-            <div class="form-group">
-              <label for="fPorsiyon">Porsiyon Miktarı (gr) <span class="required">*</span></label>
-              <input type="number" id="fPorsiyon" min="0" step="1" placeholder="0" required oninput="autoCalcAtik()" />
-            </div>
-            <div class="form-group form-group-full">
-              <label for="fOgrenci">Yemek Hiz. Yar. Öğr. Sayısı <span class="required">*</span></label>
-              <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required />
-            </div>
-          </div>
-          <div class="form-right">
-            <div class="form-section-label">Otomatik Hesaplamalar</div>
-            <div class="form-group">
-              <label for="fFire">
-                %10 Fire
-                <span class="auto-badge">Otomatik</span>
-              </label>
-              <input type="number" id="fFire" min="0" step="0.01" placeholder="0" readonly class="readonly-input" />
-            </div>
-            <div class="form-group">
-              <label for="fToplam">
-                Toplam Geçiş
-                <span class="auto-badge">Otomatik</span>
-              </label>
-              <input type="number" id="fToplam" min="0" step="1" placeholder="0" readonly class="readonly-input" />
-            </div>
-            <div class="form-group">
-              <label for="fAtik">
-                Atık Miktarı (kg)
-                <span class="auto-badge">Otomatik</span>
-              </label>
-              <input type="number" id="fAtik" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal()">İptal</button>
-          <button type="submit" class="btn btn-primary" id="formSubmitBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Kaydet
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TOAST -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script src="app.js"></script>
-</body>
-</html>
-L6 18M6 6l12 12"/></svg>
         </button>
       </div>
       <div class="targets-body">
