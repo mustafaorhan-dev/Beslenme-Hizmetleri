@@ -57,8 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   drawAllCharts();
   updateSyncUI();
-  // Auto-sync removed to prevent unintended data overwrites.
-  // Use "Google'dan Çek" button in sidebar to manually sync.
+  if (gsheetConfig.webappUrl) {
+    syncFromGSheets();
+  }
 });
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -1381,8 +1382,8 @@ function getCanvasCtx(canvasId) {
   if (!canvas) return null;
   const parent = canvas.parentElement;
   const dpr = window.devicePixelRatio || 1;
-  const w = parent.offsetWidth || 400;
-  const h = parent.offsetHeight || 280;
+  const w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  const h = Math.min(parent.offsetHeight || 280, parent.clientHeight || 280);
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.width = w + 'px';

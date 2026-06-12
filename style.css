@@ -479,7 +479,7 @@ body {
   padding: 1rem;
   overflow: auto;
 }
-#content-charts.active { padding: 0; }
+
 
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
@@ -873,9 +873,9 @@ body {
   gap: 1.5rem;
 }
 
-.charts-grid .section-card { padding: 0; }
-.chart-card .section-header { padding: 1.25rem 1.25rem 0 1.25rem; margin-bottom: 0; }
-.chart-card .chart-area { margin: 0 0.5rem 0.5rem 0.5rem; }
+.charts-grid .section-card { padding: 1.25rem; }
+.chart-card .section-header { padding: 0; margin-bottom: 1rem; }
+.chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
 
 .chart-area {
@@ -884,12 +884,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .chart-area canvas {
   display: none;
-  width: 100% !important;
-  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .chart-empty {
