@@ -3,9 +3,15 @@ const DISH_SHEET_NAME = 'Yemek Listesi';
 
 function doGet(e) {
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) {
-    return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
+    // Yemek Listesi sayfası yoksa otomatik oluştur
+    if (sheetName === DISH_SHEET_NAME) {
+      sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(DISH_SHEET_NAME);
+      sheet.appendRow(['id', 'ad', 'kalori', 'alerjen']);
+    } else {
+      return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
+    }
   }
   const data = sheet.getDataRange().getValues();
   if (data.length === 0) return jsonResponse({ data: [] });
