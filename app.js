@@ -6,6 +6,7 @@
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7LL_FMxaZa9F2wKSHHhCTws-fzLX89wA_1_xjoMW_OkI5-5xYTNDUstENow/exec';
+const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbx23TjztaYlZiRUKgbYDgwh6qd3wHbWU0dNCpChqED8pDFpYAqrZ2aWsDj9L0wXxZx3mg/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -146,15 +147,15 @@ function loadGSheetConfig() {
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
         lastSync: parsed.lastSync || null,
-        dishUrl: dishUrl
+        dishUrl: dishUrl || DEFAULT_DISH_URL
       };
     } else {
       let dishUrl = '';
       try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl };
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl || DEFAULT_DISH_URL };
     }
   } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: DEFAULT_DISH_URL };
   }
 }
 
@@ -173,10 +174,9 @@ function saveAllUrls() {
   const url1 = document.getElementById('gsheetUrl').value.trim();
   const url2 = document.getElementById('gsheetDishUrl').value.trim();
   gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
-  gsheetConfig.dishUrl = url2;
+  gsheetConfig.dishUrl = url2 || DEFAULT_DISH_URL;
   try {
     localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
-    // Yedek olarak ayrı anahtarda da sakla
     if (url2) localStorage.setItem('atik_kontrol_dish_url', url2);
   } catch (e) {}
   updateSyncUI();
