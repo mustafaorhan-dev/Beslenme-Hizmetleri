@@ -1,0 +1,1633 @@
+/* =============================================
+   ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
+   ============================================= */
+
+'use strict';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'atik_kontrol_data';
+const GSHEET_CONFIG_KEY = 'atik_kontrol_gsheet_config';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7LL_FMxaZa9F2wKSHHhCTws-fzLX89wA_1_xjoMW_OkI5-5xYTNDUstENow/exec';
+let records = [];
+let editingId = null;
+let filteredRecords = [];
+let gsheetConfig = { webappUrl: '', lastSync: null };
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+(function initTheme() {
+  const saved = localStorage.getItem('atik_kontrol_theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else if (saved === 'light') {
+    document.documentElement.removeAttribute('data-theme');
+  } else if (window.matchMedia('(prefers-color-scheme:dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? '' : 'dark');
+  localStorage.setItem('atik_kontrol_theme', isDark ? 'light' : 'dark');
+}
+
+// ─── PAGINATION ────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 20;
+let currentPage = 1;
+let selectedIds = new Set();
+
+// ─── UNSAVED CHANGES ──────────────────────────────────────────────────────────
+let formModified = false;
+
+// ─── CHART YEAR FILTER ──────────────────────────────────────────────────────
+let chartYearFilter = 'all';
+function getAvailableYears() {
+  const years = new Set();
+  records.forEach(r => {
+    if (r.tarih) {
+      const y = new Date(r.tarih + 'T00:00:00').getFullYear();
+      if (!isNaN(y)) years.add(y);
+    }
+  });
+  return [...years].sort();
+}
+function setChartYear(year) {
+  chartYearFilter = year;
+  document.querySelectorAll('.year-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.year === year);
+  });
+  drawAllCharts();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  loadGSheetConfig();
+  setCurrentDate();
+  renderAll();
+  drawAllCharts();
+  updateSyncUI();
+  if (gsheetConfig.webappUrl && records.length === 0) {
+    syncFromGSheets();
+  }
+});
+
+// ─── DATE ──────────────────────────────────────────────────────────────────────
+function normalizeDate(v) {
+  if (!v) return '';
+  // Zaten YYYY-MM-DD formatında mı?
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  // Sayısal (Google Sheets serial date)?
+  if (/^\d+(\.\d+)?$/.test(String(v))) {
+    const d = new Date(1899, 11, 30 + Number(v));
+    if (!isNaN(d)) return formatLocalDate(d);
+  }
+  // Diğer formatlar (ISO, "Sat Jan 15 2026", vb.)
+  const d = new Date(v);
+  if (!isNaN(d)) return formatLocalDate(d);
+  return '';
+}
+
+function formatLocalDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function setCurrentDate() {
+  const el = document.getElementById('currentDate');
+  const now = new Date();
+  el.textContent = now.toLocaleDateString('tr-TR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  // Set default date for form
+  document.getElementById('fTarih').value = now.toISOString().split('T')[0];
+}
+
+// ─── STORAGE ───────────────────────────────────────────────────────────────────
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    records = raw ? JSON.parse(raw) : [];
+    filteredRecords = [...records];
+  } catch (e) {
+    records = [];
+    filteredRecords = [];
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  saveGSheetConfig();
+}
+
+// ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
+function loadGSheetConfig() {
+  try {
+    const raw = localStorage.getItem(GSHEET_CONFIG_KEY);
+    gsheetConfig = raw ? JSON.parse(raw) : { webappUrl: '', lastSync: null };
+    if (!gsheetConfig.webappUrl) gsheetConfig.webappUrl = DEFAULT_GSHEET_URL;
+  } catch (e) {
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+  }
+}
+
+function saveGSheetConfig() {
+  localStorage.setItem(GSHEET_CONFIG_KEY, JSON.stringify(gsheetConfig));
+}
+
+function saveGSheetUrl() {
+  const url = document.getElementById('gsheetUrl').value.trim();
+  gsheetConfig.webappUrl = url || DEFAULT_GSHEET_URL;
+  saveGSheetConfig();
+  updateSyncUI();
+  showToast('Web App URL kaydedildi.', 'success');
+  if (url) testGSheetConnection();
+}
+
+function updateSyncUI() {
+  const statusLabel = document.getElementById('syncStatusLabel');
+  const statusSub = document.getElementById('syncStatusSub');
+  const statusIcon = document.getElementById('syncStatusIcon');
+  const lastLabel = document.getElementById('syncLastLabel');
+  const urlInput = document.getElementById('gsheetUrl');
+
+  if (urlInput) urlInput.value = gsheetConfig.webappUrl || '';
+
+  if (gsheetConfig.lastSync) {
+    const d = new Date(gsheetConfig.lastSync);
+    lastLabel.textContent = 'Son senkronizasyon: ' + d.toLocaleString('tr-TR');
+  } else {
+    lastLabel.textContent = 'Son senkronizasyon: —';
+  }
+
+  if (gsheetConfig.webappUrl) {
+    statusLabel.textContent = 'URL yapılandırıldı';
+    statusSub.textContent = 'Senkronizasyon butonlarını kullanabilirsiniz';
+    statusIcon.className = 'sync-status-icon sync-ok';
+    statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  } else {
+    statusLabel.textContent = 'Bağlantı kurulmadı';
+    statusSub.textContent = 'Ayarlardan Web App URL\'sini girin';
+    statusIcon.className = 'sync-status-icon';
+    statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>';
+  }
+}
+
+function openSyncPanel() {
+  document.getElementById('syncOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  updateSyncUI();
+}
+
+function closeSyncPanel() {
+  document.getElementById('syncOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function quickPullFromSheets() {
+  if (!gsheetConfig.webappUrl) {
+    showToast('Önce Web App URL\'sini ayarlayın (Senkronize Et → URL kaydet).', 'error');
+    return;
+  }
+  syncFromGSheets();
+}
+
+async function syncToGSheets() {
+  if (!gsheetConfig.webappUrl) {
+    showToast('Önce Web App URL\'sini girin.', 'error');
+    return;
+  }
+  if (records.length === 0) {
+    showToast('Senkronize edilecek kayıt yok.', 'error');
+    return;
+  }
+  const btn = document.getElementById('syncUploadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Senkronize ediliyor...';
+  try {
+    const res = await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveAll', records })
+    });
+    const data = await res.json();
+    if (data.success) {
+      gsheetConfig.lastSync = new Date().toISOString();
+      saveGSheetConfig();
+      updateSyncUI();
+      showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
+    } else {
+      showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (err) {
+    showToast('Bağlantı hatası: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Yerel → Google Sheet (Yedekle)';
+  }
+}
+
+async function syncFromGSheets() {
+  if (!gsheetConfig.webappUrl) {
+    showToast('Önce Web App URL\'sini girin.', 'error');
+    return;
+  }
+  const btn = document.getElementById('syncDownloadBtn');
+  btn.disabled = true;
+  btn.textContent = 'İndiriliyor...';
+  try {
+    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
+    const data = await res.json();
+    if (data.data) {
+      const cloudRecords = data.data
+        .filter(r => r.id)
+        .map(r => ({
+          id: Number(r.id) || Date.now(),
+          tarih: normalizeDate(r.tarih),
+          yemek: Number(r.yemek) || 0,
+          fire: Number(r.fire) || 0,
+          turnike: Number(r.turnike) || 0,
+          personel: Number(r.personel) || 0,
+          toplam: Number(r.toplam) || 0,
+          porsiyon: Number(r.porsiyon) || 0,
+          atik: Number(r.atik) || 0,
+          ogrenci: Number(r.ogrenci) || 0
+        }));
+      if (cloudRecords.length === 0) {
+        showToast('Google Sheet\'te kayıt bulunamadı.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
+        return;
+      }
+      records = cloudRecords;
+      records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+      saveData();
+      filteredRecords = [...records];
+      renderAll();
+      drawAllCharts();
+      gsheetConfig.lastSync = new Date().toISOString();
+      saveGSheetConfig();
+      updateSyncUI();
+      showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+    } else {
+      showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
+    }
+  } catch (err) {
+    showToast('Bağlantı hatası: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
+  }
+}
+
+async function testGSheetConnection() {
+  try {
+    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll', { method: 'GET', mode: 'cors' });
+    if (res.ok) {
+      document.getElementById('syncStatusLabel').textContent = 'Bağlantı başarılı';
+      document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e erişilebiliyor';
+      document.getElementById('syncStatusIcon').className = 'sync-status-icon sync-ok';
+    }
+  } catch (e) {
+    // Silent fail - user can test manually
+  }
+}
+
+// ─── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('content-' + name).classList.add('active');
+  if (name === 'charts') drawAllCharts();
+  if (name === 'report') renderReport();
+  // Menü seçilince sidebar'ı kapat
+  closeSidebar();
+  // Sayfa başlığını güncelle
+  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor' };
+  document.getElementById('pageTitle').textContent = labels[name] || name;
+}
+
+// ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.body.classList.toggle('sidebar-open');
+  if (window.innerWidth < 600) {
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+  }
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.body.classList.remove('sidebar-open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+// Ana içeriğe tıklayınca sidebar'ı kapat
+document.querySelector('.main-content').addEventListener('click', function(e) {
+  if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
+});
+
+// ─── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(id = null) {
+  editingId = id;
+  formModified = false;
+  const overlay = document.getElementById('modalOverlay');
+  const title = document.getElementById('modalTitle');
+  const submitBtn = document.getElementById('formSubmitBtn');
+
+  document.getElementById('entryForm').reset();
+
+  if (id !== null) {
+    const rec = records.find(r => r.id === id);
+    if (!rec) return;
+    title.textContent = 'Kaydı Düzenle';
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Güncelle`;
+    populateForm(rec);
+  } else {
+    title.textContent = 'Yeni Kayıt Ekle';
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
+    const now = new Date();
+    document.getElementById('fTarih').value = now.toISOString().split('T')[0];
+  }
+
+  // Form değişiklik izleme
+  document.querySelectorAll('#entryForm input').forEach(el => {
+    el.addEventListener('input', () => { formModified = true; }, { once: true });
+  });
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  if (formModified && !confirm('Kaydedilmemiş değişiklikler var. Yine de kapatmak istiyor musunuz?')) return;
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  editingId = null;
+  formModified = false;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function populateForm(rec) {
+  document.getElementById('fTarih').value = rec.tarih;
+  document.getElementById('fYemek').value = rec.yemek;
+  document.getElementById('fFire').value = rec.fire;
+  document.getElementById('fTurnike').value = rec.turnike;
+  document.getElementById('fPersonel').value = rec.personel;
+  document.getElementById('fToplam').value = rec.toplam;
+  document.getElementById('fPorsiyon').value = rec.porsiyon;
+  document.getElementById('fOgrenci').value = rec.ogrenci;
+  // Atik alanını formul ile yeniden hesapla - eski manuel değer yerine
+  autoCalcAtik();
+}
+
+// ─── AUTO CALC ─────────────────────────────────────────────────────────────────
+function autoCalc() {
+  const yemek = parseFloat(document.getElementById('fYemek').value) || 0;
+  document.getElementById('fFire').value = (yemek * 0.1).toFixed(2);
+  autoCalcGecis();
+}
+
+function autoCalcGecis() {
+  const turnike = parseInt(document.getElementById('fTurnike').value) || 0;
+  const personel = parseInt(document.getElementById('fPersonel').value) || 0;
+  // Toplam Geçiş = Turnike + Personel (iç personel dahil, öğrenci ayrı kolon)
+  document.getElementById('fToplam').value = turnike + personel;
+  autoCalcAtik();
+}
+
+function autoCalcAtik() {
+  const yemek   = parseFloat(document.getElementById('fYemek').value)  || 0;
+  const fire    = parseFloat(document.getElementById('fFire').value)   || 0;
+  const toplam  = parseInt(document.getElementById('fToplam').value)   || 0;
+  const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
+  // Formül: ((retilen Yemek - %10 Fire) - Toplam Geçiş) x Porsiyon / 1000
+  // Örnek: ((550 - 55) - 443) x 400 / 1000 = 20,80 kg
+  const atik = ((yemek - fire) - toplam) * porsiyon / 1000;
+  document.getElementById('fAtik').value = atik.toFixed(2);
+}
+
+// ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
+function saveRecord(e) {
+  e.preventDefault();
+
+  // Form doğrulama
+  const fYemek = document.getElementById('fYemek');
+  const fTurnike = document.getElementById('fTurnike');
+  const fPersonel = document.getElementById('fPersonel');
+  const fPorsiyon = document.getElementById('fPorsiyon');
+  const fOgrenci = document.getElementById('fOgrenci');
+  const errors = [];
+  if (parseFloat(fYemek.value) < 0) errors.push('Üretilen yemek sayısı negatif olamaz.');
+  if (parseInt(fTurnike.value) < 0) errors.push('Turnike geçiş sayısı negatif olamaz.');
+  if (parseInt(fPersonel.value) < 0) errors.push('Personel sayısı negatif olamaz.');
+  if (parseInt(fPorsiyon.value) < 0) errors.push('Porsiyon miktarı negatif olamaz.');
+  if (parseInt(fOgrenci.value) < 0) errors.push('Öğrenci sayısı negatif olamaz.');
+  if (errors.length > 0) {
+    showToast(errors.join(' '), 'error');
+    return;
+  }
+
+  const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
+  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;  // autoCalc tarafından hesaplanan değer
+  const turnike = parseInt(document.getElementById('fTurnike').value)   || 0;
+  const personel = parseInt(document.getElementById('fPersonel').value) || 0;
+  const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
+  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;  // autoCalcGecis tarafından hesaplanan değer
+  const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
+  // Formül: ((retilen Yemek - %10 Fire) - Toplam Geçiş) x Porsiyon / 1000
+  const atik = ((yemek - fire) - toplam) * porsiyon / 1000;
+
+  const rec = {
+    tarih: document.getElementById('fTarih').value,
+    yemek,
+    fire,
+    turnike,
+    personel,
+    toplam,
+    porsiyon,
+    atik,
+    ogrenci,
+    id: editingId !== null ? editingId : Date.now()
+  };
+
+  if (editingId !== null) {
+    const idx = records.findIndex(r => r.id === editingId);
+    if (idx !== -1) records[idx] = rec;
+    showToast('Kayıt başarıyla güncellendi.', 'success');
+  } else {
+    records.push(rec);
+    showToast('Yeni kayıt başarıyla eklendi.', 'success');
+  }
+
+  // Sort by date desc
+  records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  saveData();
+  filteredRecords = [...records];
+  renderAll();
+  drawAllCharts();
+  closeModal();
+}
+
+// ─── DELETE ────────────────────────────────────────────────────────────────────
+function deleteRecord(id) {
+  if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  records = records.filter(r => r.id !== id);
+  selectedIds.delete(id);
+  saveData();
+  filteredRecords = [...records];
+  renderAll();
+  drawAllCharts();
+  showToast('Kayıt silindi.', 'success');
+}
+
+// ─── FILTER ────────────────────────────────────────────────────────────────────
+function filterRecords() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const start = document.getElementById('filterStart').value;
+  const end = document.getElementById('filterEnd').value;
+
+  filteredRecords = records.filter(r => {
+    const matchQuery = !query ||
+      r.tarih.includes(query) ||
+      String(r.yemek).includes(query) ||
+      String(r.atik).includes(query) ||
+      String(r.ogrenci).includes(query);
+    const matchStart = !start || r.tarih >= start;
+    const matchEnd = !end || r.tarih <= end;
+    return matchQuery && matchStart && matchEnd;
+  });
+
+  currentPage = 1;
+  renderRecordsTable();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterStart').value = '';
+  document.getElementById('filterEnd').value = '';
+  filteredRecords = [...records];
+  currentPage = 1;
+  renderRecordsTable();
+}
+
+// ─── PAGINATION ────────────────────────────────────────────────────────────────
+function getPaginatedRecords() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  return filteredRecords.slice(start, start + PAGE_SIZE);
+}
+
+function totalPages() {
+  return Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+}
+
+function goToPage(p) {
+  if (p < 1 || p > totalPages()) return;
+  currentPage = p;
+  renderRecordsTable();
+}
+
+function renderPagination() {
+  const container = document.getElementById('pagination');
+  if (!container) return;
+  const tp = totalPages();
+  if (tp <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+  let html = '';
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>&#171;</button>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&#8249;</button>`;
+  html += `<span class="page-info">${currentPage} / ${tp}</span>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === tp ? 'disabled' : ''}>&#8250;</button>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${tp})" ${currentPage === tp ? 'disabled' : ''}>&#187;</button>`;
+  html += `<span class="page-total">${filteredRecords.length} kayıt</span>`;
+  container.innerHTML = html;
+}
+
+// ─── BULK DELETE ───────────────────────────────────────────────────────────────
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  renderRecordsTable();
+}
+
+function toggleSelectAll() {
+  const page = getPaginatedRecords();
+  const allSelected = page.every(r => selectedIds.has(r.id));
+  if (allSelected) {
+    page.forEach(r => selectedIds.delete(r.id));
+  } else {
+    page.forEach(r => selectedIds.add(r.id));
+  }
+  renderRecordsTable();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const count = document.getElementById('bulkCount');
+  if (!bar || !count) return;
+  if (selectedIds.size > 0) {
+    bar.style.display = 'flex';
+    count.textContent = selectedIds.size + ' seçili';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function deleteSelected() {
+  if (selectedIds.size === 0) {
+    showToast('Seçili kayıt yok.', 'error');
+    return;
+  }
+  if (!confirm(`Seçili ${selectedIds.size} kaydı silmek istediğinize emin misiniz?`)) return;
+  records = records.filter(r => !selectedIds.has(r.id));
+  selectedIds.clear();
+  saveData();
+  filteredRecords = [...records];
+  currentPage = 1;
+  renderAll();
+  drawAllCharts();
+  showToast('Seçili kayıtlar silindi.', 'success');
+}
+
+// ─── IMPORT ────────────────────────────────────────────────────────────────────
+function triggerImport() {
+  document.getElementById('importInput').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const content = ev.target.result;
+    try {
+      let imported = [];
+      if (file.name.endsWith('.json')) {
+        imported = JSON.parse(content);
+        if (!Array.isArray(imported)) imported = [imported];
+      } else if (file.name.endsWith('.csv')) {
+        const lines = content.split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
+        const headers = lines[0].split(';').map(h => h.replace(/^"|"$/g, '').trim());
+        const fieldMap = {
+          'Tarih': 'tarih', 'Üretilen Yemek Sayısı': 'yemek', '%10 Fire': 'fire',
+          'Turnike Geçiş Sayısı': 'turnike', 'Yemekhanede Çalışan Personel Sayısı': 'personel',
+          'Toplam Geçiş': 'toplam', 'Porsiyon Miktarı (gr)': 'porsiyon',
+          'Atık Miktarı (kg)': 'atik', 'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci',
+          'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
+          'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
+          'atik': 'atik', 'ogrenci': 'ogrenci'
+        };
+        for (let i = 1; i < lines.length; i++) {
+          const vals = lines[i].split(';').map(v => v.replace(/^"|"$/g, '').trim());
+          const row = {};
+          headers.forEach((h, idx) => {
+            const field = fieldMap[h] || h;
+            row[field] = vals[idx] || '';
+          });
+          if (row.tarih) {
+            row.id = Date.now() + i;
+            row.yemek = Number(row.yemek) || 0;
+            row.fire = Number(row.fire) || 0;
+            row.turnike = Number(row.turnike) || 0;
+            row.personel = Number(row.personel) || 0;
+            row.toplam = Number(row.toplam) || 0;
+            row.porsiyon = Number(row.porsiyon) || 0;
+            row.atik = Number(row.atik) || 0;
+            row.ogrenci = Number(row.ogrenci) || 0;
+            imported.push(row);
+          }
+        }
+      } else {
+        throw new Error('Desteklenen dosya türleri: .csv, .json');
+      }
+      if (imported.length === 0) {
+        showToast('İçe aktarılacak kayıt bulunamadı.', 'error');
+        return;
+      }
+      // Mevcut kayıtlara ekle (çakışma kontrolü yapmadan)
+      const existingIds = new Set(records.map(r => r.id));
+      const newRecords = imported.filter(r => r.id && !existingIds.has(r.id));
+      if (newRecords.length === 0 && imported.length > 0) {
+        // ID çakışması varsa yeni ID ata
+        imported.forEach(r => { r.id = Date.now() + Math.floor(Math.random() * 10000); });
+        newRecords.push(...imported);
+      }
+      records.push(...newRecords);
+      records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+      saveData();
+      filteredRecords = [...records];
+      renderAll();
+      drawAllCharts();
+      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+    } catch (err) {
+      showToast('İçe aktarma hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  e.target.value = '';
+}
+
+// ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
+function clearAllData() {
+  if (records.length === 0) {
+    showToast('Silinecek kayıt yok.', 'error');
+    return;
+  }
+  if (!confirm('TÜM kayıtları silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!')) return;
+  if (!confirm('Son bir kez daha: Tüm veriler silinsin mi?')) return;
+  records = [];
+  filteredRecords = [];
+  selectedIds.clear();
+  currentPage = 1;
+  saveData();
+  renderAll();
+  drawAllCharts();
+  showToast('Tüm kayıtlar silindi.', 'success');
+}
+
+function exportDataJSON() {
+  if (records.length === 0) {
+    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON dosyası indirildi.', 'success');
+}
+
+function exportDataSettings() {
+  const settings = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    records: records,
+    gsheetConfig: gsheetConfig
+  };
+  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `atik_kontrol_yedek_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('Tüm veriler (ayarlar dahil) dışa aktarıldı.', 'success');
+}
+
+function importFullBackup() {
+  document.getElementById('importBackupInput').click();
+}
+
+function handleFullBackupImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.records) {
+        showToast('Geçersiz yedek dosyası.', 'error');
+        return;
+      }
+      if (!confirm(`${data.records.length} kayıt içe aktarılsın mı? Mevcut kayıtlar korunacak.`)) return;
+      const existingIds = new Set(records.map(r => r.id));
+      const newRecords = data.records.filter(r => r.id && !existingIds.has(r.id));
+      records.push(...newRecords);
+      records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+      if (data.gsheetConfig && data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
+        gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
+        saveGSheetConfig();
+      }
+      saveData();
+      filteredRecords = [...records];
+      renderAll();
+      drawAllCharts();
+      updateSyncUI();
+      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+    } catch (err) {
+      showToast('Yedek yükleme hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  e.target.value = '';
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderLastRecordsTable();
+  renderRecordsTable();
+  renderReport();
+}
+
+function renderKPIs() {
+  const n = records.length;
+  document.getElementById('kpiTotalRecords').textContent = n;
+
+  if (n === 0) {
+    document.getElementById('kpiAvgAtik').textContent = '0';
+    document.getElementById('kpiLastGecis').textContent = '0';
+    document.getElementById('kpiTotalAtik').textContent = '0';
+    return;
+  }
+
+  const totalAtik = records.reduce((s, r) => s + r.atik, 0);
+  document.getElementById('kpiAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  document.getElementById('kpiLastGecis').textContent = records[0].toplam.toLocaleString('tr-TR');
+  document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function renderLastRecordsTable() {
+  const last5 = records.slice(0, 5);
+  const tbody = document.getElementById('lastRecordsTbody');
+  const table = document.getElementById('lastRecordsTable');
+  const empty = document.getElementById('emptyStateDashboard');
+  const badge = document.getElementById('lastRecordsBadge');
+
+  badge.textContent = records.length + ' kayıt';
+
+  if (last5.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  tbody.innerHTML = last5.map(r => buildRow(r, false)).join('');
+}
+
+function renderRecordsTable() {
+  const tbody = document.getElementById('recordsTbody');
+  const table = document.getElementById('recordsTable');
+  const empty = document.getElementById('emptyStateRecords');
+
+  if (filteredRecords.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    renderPagination();
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  const page = getPaginatedRecords();
+  tbody.innerHTML = page.map(r => buildRow(r, true)).join('');
+
+  // Select-all checkbox durumu
+  const selectAll = document.getElementById('selectAll');
+  if (selectAll) {
+    const allSelected = page.every(r => selectedIds.has(r.id));
+    selectAll.checked = allSelected;
+    selectAll.indeterminate = page.some(r => selectedIds.has(r.id)) && !allSelected;
+  }
+
+  updateBulkBar();
+  renderPagination();
+}
+
+function buildRow(r, showActions) {
+  const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  }) : '—';
+
+  const checkbox = showActions ? `
+    <td>
+      <input type="checkbox" class="row-checkbox" ${selectedIds.has(r.id) ? 'checked' : ''}
+        onchange="toggleSelect(${r.id})" />
+    </td>` : '';
+
+  const actions = showActions ? `
+    <td>
+      <div style="display:flex;gap:0.4rem">
+        <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">✏️</button>
+        <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">🗑️</button>
+      </div>
+    </td>` : '';
+
+  return `<tr class="${selectedIds.has(r.id) ? 'row-selected' : ''}">
+    ${checkbox}
+    <td>${dateStr}</td>
+    <td>${r.yemek.toLocaleString('tr-TR')}</td>
+    <td>${r.fire.toLocaleString('tr-TR')}</td>
+    <td>${r.turnike.toLocaleString('tr-TR')}</td>
+    <td>${r.personel.toLocaleString('tr-TR')}</td>
+    <td class="td-gecis">${r.toplam.toLocaleString('tr-TR')}</td>
+    <td>${r.porsiyon.toLocaleString('tr-TR')}</td>
+    <td class="td-atik">${r.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+    <td>${r.ogrenci.toLocaleString('tr-TR')}</td>
+    ${actions}
+  </tr>`;
+}
+
+// ─── REPORT ────────────────────────────────────────────────────────────────────
+function renderReport() {
+  const n = records.length;
+
+  if (n === 0) {
+    ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
+     'rTotalGecis','rAvgPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
+     'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('reportTbody').innerHTML = '';
+    return;
+  }
+
+  const totalYemek = records.reduce((s,r) => s+r.yemek, 0);
+  const totalTurnike = records.reduce((s,r) => s+r.turnike, 0);
+  const totalPersonel = records.reduce((s,r) => s+r.personel, 0);
+  const totalGecis = records.reduce((s,r) => s+r.toplam, 0);
+  const avgPorsiyon = records.reduce((s,r) => s+r.porsiyon, 0) / n;
+  const totalAtik = records.reduce((s,r) => s+r.atik, 0);
+  const totalOgrenci = records.reduce((s,r) => s+r.ogrenci, 0);
+  const atikValues = records.map(r => r.atik);
+  const maxAtik = Math.max(...atikValues);
+  const minAtik = Math.min(...atikValues);
+  const maxAtikRec = records.find(r => r.atik === maxAtik);
+  const minAtikRec = records.find(r => r.atik === minAtik);
+  const maxAtikDate = maxAtikRec ? new Date(maxAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
+  const minAtikDate = minAtikRec ? new Date(minAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
+
+  // Trend: son 7 gün vs önceki 7 gün
+  const sortedByDate = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  const last7 = sortedByDate.slice(0, 7);
+  const prev7 = sortedByDate.slice(7, 14);
+  const avgAtikLast7 = last7.length ? last7.reduce((s, r) => s + r.atik, 0) / last7.length : 0;
+  const avgAtikPrev7 = prev7.length ? prev7.reduce((s, r) => s + r.atik, 0) / prev7.length : 0;
+  const avgGecisLast7 = last7.length ? last7.reduce((s, r) => s + r.toplam, 0) / last7.length : 0;
+  const avgGecisPrev7 = prev7.length ? prev7.reduce((s, r) => s + r.toplam, 0) / prev7.length : 0;
+  const trendAtik = avgAtikPrev7 > 0 ? ((avgAtikLast7 - avgAtikPrev7) / avgAtikPrev7 * 100).toFixed(1) : 0;
+  const trendGecis = avgGecisPrev7 > 0 ? ((avgGecisLast7 - avgGecisPrev7) / avgGecisPrev7 * 100).toFixed(1) : 0;
+
+  // Haftalık Geçiş Hesaplama
+  const weeklyGecis = {};
+  records.forEach(r => {
+    const d = new Date(r.tarih + 'T00:00:00');
+    // Haftanın başını (Pazartesi) bul
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d);
+    monday.setDate(diff);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    const format = (date) => date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+    const weekLabel = `${format(monday)} - ${format(sunday)}`;
+    weeklyGecis[weekLabel] = (weeklyGecis[weekLabel] || 0) + r.toplam;
+  });
+
+  let maxWeekLabel = '—';
+  let maxWeekVal = 0;
+  for (const [w, val] of Object.entries(weeklyGecis)) {
+    if (val > maxWeekVal) {
+      maxWeekVal = val;
+      maxWeekLabel = w;
+    }
+  }
+
+  document.getElementById('rTotalKayit').textContent = n;
+  document.getElementById('rTotalYemek').textContent = totalYemek.toLocaleString('tr-TR');
+  document.getElementById('rTotalFireKar').textContent = (totalYemek * 0.1).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  document.getElementById('rTotalYemekSonrasi').textContent = (totalYemek * 0.9).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  document.getElementById('rTotalTurnike').textContent = totalTurnike.toLocaleString('tr-TR');
+  document.getElementById('rTotalGecis').textContent = totalGecis.toLocaleString('tr-TR');
+  document.getElementById('rAvgPorsiyon').textContent = avgPorsiyon.toFixed(0) + ' gr';
+  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Geçiş)</span>` : '—';
+  document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
+  document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
+  document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
+  document.getElementById('rMaxAtik').innerHTML = `${maxAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${maxAtikDate}</span>`;
+  document.getElementById('rMinAtik').innerHTML = `${minAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${minAtikDate}</span>`;
+
+  // Trend
+  const trendAtikEl = document.getElementById('rTrendAtik');
+  const trendGecisEl = document.getElementById('rTrendGecis');
+  if (trendAtikEl) {
+    const sign = trendAtik > 0 ? '↑' : trendAtik < 0 ? '↓' : '→';
+    const cls = trendAtik > 0 ? 'trend-up' : trendAtik < 0 ? 'trend-down' : 'trend-flat';
+    trendAtikEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendAtik)}</span><span class="report-subdate">son 7 kayıt / önceki 7</span>`;
+  }
+  if (trendGecisEl) {
+    const sign = trendGecis > 0 ? '↑' : trendGecis < 0 ? '↓' : '→';
+    const cls = trendGecis > 0 ? 'trend-up' : trendGecis < 0 ? 'trend-down' : 'trend-flat';
+    trendGecisEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendGecis)}</span><span class="report-subdate">son 7 kayıt / önceki 7</span>`;
+  }
+
+  const reportTbody = document.getElementById('reportTbody');
+  reportTbody.innerHTML = records.map(r => buildRow(r, false)).join('');
+}
+
+// ─── CHART UTILITY ───────────────────────────────────────────────────────────
+function fmt(v) {
+  // Trailing zero'ları at, tam sayıysa .00 gösterme
+  return v.toFixed(2).replace(/\.?0+$/, '');
+}
+
+// ─── CHARTS ────────────────────────────────────────────────────────────────────
+// Pure canvas chart renderer (no external dependencies)
+
+let chartInstances = {};
+
+function renderChartYearFilter() {
+  const container = document.getElementById('chartYearFilter');
+  if (!container) return;
+  const years = getAvailableYears();
+  if (years.length === 0) { container.innerHTML = ''; return; }
+  let html = '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">Tümü</button>';
+  years.forEach(y => {
+    html += '<button class="year-btn' + (chartYearFilter === String(y) ? ' active' : '') + '" data-year="' + y + '" onclick="setChartYear(\'' + y + '\')">' + y + '</button>';
+  });
+  container.innerHTML = html;
+}
+
+function drawAllCharts() {
+  renderChartYearFilter();
+
+  // Yıl filtresi uygula
+  let chartRecords = records;
+  if (chartYearFilter !== 'all') {
+    chartRecords = records.filter(r => {
+      if (!r.tarih) return false;
+      const y = new Date(r.tarih + 'T00:00:00').getFullYear();
+      return y === Number(chartYearFilter);
+    });
+  }
+
+  if (chartRecords.length === 0) {
+    ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'block';
+    });
+    ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasAtikOran','canvasOgrenci'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    return;
+  }
+
+  // Show canvases, hide empties
+  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasAtikOran','canvasOgrenci'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
+
+  const sorted = [...chartRecords].sort((a,b) => new Date(a.tarih) - new Date(b.tarih));
+
+  // Aylık Gruplandırma (önce hesapla ki tüm grafikler kullanabilsin)
+  const monthlyData = {};
+  sorted.forEach(r => {
+    const date = new Date(r.tarih + 'T00:00:00');
+    const monthKey = (date.getMonth() + 1) + '/' + date.getFullYear();
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0 };
+    }
+    monthlyData[monthKey].yemek += r.yemek;
+    monthlyData[monthKey].toplam += r.toplam;
+    monthlyData[monthKey].atik += r.atik;
+    monthlyData[monthKey].turnike += r.turnike;
+    monthlyData[monthKey].ogrenci += r.ogrenci;
+  });
+
+  const monthLabels = Object.keys(monthlyData);
+
+  // Tüm ayları kapsayan etiketler (veri olmayan aylar dahil)
+  const chartYears = chartYearFilter !== 'all'
+    ? [Number(chartYearFilter)]
+    : [...new Set(sorted.map(r => new Date(r.tarih + 'T00:00:00').getFullYear()))].sort();
+  let allMonthLabels = [];
+  chartYears.forEach(y => {
+    for (let m = 1; m <= 12; m++) allMonthLabels.push(m + '/' + y);
+  });
+  // Varsayılan: veri varsa onu kullan, yoksa 0
+  const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
+
+  // Aylık Atık (canvasAtik) — tüm 12 ay göster
+  drawBarChart('canvasAtik', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
+  ]);
+
+  drawBarChart('canvasYemek', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim Sayısı' }
+  ]);
+
+  drawBarChart('canvasTurnike', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22c55e', label: 'Aylık Turnike Geçişi' }
+  ]);
+
+  drawBarChart('canvasAylik', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#14b8a6', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
+  ]);
+
+  // Aylık Atık Oranı % = (aylık atik / aylık yemek) * 100
+  const aylikOran = allMonthLabels.map(m => {
+    const yemek = getMonthVal(m, 'yemek');
+    const atik = getMonthVal(m, 'atik');
+    return yemek > 0 ? (atik / yemek * 100) : 0;
+  });
+  const totalYemekSum = sorted.reduce((s, r) => s + r.yemek, 0);
+  const totalAtikSum = sorted.reduce((s, r) => s + r.atik, 0);
+  const avgOran = totalYemekSum > 0 ? (totalAtikSum / totalYemekSum * 100) : 0;
+
+  drawBarChart('canvasAtikOran', allMonthLabels, [
+    { data: aylikOran, color: '#ef4444', label: 'Aylık Atık Oranı %' }
+  ]);
+
+  drawBarChart('canvasOgrenci', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }
+  ]);
+
+  // Chart tooltip'leri kur
+  setupChartTooltip('canvasAtik', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
+  ]);
+  setupChartTooltip('canvasYemek', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim Sayısı' }
+  ]);
+  setupChartTooltip('canvasTurnike', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylık Turnike Geçişi' }
+  ]);
+  setupChartTooltip('canvasAylik', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
+  ]);
+  setupChartTooltip('canvasAtikOran', allMonthLabels, [
+    { data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }
+  ]);
+  setupChartTooltip('canvasOgrenci', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }
+  ]);
+}
+
+function getCanvasCtx(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+  const parent = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const w = parent.offsetWidth || 400;
+  const h = parent.offsetHeight || 280;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas._w = w;
+  canvas._h = h;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return ctx;
+}
+function getGridColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || 'rgba(255,255,255,0.05)';
+}
+function cssVar(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+function darkenColor(hex, amount) {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xff) - amount);
+  const b = Math.max(0, (num & 0xff) - amount);
+  return `rgb(${r},${g},${b})`;
+}
+function hexToRgba(hex, a) {
+  const num = parseInt(hex.slice(1), 16);
+  const r = num >> 16, g = (num >> 8) & 0xff, b = num & 0xff;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ─── CHART TOOLTIP ────────────────────────────────────────────────────────────
+// Her canvas için tooltip metaverisini sakla
+const chartMetaMap = new Map();
+
+function setupChartTooltip(canvasId, labels, datasets) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const tipId = canvasId + 'Tooltip';
+  let tip = document.getElementById(tipId);
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = tipId;
+    tip.className = 'chart-tooltip';
+    canvas.parentElement.appendChild(tip);
+  }
+  chartMetaMap.set(canvasId, { labels, datasets, tip });
+
+  // Mousemove'i ilk seferde bağla
+  if (!canvas.dataset.tooltipInit) {
+    canvas.dataset.tooltipInit = '1';
+    canvas.addEventListener('mousemove', function(e) {
+      const meta = chartMetaMap.get(this.id);
+      if (!meta || !meta.labels.length) return;
+      const rect = this.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const W = this._w;
+      const H = this._h;
+      const pad = { top: 28, right: 24, bottom: 48, left: 64 };
+      const cW = W - pad.left - pad.right;
+      const n = meta.labels.length;
+      // Grafik alanı dışı (üst/alt boşluk)? Gizle
+      if (my < pad.top || my > H - pad.bottom) { meta.tip.style.display = 'none'; return; }
+      const groupW = cW / n;
+      // Hangi group? En yakın grubu bul, yuvarla
+      const rawIdx = (mx - pad.left) / groupW;
+      const gi = Math.round(rawIdx);
+      if (gi < 0 || gi >= n) { meta.tip.style.display = 'none'; return; }
+      // Her group için geçerli bölge: group'ün %80'i (kenarlarda biraz boşluk)
+      const groupCenter = pad.left + gi * groupW + groupW / 2;
+      if (Math.abs(mx - groupCenter) > groupW * 0.5) { meta.tip.style.display = 'none'; return; }
+      // Değerleri topla
+      const label = meta.labels[gi];
+      const lines = meta.datasets.map(d => {
+        const val = d.data[gi];
+        const text = val !== undefined ? fmt(val) : '—';
+        return `<span style="color:${d.color}">●</span> ${d.label}: <strong>${text}</strong>`;
+      });
+      meta.tip.innerHTML = `<div class="tip-label">${label}</div>` + lines.join('<br>');
+      // Tooltip konumu
+      let tipX = e.clientX - rect.left + 12;
+      let tipY = e.clientY - rect.top - 10;
+      // Taşma kontrolü
+      const tipW = meta.tip.offsetWidth || 120;
+      if (tipX + tipW > W - 8) tipX = e.clientX - rect.left - tipW - 8;
+      meta.tip.style.left = tipX + 'px';
+      meta.tip.style.top = tipY + 'px';
+      meta.tip.style.display = 'block';
+    });
+    canvas.addEventListener('mouseleave', function() {
+      const meta = chartMetaMap.get(this.id);
+      if (meta) meta.tip.style.display = 'none';
+    });
+  }
+}
+
+function drawLineChart(canvasId, labels, datasets) {
+  const ctx = getCanvasCtx(canvasId);
+  if (!ctx) return;
+  const W = ctx.canvas._w;
+  const H = ctx.canvas._h;
+  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Gather all values
+  const allVals = datasets.flatMap(d => d.data);
+  const minV = Math.min(...allVals, 0);
+  const maxV = Math.max(...allVals, 1);
+  const range = maxV - minV || 1;
+
+  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
+
+  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
+  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
+
+  // Grid
+  const gridLines = 5;
+  ctx.strokeStyle = getGridColor();
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = pad.top + (i / gridLines) * cH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+
+    const val = maxV - (i / gridLines) * range;
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.6)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(val >= 100 ? 0 : 1), pad.left - 6, y + 4);
+  }
+
+  // Datasets
+  datasets.forEach(ds => {
+    if (ds.data.length === 0) return;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, ds.color + '30');
+    grad.addColorStop(1, ds.color + '00');
+
+    ctx.beginPath();
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(toX(ds.data.length - 1), H - pad.bottom);
+    ctx.lineTo(toX(0), H - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = ds.color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Dots
+    ds.data.forEach((v, i) => {
+      const x = toX(i), y = toY(v);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = ds.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0a0f1e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  });
+
+  // X labels
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(labels.length / 10));
+  // Yıl ortalamak için grup bul
+  const yearGroups = {};
+  labels.forEach((l, i) => {
+    const parts = l.split('/');
+    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+      yearGroups[parts[1]].push(i);
+    }
+  });
+  labels.forEach((l, i) => {
+    if (i % step === 0 || i === labels.length - 1) {
+      const x = toX(i);
+      const parts = l.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+        ctx.fillText(parts[0], x, H - pad.bottom + 12);
+      } else {
+        ctx.fillText(l, x, H - pad.bottom + 16);
+      }
+    }
+  });
+  // Yılları ortala
+  ctx.font = '8px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+  ctx.textAlign = 'center';
+  for (const [year, indices] of Object.entries(yearGroups)) {
+    const firstX = toX(indices[0]);
+    const lastX = toX(indices[indices.length - 1]);
+    const cx = (firstX + lastX) / 2;
+    ctx.fillText(year, cx, H - pad.bottom + 24);
+  }
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+
+  // Legend
+  const legendX = pad.left;
+  const legendY = 8;
+  datasets.forEach((ds, i) => {
+    const x = legendX + i * 130;
+    ctx.fillStyle = ds.color;
+    ctx.fillRect(x, legendY, 20, 3);
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(226,232,240,0.8)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ds.label, x + 24, legendY + 6);
+  });
+}
+
+function drawBarChart(canvasId, labels, datasets) {
+  const ctx = getCanvasCtx(canvasId);
+  if (!ctx) return;
+  const W = ctx.canvas._w;
+  const H = ctx.canvas._h;
+  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const allVals = datasets.flatMap(d => d.data);
+  const maxV = Math.max(...allVals, 1);
+  const n = labels.length;
+  const numDs = datasets.length;
+  const groupW = cW / n;
+  const barW = Math.max(4, (groupW * 0.85) / numDs);
+  const barGap = barW * 0.12;
+
+  function toY(v) { return pad.top + cH - (v / maxV) * cH; }
+
+  // Grid
+  const gridLines = 5;
+  ctx.strokeStyle = getGridColor();
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = pad.top + (i / gridLines) * cH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+
+    const val = maxV - (i / gridLines) * maxV;
+    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
+  }
+
+  // Bars
+  datasets.forEach((ds, di) => {
+    ds.data.forEach((v, gi) => {
+      const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
+      const x = groupStart + di * (barW + barGap);
+      const y = toY(v);
+      const barH = pad.top + cH - y;
+
+      // Gölge + gradient
+      ctx.shadowColor = ds.color + '40';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+
+      const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+      grad.addColorStop(0, ds.color);
+      grad.addColorStop(1, darkenColor(ds.color, 25));
+      ctx.fillStyle = grad;
+
+      const r = Math.min(6, barW / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + barW - r, y);
+      ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+      ctx.lineTo(x + barW, y + barH);
+      ctx.lineTo(x, y + barH);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gölge sıfırla
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Parlak üst çizgi
+      ctx.fillStyle = hexToRgba(ds.color, 0.35);
+      ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
+
+      // Değeri çubuğun içine yaz
+      if (barW >= 10) { 
+        ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
+        const textVal = v !== undefined ? fmt(v) : '—';
+        
+        let fontSize = 13;
+        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+        let textWidth = ctx.measureText(textVal).width;
+
+        // Yatay sığmıyorsa fontu küçült (minimum 9px'e kadar)
+        while (textWidth > barW - 2 && fontSize > 9) {
+          fontSize--;
+          ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+          textWidth = ctx.measureText(textVal).width;
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+
+        // Hafif gölge efekti ile yazı
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1;
+
+        // Eğer çubuk yeterince yüksekse içine, kısaysa dışına üstüne yaz
+        if (barH > fontSize + 10) {
+          ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
+        } else {
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
+          ctx.fillText(textVal, x + barW / 2, y - 6);
+        }
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+      }
+    });
+  });
+
+  // X labels
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+  ctx.font = '10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(labels.length / 10));
+  // Yıl ortalamak için grup bul
+  const yearGroups = {};
+  labels.forEach((l, i) => {
+    const parts = l.split('/');
+    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+      yearGroups[parts[1]].push(i);
+    }
+  });
+  labels.forEach((l, i) => {
+    if (i % step === 0 || i === labels.length - 1) {
+      const x = pad.left + i * groupW + groupW / 2;
+      const parts = l.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+        ctx.fillText(parts[0], x, H - pad.bottom + 12);
+      } else {
+        ctx.fillText(l, x, H - pad.bottom + 16);
+      }
+    }
+  });
+  // Yılları ortala
+  ctx.font = '8px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+  ctx.textAlign = 'center';
+  for (const [year, indices] of Object.entries(yearGroups)) {
+    const firstX = pad.left + indices[0] * groupW + groupW / 2;
+    const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
+    const cx = (firstX + lastX) / 2;
+    ctx.fillText(year, cx, H - pad.bottom + 24);
+  }
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+
+  // Legend
+  datasets.forEach((ds, i) => {
+    const x = pad.left + i * 130;
+    const y = 10;
+    // Yuvarlak işaret
+    ctx.beginPath();
+    ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
+    ctx.fillStyle = ds.color;
+    ctx.fill();
+    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ds.label, x + 18, y + 9);
+  });
+}
+
+// Redraw charts on window resize
+window.addEventListener('resize', () => {
+  if (document.getElementById('content-charts').classList.contains('active')) {
+    drawAllCharts();
+  }
+});
+
+// ─── EXPORT CSV ────────────────────────────────────────────────────────────────
+function exportData() {
+  if (records.length === 0) {
+    showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
+    return;
+  }
+
+  const headers = [
+    'Tarih',
+    'Üretilen Yemek Sayısı',
+    '%10 Fire',
+    'Turnike Geçiş Sayısı',
+    'Yemekhanede Çalışan Personel Sayısı',
+    'Toplam Geçiş',
+    'Porsiyon Miktarı (gr)',
+    'Atık Miktarı (kg)',
+    'Yemek Hiz. Yar. Öğr. Sayısı'
+  ];
+
+  const rows = records.map(r => [
+    r.tarih,
+    r.yemek,
+    r.fire,
+    r.turnike,
+    r.personel,
+    r.toplam,
+    r.porsiyon,
+    r.atik,
+    r.ogrenci
+  ].map(v => `"${v}"`).join(';'));
+
+  const bom = '\uFEFF';
+  const csvContent = bom + [headers.join(';'), ...rows].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV dosyası indirildi.', 'success');
+}
+
+// ─── PRINT ─────────────────────────────────────────────────────────────────────
+function printReport() {
+  switchTab('report');
+  renderReport();
+  setTimeout(() => window.print(), 300);
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const icon = type === 'success'
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ─── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
+
+  // Ctrl+N: Yeni kayıt
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    if (!document.getElementById('modalOverlay').classList.contains('open')) openModal();
+  }
+  // Ctrl+F: Arama kutusuna odaklan
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) { searchInput.focus(); searchInput.select(); }
+  }
+  // Ctrl+E: CSV dışa aktar
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    exportData();
+  }
+  // ? : Kısayol yardımı
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
+    e.preventDefault();
+    const el = document.getElementById('shortcutsHelp');
+    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+  }
+});
