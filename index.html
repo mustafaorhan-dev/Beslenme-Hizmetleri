@@ -91,10 +91,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span>Rapor</span>
         </button>
-        <button class="tab-btn" id="tab-waste" onclick="switchTab('waste')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          <span>İsraf Detayı</span>
-        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="openModal()">
@@ -326,66 +322,6 @@
             <canvas id="canvasOgrenci"></canvas>
             <div class="chart-empty" id="chartOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== WASTE DETAIL TAB ===== -->
-    <div class="tab-content" id="content-waste">
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Porsiyon İsrafı Detayı</h2>
-          <div class="toolbar-actions">
-            <button class="btn btn-secondary btn-sm" onclick="exportWasteDetail()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Dışa Aktar
-            </button>
-          </div>
-        </div>
-        <div class="waste-summary" id="wasteSummary">
-          <div class="waste-summary-item">
-            <span class="report-label">Kayıtlı Yemek Türü</span>
-            <span class="report-value" id="wasteMealCount">0</span>
-          </div>
-          <div class="waste-summary-item">
-            <span class="report-label">En Çok İsraf Edilen</span>
-            <span class="report-value" id="wasteTopMeal">—</span>
-          </div>
-          <div class="waste-summary-item">
-            <span class="report-label">En Az İsraf Edilen</span>
-            <span class="report-value" id="wasteLeastMeal">—</span>
-          </div>
-          <div class="waste-summary-item">
-            <span class="report-label">Toplam İsraflı Gün</span>
-            <span class="report-value" id="wasteDays">0</span>
-          </div>
-        </div>
-        <div class="table-wrapper">
-          <div class="empty-state" id="emptyWasteDetail">
-            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
-              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
-              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <p>Kayıt girerken "Yemek Türü" seçerek israf detaylarını görüntüleyebilirsiniz.</p>
-          </div>
-          <table class="data-table" id="wasteTable" style="display:none">
-            <thead>
-              <tr>
-                <th>Yemek Türü</th>
-                <th>Kayıt Sayısı</th>
-                <th>Toplam Atık (kg)</th>
-                <th>Ort. Atık (kg)</th>
-                <th>Min Atık</th>
-                <th>Maks Atık</th>
-                <th>Toplam Atık Oranı</th>
-              </tr>
-            </thead>
-            <tbody id="wasteTbody"></tbody>
-          </table>
-        </div>
-        <div class="chart-area waste-chart-area" id="wasteChartContainer" style="height:300px;margin-top:1rem">
-          <canvas id="canvasWaste"></canvas>
-          <div class="chart-empty" id="wasteChartEmpty">Yemek türü seçili kayıt girildiğinde grafik gösterilecek</div>
         </div>
       </div>
     </div>

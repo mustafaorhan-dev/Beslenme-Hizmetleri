@@ -70,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   drawAllCharts();
   updateSyncUI();
-  renderSparklines();
-  renderCompliance();
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
   }
@@ -458,85 +456,6 @@ function renderSparklines() {
 }
 
 // ─── WASTE DETAIL ────────────────────────────────────────────────────────────
-function renderWasteDetail() {
-  const tbody = document.getElementById('wasteTbody');
-  const table = document.getElementById('wasteTable');
-  const empty = document.getElementById('emptyWasteDetail');
-  const summary = document.getElementById('wasteSummary');
-  if (!tbody) return;
-  if (records.length === 0) {
-    if (table) table.style.display = 'none';
-    if (empty) empty.style.display = 'flex';
-    if (summary) summary.style.display = 'none';
-    return;
-  }
-  if (table) table.style.display = 'table';
-  if (empty) empty.style.display = 'none';
-  if (summary) summary.style.display = 'grid';
-  // Group by yemek_adi
-  const groups = {};
-  records.forEach(r => {
-    const key = r.yemek_adi || 'Belirtilmemiş';
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(r);
-  });
-  const totalYemek = records.reduce((s, r) => s + r.yemek, 0);
-  let html = '';
-  let maxAtik = -Infinity, maxMeal = '', minAtik = Infinity, minMeal = '';
-  for (const [meal, recs] of Object.entries(groups)) {
-    const count = recs.length;
-    const totalAtik = recs.reduce((s, r) => s + r.atik, 0);
-    const avgAtik = totalAtik / count;
-    const atikVals = recs.map(r => r.atik);
-    const gMin = Math.min(...atikVals);
-    const gMax = Math.max(...atikVals);
-    const mealYemek = recs.reduce((s, r) => s + r.yemek, 0);
-    const oran = totalYemek > 0 ? (mealYemek / totalYemek * 100).toFixed(1) : '0';
-    if (totalAtik > maxAtik) { maxAtik = totalAtik; maxMeal = meal; }
-    if (totalAtik < minAtik) { minAtik = totalAtik; minMeal = meal; }
-    html += `<tr>
-      <td><span class="meal-badge">${meal}</span></td>
-      <td>${count}</td>
-      <td class="td-atik">${totalAtik.toFixed(2)} kg</td>
-      <td>${avgAtik.toFixed(2)} kg</td>
-      <td>${gMin.toFixed(2)} kg</td>
-      <td>${gMax.toFixed(2)} kg</td>
-      <td>%${oran}</td>
-    </tr>`;
-  }
-  tbody.innerHTML = html;
-  // Update summary cards
-  document.getElementById('wasteMealCount').textContent = Object.keys(groups).length;
-  document.getElementById('wasteTopMeal').textContent = maxMeal ? `${maxMeal} (${maxAtik.toFixed(1)} kg)` : '—';
-  document.getElementById('wasteLeastMeal').textContent = minMeal ? `${minMeal} (${minAtik.toFixed(1)} kg)` : '—';
-  document.getElementById('wasteDays').textContent = records.length;
-  drawWasteChart();
-}
-function drawWasteChart() {
-  const canvas = document.getElementById('wasteChart');
-  if (!canvas || records.length < 2) return;
-  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-  const labels = sorted.map(r => r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit' }) : '');
-  const atikData = sorted.map(r => r.atik);
-  drawLineChart('wasteChart', labels, [{ data: atikData, color: '#f97316', label: 'Atık (kg)' }]);
-  setupChartTooltip('wasteChart', labels, [{ data: atikData, color: '#f97316', label: 'Atık (kg)' }]);
-}
-function exportWasteDetail() {
-  if (records.length === 0) { showToast('Veri yok.', 'error'); return; }
-  const rows = records.map(r => [
-    r.tarih, r.yemek, r.atik, r.yemek > 0 ? ((r.atik/r.yemek)*100).toFixed(2) : '0.00',
-    calcDailyCarbon(r.atik).toFixed(2)
-  ].map(v => `"${v}"`).join(';'));
-  const bom = '\uFEFF';
-  const csv = bom + ['"Tarih";"Üretim";"Atık (kg)";"Atık Oranı %";"CO₂ (kg)"', ...rows].join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `atik_detay_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  showToast('Atık detay CSV indirildi.', 'success');
-}
-
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
 function exportPDF() {
   if (records.length === 0) {
@@ -604,11 +523,10 @@ function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
-  if (name === 'waste') { renderWasteDetail(); drawWasteChart(); }
   // Menü seçilince sidebar'ı kapat
   closeSidebar();
   // Sayfa başlığını güncelle
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', waste: 'Atık Detay' };
+  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
 
@@ -1077,7 +995,6 @@ function renderAll() {
   renderReport();
   renderCompliance();
   renderSparklines();
-  renderWasteDetail();
 }
 
 function renderKPIs() {
