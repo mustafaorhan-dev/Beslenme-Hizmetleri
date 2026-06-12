@@ -945,7 +945,6 @@ function handleFullBackupImport(e) {
 function renderAll() {
   renderKPIs();
   renderDataInfo();
-  renderLastRecordsTable();
   renderRecordsTable();
   renderReport();
   renderSparklines();
@@ -1039,26 +1038,6 @@ function renderComparison() {
       <span class="comparison-diff" style="color:${good ? '#10b981' : '#ef4444'};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}${it.unit}</span>
     </div>`;
   }).join('');
-}
-
-function renderLastRecordsTable() {
-  const last5 = records.slice(0, 5);
-  const tbody = document.getElementById('lastRecordsTbody');
-  const table = document.getElementById('lastRecordsTable');
-  const empty = document.getElementById('emptyStateDashboard');
-  const badge = document.getElementById('lastRecordsBadge');
-
-  badge.textContent = records.length + ' kayıt';
-
-  if (last5.length === 0) {
-    table.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-
-  empty.style.display = 'none';
-  table.style.display = 'table';
-  tbody.innerHTML = last5.map(r => buildRow(r, false)).join('');
 }
 
 function renderRecordsTable() {
