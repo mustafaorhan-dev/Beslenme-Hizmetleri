@@ -642,8 +642,14 @@ function filterRecords() {
   const end = document.getElementById('filterEnd').value;
 
   filteredRecords = records.filter(r => {
+    const tarihStr = r.tarih ? (() => {
+      const d = new Date(r.tarih + 'T00:00:00');
+      if (isNaN(d)) return r.tarih;
+      return d.toLocaleDateString('tr-TR'); // DD.MM.YYYY
+    })() : '';
     const matchQuery = !query ||
       r.tarih.includes(query) ||
+      tarihStr.includes(query) ||
       String(r.yemek).includes(query) ||
       String(r.atik).includes(query) ||
       String(r.ogrenci).includes(query) ||
