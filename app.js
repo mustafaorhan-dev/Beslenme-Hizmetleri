@@ -645,7 +645,10 @@ function filterRecords() {
     const tarihStr = r.tarih ? (() => {
       const d = new Date(r.tarih + 'T00:00:00');
       if (isNaN(d)) return r.tarih;
-      return d.toLocaleDateString('tr-TR'); // DD.MM.YYYY
+      const gun = String(d.getDate()).padStart(2, '0');
+      const ay = String(d.getMonth() + 1).padStart(2, '0');
+      const yil = d.getFullYear();
+      return [gun + '.' + ay + '.' + yil, gun + '.' + ay, gun, ay + '.' + yil, yil].join(' ');
     })() : '';
     const matchQuery = !query ||
       r.tarih.includes(query) ||
@@ -1075,11 +1078,16 @@ function renderRecordsTable() {
   if (filteredRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    document.getElementById('emptyRecordsMsg').textContent = records.length === 0
+      ? 'Gösterilecek kayıt bulunamadı.'
+      : 'Arama kriterlerine uygun kayıt bulunamadı.';
+    document.getElementById('emptyClearFilter').style.display = records.length > 0 ? 'inline-flex' : 'none';
     renderPagination();
     return;
   }
 
   empty.style.display = 'none';
+  document.getElementById('emptyClearFilter').style.display = 'none';
   table.style.display = 'table';
   const page = getPaginatedRecords();
   tbody.innerHTML = page.map(r => buildRow(r, true)).join('');

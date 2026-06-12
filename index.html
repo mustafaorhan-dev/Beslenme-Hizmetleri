@@ -245,7 +245,8 @@
               <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
               <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <p>Gösterilecek kayıt bulunamadı.</p>
+            <p id="emptyRecordsMsg">Gösterilecek kayıt bulunamadı.</p>
+            <button class="btn btn-ghost btn-sm" onclick="clearFilters()" id="emptyClearFilter" style="display:none">Filtreyi Temizle</button>
           </div>
           <div class="bulk-bar" id="bulkBar" style="display:none">
             <span id="bulkCount">0 seçili</span>
