@@ -1410,7 +1410,7 @@ function showDishDropdown(textarea) {
 
   const val = textarea.value.split('\n')[0].toLowerCase();
   const filtered = val ? list.filter(y => y.ad.toLowerCase().includes(val)) : list;
-  if (!filtered.length) { hideDishDropdown(); return; }
+  if (!filtered.length && val) { hideDishDropdown(); return; }
 
   const rect = textarea.getBoundingClientRect();
   dishSuggestionsEl.innerHTML = filtered.map(y =>
