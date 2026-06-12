@@ -461,7 +461,7 @@
       <div class="section-card">
         <div class="section-header">
           <h2 id="menuTitle">Haftalık Menü Listesi</h2>
-          <div style="display:flex;gap:0.5rem">
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="btn btn-primary btn-sm" onclick="saveWeeklyMenu()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               Kaydet
@@ -469,6 +469,10 @@
             <button class="btn btn-secondary btn-sm" onclick="clearWeeklyMenu()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
               Temizle
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="openYemekModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              Yemek Listesi
             </button>
           </div>
         </div>
@@ -493,6 +497,26 @@
 
   </main>
   </div><!-- /.app-layout -->
+
+  <!-- ===== YEMEK LISTESI MODAL ===== -->
+  <div class="modal-overlay" id="yemekModal" onclick="if(event.target===this)closeYemekModal()">
+    <div class="modal sync-panel" style="max-width:650px">
+      <div class="modal-header">
+        <h2>Yemek Listesi</h2>
+        <button class="modal-close" onclick="closeYemekModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <input type="text" id="yemekSearchInput" placeholder="Yemek adı ile ara..." style="flex:1;min-width:150px" oninput="renderYemekListesi()" />
+          <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
+        </div>
+        <div id="yemekFormContainer" style="display:none;margin-bottom:1rem"></div>
+        <div id="yemekListesiContainer"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== SYNC PANEL ===== -->
   <div class="modal-overlay" id="syncOverlay" onclick="if(event.target===this)closeSyncPanel()">

@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
   }
+  initDishAutocomplete();
 });
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -1145,6 +1146,239 @@ function buildRow(r, showActions) {
     <td>${mealBadge}</td>
     ${actions}
   </tr>`;
+}
+
+// ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
+const YEMEK_STORAGE_KEY = 'atik_kontrol_yemekler';
+
+function loadYemekler() {
+  try {
+    const stored = localStorage.getItem(YEMEK_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) { return []; }
+}
+
+function saveYemekler(list) {
+  try { localStorage.setItem(YEMEK_STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+function formatYemek(y) {
+  let s = y.ad;
+  if (y.kalori) s += ' - (' + y.kalori + ')';
+  if (y.alerjen) s += '\n' + y.alerjen;
+  return s;
+}
+
+function renderYemekListesi() {
+  const container = document.getElementById('yemekListesiContainer');
+  const list = loadYemekler();
+  const query = (document.getElementById('yemekSearchInput').value || '').toLowerCase();
+  const filtered = query ? list.filter(y => y.ad.toLowerCase().includes(query)) : list;
+
+  if (!filtered.length) {
+    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Yemek bulunamadı.</div>';
+    return;
+  }
+
+  container.innerHTML = `<table class="data-table" style="width:100%">
+    <thead><tr><th style="width:40%">Yemek Adı</th><th style="width:20%">Kalori</th><th style="width:30%">Alerjen</th><th style="width:70px">İşlem</th></tr></thead>
+    <tbody>${filtered.map(y => `<tr>
+      <td><strong>${escapeHtml(y.ad)}</strong></td>
+      <td style="font-size:0.8rem">${escapeHtml(y.kalori || '')}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted)">${escapeHtml(y.alerjen || '')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">✏️</button>
+        <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">🗑️</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+let editingYemekId = null;
+
+function showYemekForm(editId) {
+  const container = document.getElementById('yemekFormContainer');
+  let ad = '', kalori = '', alerjen = '';
+  editingYemekId = null;
+
+  if (editId) {
+    const list = loadYemekler();
+    const y = list.find(i => i.id === editId);
+    if (y) { ad = y.ad; kalori = y.kalori || ''; alerjen = y.alerjen || ''; editingYemekId = editId; }
+  }
+
+  container.innerHTML = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
+    <div style="flex:2;min-width:140px">
+      <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek Adı</label>
+      <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: ŞEHRIYE ÇORBASI" style="width:100%" />
+    </div>
+    <div style="flex:1;min-width:100px">
+      <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Kalori</label>
+      <input type="text" id="yf_kalori" value="${escapeHtml(kalori)}" placeholder="Örn: 160 KCAL" style="width:100%" />
+    </div>
+    <div style="flex:1;min-width:120px">
+      <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Alerjen</label>
+      <input type="text" id="yf_alerjen" value="${escapeHtml(alerjen)}" placeholder="Örn: Gluten İçeren Tahıllar" style="width:100%" />
+    </div>
+    <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
+      <button class="btn btn-primary btn-sm" onclick="saveYemekForm()">Kaydet</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekFormContainer').style.display='none'">İptal</button>
+    </div>
+  </div>`;
+  container.style.display = 'block';
+  document.getElementById('yf_ad').focus();
+}
+
+function saveYemekForm() {
+  const ad = document.getElementById('yf_ad').value.trim();
+  if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
+  const kalori = document.getElementById('yf_kalori').value.trim();
+  const alerjen = document.getElementById('yf_alerjen').value.trim();
+  let list = loadYemekler();
+
+  if (editingYemekId) {
+    const y = list.find(i => i.id === editingYemekId);
+    if (y) { y.ad = ad; y.kalori = kalori; y.alerjen = alerjen; }
+  } else {
+    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), ad, kalori, alerjen });
+  }
+
+  saveYemekler(list);
+  document.getElementById('yemekFormContainer').style.display = 'none';
+  editingYemekId = null;
+  renderYemekListesi();
+  showToast('Yemek kaydedildi.', 'success');
+}
+
+function editYemek(id) {
+  showYemekForm(id);
+}
+
+function deleteYemek(id) {
+  if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
+  let list = loadYemekler();
+  list = list.filter(y => y.id !== id);
+  saveYemekler(list);
+  renderYemekListesi();
+  showToast('Yemek silindi.', 'success');
+}
+
+function openYemekModal() {
+  document.getElementById('yemekModal').classList.add('show');
+  document.getElementById('yemekSearchInput').value = '';
+  editingYemekId = null;
+  document.getElementById('yemekFormContainer').style.display = 'none';
+  renderYemekListesi();
+}
+function closeYemekModal() {
+  document.getElementById('yemekModal').classList.remove('show');
+}
+
+// -- Autocomplete in menu cells --
+let activeDishTextarea = null;
+let dishSuggestionsEl = null;
+
+function initDishAutocomplete() {
+  dishSuggestionsEl = document.createElement('div');
+  dishSuggestionsEl.className = 'dish-suggestions';
+  dishSuggestionsEl.style.display = 'none';
+  document.body.appendChild(dishSuggestionsEl);
+
+  const tbody = document.getElementById('menuTbody');
+  if (!tbody) return;
+
+  tbody.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'TEXTAREA' && e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+      activeDishTextarea = e.target;
+      showDishDropdown(e.target);
+    }
+  });
+
+  tbody.addEventListener('input', function(e) {
+    if (e.target === activeDishTextarea) {
+      showDishDropdown(e.target);
+    }
+  });
+
+  tbody.addEventListener('keydown', function(e) {
+    if (e.target !== activeDishTextarea) return;
+    const items = dishSuggestionsEl.querySelectorAll('.dish-suggestion-item');
+    if (!items.length) return;
+    const active = dishSuggestionsEl.querySelector('.dish-suggestion-item.active');
+    let idx = -1;
+    if (active) idx = Array.from(items).indexOf(active);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = (idx + 1) % items.length;
+      items.forEach(el => el.classList.remove('active'));
+      items[next].classList.add('active');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = (idx - 1 + items.length) % items.length;
+      items.forEach(el => el.classList.remove('active'));
+      items[prev].classList.add('active');
+    } else if (e.key === 'Enter') {
+      if (active) {
+        e.preventDefault();
+        selectDishItem(active.dataset.id);
+      }
+    } else if (e.key === 'Escape') {
+      hideDishDropdown();
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dish-suggestions') && e.target !== activeDishTextarea) {
+      hideDishDropdown();
+    }
+  });
+}
+
+function showDishDropdown(textarea) {
+  const list = loadYemekler();
+  if (!list.length) { hideDishDropdown(); return; }
+
+  const val = textarea.value.split('\n')[0].toLowerCase();
+  const filtered = val ? list.filter(y => y.ad.toLowerCase().includes(val)) : list;
+  if (!filtered.length) { hideDishDropdown(); return; }
+
+  const rect = textarea.getBoundingClientRect();
+  dishSuggestionsEl.innerHTML = filtered.map(y =>
+    `<div class="dish-suggestion-item" data-id="${escapeHtml(y.id)}">${escapeHtml(y.ad)} <span style="font-size:0.7rem;opacity:0.6">${escapeHtml(y.kalori || '')}</span></div>`
+  ).join('');
+  dishSuggestionsEl.style.display = 'block';
+  dishSuggestionsEl.style.top = (rect.bottom + window.scrollY + 2) + 'px';
+  dishSuggestionsEl.style.left = rect.left + 'px';
+  dishSuggestionsEl.style.width = Math.max(rect.width, 250) + 'px';
+
+  dishSuggestionsEl.querySelectorAll('.dish-suggestion-item').forEach(el => {
+    el.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      selectDishItem(this.dataset.id);
+    });
+  });
+}
+
+function selectDishItem(id) {
+  if (!activeDishTextarea) return;
+  const list = loadYemekler();
+  const y = list.find(i => i.id === id);
+  if (y) {
+    activeDishTextarea.value = formatYemek(y);
+    activeDishTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  hideDishDropdown();
+  activeDishTextarea.focus();
+}
+
+function hideDishDropdown() {
+  if (dishSuggestionsEl) dishSuggestionsEl.style.display = 'none';
+}
+
+function escapeHtml(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
 // ─── REPORT ────────────────────────────────────────────────────────────────────

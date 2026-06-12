@@ -1360,3 +1360,44 @@ body {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
 }
+
+/* ---- DISH SUGGESTIONS ---- */
+.dish-suggestions {
+  position: absolute;
+  z-index: 9999;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+}
+.dish-suggestion-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.dish-suggestion-item:last-child { border-bottom: none; }
+.dish-suggestion-item:hover,
+.dish-suggestion-item.active { background: rgba(99,102,241,0.08); }
+.dish-suggestion-item.active { background: rgba(99,102,241,0.12); }
+
+/* ---- YEMEK MODAL FORM ---- */
+#yemekFormContainer input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.6rem;
+  outline: none;
+  transition: border-color var(--transition);
+  box-sizing: border-box;
+}
+#yemekFormContainer input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(34,211,238,0.1);
+}
