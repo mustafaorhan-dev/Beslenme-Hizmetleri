@@ -9,8 +9,7 @@ const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7L
 let records = [];
 let editingId = null;
 let filteredRecords = [];
-let gsheetConfig = { webappUrl: '', lastSync: null };
-let gsheetDishUrl = '';
+let gsheetConfig = { webappUrl: '', lastSync: null, dishUrl: '' };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 // Initial theme is handled by inline script in HTML (reads localStorage)
@@ -54,7 +53,6 @@ function setChartYear(year) {
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadGSheetConfig();
-  loadGSheetDishUrl();
   setCurrentDate();
   renderAll();
   drawAllCharts();
@@ -62,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
   }
-  if (gsheetDishUrl) {
+  if (gsheetConfig.dishUrl) {
     syncDishesFromGSheets();
   }
   initDishAutocomplete();
@@ -142,13 +140,14 @@ function loadGSheetConfig() {
       const parsed = JSON.parse(stored);
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
-        lastSync: parsed.lastSync || null
+        lastSync: parsed.lastSync || null,
+        dishUrl: parsed.dishUrl || ''
       };
     } else {
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
     }
   } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
   }
 }
 
@@ -165,16 +164,9 @@ function saveGSheetUrl() {
 
 function saveGSheetDishUrl() {
   const url = document.getElementById('gsheetDishUrl').value.trim();
-  gsheetDishUrl = url;
-  try { localStorage.setItem('atik_kontrol_dish_url', url); } catch (e) {}
+  gsheetConfig.dishUrl = url;
+  try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
   showToast('Yemek Listesi URL kaydedildi.', 'success');
-}
-
-function loadGSheetDishUrl() {
-  try {
-    const stored = localStorage.getItem('atik_kontrol_dish_url');
-    gsheetDishUrl = stored || '';
-  } catch (e) { gsheetDishUrl = ''; }
 }
 
 function updateSyncUI() {
@@ -186,7 +178,7 @@ function updateSyncUI() {
 
   if (urlInput) urlInput.value = gsheetConfig.webappUrl || '';
   const dishUrlInput = document.getElementById('gsheetDishUrl');
-  if (dishUrlInput) dishUrlInput.value = gsheetDishUrl || '';
+  if (dishUrlInput) dishUrlInput.value = gsheetConfig.dishUrl || '';
 
   if (gsheetConfig.lastSync) {
     const d = new Date(gsheetConfig.lastSync);
@@ -956,8 +948,13 @@ function handleFullBackupImport(e) {
       const newRecords = data.records.filter(r => r.id && !existingIds.has(r.id));
       records.push(...newRecords);
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-      if (data.gsheetConfig && data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
-        gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
+      if (data.gsheetConfig) {
+        if (data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
+          gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
+        }
+        if (data.gsheetConfig.dishUrl && !gsheetConfig.dishUrl) {
+          gsheetConfig.dishUrl = data.gsheetConfig.dishUrl;
+        }
       }
       saveData();
       filteredRecords = [...records];
@@ -1301,9 +1298,9 @@ function closeYemekModal() {
 
 // -- Google Sheets dish sync --
 async function syncDishesFromGSheets() {
-  if (!gsheetDishUrl) return false;
+  if (!gsheetConfig.dishUrl) return false;
   try {
-    const res = await fetch(gsheetDishUrl + '?sheet=Yemek%20Listesi');
+    const res = await fetch(gsheetConfig.dishUrl + '?sheet=Yemek%20Listesi');
     const json = await res.json();
     if (json.data && Array.isArray(json.data)) {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => ({
@@ -1320,10 +1317,10 @@ async function syncDishesFromGSheets() {
 }
 
 async function syncDishesToGSheets() {
-  if (!gsheetDishUrl) return;
+  if (!gsheetConfig.dishUrl) return;
   try {
     const list = loadYemekler();
-    await fetch(gsheetDishUrl, {
+    await fetch(gsheetConfig.dishUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveDishes', dishes: list })
