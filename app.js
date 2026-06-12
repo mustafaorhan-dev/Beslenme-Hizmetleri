@@ -10,6 +10,7 @@ let records = [];
 let editingId = null;
 let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null };
+let gsheetDishUrl = '';
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 // Initial theme is handled by inline script in HTML (reads localStorage)
@@ -53,12 +54,15 @@ function setChartYear(year) {
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadGSheetConfig();
+  loadGSheetDishUrl();
   setCurrentDate();
   renderAll();
   drawAllCharts();
   updateSyncUI();
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
+  }
+  if (gsheetDishUrl) {
     syncDishesFromGSheets();
   }
   initDishAutocomplete();
@@ -159,6 +163,20 @@ function saveGSheetUrl() {
   if (url) testGSheetConnection();
 }
 
+function saveGSheetDishUrl() {
+  const url = document.getElementById('gsheetDishUrl').value.trim();
+  gsheetDishUrl = url;
+  try { localStorage.setItem('atik_kontrol_dish_url', url); } catch (e) {}
+  showToast('Yemek Listesi URL kaydedildi.', 'success');
+}
+
+function loadGSheetDishUrl() {
+  try {
+    const stored = localStorage.getItem('atik_kontrol_dish_url');
+    gsheetDishUrl = stored || '';
+  } catch (e) { gsheetDishUrl = ''; }
+}
+
 function updateSyncUI() {
   const statusLabel = document.getElementById('syncStatusLabel');
   const statusSub = document.getElementById('syncStatusSub');
@@ -167,6 +185,8 @@ function updateSyncUI() {
   const urlInput = document.getElementById('gsheetUrl');
 
   if (urlInput) urlInput.value = gsheetConfig.webappUrl || '';
+  const dishUrlInput = document.getElementById('gsheetDishUrl');
+  if (dishUrlInput) dishUrlInput.value = gsheetDishUrl || '';
 
   if (gsheetConfig.lastSync) {
     const d = new Date(gsheetConfig.lastSync);
@@ -1281,9 +1301,9 @@ function closeYemekModal() {
 
 // -- Google Sheets dish sync --
 async function syncDishesFromGSheets() {
-  if (!gsheetConfig.webappUrl) return false;
+  if (!gsheetDishUrl) return false;
   try {
-    const res = await fetch(gsheetConfig.webappUrl + '?sheet=Yemek%20Listesi');
+    const res = await fetch(gsheetDishUrl + '?sheet=Yemek%20Listesi');
     const json = await res.json();
     if (json.data && Array.isArray(json.data)) {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => ({
@@ -1300,10 +1320,10 @@ async function syncDishesFromGSheets() {
 }
 
 async function syncDishesToGSheets() {
-  if (!gsheetConfig.webappUrl) return;
+  if (!gsheetDishUrl) return;
   try {
     const list = loadYemekler();
-    await fetch(gsheetConfig.webappUrl, {
+    await fetch(gsheetDishUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveDishes', dishes: list })
