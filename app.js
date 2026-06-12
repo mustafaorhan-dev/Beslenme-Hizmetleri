@@ -454,7 +454,8 @@ function switchTab(name) {
   // Menü seçilince sidebar'ı kapat
   closeSidebar();
   // Sayfa başlığını güncelle
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor' };
+  if (name === 'menu') renderMenu();
+  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
 
@@ -1913,3 +1914,106 @@ document.addEventListener('keydown', e => {
     if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
   }
 });
+
+// ─── WEEKLY MENU ──────────────────────────────────────────────────────────────
+const MENU_STORAGE_KEY = 'atik_kontrol_menu';
+const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+let menuWeekOffset = 0;
+
+function getWeekStartDate(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1) + offset * 7;
+  const monday = new Date(now);
+  monday.setDate(diff);
+  return monday;
+}
+
+function formatDateStr(d) {
+  const gun = String(d.getDate()).padStart(2, '0');
+  const ay = String(d.getMonth() + 1).padStart(2, '0');
+  const yil = d.getFullYear();
+  return gun + '.' + ay + '.' + yil;
+}
+
+function loadWeeklyMenu() {
+  try {
+    const stored = localStorage.getItem(MENU_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) { return {}; }
+}
+
+function saveWeeklyMenu() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+
+  const menuData = {};
+  GUNLER.forEach((gun, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    menuData[key] = {
+      yemekler: [
+        document.getElementById('m1_' + i).value,
+        document.getElementById('m2_' + i).value,
+        document.getElementById('m3_' + i).value,
+        document.getElementById('m4_' + i).value,
+        document.getElementById('m5_' + i).value
+      ],
+      kisi: parseInt(document.getElementById('mk_' + i).value) || 0
+    };
+  });
+
+  const allData = loadWeeklyMenu();
+  allData[weekKey] = menuData;
+  try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData)); } catch (e) {}
+  showToast('Haftalık menü kaydedildi.', 'success');
+}
+
+function clearWeeklyMenu() {
+  if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
+  const monday = getWeekStartDate(menuWeekOffset);
+  GUNLER.forEach((_, i) => {
+    ['m1_','m2_','m3_','m4_','m5_'].forEach(id => document.getElementById(id + i).value = '');
+    document.getElementById('mk_' + i).value = '';
+  });
+  showToast('Menü temizlendi.', 'success');
+}
+
+function shiftMenuWeek(dir) {
+  menuWeekOffset += dir;
+  renderMenu();
+}
+
+function renderMenu() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+
+  document.getElementById('menuWeekLabel').textContent = weekKey + ' MENÜ LİSTESİ';
+  document.getElementById('menuTitle').textContent = weekKey + ' MENÜ LİSTESİ';
+
+  const allData = loadWeeklyMenu();
+  const weekData = allData[weekKey] || {};
+
+  const tbody = document.getElementById('menuTbody');
+  tbody.innerHTML = GUNLER.map((gun, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    const dayData = weekData[key] || { yemekler: ['','','','',''], kisi: 0 };
+
+    return `<tr>
+      <td>${gun}<br><span style="font-size:0.7rem;color:var(--text-muted)">${key}</span></td>
+      <td><input type="text" id="m1_${i}" value="${dayData.yemekler[0] || ''}" placeholder="1. çeşit" /></td>
+      <td><input type="text" id="m2_${i}" value="${dayData.yemekler[1] || ''}" placeholder="2. çeşit" /></td>
+      <td><input type="text" id="m3_${i}" value="${dayData.yemekler[2] || ''}" placeholder="3. çeşit" /></td>
+      <td><input type="text" id="m4_${i}" value="${dayData.yemekler[3] || ''}" placeholder="4. çeşit" /></td>
+      <td><input type="text" id="m5_${i}" value="${dayData.yemekler[4] || ''}" placeholder="5. çeşit" /></td>
+      <td><input type="number" class="kisi-input" id="mk_${i}" value="${dayData.kisi || 0}" min="0" placeholder="0" /></td>
+    </tr>`;
+  }).join('');
+}
