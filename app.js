@@ -138,13 +138,20 @@ function loadGSheetConfig() {
     const stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
       const parsed = JSON.parse(stored);
+      let dishUrl = parsed.dishUrl || '';
+      // Yedek anahtardan oku (eğer asıl config'de yoksa)
+      if (!dishUrl) {
+        try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
+      }
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
         lastSync: parsed.lastSync || null,
-        dishUrl: parsed.dishUrl || ''
+        dishUrl: dishUrl
       };
     } else {
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
+      let dishUrl = '';
+      try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl };
     }
   } catch (e) {
     gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
@@ -167,7 +174,11 @@ function saveAllUrls() {
   const url2 = document.getElementById('gsheetDishUrl').value.trim();
   gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
   gsheetConfig.dishUrl = url2;
-  try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
+  try {
+    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
+    // Yedek olarak ayrı anahtarda da sakla
+    if (url2) localStorage.setItem('atik_kontrol_dish_url', url2);
+  } catch (e) {}
   updateSyncUI();
   showToast('URL' + (url2 ? 'ler' : '') + ' kaydedildi.', 'success');
   if (url1) testGSheetConnection();
