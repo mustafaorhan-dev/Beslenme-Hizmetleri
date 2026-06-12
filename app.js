@@ -20,7 +20,9 @@ let gsheetConfig = { webappUrl: '', lastSync: null };
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? '' : 'dark');
+  const newTheme = isDark ? '' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('atik_kontrol_theme', newTheme || 'light');
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -98,12 +100,24 @@ function setCurrentDate() {
 }
 
 // ─── STORAGE ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'atik_kontrol_records';
+
 function loadData() {
-  records = [];
-  filteredRecords = [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    records = stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    records = [];
+  }
+  filteredRecords = [...records];
 }
 
 function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  } catch (e) {
+    // Storage full or unavailable - ignore silently
+  }
   syncToSheetSilent();
 }
 
@@ -120,12 +134,28 @@ async function syncToSheetSilent() {
 
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
 function loadGSheetConfig() {
-  gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+  try {
+    const stored = localStorage.getItem('atik_kontrol_gsheet_config');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      gsheetConfig = {
+        webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
+        lastSync: parsed.lastSync || null
+      };
+    } else {
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+    }
+  } catch (e) {
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
+  }
 }
 
 function saveGSheetUrl() {
   const url = document.getElementById('gsheetUrl').value.trim();
   gsheetConfig.webappUrl = url || DEFAULT_GSHEET_URL;
+  try {
+    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
+  } catch (e) {}
   updateSyncUI();
   showToast('Web App URL kaydedildi.', 'success');
   if (url) testGSheetConnection();
@@ -200,6 +230,7 @@ async function syncToGSheets() {
     const data = await res.json();
     if (data.success) {
       gsheetConfig.lastSync = new Date().toISOString();
+      try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
     } else {
@@ -253,6 +284,7 @@ async function syncFromGSheets() {
       renderAll();
       drawAllCharts();
       gsheetConfig.lastSync = new Date().toISOString();
+      try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
     } else {
