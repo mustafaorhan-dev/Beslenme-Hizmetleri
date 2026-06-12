@@ -5,13 +5,11 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const TARGETS_KEY = 'atik_kontrol_targets';
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7LL_FMxaZa9F2wKSHHhCTws-fzLX89wA_1_xjoMW_OkI5-5xYTNDUstENow/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null };
-let targets = { gunlukAtik: 20, haftalikAtik: 100, atikOrani: 5, karbon: 50 };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 (function initTheme() {
@@ -57,7 +55,6 @@ function setChartYear(year) {
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadGSheetConfig();
-  loadTargets();
   setCurrentDate();
   renderAll();
   drawAllCharts();
@@ -282,93 +279,6 @@ async function testGSheetConnection() {
   }
 }
 
-// ─── TARGETS ─────────────────────────────────────────────────────────────────
-function loadTargets() {
-  try {
-    const raw = localStorage.getItem(TARGETS_KEY);
-    if (raw) targets = JSON.parse(raw);
-  } catch (_) {}
-}
-function saveTargets() {
-  targets.gunlukAtik = parseFloat(document.getElementById('targetGunlukAtik').value) || 20;
-  targets.haftalikAtik = parseFloat(document.getElementById('targetHaftalikAtik').value) || 100;
-  targets.atikOrani = parseFloat(document.getElementById('targetAtikOrani').value) || 5;
-  targets.karbon = parseFloat(document.getElementById('targetKarbon').value) || 50;
-  localStorage.setItem(TARGETS_KEY, JSON.stringify(targets));
-  renderCompliance();
-  closeTargetsPanel();
-  showToast('Hedefler kaydedildi.', 'success');
-}
-function openTargetsPanel() {
-  loadTargets();
-  document.getElementById('targetGunlukAtik').value = targets.gunlukAtik;
-  document.getElementById('targetHaftalikAtik').value = targets.haftalikAtik;
-  document.getElementById('targetAtikOrani').value = targets.atikOrani;
-  document.getElementById('targetKarbon').value = targets.karbon;
-  renderCompliance();
-  document.getElementById('targetsOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeTargetsPanel() {
-  document.getElementById('targetsOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function renderCompliance() {
-  if (records.length === 0) return;
-  const n = records.length;
-  const totalAtik = records.reduce((s,r) => s+r.atik, 0);
-  const avgAtik = totalAtik / n;
-  const totalYemek = records.reduce((s,r) => s+r.yemek, 0);
-  const oran = totalYemek > 0 ? (totalAtik / totalYemek * 100) : 0;
-  const carbon = records.reduce((s,r) => s + calcDailyCarbon(r.atik), 0);
-  const avgCarbon = carbon / n;
-  // Check compliance for each
-  const okGunluk = avgAtik <= targets.gunlukAtik;
-  const okHaftalik = totalAtik <= targets.haftalikAtik;
-  const okOran = oran <= targets.atikOrani;
-  const okKarbon = avgCarbon <= targets.karbon;
-  const setComp = (id, ok, val, target) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const icon = el.querySelector('.compliance-icon');
-    if (icon) {
-      icon.textContent = ok ? '✓' : '✗';
-      icon.style.color = ok ? '#10b981' : '#ef4444';
-    }
-    el.style.borderLeft = ok ? '3px solid #10b981' : '3px solid #ef4444';
-  };
-  setComp('compGunlukAtik', okGunluk, avgAtik, targets.gunlukAtik);
-  setComp('compHaftalikAtik', okHaftalik, totalAtik, targets.haftalikAtik);
-  setComp('compAtikOrani', okOran, oran, targets.atikOrani);
-  setComp('compKarbon', okKarbon, avgCarbon, targets.karbon);
-  // Dashboard compliance container
-  const container = document.getElementById('complianceContainer');
-  if (container) {
-    const pct = [okGunluk, okHaftalik, okOran, okKarbon].filter(Boolean).length / 4 * 100;
-    container.innerHTML = `
-      <div class="compliance-summary">
-        <span class="compliance-pct" style="color:${pct >= 75 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444'}">%${Math.round(pct)}</span>
-        <span>Hedef uyumu</span>
-      </div>
-      <div class="compliance-item ${okGunluk ? 'ok' : 'fail'}">
-        <span>Günlük Atık ≤ ${targets.gunlukAtik} kg</span>
-        <span>${avgAtik.toFixed(1)} kg ${okGunluk ? '✓' : '✗'}</span>
-      </div>
-      <div class="compliance-item ${okHaftalik ? 'ok' : 'fail'}">
-        <span>Toplam Atık ≤ ${targets.haftalikAtik} kg</span>
-        <span>${totalAtik.toFixed(1)} kg ${okHaftalik ? '✓' : '✗'}</span>
-      </div>
-      <div class="compliance-item ${okOran ? 'ok' : 'fail'}">
-        <span>Atık Oranı ≤ %${targets.atikOrani}</span>
-        <span>%${oran.toFixed(2)} ${okOran ? '✓' : '✗'}</span>
-      </div>
-      <div class="compliance-item ${okKarbon ? 'ok' : 'fail'}">
-        <span>CO₂ ≤ ${targets.karbon} kg</span>
-        <span>${avgCarbon.toFixed(1)} kg ${okKarbon ? '✓' : '✗'}</span>
-      </div>`;
-  }
-}
-
 // ─── CARBON FOOTPRINT ────────────────────────────────────────────────────────
 function calcCarbonFootprint(totalAtikKg) {
   return totalAtikKg * 2.5;
@@ -455,7 +365,6 @@ function exportPDF() {
   }
   switchTab('report');
   renderReport();
-  renderCompliance();
   setTimeout(() => {
     const totalAtik = records.reduce((s,r) => s+r.atik, 0);
     const carbon = calcCarbonFootprint(totalAtik);
@@ -581,7 +490,6 @@ function closeModal() {
 
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
-  if (e.target === document.getElementById('targetsOverlay')) closeTargetsPanel();
 }
 
 function populateForm(rec) {
@@ -927,7 +835,6 @@ function exportDataSettings() {
     version: 2,
     exportedAt: new Date().toISOString(),
     records: records.map(r => ({ ...r, yemek_adi: r.yemek_adi || '' })),
-    targets: targets,
     gsheetConfig: gsheetConfig
   };
   const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json;charset=utf-8;' });
@@ -983,7 +890,6 @@ function renderAll() {
   renderLastRecordsTable();
   renderRecordsTable();
   renderReport();
-  renderCompliance();
   renderSparklines();
 }
 
@@ -1824,7 +1730,7 @@ function showToast(msg, type = 'success') {
 
 // ─── KEYBOARD ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); closeTargetsPanel(); }
+  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
 
   // Ctrl+N: Yeni kayıt
   if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
