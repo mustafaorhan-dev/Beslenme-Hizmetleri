@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   drawAllCharts();
   updateSyncUI();
-  if (gsheetConfig.webappUrl && records.length === 0) {
+  if (gsheetConfig.webappUrl) {
     syncFromGSheets();
   }
 });
@@ -120,6 +120,18 @@ function loadData() {
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   saveGSheetConfig();
+  syncToSheetSilent();
+}
+
+async function syncToSheetSilent() {
+  if (!gsheetConfig.webappUrl || records.length === 0) return;
+  try {
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveAll', records })
+    });
+  } catch (_) {}
 }
 
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
