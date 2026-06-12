@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateSyncUI();
   if (gsheetConfig.webappUrl) {
     syncFromGSheets();
+    syncDishesFromGSheets();
   }
   initDishAutocomplete();
 });
@@ -1247,6 +1248,7 @@ function saveYemekForm() {
   document.getElementById('yemekFormContainer').style.display = 'none';
   editingYemekId = null;
   renderYemekListesi();
+  syncDishesToGSheets();
   showToast('Yemek kaydedildi.', 'success');
 }
 
@@ -1260,6 +1262,7 @@ function deleteYemek(id) {
   list = list.filter(y => y.id !== id);
   saveYemekler(list);
   renderYemekListesi();
+  syncDishesToGSheets();
   showToast('Yemek silindi.', 'success');
 }
 
@@ -1269,9 +1272,43 @@ function openYemekModal() {
   editingYemekId = null;
   document.getElementById('yemekFormContainer').style.display = 'none';
   renderYemekListesi();
+  // Background'da Google Sheets'ten taze veri çek (cache güncelle)
+  syncDishesFromGSheets().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
   document.getElementById('yemekModal').classList.remove('show');
+}
+
+// -- Google Sheets dish sync --
+async function syncDishesFromGSheets() {
+  if (!gsheetConfig.webappUrl) return false;
+  try {
+    const res = await fetch(gsheetConfig.webappUrl + '?sheet=Yemek%20Listesi');
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data)) {
+      const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => ({
+        id: String(d.id || Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+        ad: String(d.ad || '').trim(),
+        kalori: String(d.kalori || '').trim(),
+        alerjen: String(d.alerjen || '').trim()
+      }));
+      saveYemekler(list);
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+async function syncDishesToGSheets() {
+  if (!gsheetConfig.webappUrl) return;
+  try {
+    const list = loadYemekler();
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveDishes', dishes: list })
+    });
+  } catch (_) {}
 }
 
 // -- Autocomplete in menu cells --

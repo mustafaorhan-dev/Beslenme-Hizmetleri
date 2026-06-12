@@ -1,9 +1,11 @@
 const SHEET_NAME = 'Atık Kontrol Sistemi';
+const DISH_SHEET_NAME = 'Yemek Listesi';
 
-function doGet() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+function doGet(e) {
+  const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) {
-    return jsonResponse({ data: [], error: 'Sayfa bulunamadı' });
+    return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
   }
   const data = sheet.getDataRange().getValues();
   if (data.length === 0) return jsonResponse({ data: [] });
@@ -21,6 +23,11 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const action = body.action;
+
+    if (action === 'getDishes' || action === 'saveDishes') {
+      return handleDishAction(action, body);
+    }
+
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
     if (!sheet) {
       return jsonResponse({ error: 'Sayfa bulunamadı' });
@@ -72,6 +79,40 @@ function doPost(e) {
   } catch (err) {
     return jsonResponse({ error: err.toString() });
   }
+}
+
+function handleDishAction(action, body) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(DISH_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(DISH_SHEET_NAME);
+    sheet.appendRow(['id', 'ad', 'kalori', 'alerjen']);
+  }
+
+  if (action === 'getDishes') {
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return jsonResponse({ dishes: [] });
+    const dishes = [];
+    for (let i = 1; i < data.length; i++) {
+      dishes.push({ id: String(data[i][0] || ''), ad: String(data[i][1] || ''), kalori: String(data[i][2] || ''), alerjen: String(data[i][3] || '') });
+    }
+    return jsonResponse({ dishes });
+  }
+
+  if (action === 'saveDishes') {
+    const dishes = body.dishes || [];
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, 4).clearContent();
+    }
+    if (dishes.length > 0) {
+      const rows = dishes.map(d => [String(d.id || ''), String(d.ad || ''), String(d.kalori || ''), String(d.alerjen || '')]);
+      sheet.getRange(2, 1, rows.length, 4).setValues(rows);
+    }
+    return jsonResponse({ success: true, count: dishes.length });
+  }
+
+  return jsonResponse({ error: 'Bilinmeyen dish action: ' + action });
 }
 
 function ensureHeaders(sheet) {
