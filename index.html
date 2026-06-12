@@ -142,7 +142,7 @@
             <span class="kpi-value" id="kpiAvgAtik">0.00</span>
             <span class="kpi-trend" id="trendAvgAtik"></span>
           </div>
-          <div class="kpi-sparkline" id="sparklineAvgAtik"></div>
+          <canvas class="kpi-sparkline" id="sparklineAtik"></canvas>
         </div>
         <div class="kpi-card" id="kpi-toplam-gecis">
           <div class="kpi-icon kpi-green">
@@ -152,6 +152,7 @@
             <span class="kpi-label">Toplam Geçiş (Son)</span>
             <span class="kpi-value" id="kpiLastGecis">0</span>
           </div>
+          <canvas class="kpi-sparkline" id="sparklineGecis"></canvas>
         </div>
         <div class="kpi-card" id="kpi-fire-oran">
           <div class="kpi-icon kpi-red">
@@ -162,8 +163,13 @@
             <span class="kpi-value" id="kpiTotalAtik">0.00</span>
             <span class="kpi-trend" id="trendTotalAtik"></span>
           </div>
-          <div class="kpi-sparkline" id="sparklineTotalAtik"></div>
         </div>
+        </div>
+      </div>
+
+      <!-- Data Info -->
+      <div class="data-info" id="dataInfo" style="display:none">
+        <span id="dataInfoRange"></span>
       </div>
 
       <!-- Period Comparison -->

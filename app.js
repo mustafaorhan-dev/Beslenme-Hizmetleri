@@ -12,11 +12,7 @@ let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
-(function initTheme() {
-  if (window.matchMedia('(prefers-color-scheme:dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-})();
+// Initial theme is handled by inline script in HTML (reads localStorage)
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -61,9 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   drawAllCharts();
   updateSyncUI();
-  if (gsheetConfig.webappUrl) {
-    syncFromGSheets();
-  }
+  // Auto-sync removed to prevent unintended data overwrites.
+  // Use "Google'dan Çek" button in sidebar to manually sync.
 });
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -650,7 +645,8 @@ function filterRecords() {
       r.tarih.includes(query) ||
       String(r.yemek).includes(query) ||
       String(r.atik).includes(query) ||
-      String(r.ogrenci).includes(query);
+      String(r.ogrenci).includes(query) ||
+      (r.yemek_adi || '').toLowerCase().includes(query);
     const matchStart = !start || r.tarih >= start;
     const matchEnd = !end || r.tarih <= end;
     return matchQuery && matchStart && matchEnd;
@@ -947,11 +943,30 @@ function handleFullBackupImport(e) {
 // ─── RENDER ────────────────────────────────────────────────────────────────────
 function renderAll() {
   renderKPIs();
+  renderDataInfo();
   renderLastRecordsTable();
   renderRecordsTable();
   renderReport();
   renderSparklines();
   renderComparison();
+}
+
+function renderDataInfo() {
+  const el = document.getElementById('dataInfo');
+  const rangeEl = document.getElementById('dataInfoRange');
+  if (!el || !rangeEl) return;
+  if (records.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  const dates = records.map(r => r.tarih).filter(Boolean).sort();
+  const first = dates[dates.length - 1];
+  const last = dates[0];
+  const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('tr-TR') : '—';
+  const totalYemek = records.reduce((s, r) => s + r.yemek, 0);
+  const totalAtik = records.reduce((s, r) => s + r.atik, 0);
+  rangeEl.textContent = `${records.length} kayıt • ${fmt(first)} — ${fmt(last)} • ${totalYemek.toLocaleString('tr-TR')} üretim • ${totalAtik.toFixed(1)} kg atık`;
 }
 
 function getTrend(current, arr, field) {
@@ -1089,8 +1104,12 @@ function buildRow(r, showActions) {
   const actions = showActions ? `
     <td>
       <div style="display:flex;gap:0.4rem">
-        <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">✏️</button>
-        <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">🗑️</button>
+        <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
       </div>
     </td>` : '';
 
@@ -1219,8 +1238,6 @@ function fmt(v) {
 
 // ─── CHARTS ────────────────────────────────────────────────────────────────────
 // Pure canvas chart renderer (no external dependencies)
-
-let chartInstances = {};
 
 function renderChartYearFilter() {
   const container = document.getElementById('chartYearFilter');
@@ -1383,7 +1400,15 @@ function cssVar(name, fallback) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 function darkenColor(hex, amount) {
-  const num = parseInt(hex.slice(1), 16);
+  if (!hex || typeof hex !== 'string') return 'rgb(100,100,100)';
+  let h = hex;
+  if (!h.startsWith('#')) h = '#' + h;
+  // Handle shorthand hex (#fff -> #ffffff)
+  if (h.length === 4) {
+    h = '#' + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
+  }
+  const num = parseInt(h.slice(1), 16);
+  if (isNaN(num)) return hex;
   const r = Math.max(0, (num >> 16) - amount);
   const g = Math.max(0, ((num >> 8) & 0xff) - amount);
   const b = Math.max(0, (num & 0xff) - amount);
@@ -1793,7 +1818,8 @@ function exportData() {
     'Toplam Geçiş',
     'Porsiyon Miktarı (gr)',
     'Atık Miktarı (kg)',
-    'Yemek Hiz. Yar. Öğr. Sayısı'
+    'Yemek Hiz. Yar. Öğr. Sayısı',
+    'Yemek Türü'
   ];
 
   const rows = records.map(r => [
@@ -1805,7 +1831,8 @@ function exportData() {
     r.toplam,
     r.porsiyon,
     r.atik,
-    r.ogrenci
+    r.ogrenci,
+    r.yemek_adi || ''
   ].map(v => `"${v}"`).join(';'));
 
   const bom = '\uFEFF';
