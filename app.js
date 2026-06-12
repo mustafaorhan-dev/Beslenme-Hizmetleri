@@ -5,8 +5,6 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'atik_kontrol_data';
-const GSHEET_CONFIG_KEY = 'atik_kontrol_gsheet_config';
 const TARGETS_KEY = 'atik_kontrol_targets';
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzt9EBgIOC7LL_FMxaZa9F2wKSHHhCTws-fzLX89wA_1_xjoMW_OkI5-5xYTNDUstENow/exec';
 let records = [];
@@ -17,12 +15,7 @@ let targets = { gunlukAtik: 20, haftalikAtik: 100, atikOrani: 5, karbon: 50 };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 (function initTheme() {
-  const saved = localStorage.getItem('atik_kontrol_theme');
-  if (saved === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  } else if (saved === 'light') {
-    document.documentElement.removeAttribute('data-theme');
-  } else if (window.matchMedia('(prefers-color-scheme:dark)').matches) {
+  if (window.matchMedia('(prefers-color-scheme:dark)').matches) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
 })();
@@ -30,7 +23,6 @@ function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
   html.setAttribute('data-theme', isDark ? '' : 'dark');
-  localStorage.setItem('atik_kontrol_theme', isDark ? 'light' : 'dark');
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -110,19 +102,11 @@ function setCurrentDate() {
 
 // ─── STORAGE ───────────────────────────────────────────────────────────────────
 function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    records = raw ? JSON.parse(raw) : [];
-    filteredRecords = [...records];
-  } catch (e) {
-    records = [];
-    filteredRecords = [];
-  }
+  records = [];
+  filteredRecords = [];
 }
 
 function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  saveGSheetConfig();
   syncToSheetSilent();
 }
 
@@ -139,23 +123,12 @@ async function syncToSheetSilent() {
 
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
 function loadGSheetConfig() {
-  try {
-    const raw = localStorage.getItem(GSHEET_CONFIG_KEY);
-    gsheetConfig = raw ? JSON.parse(raw) : { webappUrl: '', lastSync: null };
-    if (!gsheetConfig.webappUrl) gsheetConfig.webappUrl = DEFAULT_GSHEET_URL;
-  } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
-  }
-}
-
-function saveGSheetConfig() {
-  localStorage.setItem(GSHEET_CONFIG_KEY, JSON.stringify(gsheetConfig));
+  gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
 }
 
 function saveGSheetUrl() {
   const url = document.getElementById('gsheetUrl').value.trim();
   gsheetConfig.webappUrl = url || DEFAULT_GSHEET_URL;
-  saveGSheetConfig();
   updateSyncUI();
   showToast('Web App URL kaydedildi.', 'success');
   if (url) testGSheetConnection();
@@ -230,7 +203,6 @@ async function syncToGSheets() {
     const data = await res.json();
     if (data.success) {
       gsheetConfig.lastSync = new Date().toISOString();
-      saveGSheetConfig();
       updateSyncUI();
       showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
     } else {
@@ -284,7 +256,6 @@ async function syncFromGSheets() {
       renderAll();
       drawAllCharts();
       gsheetConfig.lastSync = new Date().toISOString();
-      saveGSheetConfig();
       updateSyncUI();
       showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
     } else {
@@ -991,7 +962,6 @@ function handleFullBackupImport(e) {
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
       if (data.gsheetConfig && data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
         gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
-        saveGSheetConfig();
       }
       saveData();
       filteredRecords = [...records];
