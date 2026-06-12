@@ -1956,11 +1956,11 @@ function saveWeeklyMenu() {
     const key = formatDateStr(tarih);
     menuData[key] = {
       yemekler: [
+        document.getElementById('m0_' + i).value,
         document.getElementById('m1_' + i).value,
         document.getElementById('m2_' + i).value,
         document.getElementById('m3_' + i).value,
-        document.getElementById('m4_' + i).value,
-        document.getElementById('m5_' + i).value
+        document.getElementById('m4_' + i).value
       ],
       kisi: parseInt(document.getElementById('mk_' + i).value) || 0
     };
@@ -1974,10 +1974,13 @@ function saveWeeklyMenu() {
 
 function clearWeeklyMenu() {
   if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
-  const monday = getWeekStartDate(menuWeekOffset);
   GUNLER.forEach((_, i) => {
-    ['m1_','m2_','m3_','m4_','m5_'].forEach(id => document.getElementById(id + i).value = '');
-    document.getElementById('mk_' + i).value = '';
+    for (let c = 0; c < 5; c++) {
+      const el = document.getElementById('m' + c + '_' + i);
+      if (el) el.value = '';
+    }
+    const kisiEl = document.getElementById('mk_' + i);
+    if (kisiEl) kisiEl.value = '';
   });
   showToast('Menü temizlendi.', 'success');
 }
@@ -1999,21 +2002,37 @@ function renderMenu() {
   const allData = loadWeeklyMenu();
   const weekData = allData[weekKey] || {};
 
-  const tbody = document.getElementById('menuTbody');
-  tbody.innerHTML = GUNLER.map((gun, i) => {
+  // Gün verilerini topla
+  const days = GUNLER.map((gun, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
     const dayData = weekData[key] || { yemekler: ['','','','',''], kisi: 0 };
+    return { gun, key, data: dayData };
+  });
 
+  // Başlık satırı
+  const thead = document.getElementById('menuThead');
+  thead.innerHTML = `<tr>
+    <th style="width:100px">Çeşit</th>
+    ${days.map(d => `<th>${d.gun}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${d.key}</span></th>`).join('')}
+  </tr>`;
+
+  // Gövde: her çeşit için bir satır + kişi sayısı satırı
+  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  const tbody = document.getElementById('menuTbody');
+  tbody.innerHTML = cesitler.map((label, ci) => {
     return `<tr>
-      <td>${gun}<br><span style="font-size:0.7rem;color:var(--text-muted)">${key}</span></td>
-      <td><input type="text" id="m1_${i}" value="${dayData.yemekler[0] || ''}" placeholder="1. çeşit" /></td>
-      <td><input type="text" id="m2_${i}" value="${dayData.yemekler[1] || ''}" placeholder="2. çeşit" /></td>
-      <td><input type="text" id="m3_${i}" value="${dayData.yemekler[2] || ''}" placeholder="3. çeşit" /></td>
-      <td><input type="text" id="m4_${i}" value="${dayData.yemekler[3] || ''}" placeholder="4. çeşit" /></td>
-      <td><input type="text" id="m5_${i}" value="${dayData.yemekler[4] || ''}" placeholder="5. çeşit" /></td>
-      <td><input type="number" class="kisi-input" id="mk_${i}" value="${dayData.kisi || 0}" min="0" placeholder="0" /></td>
+      <td><strong>${label}</strong></td>
+      ${days.map((d, di) => {
+        const val = d.data.yemekler[ci] || '';
+        return `<td><input type="text" id="m${ci}_${di}" value="${val}" placeholder="${label}" /></td>`;
+      }).join('')}
     </tr>`;
-  }).join('');
+  }).join('') + `<tr>
+    <td><strong>Kişi Sayısı</strong></td>
+    ${days.map((d, di) => {
+      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${d.data.kisi || 0}" min="0" placeholder="0" /></td>`;
+    }).join('')}
+  </tr>`;
 }
