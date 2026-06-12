@@ -198,16 +198,6 @@
         </div>
       </div>
 
-      <!-- Compliance Card -->
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Hedef Uyumu</h2>
-          <button class="btn btn-ghost btn-sm" onclick="openTargetsPanel()">Hedefleri Düzenle</button>
-        </div>
-        <div class="compliance-container" id="complianceContainer">
-          <p style="color:var(--text-muted);font-size:0.85rem">Henüz veri yok.</p>
-        </div>
-      </div>
     </div>
 
     <!-- ===== RECORDS TAB ===== -->
@@ -518,62 +508,6 @@
       <div class="modal-footer">
         <span class="sync-last" id="syncLastLabel">Son senkronizasyon: —</span>
         <button class="btn btn-ghost" onclick="closeSyncPanel()">Kapat</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== TARGETS PANEL ===== -->
-  <div class="modal-overlay" id="targetsOverlay" onclick="if(event.target===this)closeTargetsPanel()">
-    <div class="modal targets-panel">
-      <div class="modal-header">
-        <h2>Hedef Belirleme</h2>
-        <button class="modal-close" onclick="closeTargetsPanel()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="targets-body">
-        <p class="targets-desc">Günlük ve haftalık atık hedefleri belirleyerek performansınızı takip edin.</p>
-        <div class="targets-grid">
-          <div class="target-group">
-            <label for="targetGunlukAtik">Günlük Maks. Atık (kg)</label>
-            <input type="number" id="targetGunlukAtik" min="0" step="0.1" placeholder="20" />
-          </div>
-          <div class="target-group">
-            <label for="targetHaftalikAtik">Haftalık Maks. Atık (kg)</label>
-            <input type="number" id="targetHaftalikAtik" min="0" step="0.1" placeholder="100" />
-          </div>
-          <div class="target-group">
-            <label for="targetAtikOrani">Maks. Atık Oranı (%)</label>
-            <input type="number" id="targetAtikOrani" min="0" max="100" step="0.1" placeholder="5" />
-          </div>
-          <div class="target-group">
-            <label for="targetKarbon">Günlük Maks. CO₂ (kg)</label>
-            <input type="number" id="targetKarbon" min="0" step="0.1" placeholder="50" />
-          </div>
-        </div>
-        <div class="targets-compliance" id="targetsCompliance">
-          <div class="compliance-item" id="compGunlukAtik">
-            <span class="compliance-icon">—</span>
-            <span>Günlük Atık Hedefi</span>
-          </div>
-          <div class="compliance-item" id="compHaftalikAtik">
-            <span class="compliance-icon">—</span>
-            <span>Haftalık Atık Hedefi</span>
-          </div>
-          <div class="compliance-item" id="compAtikOrani">
-            <span class="compliance-icon">—</span>
-            <span>Atık Oranı Hedefi</span>
-          </div>
-          <div class="compliance-item" id="compKarbon">
-            <span class="compliance-icon">—</span>
-            <span>Karbon Hedefi</span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <span class="targets-status" id="targetsStatus"></span>
-        <button class="btn btn-ghost" onclick="closeTargetsPanel()">Kapat</button>
-        <button class="btn btn-primary" onclick="saveTargets()">Hedefleri Kaydet</button>
       </div>
     </div>
   </div>
