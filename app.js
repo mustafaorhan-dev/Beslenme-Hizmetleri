@@ -1227,10 +1227,11 @@ function renderProduction(weekKey, weekData, days) {
     if (dish.tarif && dish.tarif.length) {
       dish.tarif.forEach(ing => {
         const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
-        let birim = (ing.birim || 'gr').toLowerCase();
-        if (birim === 'gram' || birim === 'g') birim = 'gr';
-        else if (birim === 'litre' || birim === 'l') birim = 'lt';
-        else if (birim === 'mililitre') birim = 'ml';
+        let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
+        if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
+        else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
+        else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+        const birim = b;
         rowsHtml += `<tr>
           <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.malzeme)}</td>
           ${days.map(d => {
@@ -1488,10 +1489,11 @@ async function syncDishesFromGSheets() {
             const birimKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('birim'+n).toLowerCase());
             if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
               const miktar = miktarKey ? parseFloat(d[miktarKey]) || 0 : 0;
-              let birim = birimKey ? String(d[birimKey] || 'gr').trim().toLowerCase() : 'gr';
-              if (birim === 'gram' || birim === 'g') birim = 'gr';
-              else if (birim === 'litre' || birim === 'l') birim = 'lt';
-              else if (birim === 'mililitre') birim = 'ml';
+              let b = birimKey ? String(d[birimKey] || 'gr').trim().toLowerCase().replace(/\s/g,'') : 'gr';
+              if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
+              else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
+              else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+              const birim = b;
               tarif.push({ malzeme: String(d[urunKey]).trim(), miktar_kisi: miktar, birim: birim });
             } else break;
           }
@@ -2544,10 +2546,11 @@ function exportMenuPDF() {
           let rows = `<tr style="background:#e8e8e8"><td colspan="${days.length+1}" style="font-weight:600">${escapeHtml(dish.ad)}</td></tr>`;
           dish.tarif.forEach(ing => {
             const mk = ing.miktar_kisi || ing.miktar || 0;
-            let birim = (ing.birim || 'gr').toLowerCase();
-            if (birim === 'gram' || birim === 'g') birim = 'gr';
-            else if (birim === 'litre' || birim === 'l') birim = 'lt';
-            else if (birim === 'mililitre') birim = 'ml';
+            let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
+            if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
+            else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
+            else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+            const birim = b;
             rows += `<tr><td style="padding-left:15px;font-size:9pt">${escapeHtml(ing.malzeme)}</td>`;
             days.forEach(d => {
               const kisi = d.data.kisi || 0;
