@@ -340,11 +340,10 @@ async function syncToGSheets() {
 async function syncFromGSheets() {
   if (!gsheetConfig.webappUrl) {
     showToast('Önce Web App URL\'sini girin.', 'error');
-    return;
+    return false;
   }
   const btn = document.getElementById('syncDownloadBtn');
-  btn.disabled = true;
-  btn.textContent = 'İndiriliyor...';
+  if (btn) { btn.disabled = true; btn.textContent = 'İndiriliyor...'; }
   try {
     const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
     const data = await res.json();
@@ -365,10 +364,8 @@ async function syncFromGSheets() {
           yemek_adi: r.yemek_adi || ''
         }));
       if (cloudRecords.length === 0) {
-        showToast('Google Sheet\'te kayıt bulunamadı.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
-        return;
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)'; }
+        return true;
       }
       records = cloudRecords;
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
@@ -380,16 +377,20 @@ async function syncFromGSheets() {
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      return true;
     } else {
-      showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
+      if (btn) showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
+      return false;
     }
   } catch (err) {
     setConnectionStatus('err');
-    showToast('Bağlantı hatası: ' + err.message, 'error');
+    return false;
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
+    }
   }
 }
 
