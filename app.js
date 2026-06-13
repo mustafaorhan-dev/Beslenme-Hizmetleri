@@ -634,7 +634,7 @@ function exportDashboardPDF() {
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
   const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
-  const lastRecordsHtml = content.querySelector('.section-card') ? content.querySelector('.section-card').outerHTML : '';
+  const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Pano - Atık Kontrol</title>
     <style>
@@ -658,7 +658,7 @@ function exportDashboardPDF() {
     <h1>Yemekhane Atık Kontrol Paneli</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
-    ${lastRecordsHtml}
+    ${cardsHtml}
     <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
