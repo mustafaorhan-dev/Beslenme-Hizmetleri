@@ -1331,6 +1331,70 @@ function renderProduction(weekKey, weekData, days) {
   });
 
   tbody.innerHTML = rowsHtml;
+
+  // -- Haftalık Toplam İhtiyaç Listesi (malzeme bazında birleştirilmiş) --
+  renderWeeklyTotal(dishEntries, days);
+}
+
+function renderWeeklyTotal(dishEntries, days) {
+  const section = document.getElementById('weeklyTotalSection');
+  const thead = document.getElementById('weeklyTotalThead');
+  const tbody = document.getElementById('weeklyTotalTbody');
+  if (!section || !thead || !tbody) return;
+
+  // Malzeme bazında topla: { malzeme_birim: { ad, birim, total: [gün1, ...] } }
+  const agg = {};
+  dishEntries.forEach(dish => {
+    if (!dish.tarif) return;
+    dish.tarif.forEach(ing => {
+      const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+      let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
+      if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
+      else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
+      else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
+      const birim = b;
+      const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
+      if (!agg[key]) {
+        agg[key] = { ad: ing.malzeme.trim(), birim, totals: days.map(() => 0) };
+      }
+      days.forEach((d, i) => {
+        const kisi = d.data.kisi || 0;
+        const adMatch = d.data.yemekler.find(y => {
+          const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
+          return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
+        });
+        if (adMatch) {
+          agg[key].totals[i] += kisi * miktarKisi;
+        }
+      });
+    });
+  });
+
+  const entries = Object.values(agg);
+  if (!entries.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  thead.innerHTML = `<tr>
+    <th style="width:180px">Malzeme</th>
+    ${days.map(d => `<th style="text-align:center">${d.gun}</th>`).join('')}
+    <th style="text-align:center;color:var(--accent);font-weight:700">Haftalık Toplam</th>
+  </tr>`;
+
+  tbody.innerHTML = entries.map(e => {
+    const formatTotal = (total, birim) => {
+      if (total <= 0) return '—';
+      if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
+      if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
+      if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+      return Math.round(total) + ' ' + birim;
+    };
+    const weeklyTotal = e.totals.reduce((s, v) => s + v, 0);
+    return `<tr>
+      <td style="font-size:0.78rem;font-weight:500">${escapeHtml(e.ad)}</td>
+      ${e.totals.map(t => `<td style="text-align:center;font-size:0.78rem">${t > 0 ? formatTotal(t, e.birim) : '—'}</td>`).join('')}
+      <td style="text-align:center;font-size:0.82rem;font-weight:700;color:var(--accent)">${formatTotal(weeklyTotal, e.birim)}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
@@ -2680,6 +2744,48 @@ function exportMenuPDF() {
     </table>`;
   }
 
+  // Weekly total for PDF
+  let weeklyTotalHtml = '';
+  if (dishEntries.length) {
+    const agg = {};
+    dishEntries.forEach(dish => {
+      if (!dish.tarif) return;
+      dish.tarif.forEach(ing => {
+        const mk = ing.miktar_kisi || ing.miktar || 0;
+        let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
+        if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
+        else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
+        else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
+        const birim = b;
+        const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
+        if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, totals: days.map(() => 0) };
+        days.forEach((d, i) => {
+          const kisi = d.data.kisi || 0;
+          const adMatch = d.data.yemekler.find(y => {
+            const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
+            return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
+          });
+          if (adMatch) agg[key].totals[i] += kisi * mk;
+        });
+      });
+    });
+    const entries = Object.values(agg);
+    if (entries.length) {
+      const fmt = (total, birim) => {
+        if (total <= 0) return '—';
+        if (birim === 'gr') return total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
+        if (birim === 'ml') return total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
+        if (birim === 'lt') return (Math.round(total*100)/100)+' lt';
+        return Math.round(total)+' '+birim;
+      };
+      weeklyTotalHtml = `<h3 style="margin-top:30px;font-size:14pt">Haftalık Toplam İhtiyaç Listesi</h3>
+      <table>
+        <thead><tr><th style="width:180px">Malzeme</th>${days.map(d => `<th>${d.gun}</th>`).join('')}<th style="font-weight:700">Haftalık Toplam</th></tr></thead>
+        <tbody>${entries.map(e => `<tr><td>${escapeHtml(e.ad)}</td>${e.totals.map(t => `<td style="text-align:center">${t > 0 ? fmt(t, e.birim) : '—'}</td>`).join('')}<td style="text-align:center;font-weight:700">${fmt(e.totals.reduce((s,v) => s+v, 0), e.birim)}</td></tr>`).join('')}</tbody>
+      </table>`;
+    }
+  }
+
   let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <title>Menü ${weekKey}</title>
     <style>
@@ -2713,6 +2819,7 @@ function exportMenuPDF() {
       </tbody>
     </table>
     ${prodHtml}
+    ${weeklyTotalHtml}
     <div class="footer">Bu belge otomatik oluşturulmuştur.</div>
   </body></html>`;
 
