@@ -336,6 +336,22 @@ body {
   border-radius: var(--radius-sm);
 }
 
+.btn-logout {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-logout:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: #ef444466;
+  color: #ef4444;
+}
+
 /* ---- BUTTONS ---- */
 .btn {
   display: inline-flex;
