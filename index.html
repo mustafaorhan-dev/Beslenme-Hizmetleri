@@ -171,6 +171,15 @@
 
     <!-- ===== DASHBOARD TAB ===== -->
     <div class="tab-content active" id="content-dashboard">
+      <div class="toolbar" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-outline" onclick="exportDashboardPDF()" title="Panoyu PDF olarak yazdır">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF Yazdır
+          </button>
+        </div>
+      </div>
       <div class="kpi-grid" id="kpiGrid">
         <div class="kpi-card" id="kpi-toplam-kayit">
           <div class="kpi-icon kpi-blue">
@@ -284,6 +293,10 @@
             İçe Aktar
           </button>
           <input type="file" id="importInput" accept=".csv,.json" style="display:none" onchange="handleImport(event)" />
+          <button class="btn btn-outline" onclick="exportRecordsPDF()" title="Kayıtları PDF olarak yazdır">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF
+          </button>
         </div>
       </div>
       <div class="section-card">
@@ -329,7 +342,15 @@
 
     <!-- ===== CHARTS TAB ===== -->
     <div class="tab-content" id="content-charts">
-      <div class="chart-year-filter" id="chartYearFilter"></div>
+      <div class="toolbar" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div class="chart-year-filter" id="chartYearFilter" style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-outline" onclick="exportChartsPDF()" title="Grafikleri PDF olarak yazdır">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF Yazdır
+          </button>
+        </div>
+      </div>
       <div class="charts-grid">
         <div class="section-card chart-card chart-card-full">
           <div class="section-header">

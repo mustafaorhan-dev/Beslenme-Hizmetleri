@@ -589,6 +589,110 @@ function exportPDF() {
   }, 400);
 }
 
+function exportChartsPDF() {
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  // Canvas'ları resim'e çevir
+  const canvases = document.querySelectorAll('#content-charts canvas');
+  const replacements = [];
+  canvases.forEach(c => {
+    const img = document.createElement('img');
+    img.src = c.toDataURL();
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    replacements.push({ old: c.outerHTML, new: img.outerHTML });
+  });
+  let chartsHtml = document.getElementById('content-charts').innerHTML;
+  replacements.forEach(r => { chartsHtml = chartsHtml.replace(r.old, r.new); });
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Grafikler - Atık Kontrol</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1.5rem; }
+      .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; page-break-inside: avoid; }
+      .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+      canvas { max-width: 100%; height: auto !important; }
+      .chart-empty { font-size: 0.8rem; color: #999; text-align: center; padding: 2rem; }
+      .chart-year-filter { display: none; }
+      .toolbar-actions { display: none; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+    </style>
+  </head><body>
+    <h1>Grafikler - Atık Kontrol Yönetim Sistemi</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${chartsHtml}
+    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
+function exportDashboardPDF() {
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  const content = document.getElementById('content-dashboard');
+  const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
+  const lastRecordsHtml = content.querySelector('.section-card') ? content.querySelector('.section-card').outerHTML : '';
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Pano - Atık Kontrol</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+      .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.5rem; }
+      .kpi-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; display: flex; align-items: center; gap: 0.8rem; page-break-inside: avoid; }
+      .kpi-icon { width: 36px; height: 36px; flex-shrink: 0; }
+      .kpi-label { font-size: 0.7rem; color: #666; font-weight: 600; text-transform: uppercase; }
+      .kpi-value { font-size: 1.3rem; font-weight: 700; }
+      .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; page-break-inside: avoid; }
+      .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+      .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
+      .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
+      .toolbar, .kpi-trend, canvas, .btn, .badge { display: none; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+    </style>
+  </head><body>
+    <h1>Yemekhane Atık Kontrol Paneli</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${kpiHtml}
+    ${lastRecordsHtml}
+    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
+function exportRecordsPDF() {
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>Kayıt yok</p>';
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Kayıtlar - Atık Kontrol</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+      .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; white-space: nowrap; }
+      .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
+      .toolbar, .bulk-bar, .pagination, .btn, .empty-state svg { display: none; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+    </style>
+  </head><body>
+    <h1>Tüm Kayıtlar</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${tableHtml}
+    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
 // ─── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
