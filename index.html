@@ -20,6 +20,13 @@
 </head>
 <body>
 
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Veriler senkronize ediliyor...</div>
+    <div class="loading-sub" id="loadingSub">Google Sheets bağlantısı kuruluyor</div>
+  </div>
+
   <!-- HEADER -->
   <header class="header">
     <div class="header-content">
@@ -49,6 +56,9 @@
         </div>
       </div>
       <div class="header-right">
+        <div class="conn-status" id="connStatus" title="Bağlantı durumu">
+          <span class="conn-dot" id="connDot"></span>
+        </div>
         <span class="page-title" id="pageTitle">Panel</span>
         <div class="current-date" id="currentDate"></div>
       </div>

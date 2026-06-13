@@ -8,6 +8,51 @@
   padding: 0;
 }
 
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-primary);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden {
+  opacity: 0; pointer-events: none;
+}
+.loading-spinner {
+  width: 48px; height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 1.1rem; color: var(--text-primary); font-weight: 600;
+  margin-bottom: 6px;
+}
+.loading-sub {
+  font-size: 0.85rem; color: var(--text-secondary); opacity: 0.7;
+}
+
+/* Connection Status */
+.conn-status {
+  display: inline-flex; align-items: center; margin-right: 10px;
+}
+.conn-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #888;
+  transition: background 0.3s ease;
+}
+.conn-dot.conn-ok { background: #22c55e; box-shadow: 0 0 6px #22c55e66; }
+.conn-dot.conn-err { background: #ef4444; box-shadow: 0 0 6px #ef444466; }
+.conn-dot.conn-sync { background: #f59e0b; animation: pulse 1s ease infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
 /* Fallback font metrics match to prevent FOUT reflow */
 @font-face {
   font-family: 'Inter Fallback';

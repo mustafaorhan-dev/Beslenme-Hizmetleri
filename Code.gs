@@ -25,6 +25,8 @@ function doGet(e) {
   return jsonResponse({ data: rows });
 }
 
+const MENU_SHEET_NAME = 'Menü Verisi';
+
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
@@ -32,6 +34,25 @@ function doPost(e) {
 
     if (action === 'getDishes' || action === 'saveDishes') {
       return handleDishAction(action, body);
+    }
+
+    // Menü işlemleri
+    if (action === 'saveMenu') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(MENU_SHEET_NAME);
+      if (!sheet) sheet = ss.insertSheet(MENU_SHEET_NAME);
+      const data = body.menuData || '{}';
+      sheet.clear();
+      sheet.getRange(1, 1).setValue('menuJson');
+      sheet.getRange(1, 2).setValue(data);
+      return jsonResponse({ success: true });
+    }
+    if (action === 'loadMenu') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(MENU_SHEET_NAME);
+      if (!sheet) return jsonResponse({ menuData: '{}' });
+      const val = sheet.getRange(1, 2).getValue();
+      return jsonResponse({ menuData: val || '{}' });
     }
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);

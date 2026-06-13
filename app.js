@@ -53,21 +53,50 @@ function setChartYear(year) {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  loadData();
   loadGSheetConfig();
+  setConnectionStatus('sync');
+  setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
+  loadData();
   setCurrentDate();
   renderAll();
   drawAllCharts();
   updateSyncUI();
+
+  // Retry'li senkronizasyon
+  let mainOk = false, dishOk = false, menuOk = false;
+
   if (gsheetConfig.webappUrl) {
-    syncFromGSheets();
+    setLoadingSub('Ana veriler indiriliyor...');
+    mainOk = await fetchWithRetry(() => syncFromGSheets(), 3, 1000);
+  } else {
+    mainOk = true;
   }
+
   if (gsheetConfig.dishUrl) {
-    await syncDishesFromGSheets();
+    setLoadingSub('Yemek listesi senkronize ediliyor...');
+    dishOk = await fetchWithRetry(() => syncDishesFromGSheets(), 3, 1000);
+  } else {
+    dishOk = true;
   }
-  // Menü sekmesi aktifse ürün tablosunu güncelle
+
+  // Menü verisini Google Sheet'ten al
+  if (gsheetConfig.webappUrl) {
+    setLoadingSub('Menü verileri alınıyor...');
+    menuOk = await fetchWithRetry(() => syncMenuFromGSheet(), 3, 1000);
+  }
+
   refreshMenuProduction();
   initDishAutocomplete();
+
+  // Loading overlay'i kapat
+  document.getElementById('loadingOverlay').classList.add('hidden');
+
+  // Bağlantı durumunu göster
+  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk)) {
+    setConnectionStatus('ok');
+  } else {
+    setConnectionStatus('err');
+  }
 });
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -134,6 +163,40 @@ async function syncToSheetSilent() {
       body: JSON.stringify({ action: 'saveAll', records })
     });
   } catch (_) {}
+}
+
+// -- Retry helper --
+async function fetchWithRetry(fn, maxRetries = 3, delayMs = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const result = await fn();
+      if (result !== false) return result;
+    } catch (_) {}
+    if (i < maxRetries - 1) {
+      await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  return false;
+}
+
+function setConnectionStatus(state) {
+  const dot = document.getElementById('connDot');
+  if (!dot) return;
+  dot.className = 'conn-dot';
+  if (state === 'ok') dot.classList.add('conn-ok');
+  else if (state === 'err') dot.classList.add('conn-err');
+  else if (state === 'sync') dot.classList.add('conn-sync');
+}
+
+function setLoadingText(text, sub) {
+  const el = document.getElementById('loadingText');
+  if (el) el.textContent = text;
+  if (sub !== undefined) setLoadingSub(sub);
+}
+
+function setLoadingSub(text) {
+  const el = document.getElementById('loadingSub');
+  if (el) el.textContent = text;
 }
 
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
@@ -260,11 +323,13 @@ async function syncToGSheets() {
       gsheetConfig.lastSync = new Date().toISOString();
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
+      setConnectionStatus('ok');
       showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
     } else {
       showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
     }
   } catch (err) {
+    setConnectionStatus('err');
     showToast('Bağlantı hatası: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
@@ -314,11 +379,13 @@ async function syncFromGSheets() {
       gsheetConfig.lastSync = new Date().toISOString();
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
+      setConnectionStatus('ok');
       showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
     } else {
       showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
     }
   } catch (err) {
+    setConnectionStatus('err');
     showToast('Bağlantı hatası: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
@@ -333,6 +400,7 @@ async function testGSheetConnection() {
       document.getElementById('syncStatusLabel').textContent = 'Bağlantı başarılı';
       document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e erişilebiliyor';
       document.getElementById('syncStatusIcon').className = 'sync-status-icon sync-ok';
+      setConnectionStatus('ok');
     }
   } catch (e) {
     // Silent fail - user can test manually
@@ -1528,6 +1596,39 @@ async function syncDishesToGSheets() {
   } catch (_) {}
 }
 
+// -- Menu Google Sheet sync --
+const MENU_STORAGE_KEY = 'atik_kontrol_menu';
+
+async function syncMenuFromGSheet() {
+  if (!gsheetConfig.webappUrl) return false;
+  try {
+    const res = await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'loadMenu' })
+    });
+    const json = await res.json();
+    if (json.menuData) {
+      const parsed = JSON.parse(json.menuData);
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(parsed));
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+async function syncMenuToGSheet() {
+  if (!gsheetConfig.webappUrl) return;
+  try {
+    const data = localStorage.getItem(MENU_STORAGE_KEY) || '{}';
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveMenu', menuData: data })
+    });
+  } catch (_) {}
+}
+
 // -- Live production refresh --
 function refreshMenuProduction() {
   if (!document.getElementById('mk_0')) return; // menü henüz render edilmemiş
@@ -2429,7 +2530,6 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── WEEKLY MENU ──────────────────────────────────────────────────────────────
-const MENU_STORAGE_KEY = 'atik_kontrol_menu';
 const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
 let menuWeekOffset = 0;
 
@@ -2483,6 +2583,7 @@ function saveWeeklyMenu() {
   allData[weekKey] = menuData;
   try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData)); } catch (e) {}
   refreshMenuProduction();
+  syncMenuToGSheet();
   showToast('Haftalık menü kaydedildi.', 'success');
 }
 
@@ -2497,6 +2598,7 @@ function clearWeeklyMenu() {
     if (kisiEl) kisiEl.value = '';
   });
   refreshMenuProduction();
+  syncMenuToGSheet();
   showToast('Menü temizlendi.', 'success');
 }
 
