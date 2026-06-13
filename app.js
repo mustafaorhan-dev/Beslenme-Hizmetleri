@@ -1512,6 +1512,29 @@ async function syncDishesToGSheets() {
   } catch (_) {}
 }
 
+// -- Live production refresh --
+function refreshMenuProduction() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+  const days = GUNLER.map((gun, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    const yemekler = [];
+    for (let c = 0; c < 5; c++) {
+      const el = document.getElementById('m' + c + '_' + i);
+      yemekler.push(el ? el.value : '');
+    }
+    const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
+    return { gun, key, data: { yemekler, kisi } };
+  });
+  const wd = {};
+  days.forEach(d => { wd[d.key] = d.data; });
+  renderProduction(weekKey, wd, days);
+}
+
 // -- Autocomplete in menu cells --
 let activeDishTextarea = null;
 let dishSuggestionsEl = null;
@@ -1536,6 +1559,7 @@ function initDishAutocomplete() {
     if (e.target === activeDishTextarea) {
       showDishDropdown(e.target);
     }
+    refreshMenuProduction();
   });
 
   tbody.addEventListener('keydown', function(e) {
@@ -2441,6 +2465,7 @@ function saveWeeklyMenu() {
   const allData = loadWeeklyMenu();
   allData[weekKey] = menuData;
   try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData)); } catch (e) {}
+  refreshMenuProduction();
   showToast('Haftalık menü kaydedildi.', 'success');
 }
 
@@ -2454,6 +2479,7 @@ function clearWeeklyMenu() {
     const kisiEl = document.getElementById('mk_' + i);
     if (kisiEl) kisiEl.value = '';
   });
+  refreshMenuProduction();
   showToast('Menü temizlendi.', 'success');
 }
 
