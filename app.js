@@ -5,8 +5,8 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbwCua5py53EOIlNWpxAAqop20P2oCOvvcuZ1tsxSO8f5Nk-DRUmJhsBwxPjZeMs3PzTgg/exec';
-const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbwCua5py53EOIlNWpxAAqop20P2oCOvvcuZ1tsxSO8f5Nk-DRUmJhsBwxPjZeMs3PzTgg/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxp67GW35E0kODExPoMw1J413GCGBPg4jGXaNbfUTNaPadg-yHJyQrbPDYSPhapPXnG_Q/exec';
+const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxp67GW35E0kODExPoMw1J413GCGBPg4jGXaNbfUTNaPadg-yHJyQrbPDYSPhapPXnG_Q/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -1466,14 +1466,33 @@ async function syncDishesFromGSheets() {
     if (json.data && Array.isArray(json.data)) {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => {
         let tarif = [];
-        try { tarif = JSON.parse(d.tarif || '[]'); } catch (e) {}
+
+        // 1. JSON tarif sütunu varsa onu dene
+        if (d.tarif) {
+          try { tarif = JSON.parse(d.tarif); } catch (e) {}
+        }
+
+        // 2. Yoksa düz sütun formatını dene: ürün N, miktar N, birim N
+        if (!tarif.length) {
+          const keys = Object.keys(d);
+          for (let n = 1; n <= 20; n++) {
+            const urunKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('ürün'+n).toLowerCase());
+            const miktarKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('miktar'+n).toLowerCase());
+            const birimKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('birim'+n).toLowerCase());
+            if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
+              const miktar = miktarKey ? parseFloat(d[miktarKey]) || 0 : 0;
+              const birim = birimKey ? String(d[birimKey] || 'gr').trim() : 'gr';
+              tarif.push({ malzeme: String(d[urunKey]).trim(), miktar_kisi: miktar, birim: birim });
+            } else break;
+          }
+        }
+
         return {
           id: String(d.id || Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
           ad: String(d.ad || '').trim(),
           kalori: String(d.kalori || '').trim(),
           alerjen: String(d.alerjen || '').trim(),
-          tarif: tarif,
-          tarif_porsiyon: Number(d.tarif_porsiyon) || 100
+          tarif: tarif
         };
       });
       yemeklerCache = list;
