@@ -1426,7 +1426,6 @@ function saveYemekForm() {
   document.getElementById('yemekFormContainer').style.display = 'none';
   editingYemekId = null;
   renderYemekListesi();
-  syncDishesToGSheets();
   showToast('Yemek kaydedildi.', 'success');
 }
 
@@ -1440,7 +1439,6 @@ function deleteYemek(id) {
   list = list.filter(y => y.id !== id);
   saveYemekler(list);
   renderYemekListesi();
-  syncDishesToGSheets();
   showToast('Yemek silindi.', 'success');
 }
 
