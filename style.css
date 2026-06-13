@@ -230,12 +230,12 @@
   border-color: var(--border);
 }
 [data-theme="dark"] .btn-outline {
-  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
 }
 [data-theme="dark"] .btn-outline:hover {
-  background: rgba(99,102,241,0.15);
-  border-color: #6366f1;
-  color: #a5b4fc;
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
 }
 [data-theme="dark"] .dish-suggestions {
   box-shadow: 0 6px 24px rgba(0,0,0,0.5);
@@ -421,11 +421,11 @@ body {
 .btn-ghost:hover { background: rgba(100,116,139,0.06); color: var(--text-primary); }
 
 .btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  background: rgba(100,116,139,0.06);
+  border: 1px solid rgba(100,116,139,0.4);
+  color: var(--text-primary);
 }
-.btn-outline:hover { background: rgba(99,102,241,0.08); border-color: var(--accent); color: var(--accent); }
+.btn-outline:hover { background: rgba(100,116,139,0.12); border-color: rgba(100,116,139,0.55); }
 
 .btn-danger {
   background: rgba(239,68,68,0.12);
