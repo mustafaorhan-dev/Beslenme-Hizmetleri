@@ -20,6 +20,29 @@
 </head>
 <body>
 
+  <!-- LOGIN OVERLAY -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <div class="login-logo">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+          <circle cx="24" cy="24" r="22" fill="url(#logoGrad)" opacity="0.15"/>
+          <path d="M16 12h16l-2 4H18l-2-4z" fill="url(#logoGrad)"/>
+          <path d="M14 16h20v2H14v-2z" fill="url(#logoGrad)" opacity="0.7"/>
+          <path d="M15 18l2 18h14l2-18H15z" fill="url(#logoGrad)" opacity="0.5"/>
+          <path d="M20 22v10M24 22v10M28 22v10" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 style="margin-bottom:0.5rem;font-size:1.1rem;color:var(--text-primary)">Yemekhane Menü ve Atık Yönetim Sistemi</h2>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1.5rem">Devam etmek için şifrenizi girin</p>
+      <input type="password" id="loginPassword" placeholder="Şifre" style="width:100%;padding:0.7rem 1rem;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;margin-bottom:0.75rem" onkeydown="if(event.key==='Enter')doLogin()" />
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text-secondary);margin-bottom:1rem;cursor:pointer">
+        <input type="checkbox" id="loginRemember" checked /> Beni hatırla
+      </label>
+      <button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:0.7rem;font-size:0.9rem">Giriş</button>
+      <div id="loginError" style="color:#ef4444;font-size:0.8rem;margin-top:0.75rem;text-align:center;display:none"></div>
+    </div>
+  </div>
+
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>

@@ -51,8 +51,45 @@ function setChartYear(year) {
   drawAllCharts();
 }
 
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+const LOGIN_PASSWORD = '4056';
+
+function doLogin() {
+  const input = document.getElementById('loginPassword');
+  const error = document.getElementById('loginError');
+  if (input.value === LOGIN_PASSWORD) {
+    if (document.getElementById('loginRemember').checked) {
+      localStorage.setItem('atik_kontrol_login_hash', btoa(LOGIN_PASSWORD));
+    }
+    document.getElementById('loginOverlay').classList.add('hidden');
+    if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
+  } else {
+    window._loginAttempts = (window._loginAttempts || 0) + 1;
+    error.textContent = 'Hatalı şifre!';
+    error.style.display = 'block';
+    input.value = '';
+    input.focus();
+    if (window._loginAttempts >= 5) {
+      error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
+      setTimeout(() => location.reload(), 2000);
+    }
+  }
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Login kontrolü
+  const savedHash = localStorage.getItem('atik_kontrol_login_hash');
+  if (savedHash) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+  } else {
+    document.getElementById('loginPassword').focus();
+    await new Promise(resolve => {
+      window._loginResolve = resolve;
+      window._loginAttempts = 0;
+    });
+  }
+
   loadGSheetConfig();
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
