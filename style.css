@@ -379,8 +379,9 @@ body {
 /* ---- APP LAYOUT ---- */
 .app-layout {
   display: flex;
-  min-height: 100vh;
+  height: calc(100vh - 70px);
   margin-left: 60px;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -522,7 +523,8 @@ body {
   flex: 1;
   min-width: 0;
   padding: 1rem;
-  overflow: auto;
+  overflow-y: auto;
+  height: 100%;
 }
 
 
