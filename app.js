@@ -1421,7 +1421,11 @@ function renderYemekListesi() {
   const filtered = query ? list.filter(y => y.ad.toLowerCase().includes(query)) : list;
 
   if (!filtered.length) {
-    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Yemek bulunamadı.</div>';
+    if (query) {
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">"<strong>' + escapeHtml(query) + '</strong>" için eşleşen yemek bulunamadı.</div>';
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Henüz yemek eklenmemiş. "+ Yeni Yemek" butonuna tıklayarak ekleyin.</div>';
+    }
     return;
   }
 
@@ -1433,8 +1437,12 @@ function renderYemekListesi() {
       <td style="font-size:0.8rem;color:var(--text-muted)">${escapeHtml(y.alerjen || '')}</td>
       <td style="text-align:center">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
       <td style="white-space:nowrap">
-        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">✏️</button>
-        <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">🗑️</button>
+        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
       </td>
     </tr>`).join('')}</tbody>
   </table>`;
