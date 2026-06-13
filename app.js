@@ -79,8 +79,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     dishOk = true;
   }
 
-  // Menü verisini Google Sheet'ten al
-  if (gsheetConfig.webappUrl) {
+  // Menü verisini Google Sheet'ten al (dish URL veya main URL)
+  const menuUrl = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
+  if (menuUrl) {
     setLoadingSub('Menü verileri alınıyor...');
     menuOk = await fetchWithRetry(() => syncMenuFromGSheet(), 3, 1000);
   }
