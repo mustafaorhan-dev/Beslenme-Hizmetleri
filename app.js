@@ -65,6 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (gsheetConfig.dishUrl) {
     await syncDishesFromGSheets();
   }
+  // Menü sekmesi aktifse ürün tablosunu güncelle
+  refreshMenuProduction();
   initDishAutocomplete();
 });
 
@@ -2639,6 +2641,11 @@ function renderMenu() {
     <th style="width:100px">Çeşit</th>
     ${days.map(d => `<th>${d.gun}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${d.key}</span></th>`).join('')}
   </tr>`;
+
+  // Cache henüz dolmamışsa 500ms sonra tekrar dene
+  if (!yemeklerCache.length) {
+    setTimeout(refreshMenuProduction, 500);
+  }
 
   // Gövde: her çeşit için bir satır + kişi sayısı satırı
   const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
