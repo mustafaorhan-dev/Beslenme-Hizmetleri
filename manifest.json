@@ -1,7 +1,7 @@
 {
-  "name": "Atık Kontrol Sistemi",
-  "short_name": "Atık Kontrol",
-  "description": "Yemekhane atık kontrol ve üretim takip paneli",
+  "name": "Yemekhane Menü ve Atık Yönetim Sistemi",
+  "short_name": "Yemekhane",
+  "description": "Haftalık menü planlaması ve atık kontrol sistemi",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0a0f1e",
