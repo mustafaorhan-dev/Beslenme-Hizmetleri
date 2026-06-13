@@ -1344,7 +1344,11 @@ body {
   .header-right { gap: 0.3rem; }
   .page-title { display: none; }
   .search-box { min-width: 0; width: 100%; }
-  .comparison-label { width: auto; min-width: 70px; font-size: 0.7rem; }
+  .comparison-label { width: auto; min-width: 60px; font-size: 0.7rem; }
+  .comparison-old { min-width: 40px; font-size: 0.7rem; }
+  .comparison-new { min-width: 40px; font-size: 0.7rem; }
+  .comparison-diff { min-width: 50px; font-size: 0.7rem; }
+  .comparison-item { gap: 0.4rem; padding: 0.4rem 0.5rem; font-size: 0.72rem; }
   .btn-logout { width: 30px; height: 30px; }
   .data-table th, .data-table td { padding: 0.35rem 0.4rem; font-size: 0.65rem; }
 }
@@ -1401,11 +1405,11 @@ body {
 }
 
 /* ---- COMPARISON ---- */
-.comparison-grid { display: flex; flex-direction: column; gap: 0.5rem; }
-.comparison-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-card); font-size: 0.82rem; }
+.comparison-grid { display: flex; flex-direction: column; gap: 0.5rem; overflow-x: auto; }
+.comparison-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-card); font-size: 0.82rem; overflow-wrap: break-word; word-break: break-word; }
 .comparison-label { width: 130px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
 .comparison-old { color: var(--text-muted); min-width: 60px; text-align: right; }
-.comparison-arrow { color: var(--text-muted); }
+.comparison-arrow { color: var(--text-muted); flex-shrink: 0; }
 .comparison-new { color: var(--text-primary); font-weight: 600; min-width: 60px; text-align: right; }
 .comparison-diff { min-width: 70px; text-align: right; }
 
