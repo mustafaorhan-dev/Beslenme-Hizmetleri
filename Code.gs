@@ -8,7 +8,7 @@ function doGet(e) {
     // Yemek Listesi sayfası yoksa otomatik oluştur
     if (sheetName === DISH_SHEET_NAME) {
       sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(DISH_SHEET_NAME);
-      sheet.appendRow(['id', 'ad', 'kalori', 'alerjen']);
+      sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'tarif', 'tarif_porsiyon']);
     } else {
       return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
     }
@@ -89,10 +89,11 @@ function doPost(e) {
 
 function handleDishAction(action, body) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const COLS = 6;
   let sheet = ss.getSheetByName(DISH_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(DISH_SHEET_NAME);
-    sheet.appendRow(['id', 'ad', 'kalori', 'alerjen']);
+    sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'tarif', 'tarif_porsiyon']);
   }
 
   if (action === 'getDishes') {
@@ -100,7 +101,16 @@ function handleDishAction(action, body) {
     if (data.length <= 1) return jsonResponse({ dishes: [] });
     const dishes = [];
     for (let i = 1; i < data.length; i++) {
-      dishes.push({ id: String(data[i][0] || ''), ad: String(data[i][1] || ''), kalori: String(data[i][2] || ''), alerjen: String(data[i][3] || '') });
+      let tarif = [];
+      try { tarif = JSON.parse(data[i][4] || '[]'); } catch (e) {}
+      dishes.push({
+        id: String(data[i][0] || ''),
+        ad: String(data[i][1] || ''),
+        kalori: String(data[i][2] || ''),
+        alerjen: String(data[i][3] || ''),
+        tarif: tarif,
+        tarif_porsiyon: Number(data[i][5]) || 100
+      });
     }
     return jsonResponse({ dishes });
   }
@@ -109,11 +119,18 @@ function handleDishAction(action, body) {
     const dishes = body.dishes || [];
     const lastRow = sheet.getLastRow();
     if (lastRow > 1) {
-      sheet.getRange(2, 1, lastRow - 1, 4).clearContent();
+      sheet.getRange(2, 1, lastRow - 1, COLS).clearContent();
     }
     if (dishes.length > 0) {
-      const rows = dishes.map(d => [String(d.id || ''), String(d.ad || ''), String(d.kalori || ''), String(d.alerjen || '')]);
-      sheet.getRange(2, 1, rows.length, 4).setValues(rows);
+      const rows = dishes.map(d => [
+        String(d.id || ''),
+        String(d.ad || ''),
+        String(d.kalori || ''),
+        String(d.alerjen || ''),
+        JSON.stringify(d.tarif || []),
+        Number(d.tarif_porsiyon) || 100
+      ]);
+      sheet.getRange(2, 1, rows.length, COLS).setValues(rows);
     }
     return jsonResponse({ success: true, count: dishes.length });
   }

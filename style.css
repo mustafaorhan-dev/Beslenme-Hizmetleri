@@ -1401,3 +1401,7 @@ body {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 2px rgba(34,211,238,0.1);
 }
+
+/* ---- PRODUCTION TABLE ---- */
+#productionTable td { padding: 0.35rem 0.5rem; vertical-align: middle; }
+#productionTable tr:first-child td { border-top: none; }
