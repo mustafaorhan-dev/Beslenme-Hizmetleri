@@ -231,6 +231,35 @@
 [data-theme="dark"] .sidebar-footer {
   border-top-color: var(--border);
 }
+[data-theme="dark"] .current-date {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--border);
+}
+[data-theme="dark"] .btn-outline {
+  border-color: rgba(255,255,255,0.15);
+}
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(99,102,241,0.15);
+  border-color: #6366f1;
+  color: #a5b4fc;
+}
+[data-theme="dark"] .dish-suggestions {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.1);
+}
+[data-theme="dark"] .comparison-item {
+  background: rgba(255,255,255,0.03);
+}
+[data-theme="dark"] .report-item {
+  background: rgba(255,255,255,0.02);
+}
+[data-theme="dark"] .report-item:hover {
+  background: rgba(99,102,241,0.08);
+}
+[data-theme="dark"] .toast {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
 
 html { scroll-behavior: smooth; color-scheme: var(--color-scheme, dark); }
 
@@ -396,6 +425,13 @@ body {
   border: 1px solid rgba(100,116,139,0.25);
 }
 .btn-ghost:hover { background: rgba(100,116,139,0.06); color: var(--text-primary); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover { background: rgba(99,102,241,0.08); border-color: var(--accent); color: var(--accent); }
 
 .btn-danger {
   background: rgba(239,68,68,0.12);
