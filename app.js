@@ -1208,7 +1208,7 @@ function renderProduction(weekKey, weekData, days) {
 
   section.style.display = 'block';
 
-  // Header
+  // Header row HTML
   thead.innerHTML = `<tr>
     <th style="width:180px">Yemek / Malzeme</th>
     ${days.map(d => `<th style="text-align:center">${d.gun}<br><span style="font-weight:400;font-size:0.65rem;opacity:0.7">${d.key} (${d.data.kisi || 0} kişi)</span></th>`).join('')}
@@ -1217,21 +1217,35 @@ function renderProduction(weekKey, weekData, days) {
   // Body - list each dish's ingredients
   let rowsHtml = '';
   dishEntries.forEach(dish => {
-    const basePorsiyon = dish.tarif_porsiyon || 100;
     rowsHtml += `<tr style="background:rgba(99,102,241,0.04)"><td colspan="${days.length + 1}" style="font-weight:600;font-size:0.82rem;padding:0.4rem 0.6rem">${escapeHtml(dish.ad)}</td></tr>`;
     if (dish.tarif && dish.tarif.length) {
       dish.tarif.forEach(ing => {
+        const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+        const birim = ing.birim || 'gr';
         rowsHtml += `<tr>
           <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.malzeme)}</td>
           ${days.map(d => {
             const kisi = d.data.kisi || 0;
-            const scale = basePorsiyon > 0 ? kisi / basePorsiyon : 0;
-            const miktar = (ing.miktar * scale);
+            const total = kisi * miktarKisi;
             const ad = d.data.yemekler.find(y => {
               const trimmed = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
               return trimmed === dish.ad || trimmed.startsWith(dish.ad) || dish.ad.startsWith(trimmed);
             });
-            return `<td style="text-align:center;font-size:0.78rem">${ad ? (miktar > 0 ? (Math.round(miktar * 100) / 100) + ' ' + ing.birim : '—') : '—'}</td>`;
+            let display = '—';
+            if (ad && total > 0) {
+              if (birim === 'gr') {
+                if (total >= 1000) display = (Math.round(total / 10) / 100) + ' kg';
+                else display = Math.round(total) + ' gr';
+              } else if (birim === 'ml') {
+                if (total >= 1000) display = (Math.round(total / 10) / 100) + ' lt';
+                else display = Math.round(total) + ' ml';
+              } else if (birim === 'lt') {
+                display = (Math.round(total * 100) / 100) + ' lt';
+              } else {
+                display = Math.round(total) + ' ' + birim;
+              }
+            }
+            return `<td style="text-align:center;font-size:0.78rem">${display}</td>`;
           }).join('')}
         </tr>`;
       });
@@ -1294,7 +1308,7 @@ let yf_tarif = [];
 
 function showYemekForm(editId) {
   const container = document.getElementById('yemekFormContainer');
-  let ad = '', kalori = '', alerjen = '', tarifPorsiyon = 100;
+  let ad = '', kalori = '', alerjen = '';
   yf_tarif = [];
   editingYemekId = null;
 
@@ -1304,12 +1318,11 @@ function showYemekForm(editId) {
     if (y) {
       ad = y.ad; kalori = y.kalori || ''; alerjen = y.alerjen || '';
       yf_tarif = (y.tarif || []).map(t => ({ ...t }));
-      tarifPorsiyon = y.tarif_porsiyon || 100;
       editingYemekId = editId;
     }
   }
 
-  renderYemekForm(ad, kalori, alerjen, tarifPorsiyon);
+  renderYemekForm(ad, kalori, alerjen, 100);
   container.style.display = 'block';
   document.getElementById('yf_ad').focus();
 }
@@ -1319,13 +1332,13 @@ function renderYemekForm(ad, kalori, alerjen, tarifPorsiyon) {
   const tarifRows = yf_tarif.map((t, i) => `
     <tr>
       <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adı" data-idx="${i}" style="width:100%" /></td>
-      <td style="width:80px"><input type="number" class="yf-miktar" value="${t.miktar}" step="0.1" min="0" data-idx="${i}" style="width:70px;text-align:center" /></td>
-      <td style="width:70px">
-        <select class="yf-birim" data-idx="${i}" style="width:65px;padding:0.35rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:0.8rem">
-          <option value="kg" ${t.birim === 'kg' ? 'selected' : ''}>kg</option>
-          <option value="gr" ${t.birim === 'gr' ? 'selected' : ''}>gr</option>
-          <option value="lt" ${t.birim === 'lt' ? 'selected' : ''}>lt</option>
-          <option value="adet" ${t.birim === 'adet' ? 'selected' : ''}>adet</option>
+      <td style="width:80px"><input type="number" class="yf-miktar" value="${t.miktar_kisi || ''}" step="0.1" min="0" data-idx="${i}" style="width:70px;text-align:center" placeholder="0" /></td>
+      <td style="width:60px">
+        <select class="yf-birim" data-idx="${i}" style="width:55px;padding:0.3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:0.75rem">
+          <option value="gr" ${(t.birim||'gr')==='gr'?'selected':''}>gr</option>
+          <option value="adet" ${t.birim==='adet'?'selected':''}>adet</option>
+          <option value="lt" ${t.birim==='lt'?'selected':''}>lt</option>
+          <option value="ml" ${t.birim==='ml'?'selected':''}>ml</option>
         </select>
       </td>
       <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">✕</button></td>
@@ -1355,12 +1368,10 @@ function renderYemekForm(ad, kalori, alerjen, tarifPorsiyon) {
     <div style="border-top:1px solid var(--border);padding-top:0.75rem">
       <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
         <strong style="font-size:0.82rem">Malzemeler</strong>
-        <span style="font-size:0.7rem;color:var(--text-muted)">Bu tarif</span>
-        <input type="number" id="yf_tarif_porsiyon" value="${tarifPorsiyon}" min="1" style="width:60px;text-align:center;padding:0.2rem;font-size:0.78rem" />
-        <span style="font-size:0.7rem;color:var(--text-muted)">kişilik</span>
+        <span style="font-size:0.7rem;color:var(--text-muted)">(kişi başı gram)</span>
       </div>
       <table style="width:100%;font-size:0.8rem">
-        <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">Miktar</th><th style="width:70px">Birim</th><th style="width:30px"></th></tr></thead>
+        <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">/kişi</th><th style="width:60px">Birim</th><th style="width:30px"></th></tr></thead>
         <tbody id="yf_tarif_tbody">${tarifRows}</tbody>
       </table>
       <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">+ Malzeme Ekle</button>
@@ -1369,13 +1380,11 @@ function renderYemekForm(ad, kalori, alerjen, tarifPorsiyon) {
 }
 
 function yfTarifEkle() {
-  yf_tarif.push({ malzeme: '', miktar: 0, birim: 'kg' });
-  // Re-render the form with current values
+  yf_tarif.push({ malzeme: '', miktar_kisi: 0, birim: 'gr' });
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
-  const porsiyon = parseInt(document.getElementById('yf_tarif_porsiyon').value) || 100;
-  renderYemekForm(ad, kalori, alerjen, porsiyon);
+  renderYemekForm(ad, kalori, alerjen, 100);
 }
 
 function yfTarifSil(idx) {
@@ -1383,8 +1392,7 @@ function yfTarifSil(idx) {
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
-  const porsiyon = parseInt(document.getElementById('yf_tarif_porsiyon').value) || 100;
-  renderYemekForm(ad, kalori, alerjen, porsiyon);
+  renderYemekForm(ad, kalori, alerjen, 100);
 }
 
 function saveYemekForm() {
@@ -1392,7 +1400,6 @@ function saveYemekForm() {
   if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
   const alerjen = document.getElementById('yf_alerjen').value.trim();
-  const tarifPorsiyon = parseInt(document.getElementById('yf_tarif_porsiyon').value) || 100;
 
   // Read ingredients from DOM
   const malzemeInputs = document.querySelectorAll('.yf-malzeme');
@@ -1404,8 +1411,8 @@ function saveYemekForm() {
     if (malzeme) {
       tarif.push({
         malzeme: malzeme,
-        miktar: parseFloat(miktarInputs[i]?.value) || 0,
-        birim: birimSelects[i]?.value || 'kg'
+        miktar_kisi: parseFloat(miktarInputs[i]?.value) || 0,
+        birim: birimSelects[i]?.value || 'gr'
       });
     }
   });
@@ -1414,9 +1421,9 @@ function saveYemekForm() {
 
   if (editingYemekId) {
     const y = list.find(i => i.id === editingYemekId);
-    if (y) { y.ad = ad; y.kalori = kalori; y.alerjen = alerjen; y.tarif = tarif; y.tarif_porsiyon = tarifPorsiyon; }
+    if (y) { y.ad = ad; y.kalori = kalori; y.alerjen = alerjen; y.tarif = tarif; }
   } else {
-    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), ad, kalori, alerjen, tarif, tarif_porsiyon: tarifPorsiyon });
+    list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), ad, kalori, alerjen, tarif });
   }
 
   saveYemekler(list);
@@ -2460,13 +2467,64 @@ function exportMenuPDF() {
 
   const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
 
+  // Production breakdown for PDF
+  const yemekler = loadYemekler();
+  const usedDishes = {};
+  days.forEach(d => {
+    d.data.yemekler.forEach(ad => {
+      const trimmed = ad.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+      if (trimmed) {
+        const dish = yemekler.find(y => y.ad === trimmed || y.ad.startsWith(trimmed) || trimmed.startsWith(y.ad));
+        if (dish && dish.tarif && dish.tarif.length) usedDishes[dish.ad] = dish;
+      }
+    });
+  });
+  const dishEntries = Object.values(usedDishes);
+  let prodHtml = '';
+  if (dishEntries.length) {
+    prodHtml = `<h3 style="margin-top:30px;font-size:14pt">Ürün İhtiyaç Listesi</h3>
+    <table>
+      <thead><tr><th style="width:180px">Yemek / Malzeme</th>${days.map(d => `<th>${d.gun}<br><span style="font-weight:400;font-size:8pt">(${d.data.kisi||0} kişi)</span></th>`).join('')}</tr></thead>
+      <tbody>
+        ${dishEntries.map(dish => {
+          let rows = `<tr style="background:#e8e8e8"><td colspan="${days.length+1}" style="font-weight:600">${escapeHtml(dish.ad)}</td></tr>`;
+          dish.tarif.forEach(ing => {
+            const mk = ing.miktar_kisi || ing.miktar || 0;
+            const birim = ing.birim || 'gr';
+            rows += `<tr><td style="padding-left:15px;font-size:9pt">${escapeHtml(ing.malzeme)}</td>`;
+            days.forEach(d => {
+              const kisi = d.data.kisi || 0;
+              const total = kisi * mk;
+              let display = '—';
+              if (total > 0) {
+                const adMatch = d.data.yemekler.find(y => {
+                  const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+                  return t === dish.ad || t.startsWith(dish.ad) || dish.ad.startsWith(t);
+                });
+                if (adMatch) {
+                  if (birim === 'gr') display = total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
+                  else if (birim === 'ml') display = total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
+                  else if (birim === 'lt') display = (Math.round(total*100)/100)+' lt';
+                  else display = Math.round(total)+' '+birim;
+                }
+              }
+              rows += `<td style="text-align:center;font-size:9pt">${display}</td>`;
+            });
+            rows += '</tr>';
+          });
+          return rows;
+        }).join('')}
+      </tbody>
+    </table>`;
+  }
+
   let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <title>Menü ${weekKey}</title>
     <style>
       body { font-family: 'Segoe UI', Arial, sans-serif; margin: 2cm; color: #1a1a1a; }
-      h2 { text-align: center; font-size: 18pt; margin-bottom: 20px; }
-      table { width: 100%; border-collapse: collapse; font-size: 10pt; }
-      th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; vertical-align: top; }
+      h2 { text-align: center; font-size: 18pt; margin-bottom: 6px; }
+      table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 12px; }
+      th, td { border: 1px solid #999; padding: 5px 7px; text-align: left; vertical-align: top; }
       th { background: #f0f0f0; font-weight: 600; text-align: center; }
       td:first-child { font-weight: 600; white-space: nowrap; }
       .footer { text-align: center; margin-top: 20px; font-size: 9pt; color: #666; }
@@ -2492,6 +2550,7 @@ function exportMenuPDF() {
         </tr>
       </tbody>
     </table>
+    ${prodHtml}
     <div class="footer">Bu belge otomatik oluşturulmuştur.</div>
   </body></html>`;
 
