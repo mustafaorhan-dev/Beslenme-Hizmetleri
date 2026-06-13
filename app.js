@@ -1228,9 +1228,9 @@ function renderProduction(weekKey, weekData, days) {
       dish.tarif.forEach(ing => {
         const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
         let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-        if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
-        else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
-        else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+        if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
+        else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
+        else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
         const birim = b;
         rowsHtml += `<tr>
           <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.malzeme)}</td>
@@ -1490,9 +1490,9 @@ async function syncDishesFromGSheets() {
             if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
               const miktar = miktarKey ? parseFloat(d[miktarKey]) || 0 : 0;
               let b = birimKey ? String(d[birimKey] || 'gr').trim().toLowerCase().replace(/\s/g,'') : 'gr';
-              if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
-              else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
-              else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+              if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
+              else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
+              else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
               const birim = b;
               tarif.push({ malzeme: String(d[urunKey]).trim(), miktar_kisi: miktar, birim: birim });
             } else break;
@@ -2547,9 +2547,9 @@ function exportMenuPDF() {
           dish.tarif.forEach(ing => {
             const mk = ing.miktar_kisi || ing.miktar || 0;
             let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-            if (b === 'g' || b.startsWith('gr') || b.startsWith('gram')) b = 'gr';
-            else if (b === 'l' || b.startsWith('lt') || b.startsWith('litr')) b = 'lt';
-            else if (b.startsWith('ml') || b.startsWith('mil')) b = 'ml';
+            if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
+            else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
+            else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
             const birim = b;
             rows += `<tr><td style="padding-left:15px;font-size:9pt">${escapeHtml(ing.malzeme)}</td>`;
             days.forEach(d => {
