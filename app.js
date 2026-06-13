@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxp67GW35E0kODExPoMw1J413GCGBPg4jGXaNbfUTNaPadg-yHJyQrbPDYSPhapPXnG_Q/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbw40N8NfSMrurURdbx7kPfHeqqSbiEzQ8hC7vnmXLFSFfmlPvwr2bfQ9Dwy1CILS-AUuQ/exec';
 const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxp67GW35E0kODExPoMw1J413GCGBPg4jGXaNbfUTNaPadg-yHJyQrbPDYSPhapPXnG_Q/exec';
 let records = [];
 let editingId = null;
