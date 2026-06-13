@@ -6,7 +6,7 @@
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzY5J2Fj-8PkelM9d7mVJiMdSqHwLlOEsOS9N2oEVmZnbbA1KwN64o6hCVwOiZ8r08RFw/exec';
-const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxp67GW35E0kODExPoMw1J413GCGBPg4jGXaNbfUTNaPadg-yHJyQrbPDYSPhapPXnG_Q/exec';
+const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbzfmE_TPP5HyUYeCZn55715qpdc-KAvNSZoaSaHNskvl-83x8bRGim3CGY__yo72Nej4A/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -1673,9 +1673,10 @@ async function syncDishesToGSheets() {
 const MENU_STORAGE_KEY = 'atik_kontrol_menu';
 
 async function syncMenuFromGSheet() {
-  if (!gsheetConfig.webappUrl) return false;
+  const url = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
+  if (!url) return false;
   try {
-    const res = await fetch(gsheetConfig.webappUrl, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'loadMenu' })
@@ -1691,10 +1692,11 @@ async function syncMenuFromGSheet() {
 }
 
 async function syncMenuToGSheet() {
-  if (!gsheetConfig.webappUrl) return;
+  const url = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
+  if (!url) return;
   try {
     const data = localStorage.getItem(MENU_STORAGE_KEY) || '{}';
-    await fetch(gsheetConfig.webappUrl, {
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveMenu', menuData: data })
@@ -2837,6 +2839,39 @@ function exportMenuPDF() {
   w.document.close();
   w.focus();
   setTimeout(() => { w.print(); }, 500);
+}
+
+function exportMenuJSON() {
+  const allData = loadWeeklyMenu();
+  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'menu_verisi_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('Menü JSON dosyası indirildi.', 'success');
+}
+
+function importMenuJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
+      menuWeekOffset = 0;
+      renderMenu();
+      syncMenuToGSheet();
+      showToast('Menü JSON dosyası yüklendi.', 'success');
+    } catch (err) {
+      showToast('JSON dosyası okunamadı: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 function renderMenu() {
