@@ -1217,7 +1217,7 @@ function renderProduction(weekKey, weekData, days) {
   // Header row HTML
   thead.innerHTML = `<tr>
     <th style="width:180px">Yemek / Malzeme</th>
-    ${days.map(d => `<th style="text-align:center">${d.gun}<br><span style="font-weight:400;font-size:0.65rem;opacity:0.7">${d.key} (${d.data.kisi || 0} kişi)</span></th>`).join('')}
+    ${days.map(d => `<th style="text-align:center">${d.gun}<br><span style="font-weight:400;font-size:0.65rem;opacity:0.7">${d.key}</span><br><span style="font-weight:600;font-size:0.75rem;color:var(--accent)">${d.data.kisi || 0} kişi</span></th>`).join('')}
   </tr>`;
 
   // Body - list each dish's ingredients
