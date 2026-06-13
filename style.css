@@ -448,7 +448,7 @@ body {
 .sidebar.open .sidebar-actions .tab-btn span,
 .sidebar.open .sidebar-header span,
 .sidebar.open .sidebar-footer .theme-toggle span,
-.sidebar.open .sidebar-footer { display: inline; }
+.sidebar.open .sidebar-footer { display: block; }
 .sidebar:not(.open) .sidebar-nav .tab-btn span,
 .sidebar:not(.open) .sidebar-actions .tab-btn span,
 .sidebar:not(.open) .sidebar-footer .theme-toggle span,
@@ -786,7 +786,6 @@ body {
 }
 
 .data-table tr:hover td { background: rgba(99,102,241,0.06); }
-.data-table tr:last-child td { border-bottom: none; }
 .data-table tr:last-child td { border-bottom: none; }
 
 .data-table td:first-child { color: var(--text-primary); font-weight: 500; }

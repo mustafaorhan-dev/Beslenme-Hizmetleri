@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   // Bağlantı durumunu göster
-  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk)) {
+  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk) && (!menuUrl || menuOk)) {
     setConnectionStatus('ok');
   } else {
     setConnectionStatus('err');
@@ -336,12 +336,12 @@ function closeSyncPanel() {
   document.body.style.overflow = '';
 }
 
-function quickPullFromSheets() {
+async function quickPullFromSheets() {
   if (!gsheetConfig.webappUrl) {
     showToast('Önce Web App URL\'sini ayarlayın (Senkronize Et → URL kaydet).', 'error');
     return;
   }
-  syncFromGSheets();
+  try { await syncFromGSheets(); } catch (e) { showToast('Senkronizasyon hatası: ' + e.message, 'error'); }
 }
 
 async function syncToGSheets() {
@@ -544,6 +544,7 @@ function exportPDF() {
     const pred = predictNextWaste();
     const reportEl = document.getElementById('content-report');
     const printWin = window.open('', '_blank', 'width=1000,height=800');
+    if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
     printWin.document.write(`<!DOCTYPE html><html><head>
       <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
       <style>
@@ -1122,15 +1123,15 @@ function renderDataInfo() {
   }
   el.style.display = 'flex';
   const dates = records.map(r => r.tarih).filter(Boolean).sort();
-  const first = dates[dates.length - 1];
-  const last = dates[0];
+  const first = dates[0];
+  const last = dates[dates.length - 1];
   const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('tr-TR') : '—';
-  const totalYemek = records.reduce((s, r) => s + r.yemek, 0);
-  const totalAtik = records.reduce((s, r) => s + r.atik, 0);
+  const totalYemek = records.reduce((s, r) => s + (r.yemek || 0), 0);
+  const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
   rangeEl.textContent = `${records.length} kayıt • ${fmt(first)} — ${fmt(last)} • ${totalYemek.toLocaleString('tr-TR')} üretim • ${totalAtik.toFixed(1)} kg atık`;
 }
 
-function getTrend(current, arr, field) {
+function getTrend(_current, arr, field) {
   if (arr.length < 2) return null;
   const mid = Math.floor(arr.length / 2);
   const recent = arr.slice(0, mid);
@@ -1161,10 +1162,11 @@ function renderKPIs() {
     return;
   }
 
-  const totalAtik = records.reduce((s, r) => s + r.atik, 0);
+  const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
   const avgAtik = totalAtik / n;
   document.getElementById('kpiAvgAtik').textContent = avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  document.getElementById('kpiLastGecis').textContent = records[0].toplam.toLocaleString('tr-TR');
+  const lastRec = records[0];
+  document.getElementById('kpiLastGecis').textContent = lastRec ? (lastRec.toplam || 0).toLocaleString('tr-TR') : '0';
   document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
@@ -1279,26 +1281,27 @@ function buildRow(r, showActions) {
       </div>
     </td>` : '';
 
-  const mealBadge = r.yemek_adi ? `<span class="meal-badge">${r.yemek_adi}</span>` : '';
+  const mealBadge = r.yemek_adi ? `<span class="meal-badge">${escapeHtml(r.yemek_adi)}</span>` : '';
 
+  const safe = (v) => (v ?? 0);
   return `<tr class="${selectedIds.has(r.id) ? 'row-selected' : ''}">
     ${checkbox}
     <td>${dateStr}</td>
-    <td>${r.yemek.toLocaleString('tr-TR')}</td>
-    <td>${r.fire.toLocaleString('tr-TR')}</td>
-    <td>${r.turnike.toLocaleString('tr-TR')}</td>
-    <td>${r.personel.toLocaleString('tr-TR')}</td>
-    <td class="td-gecis">${r.toplam.toLocaleString('tr-TR')}</td>
-    <td>${r.porsiyon.toLocaleString('tr-TR')}</td>
-    <td class="td-atik">${r.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-    <td>${r.ogrenci.toLocaleString('tr-TR')}</td>
+    <td>${safe(r.yemek).toLocaleString('tr-TR')}</td>
+    <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
+    <td>${safe(r.turnike).toLocaleString('tr-TR')}</td>
+    <td>${safe(r.personel).toLocaleString('tr-TR')}</td>
+    <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
+    <td>${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
+    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+    <td>${safe(r.ogrenci).toLocaleString('tr-TR')}</td>
     <td>${mealBadge}</td>
     ${actions}
   </tr>`;
 
 }
 
-function renderProduction(weekKey, weekData, days) {
+function renderProduction(_weekKey, _weekData, days) {
   const section = document.getElementById('productionSection');
   const thead = document.getElementById('productionThead');
   const tbody = document.getElementById('productionTbody');
@@ -1449,7 +1452,7 @@ function loadYemekler() {
 
 function saveYemekler(list) {
   yemeklerCache = list;
-  syncDishesToGSheets();
+  syncDishesToGSheets().catch(() => {});
 }
 
 function formatYemek(y) {
@@ -1495,12 +1498,12 @@ function renderYemekListesi() {
 
 let editingYemekId = null;
 
-let yf_tarif = [];
+let yfTarif = [];
 
 function showYemekForm(editId) {
   const container = document.getElementById('yemekFormContainer');
   let ad = '', kalori = '', alerjen = '';
-  yf_tarif = [];
+  yfTarif = [];
   editingYemekId = null;
 
   if (editId) {
@@ -1508,7 +1511,7 @@ function showYemekForm(editId) {
     const y = list.find(i => i.id === editId);
     if (y) {
       ad = y.ad; kalori = y.kalori || ''; alerjen = y.alerjen || '';
-      yf_tarif = (y.tarif || []).map(t => ({ ...t }));
+      yfTarif = (y.tarif || []).map(t => ({ ...t }));
       editingYemekId = editId;
     }
   }
@@ -1520,7 +1523,7 @@ function showYemekForm(editId) {
 
 function renderYemekForm(ad, kalori, alerjen) {
   const container = document.getElementById('yemekFormContainer');
-  const tarifRows = yf_tarif.map((t, i) => `
+  const tarifRows = yfTarif.map((t, i) => `
     <tr>
       <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adı" data-idx="${i}" style="width:100%" /></td>
       <td style="width:80px"><input type="number" class="yf-miktar" value="${t.miktar_kisi || ''}" step="0.1" min="0" data-idx="${i}" style="width:70px;text-align:center" placeholder="0" /></td>
@@ -1563,7 +1566,7 @@ function renderYemekForm(ad, kalori, alerjen) {
       </div>
       <table style="width:100%;font-size:0.8rem">
         <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">/kişi</th><th style="width:60px">Birim</th><th style="width:30px"></th></tr></thead>
-        <tbody id="yf_tarif_tbody">${tarifRows}</tbody>
+        <tbody id="yfTarif_tbody">${tarifRows}</tbody>
       </table>
       <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">+ Malzeme Ekle</button>
     </div>
@@ -1571,7 +1574,7 @@ function renderYemekForm(ad, kalori, alerjen) {
 }
 
 function yfTarifEkle() {
-  yf_tarif.push({ malzeme: '', miktar_kisi: 0, birim: 'gr' });
+  yfTarif.push({ malzeme: '', miktar_kisi: 0, birim: 'gr' });
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
@@ -1579,7 +1582,7 @@ function yfTarifEkle() {
 }
 
 function yfTarifSil(idx) {
-  yf_tarif.splice(idx, 1);
+  yfTarif.splice(idx, 1);
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
@@ -1777,8 +1780,11 @@ function refreshMenuProduction() {
 // -- Autocomplete in menu cells --
 let activeDishTextarea = null;
 let dishSuggestionsEl = null;
+let dishAutocompleteInited = false;
 
 function initDishAutocomplete() {
+  if (dishAutocompleteInited) return;
+  dishAutocompleteInited = true;
   dishSuggestionsEl = document.createElement('div');
   dishSuggestionsEl.className = 'dish-suggestions';
   dishSuggestionsEl.style.display = 'none';
@@ -1896,18 +1902,18 @@ function renderReport() {
     return;
   }
 
-  const totalYemek = records.reduce((s,r) => s+r.yemek, 0);
-  const totalTurnike = records.reduce((s,r) => s+r.turnike, 0);
-  const totalPersonel = records.reduce((s,r) => s+r.personel, 0);
-  const totalGecis = records.reduce((s,r) => s+r.toplam, 0);
-  const avgPorsiyon = records.reduce((s,r) => s+r.porsiyon, 0) / n;
-  const totalAtik = records.reduce((s,r) => s+r.atik, 0);
-  const totalOgrenci = records.reduce((s,r) => s+r.ogrenci, 0);
-  const atikValues = records.map(r => r.atik);
+  const totalYemek = records.reduce((s,r) => s+(r.yemek||0), 0);
+  const totalTurnike = records.reduce((s,r) => s+(r.turnike||0), 0);
+  const totalPersonel = records.reduce((s,r) => s+(r.personel||0), 0);
+  const totalGecis = records.reduce((s,r) => s+(r.toplam||0), 0);
+  const avgPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0) / n;
+  const totalAtik = records.reduce((s,r) => s+(r.atik||0), 0);
+  const totalOgrenci = records.reduce((s,r) => s+(r.ogrenci||0), 0);
+  const atikValues = records.map(r => r.atik || 0);
   const maxAtik = Math.max(...atikValues);
   const minAtik = Math.min(...atikValues);
-  const maxAtikRec = records.find(r => r.atik === maxAtik);
-  const minAtikRec = records.find(r => r.atik === minAtik);
+  const maxAtikRec = records.find(r => (r.atik||0) === maxAtik);
+  const minAtikRec = records.find(r => (r.atik||0) === minAtik);
   const maxAtikDate = maxAtikRec ? new Date(maxAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
   const minAtikDate = minAtikRec ? new Date(minAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
 
@@ -1915,10 +1921,10 @@ function renderReport() {
   const sortedByDate = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   const last7 = sortedByDate.slice(0, 7);
   const prev7 = sortedByDate.slice(7, 14);
-  const avgAtikLast7 = last7.length ? last7.reduce((s, r) => s + r.atik, 0) / last7.length : 0;
-  const avgAtikPrev7 = prev7.length ? prev7.reduce((s, r) => s + r.atik, 0) / prev7.length : 0;
-  const avgGecisLast7 = last7.length ? last7.reduce((s, r) => s + r.toplam, 0) / last7.length : 0;
-  const avgGecisPrev7 = prev7.length ? prev7.reduce((s, r) => s + r.toplam, 0) / prev7.length : 0;
+  const avgAtikLast7 = last7.length ? last7.reduce((s, r) => s+(r.atik||0), 0) / last7.length : 0;
+  const avgAtikPrev7 = prev7.length ? prev7.reduce((s, r) => s+(r.atik||0), 0) / prev7.length : 0;
+  const avgGecisLast7 = last7.length ? last7.reduce((s, r) => s+(r.toplam||0), 0) / last7.length : 0;
+  const avgGecisPrev7 = prev7.length ? prev7.reduce((s, r) => s+(r.toplam||0), 0) / prev7.length : 0;
   const trendAtik = avgAtikPrev7 > 0 ? ((avgAtikLast7 - avgAtikPrev7) / avgAtikPrev7 * 100).toFixed(1) : 0;
   const trendGecis = avgGecisPrev7 > 0 ? ((avgGecisLast7 - avgGecisPrev7) / avgGecisPrev7 * 100).toFixed(1) : 0;
 
@@ -2053,8 +2059,6 @@ function drawAllCharts() {
     monthlyData[monthKey].turnike += r.turnike;
     monthlyData[monthKey].ogrenci += r.ogrenci;
   });
-
-  const monthLabels = Object.keys(monthlyData);
 
   // Tüm ayları kapsayan etiketler (veri olmayan aylar dahil)
   const chartYears = chartYearFilter !== 'all'
@@ -2606,6 +2610,7 @@ function printReport() {
 // ─── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
   const container = document.getElementById('toastContainer');
+  if (!container) return;
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
 
@@ -2613,13 +2618,14 @@ function showToast(msg, type = 'success') {
     ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
 
-  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${msg}</span>`;
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${escapeHtml(msg)}</span>`;
   container.appendChild(toast);
 
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     toast.style.animation = 'fadeOut 0.3s ease forwards';
-    setTimeout(() => toast.remove(), 300);
+    setTimeout(() => { try { toast.remove(); } catch(e) {} }, 300);
   }, 3000);
+  toast._timer = timer;
 }
 
 // ─── KEYBOARD ──────────────────────────────────────────────────────────────────
@@ -2704,7 +2710,7 @@ function saveWeeklyMenu() {
   allData[weekKey] = menuData;
   try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData)); } catch (e) {}
   refreshMenuProduction();
-  syncMenuToGSheet();
+  syncMenuToGSheet().catch(() => {});
   showToast('Haftalık menü kaydedildi.', 'success');
 }
 
@@ -2719,7 +2725,7 @@ function clearWeeklyMenu() {
     if (kisiEl) kisiEl.value = '';
   });
   refreshMenuProduction();
-  syncMenuToGSheet();
+  syncMenuToGSheet().catch(() => {});
   showToast('Menü temizlendi.', 'success');
 }
 
@@ -2881,10 +2887,11 @@ function exportMenuPDF() {
   </body></html>`;
 
   const w = window.open('', '_blank');
+  if (!w) { showToast('Pop-up engelleyiciyi kapatın veya manuel yazdırma kullanın.', 'error'); return; }
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => { w.print(); }, 500);
+  setTimeout(() => { try { w.print(); } catch(e) {} }, 500);
 }
 
 function exportMenuJSON() {
@@ -2910,7 +2917,7 @@ function importMenuJSON(event) {
       localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
       menuWeekOffset = 0;
       renderMenu();
-      syncMenuToGSheet();
+      syncMenuToGSheet().catch(() => {});
       showToast('Menü JSON dosyası yüklendi.', 'success');
     } catch (err) {
       showToast('JSON dosyası okunamadı: ' + err.message, 'error');
@@ -2945,12 +2952,13 @@ function renderMenu() {
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
     <th style="width:100px">Çeşit</th>
-    ${days.map(d => `<th>${d.gun}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${d.key}</span></th>`).join('')}
+    ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${escapeHtml(d.key)}</span></th>`).join('')}
   </tr>`;
 
   // Cache henüz dolmamışsa 500ms sonra tekrar dene
   if (!yemeklerCache.length) {
-    setTimeout(refreshMenuProduction, 500);
+    if (window._menuRetryTimer) clearTimeout(window._menuRetryTimer);
+    window._menuRetryTimer = setTimeout(refreshMenuProduction, 500);
   }
 
   // Gövde: her çeşit için bir satır + kişi sayısı satırı
@@ -2960,14 +2968,14 @@ function renderMenu() {
     return `<tr>
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
-        const val = d.data.yemekler[ci] || '';
-        return `<td><textarea id="m${ci}_${di}" placeholder="${label}" rows="3">${val}</textarea></td>`;
+        const val = escapeHtml(d.data.yemekler[ci] || '');
+        return `<td><textarea id="m${ci}_${di}" placeholder="${escapeHtml(label)}" rows="3">${val}</textarea></td>`;
       }).join('')}
     </tr>`;
   }).join('') + `<tr>
     <td><strong>Kişi Sayısı</strong></td>
     ${days.map((d, di) => {
-      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${d.data.kisi || 0}" min="0" placeholder="0" /></td>`;
+      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" /></td>`;
     }).join('')}
   </tr>`;
   renderProduction(weekKey, weekData, days);
