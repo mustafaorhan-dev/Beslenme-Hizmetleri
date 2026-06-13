@@ -51,7 +51,12 @@ function setChartYear(year) {
   drawAllCharts();
 }
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
+// ─── LOGIN / LOGOUT ─────────────────────────────────────────────────────────
+
+function doLogout() {
+  localStorage.removeItem('atik_kontrol_login_hash');
+  location.reload();
+}──
 const LOGIN_PASSWORD = '4056';
 
 function doLogin() {
