@@ -539,53 +539,40 @@ function exportPDF() {
   switchTab('report');
   renderReport();
   setTimeout(() => {
-    const totalAtik = records.reduce((s,r) => s+r.atik, 0);
-    const carbon = calcCarbonFootprint(totalAtik);
-    const pred = predictNextWaste();
-    const reportEl = document.getElementById('content-report');
-    const printWin = window.open('', '_blank', 'width=1000,height=800');
+    const printWin = window.open('', '_blank', 'width=1100,height=800');
     if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+    const cards = [...document.querySelectorAll('#content-report > .section-card')].map(c => c.outerHTML).join('');
     printWin.document.write(`<!DOCTYPE html><html><head>
       <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-        th { background: #f1f5f9; font-weight: 600; }
-        h1 { font-size: 18px; margin-bottom: 4px; }
-        h2 { font-size: 14px; margin: 16px 0 6px; color: #475569; }
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+        .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+        .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; page-break-inside: avoid; }
+        .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
         .report-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 8px; margin: 10px 0; }
         .report-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; }
         .report-label { font-size: 10px; color: #64748b; text-transform: uppercase; }
         .report-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
-        .footer { margin-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        .report-subdate { font-size: 0.65rem; color: #94a3b8; font-weight: 400; display: block; margin-top: 1px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .data-table th { background: #f1f5f9; font-weight: 600; padding: 0.4rem 0.5rem; text-align: left; border: 1px solid #ddd; }
+        .data-table td { padding: 0.35rem 0.5rem; border: 1px solid #ddd; }
+        .trend-up { color: #ef4444; font-weight: 700; }
+        .trend-down { color: #10b981; font-weight: 700; }
+        .trend-flat { color: #64748b; font-weight: 700; }
+        .badge, .btn, .toolbar, .year-btn { display: none; }
+        .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       </style>
     </head><body>
       <h1>Atık Kontrol Raporu</h1>
-      <p style="font-size:12px;color:#64748b">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</p>
-      <h2>Özet</h2>
-      <div class="report-grid">
-        <div class="report-item"><div class="report-label">Toplam Kayıt</div><div class="report-value">${records.length}</div></div>
-        <div class="report-item"><div class="report-label">Toplam Atık</div><div class="report-value">${totalAtik.toFixed(1)} kg</div></div>
-        <div class="report-item"><div class="report-label">Ort. Atık</div><div class="report-value">${(totalAtik/records.length).toFixed(1)} kg</div></div>
-        <div class="report-item"><div class="report-label">CO₂ Ayak İzi</div><div class="report-value">${carbon.toFixed(1)} kg</div></div>
-        ${pred ? `<div class="report-item"><div class="report-label">Tahmin (sonraki)</div><div class="report-value">${Math.max(0, pred.next).toFixed(1)} kg</div></div>` : ''}
-      </div>
-      <h2>Hedef Uyumu</h2>
-      <div style="margin:6px 0">${document.getElementById('complianceContainer') ? document.getElementById('complianceContainer').innerHTML : ''}</div>
-      <h2>Kayıtlar (son 20)</h2>
-      ${document.getElementById('reportTbody') ? (() => {
-        const rows = [...document.getElementById('reportTbody').querySelectorAll('tr')].slice(0,20);
-        const headers = [...document.querySelectorAll('#reportTable thead th')].map(th => th.textContent);
-        if (rows.length === 0) return '<p>Kayıt yok</p>';
-        let html = '<table><thead><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
-        rows.forEach(tr => { html += '<tr>' + [...tr.querySelectorAll('td')].map(td => '<td>' + td.innerHTML + '</td>').join('') + '</tr>'; });
-        return html + '</tbody></table>';
-      })() : '<p>Kayıt tablosu bulunamadı</p>'}
+      <div class="date">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</div>
+      ${cards}
       <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
     printWin.document.close();
-    setTimeout(() => { printWin.focus(); printWin.print(); }, 500);
+    printWin.focus();
+    setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
   }, 400);
 }
 
