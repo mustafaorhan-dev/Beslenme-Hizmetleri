@@ -1697,12 +1697,14 @@ async function syncMenuToGSheet() {
   if (!url) return;
   try {
     const data = localStorage.getItem(MENU_STORAGE_KEY) || '{}';
-    await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveMenu', menuData: data })
     });
-  } catch (_) {}
+    const json = await res.json();
+    if (!json.success) showToast('Menü Sheet\'e yedeklenemedi: ' + (json.error || ''), 'error');
+  } catch (_) { showToast('Menü Sheet\'e yedeklenemedi (bağlantı hatası).', 'error'); }
 }
 
 // -- Live production refresh --
