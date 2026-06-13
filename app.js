@@ -6,7 +6,7 @@
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzY5J2Fj-8PkelM9d7mVJiMdSqHwLlOEsOS9N2oEVmZnbbA1KwN64o6hCVwOiZ8r08RFw/exec';
-const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbwzFno8ACG1CCNJRjIIF5YxlqkvGXPfCoC20N4DRWHUgwU18fcXuE_7WLF_0Zu7SQeRNg/exec';
+const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxZifUt3a2HuknThnOpvBG4Cg_XokEFmk_b0R9D5Gj6p54WX1Dg_sXaVQIDwd81aPIe9Q/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
