@@ -11,6 +11,7 @@ let records = [];
 let editingId = null;
 let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null, dishUrl: '' };
+let yemeklerCache = [];
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 // Initial theme is handled by inline script in HTML (reads localStorage)
@@ -51,7 +52,7 @@ function setChartYear(year) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   loadData();
   loadGSheetConfig();
   setCurrentDate();
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     syncFromGSheets();
   }
   if (gsheetConfig.dishUrl) {
-    syncDishesFromGSheets();
+    await syncDishesFromGSheets();
   }
   initDishAutocomplete();
 });
@@ -1180,7 +1181,6 @@ function buildRow(r, showActions) {
     ${actions}
   </tr>`;
 
-  renderProduction(weekKey, weekData, days);
 }
 
 function renderProduction(weekKey, weekData, days) {
@@ -1256,17 +1256,13 @@ function renderProduction(weekKey, weekData, days) {
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
-const YEMEK_STORAGE_KEY = 'atik_kontrol_yemekler';
-
 function loadYemekler() {
-  try {
-    const stored = localStorage.getItem(YEMEK_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (e) { return []; }
+  return yemeklerCache;
 }
 
 function saveYemekler(list) {
-  try { localStorage.setItem(YEMEK_STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  yemeklerCache = list;
+  syncDishesToGSheets();
 }
 
 function formatYemek(y) {
@@ -1322,12 +1318,12 @@ function showYemekForm(editId) {
     }
   }
 
-  renderYemekForm(ad, kalori, alerjen, 100);
+  renderYemekForm(ad, kalori, alerjen);
   container.style.display = 'block';
   document.getElementById('yf_ad').focus();
 }
 
-function renderYemekForm(ad, kalori, alerjen, tarifPorsiyon) {
+function renderYemekForm(ad, kalori, alerjen) {
   const container = document.getElementById('yemekFormContainer');
   const tarifRows = yf_tarif.map((t, i) => `
     <tr>
@@ -1384,7 +1380,7 @@ function yfTarifEkle() {
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
-  renderYemekForm(ad, kalori, alerjen, 100);
+  renderYemekForm(ad, kalori, alerjen);
 }
 
 function yfTarifSil(idx) {
@@ -1392,7 +1388,7 @@ function yfTarifSil(idx) {
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
   const alerjen = document.getElementById('yf_alerjen').value;
-  renderYemekForm(ad, kalori, alerjen, 100);
+  renderYemekForm(ad, kalori, alerjen);
 }
 
 function saveYemekForm() {
@@ -1480,7 +1476,7 @@ async function syncDishesFromGSheets() {
           tarif_porsiyon: Number(d.tarif_porsiyon) || 100
         };
       });
-      saveYemekler(list);
+      yemeklerCache = list;
       return true;
     }
     return false;
@@ -2606,4 +2602,5 @@ function renderMenu() {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${d.data.kisi || 0}" min="0" placeholder="0" /></td>`;
     }).join('')}
   </tr>`;
+  renderProduction(weekKey, weekData, days);
 }
