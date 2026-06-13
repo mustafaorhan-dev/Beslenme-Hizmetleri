@@ -1494,6 +1494,8 @@ async function syncDishesFromGSheets() {
         };
       });
       yemeklerCache = list;
+      // Menü sekmesi açıksa ürün tablosunu güncelle
+      if (document.getElementById('productionSection')) refreshMenuProduction();
       return true;
     }
     return false;
@@ -1514,6 +1516,7 @@ async function syncDishesToGSheets() {
 
 // -- Live production refresh --
 function refreshMenuProduction() {
+  if (!document.getElementById('mk_0')) return; // menü henüz render edilmemiş
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
