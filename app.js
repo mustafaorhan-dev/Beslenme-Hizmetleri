@@ -1221,7 +1221,10 @@ function renderProduction(weekKey, weekData, days) {
     if (dish.tarif && dish.tarif.length) {
       dish.tarif.forEach(ing => {
         const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
-        const birim = ing.birim || 'gr';
+        let birim = (ing.birim || 'gr').toLowerCase();
+        if (birim === 'gram' || birim === 'g') birim = 'gr';
+        else if (birim === 'litre' || birim === 'l') birim = 'lt';
+        else if (birim === 'mililitre') birim = 'ml';
         rowsHtml += `<tr>
           <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.malzeme)}</td>
           ${days.map(d => {
@@ -1479,7 +1482,10 @@ async function syncDishesFromGSheets() {
             const birimKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('birim'+n).toLowerCase());
             if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
               const miktar = miktarKey ? parseFloat(d[miktarKey]) || 0 : 0;
-              const birim = birimKey ? String(d[birimKey] || 'gr').trim() : 'gr';
+              let birim = birimKey ? String(d[birimKey] || 'gr').trim().toLowerCase() : 'gr';
+              if (birim === 'gram' || birim === 'g') birim = 'gr';
+              else if (birim === 'litre' || birim === 'l') birim = 'lt';
+              else if (birim === 'mililitre') birim = 'ml';
               tarif.push({ malzeme: String(d[urunKey]).trim(), miktar_kisi: miktar, birim: birim });
             } else break;
           }
@@ -2532,7 +2538,10 @@ function exportMenuPDF() {
           let rows = `<tr style="background:#e8e8e8"><td colspan="${days.length+1}" style="font-weight:600">${escapeHtml(dish.ad)}</td></tr>`;
           dish.tarif.forEach(ing => {
             const mk = ing.miktar_kisi || ing.miktar || 0;
-            const birim = ing.birim || 'gr';
+            let birim = (ing.birim || 'gr').toLowerCase();
+            if (birim === 'gram' || birim === 'g') birim = 'gr';
+            else if (birim === 'litre' || birim === 'l') birim = 'lt';
+            else if (birim === 'mililitre') birim = 'ml';
             rows += `<tr><td style="padding-left:15px;font-size:9pt">${escapeHtml(ing.malzeme)}</td>`;
             days.forEach(d => {
               const kisi = d.data.kisi || 0;
