@@ -1197,7 +1197,11 @@ function renderProduction(weekKey, weekData, days) {
     d.data.yemekler.forEach(ad => {
       const trimmed = ad.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
       if (trimmed) {
-        const dish = yemekler.find(y => y.ad === trimmed || y.ad.startsWith(trimmed) || trimmed.startsWith(y.ad));
+        const lower = trimmed.toLowerCase();
+        const dish = yemekler.find(y => {
+          const yLower = y.ad.toLowerCase();
+          return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
+        });
         if (dish && dish.tarif && dish.tarif.length) {
           usedDishes[dish.ad] = dish;
         }
@@ -1233,8 +1237,8 @@ function renderProduction(weekKey, weekData, days) {
             const kisi = d.data.kisi || 0;
             const total = kisi * miktarKisi;
             const ad = d.data.yemekler.find(y => {
-              const trimmed = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
-              return trimmed === dish.ad || trimmed.startsWith(dish.ad) || dish.ad.startsWith(trimmed);
+              const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
+              return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
             });
             let display = '—';
             if (ad && total > 0) {
@@ -2551,8 +2555,8 @@ function exportMenuPDF() {
               let display = '—';
               if (total > 0) {
                 const adMatch = d.data.yemekler.find(y => {
-                  const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
-                  return t === dish.ad || t.startsWith(dish.ad) || dish.ad.startsWith(t);
+                  const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
+                  return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
                 });
                 if (adMatch) {
                   if (birim === 'gr') display = total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
