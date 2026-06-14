@@ -831,13 +831,37 @@ body {
   margin: 0 0 0.15rem 0;
   color: var(--text-primary);
   white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.15rem;
 }
 .prod-ing {
+  display: flex;
+  gap: 0.25rem;
   font-size: 0.82rem;
   padding-left: 0.5rem;
+  line-height: 1.7;
   color: var(--text-secondary);
-  line-height: 1.6;
   white-space: nowrap;
+}
+.prod-num {
+  width: 1.8rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+.prod-name {
+  flex: 1;
+  min-width: 0;
+}
+.prod-sep {
+  width: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.prod-qty {
+  width: 5rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-weight: 500;
 }
 
 /* ---- CHECKBOX ---- */

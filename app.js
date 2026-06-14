@@ -1399,9 +1399,11 @@ function renderProduction(_weekKey, _weekData, days) {
   const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
   const findDish = (name) => {
     const lower = name.toLowerCase();
+    const exact = yemekler.find(y => y.ad.toLowerCase() === lower);
+    if (exact) return exact;
     return yemekler.find(y => {
       const yLower = y.ad.toLowerCase();
-      return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
+      return yLower.startsWith(lower) || lower.startsWith(yLower);
     });
   };
   const normBirim = (b) => {
@@ -1450,7 +1452,7 @@ function renderProduction(_weekKey, _weekData, days) {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          html += `<div class="prod-ing">${idx + 1}. ${escapeHtml(ing.malzeme.trim())} — ${fmt(total, birim)}</div>`;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
         });
       }
       html += '</div>';
@@ -2848,9 +2850,11 @@ function exportMenuPDF() {
   const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
   const findDish = (name) => {
     const lower = name.toLowerCase();
+    const exact = yemekler.find(y => y.ad.toLowerCase() === lower);
+    if (exact) return exact;
     return yemekler.find(y => {
       const yLower = y.ad.toLowerCase();
-      return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
+      return yLower.startsWith(lower) || lower.startsWith(yLower);
     });
   };
   const normBirim = (b) => {
@@ -2896,7 +2900,7 @@ function exportMenuPDF() {
             const mk = ing.miktar_kisi || ing.miktar || 0;
             const total = mk * kisi;
             const birim = normBirim(ing.birim);
-            section += `<div style="padding-left:8px;font-size:9pt;line-height:1.7;white-space:nowrap">${idx+1}. ${escapeHtml(ing.malzeme.trim())} — ${fmtPdf(total, birim)}</div>`;
+            section += `<div style="padding-left:8px;font-size:9pt;line-height:1.7;white-space:nowrap;display:flex;gap:4px"><span style="width:20px;text-align:right;flex-shrink:0">${idx+1}.</span><span style="flex:1">${escapeHtml(ing.malzeme.trim())}</span><span style="width:12px;text-align:center;flex-shrink:0">—</span><span style="width:60px;text-align:right;flex-shrink:0;font-weight:500">${fmtPdf(total, birim)}</span></div>`;
           });
         }
         section += '</div>';
