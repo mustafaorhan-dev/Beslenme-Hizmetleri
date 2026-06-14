@@ -2481,157 +2481,170 @@ function drawBarChart(canvasId, labels, datasets) {
   const barGap = barW * 0.12;
 
   function toY(v) { return pad.top + cH - (v / maxV) * cH; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-  // Grid
-  const gridLines = 5;
-  ctx.strokeStyle = getGridColor();
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= gridLines; i++) {
-    const y = pad.top + (i / gridLines) * cH;
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(W - pad.right, y);
-    ctx.stroke();
+  function drawFrame(progress) {
+    ctx.clearRect(0, 0, W, H);
 
-    const val = maxV - (i / gridLines) * maxV;
-    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
-  }
-
-  // Bars
-  datasets.forEach((ds, di) => {
-    ds.data.forEach((v, gi) => {
-      const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
-      const x = groupStart + di * (barW + barGap);
-      const y = toY(v);
-      const barH = pad.top + cH - y;
-
-      // Gölge + gradient
-      ctx.shadowColor = ds.color + '40';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 2;
-
-      const grad = ctx.createLinearGradient(0, y, 0, y + barH);
-      grad.addColorStop(0, ds.color);
-      grad.addColorStop(1, darkenColor(ds.color, 25));
-      ctx.fillStyle = grad;
-
-      const r = Math.min(6, barW / 2);
+    // Grid
+    const gridLines = 5;
+    ctx.strokeStyle = getGridColor();
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= gridLines; i++) {
+      const y = pad.top + (i / gridLines) * cH;
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + barW - r, y);
-      ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-      ctx.lineTo(x + barW, y + barH);
-      ctx.lineTo(x, y + barH);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
 
-      // Gölge sıfırla
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetY = 0;
+      const val = maxV - (i / gridLines) * maxV;
+      ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
+    }
 
-      // Parlak üst çizgi
-      ctx.fillStyle = hexToRgba(ds.color, 0.35);
-      ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
+    // Bars
+    datasets.forEach((ds, di) => {
+      ds.data.forEach((v, gi) => {
+        const fullH = (v / maxV) * cH;
+        const currentH = fullH * easeOutCubic(progress);
+        const yBase = pad.top + cH;
+        const y = yBase - currentH;
+        const barH = currentH;
 
-      // Değeri çubuğun içine yaz
-      if (barW >= 10) { 
-        ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
-        const textVal = v !== undefined ? fmt(v) : '—';
-        
-        let fontSize = 13;
-        ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-        let textWidth = ctx.measureText(textVal).width;
+        const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
+        const x = groupStart + di * (barW + barGap);
 
-        // Yatay sığmıyorsa fontu küçült (minimum 9px'e kadar)
-        while (textWidth > barW - 2 && fontSize > 9) {
-          fontSize--;
-          ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-          textWidth = ctx.measureText(textVal).width;
-        }
+        if (barH < 1) return;
 
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
+        ctx.shadowColor = ds.color + '40';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 2;
 
-        // Hafif gölge efekti ile yazı
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 3;
-        ctx.shadowOffsetY = 1;
+        const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+        grad.addColorStop(0, ds.color);
+        grad.addColorStop(1, darkenColor(ds.color, 25));
+        ctx.fillStyle = grad;
 
-        // Eğer çubuk yeterince yüksekse içine, kısaysa dışına üstüne yaz
-        if (barH > fontSize + 10) {
-          ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
-        } else {
-          ctx.shadowColor = 'transparent';
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
-          ctx.fillText(textVal, x + barW / 2, y - 6);
-        }
+        const r = Math.min(6, barW / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + barW - r, y);
+        ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+        ctx.lineTo(x + barW, y + barH);
+        ctx.lineTo(x, y + barH);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
-      }
-    });
-  });
 
-  // X labels
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-  ctx.font = '10px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(labels.length / 10));
-  // Yıl ortalamak için grup bul
-  const yearGroups = {};
-  labels.forEach((l, i) => {
-    const parts = l.split('/');
-    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-      yearGroups[parts[1]].push(i);
-    }
-  });
-  labels.forEach((l, i) => {
-    if (i % step === 0 || i === labels.length - 1) {
-      const x = pad.left + i * groupW + groupW / 2;
+        if (progress >= 0.95) {
+          ctx.fillStyle = hexToRgba(ds.color, 0.35);
+          ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
+
+          if (barW >= 10) {
+            ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
+            const textVal = v !== undefined ? fmt(v) : '—';
+
+            let fontSize = 13;
+            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+            let textWidth = ctx.measureText(textVal).width;
+
+            while (textWidth > barW - 2 && fontSize > 9) {
+              fontSize--;
+              ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+              textWidth = ctx.measureText(textVal).width;
+            }
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetY = 1;
+
+            if (barH > fontSize + 10) {
+              ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
+            } else {
+              ctx.shadowColor = 'transparent';
+              ctx.shadowBlur = 0;
+              ctx.shadowOffsetY = 0;
+              ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
+              ctx.fillText(textVal, x + barW / 2, y - 6);
+            }
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+          }
+        }
+      });
+    });
+
+    // X labels
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(labels.length / 10));
+    const yearGroups = {};
+    labels.forEach((l, i) => {
       const parts = l.split('/');
       if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        ctx.fillText(parts[0], x, H - pad.bottom + 12);
-      } else {
-        ctx.fillText(l, x, H - pad.bottom + 16);
+        if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+        yearGroups[parts[1]].push(i);
       }
+    });
+    labels.forEach((l, i) => {
+      if (i % step === 0 || i === labels.length - 1) {
+        const x = pad.left + i * groupW + groupW / 2;
+        const parts = l.split('/');
+        if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+          ctx.fillText(parts[0], x, H - pad.bottom + 12);
+        } else {
+          ctx.fillText(l, x, H - pad.bottom + 16);
+        }
+      }
+    });
+    ctx.font = '8px Inter, sans-serif';
+    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
+    ctx.textAlign = 'center';
+    for (const [year, indices] of Object.entries(yearGroups)) {
+      const firstX = pad.left + indices[0] * groupW + groupW / 2;
+      const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
+      const cx = (firstX + lastX) / 2;
+      ctx.fillText(year, cx, H - pad.bottom + 24);
     }
-  });
-  // Yılları ortala
-  ctx.font = '8px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-  ctx.textAlign = 'center';
-  for (const [year, indices] of Object.entries(yearGroups)) {
-    const firstX = pad.left + indices[0] * groupW + groupW / 2;
-    const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
-    const cx = (firstX + lastX) / 2;
-    ctx.fillText(year, cx, H - pad.bottom + 24);
-  }
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
 
-  // Legend
-  datasets.forEach((ds, i) => {
-    const x = pad.left + i * 130;
-    const y = 10;
-    // Yuvarlak işaret
-    ctx.beginPath();
-    ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
-    ctx.fillStyle = ds.color;
-    ctx.fill();
-    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
-    ctx.font = '11px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(ds.label, x + 18, y + 9);
-  });
+    // Legend
+    datasets.forEach((ds, i) => {
+      const x = pad.left + i * 130;
+      const y = 10;
+      ctx.beginPath();
+      ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
+      ctx.fillStyle = ds.color;
+      ctx.fill();
+      ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(ds.label, x + 18, y + 9);
+    });
+  }
+
+  // Animasyon
+  const duration = 900;
+  const start = performance.now();
+  function animate(now) {
+    const t = Math.min(1, (now - start) / duration);
+    drawFrame(t);
+    if (t < 1) requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
 }
 
 // Redraw charts on window resize
