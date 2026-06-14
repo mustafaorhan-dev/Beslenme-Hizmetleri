@@ -1459,11 +1459,11 @@ function renderProduction(_weekKey, _weekData, days) {
       }
     }
 
-    return `<table class="data-table" style="min-width:220px;flex-shrink:0"><thead><tr><th style="text-align:center;min-width:100px">Yemek / Malzeme</th><th style="text-align:center;min-width:80px">${d.gun}</th></tr></thead><tbody>${rows}</tbody></table>`;
+    return `<table class="data-table" style="flex:1;min-width:0"><thead><tr><th style="text-align:center">Yemek / Malzeme</th><th style="text-align:center">${d.gun}</th></tr></thead><tbody>${rows}</tbody></table>`;
   }).join('');
 
   const wrapper = section.querySelector('.table-wrapper');
-  wrapper.innerHTML = `<div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem">${tablesHtml}</div>`;
+  wrapper.innerHTML = `<div style="display:flex;gap:0.25rem;flex-wrap:nowrap">${tablesHtml}</div>`;
 
   // Weekly total
   const allDishes = [];
