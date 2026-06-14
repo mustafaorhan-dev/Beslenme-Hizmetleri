@@ -254,6 +254,16 @@
   border-color: rgba(255,255,255,0.12);
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
+[data-theme="dark"] .prod-day {
+  background: var(--card-bg);
+  border-color: rgba(255,255,255,0.12);
+}
+[data-theme="dark"] .prod-cesit {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .prod-ing {
+  color: var(--text-secondary);
+}
 
 html { scroll-behavior: smooth; color-scheme: var(--color-scheme, dark); }
 
@@ -789,6 +799,35 @@ body {
 
 .td-atik { color: var(--accent-orange) !important; font-weight: 600; }
 .td-gecis { color: var(--accent-green) !important; font-weight: 600; }
+
+/* ---- ÜRETİM LİSTESİ ---- */
+.prod-day {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.prod-day-header {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--accent);
+}
+.prod-cesit {
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin: 0.5rem 0 0.15rem 0;
+  color: var(--text-primary);
+}
+.prod-ing {
+  font-size: 0.82rem;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
 
 /* ---- CHECKBOX ---- */
 .row-checkbox, #selectAll {
