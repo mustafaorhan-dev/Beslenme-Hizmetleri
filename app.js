@@ -1397,7 +1397,6 @@ function renderProduction(_weekKey, _weekData, days) {
   const thead = document.getElementById('productionThead');
   const tbody = document.getElementById('productionTbody');
   const yemekler = loadYemekler();
-  const CESITLER = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
 
   const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
   const findDish = (name) => {
@@ -1422,72 +1421,94 @@ function renderProduction(_weekKey, _weekData, days) {
     return Math.round(total) + ' ' + birim;
   };
 
-  const cesitData = CESITLER.map((label, ci) => {
-    const gunluk = days.map(d => {
+  const CESIT_LABELS = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+
+  // Per day: structured by çeşit
+  const dayData = days.map(d => ({
+    kisi: d.data.kisi || 0,
+    cesitler: [0,1,2,3,4].map(ci => {
       const raw = d.data.yemekler[ci] || '';
       const name = parseDishName(raw);
       const dish = name ? findDish(name) : null;
-      return { name, dish, kisi: d.data.kisi || 0 };
-    });
-    return { label, gunluk };
-  });
+      return { name, dish };
+    })
+  }));
 
-  const hasAny = cesitData.some(c => c.gunluk.some(g => g.dish && g.dish.tarif && g.dish.tarif.length));
+  const hasAny = dayData.some(dd => dd.cesitler.some(c => c.dish && c.dish.tarif && c.dish.tarif.length));
   if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); return; }
   section.style.display = 'block';
 
-  thead.innerHTML = `<tr>
-    <th style="width:180px">Yemek / Malzeme</th>
-    ${days.map(d => `<th style="text-align:center">${d.gun}<br><span style="font-weight:400;font-size:0.65rem;opacity:0.7">${d.key}</span><br><span style="font-weight:600;font-size:0.75rem;color:var(--accent)">${d.data.kisi || 0} kişi</span></th>`).join('')}
-  </tr>`;
-
-  let rowsHtml = '';
-  cesitData.forEach(({ label, gunluk }) => {
-    const anyDish = gunluk.some(g => g.dish);
-    if (!anyDish) return;
-
-    rowsHtml += `<tr style="background:rgba(99,102,241,0.04)">
-      <td style="font-weight:600;font-size:0.82rem;padding:0.4rem 0.6rem">${escapeHtml(label)}</td>
-      ${gunluk.map(g => `<td style="text-align:center;font-size:0.78rem;font-weight:500">${g.dish ? escapeHtml(g.name) : '—'}</td>`).join('')}
-    </tr>`;
-
+  // Per çeşit: collect unique ingredients across all days
+  const cesitRows = CESIT_LABELS.map((label, ci) => {
     const ingMap = {};
-    gunluk.forEach(g => {
-      if (!g.dish || !g.dish.tarif) return;
-      g.dish.tarif.forEach(ing => {
+    dayData.forEach(dd => {
+      const c = dd.cesitler[ci];
+      if (!c.dish || !c.dish.tarif) return;
+      c.dish.tarif.forEach(ing => {
         const birim = normBirim(ing.birim);
         const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
         if (!ingMap[key]) ingMap[key] = { ad: ing.malzeme.trim(), birim };
       });
     });
+    return { label, ci, ingredients: Object.values(ingMap) };
+  });
 
-    const ingredients = Object.values(ingMap);
+  // Build thead: alternating (Yemek/Malzeme | Day) pairs
+  thead.innerHTML = `<tr>${days.map(d => `<th style="text-align:center;min-width:90px">Yemek / Malzeme</th><th style="text-align:center;min-width:90px">${d.gun}</th>`).join('')}</tr>`;
+
+  let rowsHtml = '';
+
+  // Kişi row
+  rowsHtml += `<tr>${dayData.map(dd => {
+    return `<td style="font-weight:500;font-size:0.78rem">Kişi</td><td style="text-align:center;font-size:0.78rem;font-weight:600;color:var(--accent)">${dd.kisi}</td>`;
+  }).join('')}</tr>`;
+
+  // Per çeşit
+  cesitRows.forEach(({ label, ci, ingredients }) => {
+    const anyDish = dayData.some(dd => dd.cesitler[ci] && dd.cesitler[ci].name);
+    if (!anyDish) return;
+
+    // Çeşit header: dish names per day
+    rowsHtml += `<tr style="background:rgba(99,102,241,0.04)">${dayData.map(dd => {
+      const c = dd.cesitler[ci];
+      const dishName = c && c.name ? escapeHtml(c.name) : '—';
+      return `<td style="font-weight:500;font-size:0.78rem;padding-left:0.2rem">${escapeHtml(label)}</td><td style="text-align:center;font-size:0.78rem;font-weight:500">${dishName}</td>`;
+    }).join('')}</tr>`;
+
     if (!ingredients.length) return;
 
+    // Ingredient rows
     ingredients.forEach(ing => {
-      rowsHtml += `<tr>
-        <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.ad)}</td>
-        ${gunluk.map(g => {
-          if (!g.dish || !g.dish.tarif) return '<td style="text-align:center;font-size:0.78rem">—</td>';
-          const matchIng = g.dish.tarif.find(i => {
-            const ib = normBirim(i.birim);
-            return i.malzeme.trim().toLowerCase() === ing.ad.toLowerCase() && ib === ing.birim;
-          });
-          if (!matchIng) return '<td style="text-align:center;font-size:0.78rem">—</td>';
-          const miktar = (matchIng.miktar_kisi || matchIng.miktar || 0) * g.kisi;
-          return `<td style="text-align:center;font-size:0.78rem">${fmt(miktar, ing.birim)}</td>`;
-        }).join('')}
-      </tr>`;
+      rowsHtml += `<tr>${dayData.map(dd => {
+        const c = dd.cesitler[ci];
+        if (!c.dish || !c.dish.tarif) {
+          return `<td style="font-size:0.78rem">—</td><td style="text-align:center;font-size:0.78rem">—</td>`;
+        }
+        const matchIng = c.dish.tarif.find(i => {
+          const ib = normBirim(i.birim);
+          return i.malzeme.trim().toLowerCase() === ing.ad.toLowerCase() && ib === ing.birim;
+        });
+        if (!matchIng) {
+          return `<td style="font-size:0.78rem">—</td><td style="text-align:center;font-size:0.78rem">—</td>`;
+        }
+        const miktar = (matchIng.miktar_kisi || matchIng.miktar || 0) * dd.kisi;
+        return `<td style="padding-left:0.6rem;font-size:0.78rem">${escapeHtml(ing.ad)}</td><td style="text-align:center;font-size:0.78rem">${fmt(miktar, ing.birim)}</td>`;
+      }).join('')}</tr>`;
     });
   });
 
   tbody.innerHTML = rowsHtml;
 
-  const allUsed = [];
-  cesitData.forEach(({ gunluk }) => {
-    gunluk.forEach(g => { if (g.dish && g.dish.tarif && g.dish.tarif.length && !allUsed.find(d => d.ad === g.dish.ad)) allUsed.push(g.dish); });
+  // Weekly total
+  const allDishes = [];
+  dayData.forEach(dd => {
+    dd.cesitler.forEach(c => {
+      if (c.dish && c.dish.tarif && c.dish.tarif.length && !allDishes.find(d => d.ad === c.dish.ad)) {
+        allDishes.push(c.dish);
+      }
+    });
   });
-  renderWeeklyTotal(allUsed, days);
+  renderWeeklyTotal(allDishes, days);
 }
 
 function renderWeeklyTotal(dishEntries, days) {
