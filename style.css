@@ -265,6 +265,10 @@
 [data-theme="dark"] .prod-day-header .prod-day-kisi {
   background: rgba(99,102,241,0.15);
 }
+[data-theme="dark"] .section-title {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.03) 100%);
+  border-left-color: var(--accent);
+}
 [data-theme="dark"] .prod-cesit {
   color: var(--text-primary);
 }
@@ -807,7 +811,21 @@ body {
 .td-atik { color: var(--accent-orange) !important; font-weight: 600; }
 .td-gecis { color: var(--accent-green) !important; font-weight: 600; }
 
-/* ---- ÜRETİM LİSTESİ ---- */
+/* ---- SEKTÖR BAŞLIKLARI ---- */
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem 0;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(99,102,241,0.01) 100%);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+#weeklyTotalSection > .section-title {
+  margin-top: 0;
+}
 .prod-day {
   background: var(--card-bg);
   border: 1px solid var(--border);

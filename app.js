@@ -1521,7 +1521,7 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  section.innerHTML = `<h3 style="font-size:0.9rem;margin-bottom:0.75rem">Haftalık Toplam İhtiyaç Listesi</h3>
+  section.innerHTML = `<h3 class="section-title">Haftalık Toplam İhtiyaç Listesi</h3>
     <div class="weekly-total-grid">${entries.map((e, idx) => {
       const total = e.total;
       if (total <= 0) return '';
