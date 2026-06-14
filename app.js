@@ -1435,7 +1435,7 @@ function renderProduction(_weekKey, _weekData, days) {
   let html = '';
   days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    html += `<div class="prod-day"><div class="prod-day-header">${d.gun} (${kisi} kişi)</div>`;
+    html += `<div class="prod-day"><div class="prod-day-header">${d.gun} (${kisi} kişi)</div><div class="prod-cesit-row">`;
 
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
@@ -1443,7 +1443,7 @@ function renderProduction(_weekKey, _weekData, days) {
       if (!name) continue;
       const dish = findDish(name);
 
-      html += `<div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
+      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
 
       if (dish && dish.tarif && dish.tarif.length) {
         dish.tarif.forEach((ing, idx) => {
@@ -1453,8 +1453,9 @@ function renderProduction(_weekKey, _weekData, days) {
           html += `<div class="prod-ing">${idx + 1}. ${escapeHtml(ing.malzeme.trim())} — ${fmt(total, birim)}</div>`;
         });
       }
+      html += '</div>';
     }
-    html += '</div>';
+    html += '</div></div>';
   });
 
   wrapper.innerHTML = html;
@@ -2883,22 +2884,24 @@ function exportMenuPDF() {
       const kisi = d.data.kisi || 0;
       let section = `<div style="margin-bottom:20px;padding:12px;border:1px solid #ccc;border-radius:6px">`;
       section += `<div style="font-size:13pt;font-weight:700;color:#555;border-bottom:2px solid #555;padding-bottom:6px;margin-bottom:10px">${d.gun} (${kisi} kişi)</div>`;
+      section += `<div style="display:flex;gap:1rem;flex-wrap:wrap">`;
       for (let ci = 0; ci < 5; ci++) {
         const raw = d.data.yemekler[ci] || '';
         const name = parseDishName(raw);
         if (!name) continue;
         const dish = findDish(name);
-        section += `<div style="font-weight:600;margin:8px 0 2px 0">${ci+1}. Çeşit: ${escapeHtml(name)}</div>`;
+        section += `<div style="flex:1;min-width:140px"><div style="font-weight:600;margin:0 0 2px 0;white-space:nowrap">${ci+1}. Çeşit: ${escapeHtml(name)}</div>`;
         if (dish && dish.tarif && dish.tarif.length) {
           dish.tarif.forEach((ing, idx) => {
             const mk = ing.miktar_kisi || ing.miktar || 0;
             const total = mk * kisi;
             const birim = normBirim(ing.birim);
-            section += `<div style="padding-left:16px;font-size:9pt;line-height:1.7">${idx+1}. ${escapeHtml(ing.malzeme.trim())} — ${fmtPdf(total, birim)}</div>`;
+            section += `<div style="padding-left:8px;font-size:9pt;line-height:1.7;white-space:nowrap">${idx+1}. ${escapeHtml(ing.malzeme.trim())} — ${fmtPdf(total, birim)}</div>`;
           });
         }
+        section += '</div>';
       }
-      section += '</div>';
+      section += '</div></div>';
       return section;
     }).join('')}`;
   }
