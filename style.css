@@ -258,6 +258,13 @@
   background: var(--card-bg);
   border-color: rgba(255,255,255,0.12);
 }
+[data-theme="dark"] .prod-day-header {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.05) 100%);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .prod-day-header .prod-day-kisi {
+  background: rgba(99,102,241,0.15);
+}
 [data-theme="dark"] .prod-cesit {
   color: var(--text-primary);
 }
@@ -804,17 +811,44 @@ body {
 .prod-day {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  border-radius: 10px;
+  padding: 0;
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .prod-day-header {
   font-size: 1rem;
   font-weight: 700;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(99,102,241,0.02) 100%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.prod-day-header::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.prod-day-header .prod-day-label {
   color: var(--accent);
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--accent);
+}
+.prod-day-header .prod-day-kisi {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: rgba(99,102,241,0.08);
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+}
+.prod-day-body {
+  padding: 0.75rem 1rem 1rem 1rem;
 }
 .prod-cesit-row {
   display: flex;
@@ -863,17 +897,40 @@ body {
 
 /* ---- HAFTALIK TOPLAM LİSTESİ ---- */
 .weekly-total-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem 2rem;
+  column-width: 220px;
+  column-gap: 2rem;
 }
 .weekly-total-item {
   display: flex;
-  gap: 0.15rem;
+  gap: 0.3rem;
   white-space: nowrap;
-  min-width: 140px;
   font-size: 0.85rem;
-  line-height: 1.7;
+  line-height: 1.8;
+  break-inside: avoid;
+}
+.weekly-total-num {
+  width: 1.3rem;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.weekly-total-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.weekly-total-sep {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.weekly-total-qty {
+  width: 4rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--accent);
 }
 .weekly-total-num {
   width: 1.3rem;

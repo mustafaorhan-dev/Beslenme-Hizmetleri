@@ -1437,7 +1437,7 @@ function renderProduction(_weekKey, _weekData, days) {
   let html = '';
   days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    html += `<div class="prod-day"><div class="prod-day-header">${d.gun} (${kisi} kişi)</div><div class="prod-cesit-row">`;
+    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
 
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
@@ -1457,7 +1457,7 @@ function renderProduction(_weekKey, _weekData, days) {
       }
       html += '</div>';
     }
-    html += '</div></div>';
+    html += '</div></div></div>';
   });
 
   wrapper.innerHTML = html;
@@ -2877,8 +2877,9 @@ function exportMenuPDF() {
   if (hasAnyProd) {
     prodHtml = `<h3 style="margin-top:30px;font-size:14pt">Ürün İhtiyaç Listesi</h3>${days.map(d => {
       const kisi = d.data.kisi || 0;
-      let section = `<div style="margin-bottom:20px;padding:12px;border:1px solid #ccc;border-radius:6px">`;
-      section += `<div style="font-size:13pt;font-weight:700;color:#555;border-bottom:2px solid #555;padding-bottom:6px;margin-bottom:10px">${d.gun} (${kisi} kişi)</div>`;
+      let section = `<div style="margin-bottom:20px;border:1px solid #ccc;border-radius:8px;overflow:hidden">`;
+      section += `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f5f5ff;border-bottom:1px solid #ccc;font-size:12pt;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#666"></span><span style="color:#555">${d.gun}</span><span style="margin-left:auto;font-size:9pt;font-weight:500;color:#888;background:#eee;padding:2px 10px;border-radius:12px">${kisi} kişi</span></div>`;
+      section += `<div style="padding:10px 14px"><div style="display:flex;gap:1rem;flex-wrap:wrap">`;
       section += `<div style="display:flex;gap:1rem;flex-wrap:wrap">`;
       for (let ci = 0; ci < 5; ci++) {
         const raw = d.data.yemekler[ci] || '';
@@ -2896,7 +2897,7 @@ function exportMenuPDF() {
         }
         section += '</div>';
       }
-      section += '</div></div>';
+      section += '</div></div></div>';
       return section;
     }).join('')}`;
   }
