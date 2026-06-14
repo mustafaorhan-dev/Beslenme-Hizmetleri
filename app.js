@@ -2877,7 +2877,7 @@ function exportMenuPDF() {
   if (hasAnyProd) {
     prodHtml = `<h3 style="margin-top:30px;font-size:14pt">Ürün İhtiyaç Listesi</h3>${days.map(d => {
       const kisi = d.data.kisi || 0;
-      let section = `<div style="margin-bottom:20px;border:1px solid #ccc;border-radius:8px;overflow:hidden">`;
+      let section = `<div class="prod-day-pdf"><div style="border:1px solid #ccc;border-radius:8px">`;
       section += `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f5f5ff;border-bottom:1px solid #ccc;font-size:12pt;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#666"></span><span style="color:#555">${d.gun}</span><span style="margin-left:auto;font-size:9pt;font-weight:500;color:#888;background:#eee;padding:2px 10px;border-radius:12px">${kisi} kişi</span></div>`;
       section += `<div style="padding:10px 14px"><div style="display:flex;gap:1rem;flex-wrap:wrap">`;
       section += `<div style="display:flex;gap:1rem;flex-wrap:wrap">`;
@@ -2897,7 +2897,7 @@ function exportMenuPDF() {
         }
         section += '</div>';
       }
-      section += '</div></div></div>';
+      section += '</div></div></div></div>';
       return section;
     }).join('')}`;
   }
@@ -2936,12 +2936,12 @@ function exportMenuPDF() {
     });
     const entries = Object.values(agg);
     if (entries.length) {
-      weeklyTotalHtml = `<h3 style="margin-top:30px;font-size:14pt">Haftalık Toplam İhtiyaç Listesi</h3>
-      <div style="display:flex;flex-wrap:wrap;gap:4px 32px;margin-top:8px">${entries.map((e, idx) => {
+      weeklyTotalHtml = `<div class="weekly-section"><h3 style="font-size:14pt;margin-bottom:8px">Haftalık Toplam İhtiyaç Listesi</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 32px">${entries.map((e, idx) => {
         const total = e.totals.reduce((s,v) => s+v, 0);
         if (total <= 0) return '';
         return `<div style="display:flex;gap:4px;white-space:nowrap;min-width:140px;font-size:10pt;line-height:1.7"><span style="width:20px;text-align:right;flex-shrink:0;color:#999">${idx+1}.</span><span style="flex:1">${escapeHtml(e.ad)}</span><span style="flex-shrink:0;color:#999">—</span><span style="width:60px;text-align:right;flex-shrink:0;font-weight:600">${fmtPdf(total, e.birim)}</span></div>`;
-      }).filter(Boolean).join('')}</div>`;
+      }).filter(Boolean).join('')}</div></div>`;
     }
   }
 
@@ -2954,7 +2954,11 @@ function exportMenuPDF() {
       th, td { border: 1px solid #999; padding: 5px 7px; text-align: left; vertical-align: top; }
       th { background: #f0f0f0; font-weight: 600; text-align: center; }
       td:first-child { font-weight: 600; white-space: nowrap; }
-      .footer { text-align: center; margin-top: 20px; font-size: 9pt; color: #666; }
+      .prod-day-pdf { page-break-inside: avoid; margin-bottom: 20px; }
+      .prod-day-pdf > div { border: 1px solid #ccc; border-radius: 8px; }
+      .weekly-section { page-break-inside: avoid; margin-top: 40px; }
+      .weekly-section h3 { margin-top: 0; }
+      .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; }
     </style>
   </head><body>
     <h2>${weekKey} HAFTALIK MENÜ LİSTESİ</h2>
