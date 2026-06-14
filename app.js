@@ -1522,10 +1522,10 @@ function renderWeeklyTotal(dishEntries, days) {
   section.style.display = 'block';
 
   section.innerHTML = `<h3 style="font-size:0.9rem;margin-bottom:0.75rem">Haftalık Toplam İhtiyaç Listesi</h3>
-    <div class="weekly-total-grid">${entries.map(e => {
+    <div class="weekly-total-grid">${entries.map((e, idx) => {
       const total = e.total;
       if (total <= 0) return '';
-      return `<div class="weekly-total-item"><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
     }).filter(Boolean).join('')}</div>`;
 }
 
@@ -2936,10 +2936,10 @@ function exportMenuPDF() {
     const entries = Object.values(agg);
     if (entries.length) {
       weeklyTotalHtml = `<h3 style="margin-top:30px;font-size:14pt">Haftalık Toplam İhtiyaç Listesi</h3>
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem 2rem;margin-top:8px">${entries.map(e => {
+      <div style="display:flex;flex-wrap:wrap;gap:4px 32px;margin-top:8px">${entries.map((e, idx) => {
         const total = e.totals.reduce((s,v) => s+v, 0);
         if (total <= 0) return '';
-        return `<div style="display:flex;gap:6px;white-space:nowrap;min-width:140px"><span style="flex:1">${escapeHtml(e.ad)}</span><span>—</span><span style="font-weight:600">${fmtPdf(total, e.birim)}</span></div>`;
+        return `<div style="display:flex;gap:4px;white-space:nowrap;min-width:140px;font-size:10pt;line-height:1.7"><span style="width:20px;text-align:right;flex-shrink:0;color:#999">${idx+1}.</span><span style="flex:1">${escapeHtml(e.ad)}</span><span style="flex-shrink:0;color:#999">—</span><span style="width:60px;text-align:right;flex-shrink:0;font-weight:600">${fmtPdf(total, e.birim)}</span></div>`;
       }).filter(Boolean).join('')}</div>`;
     }
   }
