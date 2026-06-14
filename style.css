@@ -852,7 +852,7 @@ body {
 }
 .prod-cesit-row {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 .prod-cesit-col {
@@ -884,13 +884,17 @@ body {
   flex-shrink: 0;
 }
 .prod-name {
-  flex-shrink: 1;
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .prod-sep {
   flex-shrink: 0;
 }
 .prod-qty {
+  width: 4rem;
+  text-align: right;
   flex-shrink: 0;
   font-weight: 500;
 }
