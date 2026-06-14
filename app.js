@@ -1394,8 +1394,6 @@ function buildRow(r, showActions) {
 
 function renderProduction(_weekKey, _weekData, days) {
   const section = document.getElementById('productionSection');
-  const thead = document.getElementById('productionThead');
-  const tbody = document.getElementById('productionTbody');
   const yemekler = loadYemekler();
 
   const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
@@ -1421,92 +1419,63 @@ function renderProduction(_weekKey, _weekData, days) {
     return Math.round(total) + ' ' + birim;
   };
 
-  const CESIT_LABELS = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
-
-  // Per day: structured by çeşit
-  const dayData = days.map(d => ({
-    kisi: d.data.kisi || 0,
-    cesitler: [0,1,2,3,4].map(ci => {
+  const hasAny = days.some(d => {
+    for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
       const name = parseDishName(raw);
       const dish = name ? findDish(name) : null;
-      return { name, dish };
-    })
-  }));
-
-  const hasAny = dayData.some(dd => dd.cesitler.some(c => c.dish && c.dish.tarif && c.dish.tarif.length));
+      if (dish && dish.tarif && dish.tarif.length) return true;
+    }
+    return false;
+  });
   if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); return; }
   section.style.display = 'block';
 
-  // Per çeşit: collect unique ingredients across all days
-  const cesitRows = CESIT_LABELS.map((label, ci) => {
-    const ingMap = {};
-    dayData.forEach(dd => {
-      const c = dd.cesitler[ci];
-      if (!c.dish || !c.dish.tarif) return;
-      c.dish.tarif.forEach(ing => {
-        const birim = normBirim(ing.birim);
-        const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-        if (!ingMap[key]) ingMap[key] = { ad: ing.malzeme.trim(), birim };
-      });
-    });
-    return { label, ci, ingredients: Object.values(ingMap) };
-  });
+  // Her gün için bağımsız mini tablo
+  const tablesHtml = days.map(d => {
+    const kisi = d.data.kisi || 0;
+    let rows = '';
 
-  // Build thead: alternating (Yemek/Malzeme | Day) pairs
-  thead.innerHTML = `<tr>${days.map(d => `<th style="text-align:center;min-width:90px">Yemek / Malzeme</th><th style="text-align:center;min-width:90px">${d.gun}</th>`).join('')}</tr>`;
+    // Kişi
+    rows += `<tr><td style="font-weight:500;font-size:0.82rem">Kişi</td><td style="text-align:center;font-size:0.82rem;font-weight:600;color:var(--accent)">${kisi}</td></tr>`;
 
-  let rowsHtml = '';
+    for (let ci = 0; ci < 5; ci++) {
+      const raw = d.data.yemekler[ci] || '';
+      const name = parseDishName(raw);
+      if (!name) continue;
+      const dish = findDish(name);
 
-  // Kişi row
-  rowsHtml += `<tr>${dayData.map(dd => {
-    return `<td style="font-weight:500;font-size:0.78rem">Kişi</td><td style="text-align:center;font-size:0.78rem;font-weight:600;color:var(--accent)">${dd.kisi}</td>`;
-  }).join('')}</tr>`;
+      // Çeşit başlık satırı
+      rows += `<tr style="background:rgba(99,102,241,0.04)"><td style="font-weight:600;font-size:0.82rem;padding:0.4rem 0.6rem">${escapeHtml(`${ci + 1}. Çeşit`)}</td><td style="text-align:center;font-size:0.82rem;font-weight:600">${escapeHtml(name)}</td></tr>`;
 
-  // Per çeşit
-  cesitRows.forEach(({ label, ci, ingredients }) => {
-    const anyDish = dayData.some(dd => dd.cesitler[ci] && dd.cesitler[ci].name);
-    if (!anyDish) return;
-
-    // Çeşit header: dish names per day
-    rowsHtml += `<tr style="background:rgba(99,102,241,0.04)">${dayData.map(dd => {
-      const c = dd.cesitler[ci];
-      const dishName = c && c.name ? escapeHtml(c.name) : '—';
-      return `<td style="font-weight:500;font-size:0.78rem;padding-left:0.2rem">${escapeHtml(label)}</td><td style="text-align:center;font-size:0.78rem;font-weight:500">${dishName}</td>`;
-    }).join('')}</tr>`;
-
-    if (!ingredients.length) return;
-
-    // Ingredient rows
-    ingredients.forEach(ing => {
-      rowsHtml += `<tr>${dayData.map(dd => {
-        const c = dd.cesitler[ci];
-        if (!c.dish || !c.dish.tarif) {
-          return `<td style="font-size:0.78rem">—</td><td style="text-align:center;font-size:0.78rem">—</td>`;
-        }
-        const matchIng = c.dish.tarif.find(i => {
-          const ib = normBirim(i.birim);
-          return i.malzeme.trim().toLowerCase() === ing.ad.toLowerCase() && ib === ing.birim;
+      // Malzemeler
+      if (dish && dish.tarif && dish.tarif.length) {
+        dish.tarif.forEach(ing => {
+          const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+          const total = miktarKisi * kisi;
+          const birim = normBirim(ing.birim);
+          rows += `<tr><td style="padding-left:1rem;font-size:0.78rem">${escapeHtml(ing.malzeme.trim())}</td><td style="text-align:center;font-size:0.78rem">${fmt(total, birim)}</td></tr>`;
         });
-        if (!matchIng) {
-          return `<td style="font-size:0.78rem">—</td><td style="text-align:center;font-size:0.78rem">—</td>`;
-        }
-        const miktar = (matchIng.miktar_kisi || matchIng.miktar || 0) * dd.kisi;
-        return `<td style="padding-left:0.6rem;font-size:0.78rem">${escapeHtml(ing.ad)}</td><td style="text-align:center;font-size:0.78rem">${fmt(miktar, ing.birim)}</td>`;
-      }).join('')}</tr>`;
-    });
-  });
+      }
+    }
 
-  tbody.innerHTML = rowsHtml;
+    return `<table class="data-table" style="min-width:220px;flex-shrink:0"><thead><tr><th style="text-align:center;min-width:100px">Yemek / Malzeme</th><th style="text-align:center;min-width:80px">${d.gun}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }).join('');
+
+  const wrapper = section.querySelector('.table-wrapper');
+  wrapper.innerHTML = `<div style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:0.5rem">${tablesHtml}</div>`;
 
   // Weekly total
   const allDishes = [];
-  dayData.forEach(dd => {
-    dd.cesitler.forEach(c => {
-      if (c.dish && c.dish.tarif && c.dish.tarif.length && !allDishes.find(d => d.ad === c.dish.ad)) {
-        allDishes.push(c.dish);
+  days.forEach(d => {
+    for (let ci = 0; ci < 5; ci++) {
+      const raw = d.data.yemekler[ci] || '';
+      const name = parseDishName(raw);
+      const dish = name ? findDish(name) : null;
+      if (dish && dish.tarif && dish.tarif.length && !allDishes.find(x => x.ad === dish.ad)) {
+        allDishes.push(dish);
       }
-    });
+    }
   });
   renderWeeklyTotal(allDishes, days);
 }
@@ -2879,74 +2848,88 @@ function exportMenuPDF() {
 
   const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
 
-  // Production breakdown for PDF
+  // Production breakdown for PDF — per-day independent mini-tables
   const yemekler = loadYemekler();
-  const usedDishes = {};
-  days.forEach(d => {
-    d.data.yemekler.forEach(ad => {
-      const trimmed = ad.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
-      if (trimmed) {
-        const dish = yemekler.find(y => y.ad === trimmed || y.ad.startsWith(trimmed) || trimmed.startsWith(y.ad));
-        if (dish && dish.tarif && dish.tarif.length) usedDishes[dish.ad] = dish;
-      }
+  const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+  const findDish = (name) => {
+    const lower = name.toLowerCase();
+    return yemekler.find(y => {
+      const yLower = y.ad.toLowerCase();
+      return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
     });
+  };
+  const normBirim = (b) => {
+    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
+    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
+    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    return s;
+  };
+  const fmtPdf = (total, birim) => {
+    if (total <= 0) return '—';
+    if (birim === 'gr') return total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
+    if (birim === 'ml') return total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
+    if (birim === 'lt') return (Math.round(total*100)/100)+' lt';
+    return Math.round(total)+' '+birim;
+  };
+
+  const hasAnyProd = days.some(d => {
+    for (let ci = 0; ci < 5; ci++) {
+      const raw = d.data.yemekler[ci] || '';
+      const name = parseDishName(raw);
+      const dish = name ? findDish(name) : null;
+      if (dish && dish.tarif && dish.tarif.length) return true;
+    }
+    return false;
   });
-  const dishEntries = Object.values(usedDishes);
+
   let prodHtml = '';
-  if (dishEntries.length) {
+  if (hasAnyProd) {
     prodHtml = `<h3 style="margin-top:30px;font-size:14pt">Ürün İhtiyaç Listesi</h3>
-    <table>
-      <thead><tr><th style="width:180px">Yemek / Malzeme</th>${days.map(d => `<th>${d.gun}<br><span style="font-weight:400;font-size:8pt">(${d.data.kisi||0} kişi)</span></th>`).join('')}</tr></thead>
-      <tbody>
-        ${dishEntries.map(dish => {
-          let rows = `<tr style="background:#e8e8e8"><td colspan="${days.length+1}" style="font-weight:600">${escapeHtml(dish.ad)}</td></tr>`;
-          dish.tarif.forEach(ing => {
-            const mk = ing.miktar_kisi || ing.miktar || 0;
-            let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-            if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
-            else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
-            else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
-            const birim = b;
-            rows += `<tr><td style="padding-left:15px;font-size:9pt">${escapeHtml(ing.malzeme)}</td>`;
-            days.forEach(d => {
-              const kisi = d.data.kisi || 0;
-              const total = kisi * mk;
-              let display = '—';
-              if (total > 0) {
-                const adMatch = d.data.yemekler.find(y => {
-                  const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
-                  return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
-                });
-                if (adMatch) {
-                  if (birim === 'gr') display = total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
-                  else if (birim === 'ml') display = total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
-                  else if (birim === 'lt') display = (Math.round(total*100)/100)+' lt';
-                  else display = Math.round(total)+' '+birim;
-                }
-              }
-              rows += `<td style="text-align:center;font-size:9pt">${display}</td>`;
+    <div style="display:flex;gap:1rem;overflow-x:auto">
+      ${days.map(d => {
+        const kisi = d.data.kisi || 0;
+        let rows = `<tr><td><strong>Kişi</strong></td><td style="text-align:center;font-weight:600">${kisi}</td></tr>`;
+        for (let ci = 0; ci < 5; ci++) {
+          const raw = d.data.yemekler[ci] || '';
+          const name = parseDishName(raw);
+          if (!name) continue;
+          const dish = findDish(name);
+          rows += `<tr style="background:#e8e8e8"><td style="font-weight:600">${escapeHtml(`${ci+1}. Çeşit`)}</td><td style="text-align:center;font-weight:600">${escapeHtml(name)}</td></tr>`;
+          if (dish && dish.tarif && dish.tarif.length) {
+            dish.tarif.forEach(ing => {
+              const mk = ing.miktar_kisi || ing.miktar || 0;
+              const total = mk * kisi;
+              const birim = normBirim(ing.birim);
+              rows += `<tr><td style="padding-left:12px;font-size:9pt">${escapeHtml(ing.malzeme.trim())}</td><td style="text-align:center;font-size:9pt">${fmtPdf(total, birim)}</td></tr>`;
             });
-            rows += '</tr>';
-          });
-          return rows;
-        }).join('')}
-      </tbody>
-    </table>`;
+          }
+        }
+        return `<table style="min-width:200px;margin:0"><thead><tr><th>Yemek / Malzeme</th><th>${d.gun}</th></tr></thead><tbody>${rows}</tbody></table>`;
+      }).join('')}
+    </div>`;
   }
 
   // Weekly total for PDF
   let weeklyTotalHtml = '';
-  if (dishEntries.length) {
+  const pdfDishEntries = [];
+  days.forEach(d => {
+    for (let ci = 0; ci < 5; ci++) {
+      const raw = d.data.yemekler[ci] || '';
+      const name = parseDishName(raw);
+      const dish = name ? findDish(name) : null;
+      if (dish && dish.tarif && dish.tarif.length && !pdfDishEntries.find(x => x.ad === dish.ad)) {
+        pdfDishEntries.push(dish);
+      }
+    }
+  });
+  if (pdfDishEntries.length) {
     const agg = {};
-    dishEntries.forEach(dish => {
+    pdfDishEntries.forEach(dish => {
       if (!dish.tarif) return;
       dish.tarif.forEach(ing => {
         const mk = ing.miktar_kisi || ing.miktar || 0;
-        let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-        if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
-        else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
-        else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
-        const birim = b;
+        const birim = normBirim(ing.birim);
         const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
         if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, totals: days.map(() => 0) };
         days.forEach((d, i) => {
@@ -2961,17 +2944,10 @@ function exportMenuPDF() {
     });
     const entries = Object.values(agg);
     if (entries.length) {
-      const fmt = (total, birim) => {
-        if (total <= 0) return '—';
-        if (birim === 'gr') return total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
-        if (birim === 'ml') return total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
-        if (birim === 'lt') return (Math.round(total*100)/100)+' lt';
-        return Math.round(total)+' '+birim;
-      };
       weeklyTotalHtml = `<h3 style="margin-top:30px;font-size:14pt">Haftalık Toplam İhtiyaç Listesi</h3>
       <table>
         <thead><tr><th style="width:180px">Malzeme</th>${days.map(d => `<th>${d.gun}</th>`).join('')}<th style="font-weight:700">Haftalık Toplam</th></tr></thead>
-        <tbody>${entries.map(e => `<tr><td>${escapeHtml(e.ad)}</td>${e.totals.map(t => `<td style="text-align:center">${t > 0 ? fmt(t, e.birim) : '—'}</td>`).join('')}<td style="text-align:center;font-weight:700">${fmt(e.totals.reduce((s,v) => s+v, 0), e.birim)}</td></tr>`).join('')}</tbody>
+        <tbody>${entries.map(e => `<tr><td>${escapeHtml(e.ad)}</td>${e.totals.map(t => `<td style="text-align:center">${t > 0 ? fmtPdf(t, e.birim) : '—'}</td>`).join('')}<td style="text-align:center;font-weight:700">${fmtPdf(e.totals.reduce((s,v) => s+v, 0), e.birim)}</td></tr>`).join('')}</tbody>
       </table>`;
     }
   }
