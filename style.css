@@ -871,7 +871,7 @@ body {
 }
 .prod-cesit-row {
   display: flex;
-  gap: 2rem;
+  gap: 1rem 3rem;
   flex-wrap: wrap;
 }
 .prod-cesit-col {
