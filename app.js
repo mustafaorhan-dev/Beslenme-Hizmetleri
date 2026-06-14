@@ -2118,11 +2118,11 @@ function drawAllCharts() {
   }
 
   // Show canvases, hide empties
-  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasAtikOran','canvasOgrenci'].forEach(id => {
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
   });
