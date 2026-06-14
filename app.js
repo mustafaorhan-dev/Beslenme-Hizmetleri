@@ -1397,82 +1397,97 @@ function renderProduction(_weekKey, _weekData, days) {
   const thead = document.getElementById('productionThead');
   const tbody = document.getElementById('productionTbody');
   const yemekler = loadYemekler();
+  const CESITLER = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
 
-  // Collect all dishes used this week that have recipes
-  const usedDishes = {};
-  days.forEach(d => {
-    d.data.yemekler.forEach(ad => {
-      const trimmed = ad.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
-      if (trimmed) {
-        const lower = trimmed.toLowerCase();
-        const dish = yemekler.find(y => {
-          const yLower = y.ad.toLowerCase();
-          return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
-        });
-        if (dish && dish.tarif && dish.tarif.length) {
-          usedDishes[dish.ad] = dish;
-        }
-      }
+  const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+  const findDish = (name) => {
+    const lower = name.toLowerCase();
+    return yemekler.find(y => {
+      const yLower = y.ad.toLowerCase();
+      return yLower === lower || yLower.startsWith(lower) || lower.startsWith(yLower);
     });
+  };
+  const normBirim = (b) => {
+    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
+    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
+    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    return s;
+  };
+  const fmt = (total, birim) => {
+    if (total <= 0) return '—';
+    if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
+    if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
+    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    return Math.round(total) + ' ' + birim;
+  };
+
+  const cesitData = CESITLER.map((label, ci) => {
+    const gunluk = days.map(d => {
+      const raw = d.data.yemekler[ci] || '';
+      const name = parseDishName(raw);
+      const dish = name ? findDish(name) : null;
+      return { name, dish, kisi: d.data.kisi || 0 };
+    });
+    return { label, gunluk };
   });
 
-  const dishEntries = Object.values(usedDishes);
-  if (!dishEntries.length) { section.style.display = 'none'; return; }
-
+  const hasAny = cesitData.some(c => c.gunluk.some(g => g.dish && g.dish.tarif && g.dish.tarif.length));
+  if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); return; }
   section.style.display = 'block';
 
-  // Header row HTML
   thead.innerHTML = `<tr>
     <th style="width:180px">Yemek / Malzeme</th>
     ${days.map(d => `<th style="text-align:center">${d.gun}<br><span style="font-weight:400;font-size:0.65rem;opacity:0.7">${d.key}</span><br><span style="font-weight:600;font-size:0.75rem;color:var(--accent)">${d.data.kisi || 0} kişi</span></th>`).join('')}
   </tr>`;
 
-  // Body - list each dish's ingredients
   let rowsHtml = '';
-  dishEntries.forEach(dish => {
-    rowsHtml += `<tr style="background:rgba(99,102,241,0.04)"><td colspan="${days.length + 1}" style="font-weight:600;font-size:0.82rem;padding:0.4rem 0.6rem">${escapeHtml(dish.ad)}</td></tr>`;
-    if (dish.tarif && dish.tarif.length) {
-      dish.tarif.forEach(ing => {
-        const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
-        let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-        if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
-        else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
-        else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
-        const birim = b;
-        rowsHtml += `<tr>
-          <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.malzeme)}</td>
-          ${days.map(d => {
-            const kisi = d.data.kisi || 0;
-            const total = kisi * miktarKisi;
-            const ad = d.data.yemekler.find(y => {
-              const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
-              return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
-            });
-            let display = '—';
-            if (ad && total > 0) {
-              if (birim === 'gr') {
-                if (total >= 1000) display = (Math.round(total / 10) / 100) + ' kg';
-                else display = Math.round(total) + ' gr';
-              } else if (birim === 'ml') {
-                if (total >= 1000) display = (Math.round(total / 10) / 100) + ' lt';
-                else display = Math.round(total) + ' ml';
-              } else if (birim === 'lt') {
-                display = (Math.round(total * 100) / 100) + ' lt';
-              } else {
-                display = Math.round(total) + ' ' + birim;
-              }
-            }
-            return `<td style="text-align:center;font-size:0.78rem">${display}</td>`;
-          }).join('')}
-        </tr>`;
+  cesitData.forEach(({ label, gunluk }) => {
+    const anyDish = gunluk.some(g => g.dish);
+    if (!anyDish) return;
+
+    rowsHtml += `<tr style="background:rgba(99,102,241,0.04)">
+      <td style="font-weight:600;font-size:0.82rem;padding:0.4rem 0.6rem">${escapeHtml(label)}</td>
+      ${gunluk.map(g => `<td style="text-align:center;font-size:0.78rem;font-weight:500">${g.dish ? escapeHtml(g.name) : '—'}</td>`).join('')}
+    </tr>`;
+
+    const ingMap = {};
+    gunluk.forEach(g => {
+      if (!g.dish || !g.dish.tarif) return;
+      g.dish.tarif.forEach(ing => {
+        const birim = normBirim(ing.birim);
+        const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
+        if (!ingMap[key]) ingMap[key] = { ad: ing.malzeme.trim(), birim };
       });
-    }
+    });
+
+    const ingredients = Object.values(ingMap);
+    if (!ingredients.length) return;
+
+    ingredients.forEach(ing => {
+      rowsHtml += `<tr>
+        <td style="padding-left:1.2rem;font-size:0.78rem">${escapeHtml(ing.ad)}</td>
+        ${gunluk.map(g => {
+          if (!g.dish || !g.dish.tarif) return '<td style="text-align:center;font-size:0.78rem">—</td>';
+          const matchIng = g.dish.tarif.find(i => {
+            const ib = normBirim(i.birim);
+            return i.malzeme.trim().toLowerCase() === ing.ad.toLowerCase() && ib === ing.birim;
+          });
+          if (!matchIng) return '<td style="text-align:center;font-size:0.78rem">—</td>';
+          const miktar = (matchIng.miktar_kisi || matchIng.miktar || 0) * g.kisi;
+          return `<td style="text-align:center;font-size:0.78rem">${fmt(miktar, ing.birim)}</td>`;
+        }).join('')}
+      </tr>`;
+    });
   });
 
   tbody.innerHTML = rowsHtml;
 
-  // -- Haftalık Toplam İhtiyaç Listesi (malzeme bazında birleştirilmiş) --
-  renderWeeklyTotal(dishEntries, days);
+  const allUsed = [];
+  cesitData.forEach(({ gunluk }) => {
+    gunluk.forEach(g => { if (g.dish && g.dish.tarif && g.dish.tarif.length && !allUsed.find(d => d.ad === g.dish.ad)) allUsed.push(g.dish); });
+  });
+  renderWeeklyTotal(allUsed, days);
 }
 
 function renderWeeklyTotal(dishEntries, days) {
