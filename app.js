@@ -21,6 +21,7 @@ function toggleTheme() {
   const newTheme = isDark ? '' : 'dark';
   html.setAttribute('data-theme', newTheme);
   localStorage.setItem('atik_kontrol_theme', newTheme || 'light');
+  if (typeof drawAllCharts === 'function') drawAllCharts();
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -2270,6 +2271,20 @@ function darkenColor(hex, amount) {
   const b = Math.max(0, (num & 0xff) - amount);
   return `rgb(${r},${g},${b})`;
 }
+function lightenColor(hex, amount) {
+  if (!hex || typeof hex !== 'string') return 'rgb(180,180,180)';
+  let h = hex;
+  if (!h.startsWith('#')) h = '#' + h;
+  if (h.length === 4) {
+    h = '#' + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
+  }
+  const num = parseInt(h.slice(1), 16);
+  if (isNaN(num)) return hex;
+  const r = Math.min(255, (num >> 16) + amount);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+  const b = Math.min(255, (num & 0xff) + amount);
+  return `rgb(${r},${g},${b})`;
+}
 function hexToRgba(hex, a) {
   const num = parseInt(hex.slice(1), 16);
   const r = num >> 16, g = (num >> 8) & 0xff, b = num & 0xff;
@@ -2609,7 +2624,7 @@ function drawHeartLineChart(canvasId, labels, datasets) {
         for (let i = 0; i < drawCount; i++) {
           ctx.beginPath();
           ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = ds.color;
+      ctx.fillStyle = ds.color;
           ctx.fill();
           ctx.strokeStyle = isDark ? '#0f172a' : '#fff';
           ctx.lineWidth = 2;
@@ -2662,6 +2677,8 @@ function drawBarChart(canvasId, labels, datasets) {
 
   ctx.clearRect(0, 0, W, H);
 
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
   const allVals = datasets.flatMap(d => d.data);
   const minV = Math.min(0, ...allVals);
   const maxV = Math.max(1, ...allVals);
@@ -2712,6 +2729,8 @@ function drawBarChart(canvasId, labels, datasets) {
 
     // Bars
     datasets.forEach((ds, di) => {
+      const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
+      const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
       ds.data.forEach((v, gi) => {
         const animScale = easeOutCubic(progress);
         const currentH = v * scale * animScale;
@@ -2732,13 +2751,13 @@ function drawBarChart(canvasId, labels, datasets) {
 
         if (barH < 0.5) return;
 
-        ctx.shadowColor = ds.color + '40';
+        ctx.shadowColor = barColor + '40';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 2;
 
         const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
-        grad.addColorStop(0, ds.color);
-        grad.addColorStop(1, darkenColor(ds.color, 25));
+        grad.addColorStop(0, barColor);
+        grad.addColorStop(1, barColorDarker);
         ctx.fillStyle = grad;
 
         const r = Math.min(6, barW / 2);
@@ -2758,7 +2777,7 @@ function drawBarChart(canvasId, labels, datasets) {
         ctx.shadowOffsetY = 0;
 
         if (progress >= 0.95) {
-          ctx.fillStyle = hexToRgba(ds.color, 0.35);
+          ctx.fillStyle = hexToRgba(barColor, 0.35);
           ctx.fillRect(x + r, barTop + 1, barW - r * 2, 2);
 
           if (barW >= 10) {
@@ -2841,7 +2860,7 @@ function drawBarChart(canvasId, labels, datasets) {
       const y = 10;
       ctx.beginPath();
       ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
-      ctx.fillStyle = ds.color;
+      ctx.fillStyle = barColor;
       ctx.fill();
       ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
       ctx.font = '11px Inter, sans-serif';
