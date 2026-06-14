@@ -770,7 +770,7 @@ function populateForm(rec) {
   document.getElementById('fPorsiyon').value = rec.porsiyon;
   document.getElementById('fOgrenci').value = rec.ogrenci;
   // Atik alanını formul ile yeniden hesapla - eski manuel değer yerine
-  autoCalcAtik();
+  autoCalc();
 }
 
 // ─── AUTO CALC ─────────────────────────────────────────────────────────────────
@@ -793,9 +793,9 @@ function autoCalcAtik() {
   const fire    = parseFloat(document.getElementById('fFire').value)   || 0;
   const toplam  = parseInt(document.getElementById('fToplam').value)   || 0;
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: ((retilen Yemek - %10 Fire) - Toplam Geçiş) x Porsiyon / 1000
-  // Örnek: ((550 - 55) - 443) x 400 / 1000 = 20,80 kg
-  const atik = ((yemek - fire) - toplam) * porsiyon / 1000;
+  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
+  // Örnek: (550 - 55 - 443) x 400 / 1000 = 20,80 kg
+  const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
 
@@ -827,8 +827,8 @@ function saveRecord(e) {
   const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
   const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;  // autoCalcGecis tarafından hesaplanan değer
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: ((retilen Yemek - %10 Fire) - Toplam Geçiş) x Porsiyon / 1000
-  const atik = ((yemek - fire) - toplam) * porsiyon / 1000;
+  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
+  const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
 
   const rec = {
     tarih: document.getElementById('fTarih').value,
