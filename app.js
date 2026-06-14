@@ -2093,7 +2093,9 @@ function renderChartYearFilter() {
   container.innerHTML = html;
 }
 
+let _chartVer = 0;
 function drawAllCharts() {
+  _chartVer++;
   renderChartYearFilter();
 
   // Yıl filtresi uygula
@@ -2157,34 +2159,35 @@ function drawAllCharts() {
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
 
   // Kalp grafiği (neon çizgi) — Üretim Trendi
+  const ver = _chartVer;
   drawHeartLineChart('canvasHeart', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' }
-  ]);
+  ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
   drawBarChart('canvasAtik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
-  ]);
+  ], ver);
 
   drawBarChart('canvasYemek', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim Sayısı' }
-  ]);
+  ], ver);
 
   drawBarChart('canvasTurnike', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22c55e', label: 'Aylık Turnike Geçişi' }
-  ]);
+  ], ver);
 
   drawBarChart('canvasAylik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#14b8a6', label: 'Aylık Geçiş' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
-  ]);
+  ], ver);
 
   // Üretim - Geçiş Farkı
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
   drawBarChart('canvasFark', allMonthLabels, [
     { data: farkData, color: '#8b5cf6', label: 'Üretim - Geçiş Farkı' }
-  ]);
+  ], ver);
 
   // Aylık Atık Oranı % = (aylık atik / aylık yemek) * 100
   const aylikOran = allMonthLabels.map(m => {
@@ -2198,11 +2201,11 @@ function drawAllCharts() {
 
   drawBarChart('canvasAtikOran', allMonthLabels, [
     { data: aylikOran, color: '#ef4444', label: 'Aylık Atık Oranı %' }
-  ]);
+  ], ver);
 
   drawBarChart('canvasOgrenci', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }
-  ]);
+  ], ver);
 
   // Chart tooltip'leri kur
   setupChartTooltip('canvasHeart', allMonthLabels, [
@@ -2493,7 +2496,7 @@ function drawLineChart(canvasId, labels, datasets) {
   });
 }
 
-function drawHeartLineChart(canvasId, labels, datasets) {
+function drawHeartLineChart(canvasId, labels, datasets, ver) {
   const ctx = getCanvasCtx(canvasId);
   if (!ctx) return;
   const W = ctx.canvas._w;
@@ -2659,6 +2662,7 @@ function drawHeartLineChart(canvasId, labels, datasets) {
   const duration = 1200;
   const start = performance.now();
   function animate(now) {
+    if (_chartVer !== ver) return;
     const t = Math.min(1, (now - start) / duration);
     drawFrame(t);
     if (t < 1) requestAnimationFrame(animate);
@@ -2666,7 +2670,7 @@ function drawHeartLineChart(canvasId, labels, datasets) {
   requestAnimationFrame(animate);
 }
 
-function drawBarChart(canvasId, labels, datasets) {
+function drawBarChart(canvasId, labels, datasets, ver) {
   const ctx = getCanvasCtx(canvasId);
   if (!ctx) return;
   const W = ctx.canvas._w;
@@ -2874,6 +2878,7 @@ function drawBarChart(canvasId, labels, datasets) {
   const duration = 900;
   const start = performance.now();
   function animate(now) {
+    if (_chartVer !== ver) return;
     const t = Math.min(1, (now - start) / duration);
     drawFrame(t);
     if (t < 1) requestAnimationFrame(animate);
