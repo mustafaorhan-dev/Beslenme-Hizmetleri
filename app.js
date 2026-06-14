@@ -2106,11 +2106,11 @@ function drawAllCharts() {
   }
 
   if (chartRecords.length === 0) {
-    ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'block';
     });
-    ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasAtikOran','canvasOgrenci'].forEach(id => {
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2174,6 +2174,12 @@ function drawAllCharts() {
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
   ]);
 
+  // Üretim - Geçiş Farkı
+  const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
+  drawBarChart('canvasFark', allMonthLabels, [
+    { data: farkData, color: '#8b5cf6', label: 'Üretim - Geçiş Farkı' }
+  ]);
+
   // Aylık Atık Oranı % = (aylık atik / aylık yemek) * 100
   const aylikOran = allMonthLabels.map(m => {
     const yemek = getMonthVal(m, 'yemek');
@@ -2206,6 +2212,9 @@ function drawAllCharts() {
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
+  ]);
+  setupChartTooltip('canvasFark', allMonthLabels, [
+    { data: farkData, color: '#8b5cf6', label: 'Üretim - Geçiş Farkı' }
   ]);
   setupChartTooltip('canvasAtikOran', allMonthLabels, [
     { data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }
@@ -2473,14 +2482,18 @@ function drawBarChart(canvasId, labels, datasets) {
   ctx.clearRect(0, 0, W, H);
 
   const allVals = datasets.flatMap(d => d.data);
-  const maxV = Math.max(...allVals, 1);
+  const minV = Math.min(0, ...allVals);
+  const maxV = Math.max(1, ...allVals);
+  const range = maxV - minV;
   const n = labels.length;
   const numDs = datasets.length;
   const groupW = cW / n;
   const barW = Math.max(4, (groupW * 0.85) / numDs);
   const barGap = barW * 0.12;
 
-  function toY(v) { return pad.top + cH - (v / maxV) * cH; }
+  const scale = cH / range;
+  const zeroY = pad.top + maxV * scale;
+
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
   function drawFrame(progress) {
@@ -2497,45 +2510,65 @@ function drawBarChart(canvasId, labels, datasets) {
       ctx.lineTo(W - pad.right, y);
       ctx.stroke();
 
-      const val = maxV - (i / gridLines) * maxV;
+      const val = maxV - (i / gridLines) * range;
       ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
       ctx.font = '10px Inter, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
     }
 
+    // Zero çizgisi (eğer negatif değer varsa)
+    if (minV < 0) {
+      ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, zeroY);
+      ctx.lineTo(W - pad.right, zeroY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     // Bars
     datasets.forEach((ds, di) => {
       ds.data.forEach((v, gi) => {
-        const fullH = (v / maxV) * cH;
-        const currentH = fullH * easeOutCubic(progress);
-        const yBase = pad.top + cH;
-        const y = yBase - currentH;
-        const barH = currentH;
+        const animScale = easeOutCubic(progress);
+        const currentH = v * scale * animScale;
+        let barTop, barBottom, barH;
+
+        if (v >= 0) {
+          barH = currentH;
+          barTop = zeroY - barH;
+          barBottom = zeroY;
+        } else {
+          barH = -currentH;
+          barTop = zeroY;
+          barBottom = zeroY + barH;
+        }
 
         const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
         const x = groupStart + di * (barW + barGap);
 
-        if (barH < 1) return;
+        if (barH < 0.5) return;
 
         ctx.shadowColor = ds.color + '40';
         ctx.shadowBlur = 8;
         ctx.shadowOffsetY = 2;
 
-        const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+        const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
         grad.addColorStop(0, ds.color);
         grad.addColorStop(1, darkenColor(ds.color, 25));
         ctx.fillStyle = grad;
 
         const r = Math.min(6, barW / 2);
         ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + barW - r, y);
-        ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-        ctx.lineTo(x + barW, y + barH);
-        ctx.lineTo(x, y + barH);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.moveTo(x + r, barTop);
+        ctx.lineTo(x + barW - r, barTop);
+        ctx.quadraticCurveTo(x + barW, barTop, x + barW, barTop + r);
+        ctx.lineTo(x + barW, barBottom);
+        ctx.lineTo(x, barBottom);
+        ctx.lineTo(x, barTop + r);
+        ctx.quadraticCurveTo(x, barTop, x + r, barTop);
         ctx.closePath();
         ctx.fill();
 
@@ -2545,7 +2578,7 @@ function drawBarChart(canvasId, labels, datasets) {
 
         if (progress >= 0.95) {
           ctx.fillStyle = hexToRgba(ds.color, 0.35);
-          ctx.fillRect(x + r, y + 1, barW - r * 2, 2);
+          ctx.fillRect(x + r, barTop + 1, barW - r * 2, 2);
 
           if (barW >= 10) {
             ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
@@ -2569,13 +2602,13 @@ function drawBarChart(canvasId, labels, datasets) {
             ctx.shadowOffsetY = 1;
 
             if (barH > fontSize + 10) {
-              ctx.fillText(textVal, x + barW / 2, y + fontSize + 4);
+              ctx.fillText(textVal, x + barW / 2, barTop + fontSize + 4);
             } else {
               ctx.shadowColor = 'transparent';
               ctx.shadowBlur = 0;
               ctx.shadowOffsetY = 0;
               ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
-              ctx.fillText(textVal, x + barW / 2, y - 6);
+              ctx.fillText(textVal, x + barW / 2, barTop - 6);
             }
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
