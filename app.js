@@ -1479,34 +1479,40 @@ function renderProduction(_weekKey, _weekData, days) {
 
 function renderWeeklyTotal(dishEntries, days) {
   const section = document.getElementById('weeklyTotalSection');
-  const thead = document.getElementById('weeklyTotalThead');
-  const tbody = document.getElementById('weeklyTotalTbody');
-  if (!section || !thead || !tbody) return;
+  if (!section) return;
 
-  // Malzeme bazında topla: { malzeme_birim: { ad, birim, total: [gün1, ...] } }
+  const fmtTotal = (total, birim) => {
+    if (total <= 0) return '—';
+    if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
+    if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
+    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    return Math.round(total) + ' ' + birim;
+  };
+
+  const normBirim = (b) => {
+    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
+    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
+    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    return s;
+  };
+
+  // Aggregate across all dishes, per ingredient
   const agg = {};
   dishEntries.forEach(dish => {
     if (!dish.tarif) return;
     dish.tarif.forEach(ing => {
       const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
-      let b = (ing.birim || 'gr').toLowerCase().replace(/\s/g,'');
-      if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
-      else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
-      else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
-      const birim = b;
+      const birim = normBirim(ing.birim);
       const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-      if (!agg[key]) {
-        agg[key] = { ad: ing.malzeme.trim(), birim, totals: days.map(() => 0) };
-      }
+      if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, total: 0 };
       days.forEach((d, i) => {
         const kisi = d.data.kisi || 0;
         const adMatch = d.data.yemekler.find(y => {
           const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
           return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
         });
-        if (adMatch) {
-          agg[key].totals[i] += kisi * miktarKisi;
-        }
+        if (adMatch) agg[key].total += kisi * miktarKisi;
       });
     });
   });
@@ -1515,27 +1521,12 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  thead.innerHTML = `<tr>
-    <th style="width:180px">Malzeme</th>
-    ${days.map(d => `<th style="text-align:center">${d.gun}</th>`).join('')}
-    <th style="text-align:center;color:var(--accent);font-weight:700">Haftalık Toplam</th>
-  </tr>`;
-
-  tbody.innerHTML = entries.map(e => {
-    const formatTotal = (total, birim) => {
-      if (total <= 0) return '—';
-      if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
-      if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
-      if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
-      return Math.round(total) + ' ' + birim;
-    };
-    const weeklyTotal = e.totals.reduce((s, v) => s + v, 0);
-    return `<tr>
-      <td style="font-size:0.78rem;font-weight:500">${escapeHtml(e.ad)}</td>
-      ${e.totals.map(t => `<td style="text-align:center;font-size:0.78rem">${t > 0 ? formatTotal(t, e.birim) : '—'}</td>`).join('')}
-      <td style="text-align:center;font-size:0.82rem;font-weight:700;color:var(--accent)">${formatTotal(weeklyTotal, e.birim)}</td>
-    </tr>`;
-  }).join('');
+  section.innerHTML = `<h3 style="font-size:0.9rem;margin-bottom:0.75rem">Haftalık Toplam İhtiyaç Listesi</h3>
+    <div class="weekly-total-grid">${entries.map(e => {
+      const total = e.total;
+      if (total <= 0) return '';
+      return `<div class="weekly-total-item"><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+    }).filter(Boolean).join('')}</div>`;
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
@@ -2945,10 +2936,11 @@ function exportMenuPDF() {
     const entries = Object.values(agg);
     if (entries.length) {
       weeklyTotalHtml = `<h3 style="margin-top:30px;font-size:14pt">Haftalık Toplam İhtiyaç Listesi</h3>
-      <table>
-        <thead><tr><th style="width:180px">Malzeme</th>${days.map(d => `<th>${d.gun}</th>`).join('')}<th style="font-weight:700">Haftalık Toplam</th></tr></thead>
-        <tbody>${entries.map(e => `<tr><td>${escapeHtml(e.ad)}</td>${e.totals.map(t => `<td style="text-align:center">${t > 0 ? fmtPdf(t, e.birim) : '—'}</td>`).join('')}<td style="text-align:center;font-weight:700">${fmtPdf(e.totals.reduce((s,v) => s+v, 0), e.birim)}</td></tr>`).join('')}</tbody>
-      </table>`;
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem 2rem;margin-top:8px">${entries.map(e => {
+        const total = e.totals.reduce((s,v) => s+v, 0);
+        if (total <= 0) return '';
+        return `<div style="display:flex;gap:6px;white-space:nowrap;min-width:140px"><span style="flex:1">${escapeHtml(e.ad)}</span><span>—</span><span style="font-weight:600">${fmtPdf(total, e.birim)}</span></div>`;
+      }).filter(Boolean).join('')}</div>`;
     }
   }
 
