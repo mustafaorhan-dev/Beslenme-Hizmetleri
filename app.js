@@ -2106,11 +2106,11 @@ function drawAllCharts() {
   }
 
   if (chartRecords.length === 0) {
-  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'block';
     });
-  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
+  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2118,11 +2118,11 @@ function drawAllCharts() {
   }
 
   // Show canvases, hide empties
-  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
+  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
+  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
   });
@@ -2154,6 +2154,11 @@ function drawAllCharts() {
   });
   // Varsayılan: veri varsa onu kullan, yoksa 0
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
+
+  // Kalp grafiği (neon çizgi) — Üretim Trendi
+  drawHeartLineChart('canvasHeart', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' }
+  ]);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
   drawBarChart('canvasAtik', allMonthLabels, [
@@ -2199,6 +2204,9 @@ function drawAllCharts() {
   ]);
 
   // Chart tooltip'leri kur
+  setupChartTooltip('canvasHeart', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' }
+  ]);
   setupChartTooltip('canvasAtik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
   ]);
@@ -2468,6 +2476,178 @@ function drawLineChart(canvasId, labels, datasets) {
     ctx.textAlign = 'left';
     ctx.fillText(ds.label, x + 24, legendY + 6);
   });
+}
+
+function drawHeartLineChart(canvasId, labels, datasets) {
+  const ctx = getCanvasCtx(canvasId);
+  if (!ctx) return;
+  const W = ctx.canvas._w;
+  const H = ctx.canvas._h;
+  const pad = { top: 32, right: 20, bottom: 44, left: 56 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const allVals = datasets.flatMap(d => d.data);
+  const minV = Math.min(...allVals, 0);
+  const maxV = Math.max(...allVals, 1);
+  const range = maxV - minV || 1;
+  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
+
+  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
+  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
+
+  // Smooth control point helper
+  function controlPoints(prev, curr, next, smooth) {
+    const p = prev || curr;
+    const n = next || curr;
+    const d = smooth || 0.25;
+    return {
+      cp1x: curr.x + (p.x - curr.x) * d,
+      cp1y: curr.y + (p.y - curr.y) * d,
+      cp2x: curr.x + (n.x - curr.x) * d,
+      cp2y: curr.y + (n.y - curr.y) * d,
+    };
+  }
+
+  function drawFrame(progress) {
+    ctx.clearRect(0, 0, W, H);
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor = isDark ? 'rgba(148,163,184,0.08)' : 'rgba(0,0,0,0.06)';
+    const textColor = isDark ? 'rgba(148,163,184,0.5)' : 'rgba(100,116,139,0.5)';
+
+    // Grid
+    const gridLines = 4;
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= gridLines; i++) {
+      const y = pad.top + (i / gridLines) * cH;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+
+      const val = maxV - (i / gridLines) * range;
+      ctx.fillStyle = textColor;
+      ctx.font = '9px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(val >= 100 ? Math.round(val) : val.toFixed(1), pad.left - 6, y + 3);
+    }
+
+    // X labels
+    ctx.fillStyle = textColor;
+    ctx.font = '9px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(labels.length / 10));
+    labels.forEach((l, i) => {
+      if (i % step === 0 || i === labels.length - 1) {
+        const parts = l.split('/');
+        ctx.fillText(parts[0], toX(i), H - pad.bottom + 14);
+      }
+    });
+
+    // Yıl ortalama
+    const yearGroups = {};
+    labels.forEach((l, i) => {
+      const parts = l.split('/');
+      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
+        if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
+        yearGroups[parts[1]].push(i);
+      }
+    });
+    ctx.font = '8px Inter, sans-serif';
+    for (const [year, indices] of Object.entries(yearGroups)) {
+      const cx = (toX(indices[0]) + toX(indices[indices.length - 1])) / 2;
+      ctx.fillText(year, cx, H - pad.bottom + 24);
+    }
+
+    // Datasets
+    datasets.forEach((ds, dsIdx) => {
+      const pts = ds.data.map((v, i) => ({ x: toX(i), y: toY(v) }));
+      const drawCount = Math.floor(pts.length * easeOutCubic(progress));
+
+      // Gradient fill
+      const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+      grad.addColorStop(0, ds.color + '40');
+      grad.addColorStop(0.5, ds.color + '20');
+      grad.addColorStop(1, ds.color + '00');
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, H - pad.bottom);
+      ctx.lineTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < drawCount; i++) {
+        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
+        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
+      }
+      ctx.lineTo(pts[Math.max(0, drawCount - 1)].x, H - pad.bottom);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Neon line
+      ctx.save();
+      ctx.shadowColor = ds.color;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < drawCount; i++) {
+        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
+        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = ds.color;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+
+      // Dots (only at full progress)
+      if (progress >= 0.95) {
+        for (let i = 0; i < drawCount; i++) {
+          ctx.beginPath();
+          ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = ds.color;
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#0f172a' : '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // Labels at end
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        for (let i = 0; i < drawCount; i++) {
+          const v = ds.data[i];
+          ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
+          ctx.fillText(v, pts[i].x, pts[i].y - 12);
+        }
+        ctx.shadowBlur = 0;
+      }
+
+      // Legend
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = ds.color;
+      ctx.beginPath();
+      ctx.arc(pad.left + dsIdx * 130 + 8, 12, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = textColor;
+      ctx.fillText(ds.label, pad.left + dsIdx * 130 + 18, 16);
+    });
+  }
+
+  const duration = 1200;
+  const start = performance.now();
+  function animate(now) {
+    const t = Math.min(1, (now - start) / duration);
+    drawFrame(t);
+    if (t < 1) requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
 }
 
 function drawBarChart(canvasId, labels, datasets) {
