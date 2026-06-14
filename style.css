@@ -837,28 +837,26 @@ body {
 }
 .prod-ing {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.15rem;
   font-size: 0.82rem;
   padding-left: 0.5rem;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 .prod-num {
-  width: 1.4rem;
+  width: 1.3rem;
   text-align: right;
   flex-shrink: 0;
 }
 .prod-name {
-  flex: 1;
+  flex-shrink: 1;
   min-width: 0;
 }
 .prod-sep {
   flex-shrink: 0;
 }
 .prod-qty {
-  width: 4rem;
-  text-align: right;
   flex-shrink: 0;
   font-weight: 500;
 }
@@ -867,24 +865,25 @@ body {
 .weekly-total-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.2rem 2rem;
+  gap: 0.15rem 2rem;
 }
 .weekly-total-item {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.15rem;
   white-space: nowrap;
   min-width: 140px;
   font-size: 0.85rem;
   line-height: 1.7;
 }
 .weekly-total-num {
-  width: 1.4rem;
+  width: 1.3rem;
   text-align: right;
   flex-shrink: 0;
   color: var(--text-muted);
 }
 .weekly-total-name {
-  flex: 1;
+  flex-shrink: 1;
+  min-width: 0;
   color: var(--text-primary);
 }
 .weekly-total-sep {
@@ -892,8 +891,6 @@ body {
   color: var(--text-muted);
 }
 .weekly-total-qty {
-  width: 4rem;
-  text-align: right;
   flex-shrink: 0;
   font-weight: 600;
   color: var(--accent);
