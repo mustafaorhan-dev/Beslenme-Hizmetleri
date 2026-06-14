@@ -2497,6 +2497,7 @@ function drawHeartLineChart(canvasId, labels, datasets) {
 
   function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
   function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
   // Smooth control point helper
   function controlPoints(prev, curr, next, smooth) {
