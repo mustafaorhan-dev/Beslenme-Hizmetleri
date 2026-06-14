@@ -2860,7 +2860,8 @@ function drawBarChart(canvasId, labels, datasets) {
       const y = 10;
       ctx.beginPath();
       ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
-      ctx.fillStyle = barColor;
+      const legendColor = isDark ? lightenColor(ds.color, 60) : ds.color;
+      ctx.fillStyle = legendColor;
       ctx.fill();
       ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
       ctx.font = '11px Inter, sans-serif';
