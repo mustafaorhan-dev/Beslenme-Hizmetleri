@@ -2210,11 +2210,11 @@ const chartValueLabelPlugin = {
         const val = ds.data[idx];
         if (val === undefined || val === null) return;
         ctx.fillStyle = chart.options.plugins.legend.labels.color || '#334155';
-        ctx.font = '10px Inter, sans-serif';
+        ctx.font = 'bold 13px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
-        ctx.fillText(display, bar.x, bar.y - 4);
+        ctx.fillText(display, bar.x, bar.y - 7);
       });
     });
   }
@@ -2324,7 +2324,7 @@ function drawAllCharts() {
         animation: { duration: 900, easing: 'easeOutCubic' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: colors.text, font: { size: 11, family: 'Inter' } } },
+          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
           tooltip: {
             backgroundColor: colors.tooltipBg,
             titleColor: colors.text,
@@ -2333,8 +2333,8 @@ function drawAllCharts() {
             borderWidth: 1,
             padding: 10,
             cornerRadius: 8,
-            bodyFont: { size: 12, family: 'Inter' },
-            titleFont: { size: 12, family: 'Inter', weight: 'bold' },
+            bodyFont: { size: 13, family: 'Inter' },
+            titleFont: { size: 14, family: 'Inter', weight: 'bold' },
             callbacks: {
               label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 100 ? Math.round(ctx.parsed.y) : ctx.parsed.y >= 10 ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(2))
             }
@@ -2344,8 +2344,8 @@ function drawAllCharts() {
         scales: {
           x: {
             ticks: {
-              color: colors.text, font: { size: 10, family: 'Inter' },
-              maxRotation: labels.length > 20 ? 90 : 0,
+              color: colors.text, font: { size: 12, family: 'Inter' },
+              maxRotation: labels.length > 20 ? 90 : 45,
               autoSkip: false,
               maxTicksLimit: labels.length,
             },
@@ -2353,7 +2353,7 @@ function drawAllCharts() {
           },
           y: {
             beginAtZero: true,
-            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
             grid: { color: colors.grid }
           }
         },
