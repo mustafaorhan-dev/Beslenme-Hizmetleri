@@ -2536,7 +2536,7 @@ function drawSmallLineChart(canvasId, labels, datasets, ver) {
   if (!ctx) return;
   const W = ctx.canvas._w;
   const H = ctx.canvas._h;
-  const pad = { top: 16, right: 12, bottom: 36, left: 48 };
+  const pad = { top: 4, right: 8, bottom: 20, left: 8 };
   const cW = W - pad.left - pad.right;
   const cH = H - pad.top - pad.bottom;
 
@@ -2568,48 +2568,19 @@ function drawSmallLineChart(canvasId, labels, datasets, ver) {
     ctx.clearRect(0, 0, W, H);
 
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const gridColor = isDark ? 'rgba(148,163,184,0.06)' : 'rgba(0,0,0,0.04)';
-    const textColor = isDark ? 'rgba(148,163,184,0.45)' : 'rgba(100,116,139,0.45)';
+    const textDim = isDark ? 'rgba(148,163,184,0.35)' : 'rgba(100,116,139,0.35)';
 
-    // Grid (dashed)
-    ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = gridColor;
+    // Basit alt çizgi
+    ctx.strokeStyle = isDark ? 'rgba(148,163,184,0.08)' : 'rgba(0,0,0,0.06)';
     ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 3; i++) {
-      const y = pad.top + (i / 3) * cH;
-      ctx.beginPath();
-      ctx.moveTo(pad.left, y);
-      ctx.lineTo(W - pad.right, y);
-      ctx.stroke();
-    }
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, H - pad.bottom);
+    ctx.lineTo(W - pad.right, H - pad.bottom);
+    ctx.stroke();
     ctx.setLineDash([]);
 
-    // Y-axis labels
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= 3; i++) {
-      const y = pad.top + (i / 3) * cH;
-      const val = maxV - (i / 3) * range;
-      ctx.fillStyle = textColor;
-      ctx.font = '9px Inter, sans-serif';
-      ctx.textAlign = 'right';
-      const label = val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val >= 100 ? Math.round(val) + '' : val.toFixed(1);
-      ctx.fillText(label, pad.left - 6, y);
-    }
-
-    // X labels (month numbers)
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = textColor;
-    ctx.font = '9px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(labels.length / 12));
-    labels.forEach((l, i) => {
-      if (i % step === 0 || i === labels.length - 1) {
-        const parts = l.split('/');
-        ctx.fillText(parts[0], toX(i), H - pad.bottom + 8);
-      }
-    });
-
-    // Year labels
+    // Yıl etiketleri (çok hafif, sadece yılın ortasında)
     const yearGroups = {};
     labels.forEach((l, i) => {
       const parts = l.split('/');
@@ -2618,12 +2589,14 @@ function drawSmallLineChart(canvasId, labels, datasets, ver) {
         yearGroups[parts[1]].push(i);
       }
     });
+    ctx.textBaseline = 'top';
     ctx.font = '8px Inter, sans-serif';
-    for (const [year, indices] of Object.entries(yearGroups)) {
-      const cx = (toX(indices[0]) + toX(indices[indices.length - 1])) / 2;
-      ctx.fillText(year, cx, H - pad.bottom + 18);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = textDim;
+    for (const [year] of Object.entries(yearGroups)) {
+      // Yılı sol tarafa yaz
+      ctx.fillText(year, pad.left, H - pad.bottom + 4);
     }
-    ctx.textBaseline = 'alphabetic';
 
     // Line datasets
     datasets.forEach((ds) => {
@@ -2631,10 +2604,10 @@ function drawSmallLineChart(canvasId, labels, datasets, ver) {
       const drawCount = Math.floor(pts.length * easeOutCubic(progress));
       if (drawCount < 2) return;
 
-      // Gradient fill under line
+      // Gradient fill under line (çok hafif)
       const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-      grad.addColorStop(0, ds.color + '20');
-      grad.addColorStop(0.5, ds.color + '08');
+      grad.addColorStop(0, ds.color + '18');
+      grad.addColorStop(0.5, ds.color + '06');
       grad.addColorStop(1, ds.color + '00');
 
       ctx.beginPath();
@@ -2649,52 +2622,46 @@ function drawSmallLineChart(canvasId, labels, datasets, ver) {
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Line
+      // Line (ince ve temiz)
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < drawCount; i++) {
-        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
+        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.18);
         ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
       }
       ctx.strokeStyle = ds.color;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // Dots (only at full progress)
-      if (progress >= 0.95) {
-        for (let i = 0; i < drawCount; i++) {
-          const bgColor = isDark ? '#0f172a' : '#ffffff';
-          ctx.beginPath();
-          ctx.arc(pts[i].x, pts[i].y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = bgColor;
-          ctx.fill();
-          ctx.strokeStyle = ds.color;
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
+      // Son değer etiketi (sadece en son noktada)
+      if (progress >= 0.95 && pts.length > 0) {
+        const last = pts[pts.length - 1];
+        const lastVal = ds.data[ds.data.length - 1];
+
+        // Son noktadaki küçük yuvarlak
+        ctx.beginPath();
+        ctx.arc(last.x, last.y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = ds.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Değer etiketi (son noktanın yanında)
+        const label = fmt(lastVal);
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = ds.color;
+        ctx.fillText(label, last.x - 10, last.y - 6);
+        ctx.textBaseline = 'alphabetic';
       }
     });
-
-    // Legend (first dataset label)
-    ctx.textBaseline = 'middle';
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    datasets.forEach((ds, i) => {
-      const lx = pad.left + i * 120 + 6;
-      const ly = 8;
-      ctx.fillStyle = ds.color;
-      ctx.beginPath();
-      ctx.arc(lx, ly, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = textColor;
-      ctx.fillText(ds.label, lx + 8, ly);
-    });
-    ctx.textBaseline = 'alphabetic';
   }
 
-  const duration = 800;
+  const duration = 700;
   const start = performance.now();
   function animate(now) {
     if (_chartVer !== ver) return;
