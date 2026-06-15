@@ -2326,13 +2326,14 @@ function drawAllCharts() {
         plugins: {
           legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
           tooltip: {
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            backgroundColor: isDark ? '#111111' : '#ffffff',
             titleColor: colors.text,
             bodyColor: colors.text,
-            borderColor: colors.tooltipBorder,
+            borderColor: isDark ? '#333333' : '#e2e8f0',
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
+            caretColor: isDark ? '#111111' : '#ffffff',
             bodyFont: { size: 13, family: 'Inter' },
             titleFont: { size: 14, family: 'Inter', weight: 'bold' },
             callbacks: {
