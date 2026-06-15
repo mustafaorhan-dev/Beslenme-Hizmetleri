@@ -2624,10 +2624,6 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
 
         if (currentH < 0.5) return;
 
-        ctx.shadowColor = barColor + '40';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-
         const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
         grad.addColorStop(0, barColor);
         grad.addColorStop(1, barColorDarker);
@@ -2645,21 +2641,11 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         ctx.closePath();
         ctx.fill();
 
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-
         if (progress >= 0.95) {
           ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
           ctx.font = 'bold 10px Inter, sans-serif';
           ctx.textAlign = 'center';
-          ctx.shadowColor = 'rgba(0,0,0,0.3)';
-          ctx.shadowBlur = 3;
-          ctx.shadowOffsetY = 1;
-          ctx.fillText(v >= 100 ? Math.round(v) : v.toFixed(1), x + barW / 2, barTop - 8);
-          ctx.shadowColor = 'transparent';
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetY = 0;
+          ctx.fillText(fmt(v), x + barW / 2, barTop - 8);
         }
       });
     });
@@ -2688,10 +2674,7 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Neon line
-      ctx.save();
-      ctx.shadowColor = ds.color;
-      ctx.shadowBlur = 18;
+      // Line
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < drawCount; i++) {
@@ -2703,7 +2686,6 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.stroke();
-      ctx.restore();
 
       // Dots (only at full progress)
       if (progress >= 0.95) {
@@ -2712,22 +2694,17 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
           ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
       ctx.fillStyle = ds.color;
           ctx.fill();
-          ctx.strokeStyle = isDark ? '#0f172a' : '#fff';
-          ctx.lineWidth = 2;
-          ctx.stroke();
         }
 
         // Labels at end
-        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.font = 'bold 10px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 4;
         for (let i = 0; i < drawCount; i++) {
           const v = ds.data[i];
           ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
-          ctx.fillText(v, pts[i].x, pts[i].y - 12);
+          const labelY = pts[i].y < pad.top + 24 ? pts[i].y + 16 : pts[i].y - 10;
+          ctx.fillText(fmt(v), pts[i].x, labelY);
         }
-        ctx.shadowBlur = 0;
       }
 
     });
