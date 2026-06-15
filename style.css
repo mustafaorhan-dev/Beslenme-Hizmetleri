@@ -1145,22 +1145,6 @@ body {
 .chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
 
-.small-multiples-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.small-multiples-grid .section-card { padding: 1rem; }
-
-.chart-area-small { height: 220px; }
-
-@media (max-width: 700px) {
-  .small-multiples-grid { grid-template-columns: 1fr; }
-  .chart-area-small { height: 200px; }
-}
-
 .chart-area {
   position: relative;
   height: 360px;

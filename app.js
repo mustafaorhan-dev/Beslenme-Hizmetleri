@@ -2116,11 +2116,11 @@ function drawAllCharts() {
   }
 
   if (chartRecords.length === 0) {
-  ['chartHeartEmpty1','chartHeartEmpty2','chartHeartEmpty3','chartHeartEmpty4','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
+  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'block';
     });
-  ['canvasHeart1','canvasHeart2','canvasHeart3','canvasHeart4','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
+  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2128,11 +2128,11 @@ function drawAllCharts() {
   }
 
   // Show canvases, hide empties
-  ['chartHeartEmpty1','chartHeartEmpty2','chartHeartEmpty3','chartHeartEmpty4','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
+  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  ['canvasHeart1','canvasHeart2','canvasHeart3','canvasHeart4','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
+  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
   });
@@ -2165,20 +2165,14 @@ function drawAllCharts() {
   // Varsayılan: veri varsa onu kullan, yoksa 0
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
 
-  // Small Multiples — 4 separate trend charts
+  // Kalp grafiği (neon çizgi + bar) — Üretim / Geçiş / Atık Trendi
   const ver = _chartVer;
   const karbonDataHeart = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  drawSmallLineChart('canvasHeart1', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim' }
-  ], ver);
-  drawSmallLineChart('canvasHeart2', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş' }
-  ], ver);
-  drawSmallLineChart('canvasHeart3', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
-  ], ver);
-  drawSmallLineChart('canvasHeart4', allMonthLabels, [
-    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)' }
+  drawHeartLineChart('canvasHeart', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim', type: 'line', width: 3 },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş', type: 'line', width: 2.5 },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)', type: 'line', width: 2.5 },
+    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)', type: 'line', width: 2 }
   ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
@@ -2231,16 +2225,10 @@ function drawAllCharts() {
   ], ver);
 
   // Chart tooltip'leri kur
-  setupChartTooltip('canvasHeart1', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim' }
-  ]);
-  setupChartTooltip('canvasHeart2', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş' }
-  ]);
-  setupChartTooltip('canvasHeart3', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
-  ]);
-  setupChartTooltip('canvasHeart4', allMonthLabels, [
+  setupChartTooltip('canvasHeart', allMonthLabels, [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' },
     { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)' }
   ]);
   setupChartTooltip('canvasAtik', allMonthLabels, [
@@ -2529,147 +2517,6 @@ function drawLineChart(canvasId, labels, datasets) {
     ctx.textAlign = 'left';
     ctx.fillText(ds.label, x + 24, legendY + 6);
   });
-}
-
-function drawSmallLineChart(canvasId, labels, datasets, ver) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 4, right: 8, bottom: 20, left: 8 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(...allVals, 0);
-  const maxV = Math.max(...allVals, 1);
-  const range = maxV - minV || 1;
-  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
-
-  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
-  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  function controlPoints(prev, curr, next, smooth) {
-    const p = prev || curr;
-    const n = next || curr;
-    const d = smooth || 0.25;
-    return {
-      cp1x: curr.x + (p.x - curr.x) * d,
-      cp1y: curr.y + (p.y - curr.y) * d,
-      cp2x: curr.x + (n.x - curr.x) * d,
-      cp2y: curr.y + (n.y - curr.y) * d,
-    };
-  }
-
-  function drawFrame(progress) {
-    ctx.clearRect(0, 0, W, H);
-
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textDim = isDark ? 'rgba(148,163,184,0.35)' : 'rgba(100,116,139,0.35)';
-
-    // Basit alt çizgi
-    ctx.strokeStyle = isDark ? 'rgba(148,163,184,0.08)' : 'rgba(0,0,0,0.06)';
-    ctx.lineWidth = 0.5;
-    ctx.setLineDash([2, 3]);
-    ctx.beginPath();
-    ctx.moveTo(pad.left, H - pad.bottom);
-    ctx.lineTo(W - pad.right, H - pad.bottom);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Yıl etiketleri (çok hafif, sadece yılın ortasında)
-    const yearGroups = {};
-    labels.forEach((l, i) => {
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-        yearGroups[parts[1]].push(i);
-      }
-    });
-    ctx.textBaseline = 'top';
-    ctx.font = '8px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = textDim;
-    for (const [year] of Object.entries(yearGroups)) {
-      // Yılı sol tarafa yaz
-      ctx.fillText(year, pad.left, H - pad.bottom + 4);
-    }
-
-    // Line datasets
-    datasets.forEach((ds) => {
-      const pts = ds.data.map((v, i) => ({ x: toX(i), y: toY(v) }));
-      const drawCount = Math.floor(pts.length * easeOutCubic(progress));
-      if (drawCount < 2) return;
-
-      // Gradient fill under line (çok hafif)
-      const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-      grad.addColorStop(0, ds.color + '18');
-      grad.addColorStop(0.5, ds.color + '06');
-      grad.addColorStop(1, ds.color + '00');
-
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, H - pad.bottom);
-      ctx.lineTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < drawCount; i++) {
-        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
-        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
-      }
-      ctx.lineTo(pts[drawCount - 1].x, H - pad.bottom);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Line (ince ve temiz)
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < drawCount; i++) {
-        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.18);
-        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
-      }
-      ctx.strokeStyle = ds.color;
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // Son değer etiketi (sadece en son noktada)
-      if (progress >= 0.95 && pts.length > 0) {
-        const last = pts[pts.length - 1];
-        const lastVal = ds.data[ds.data.length - 1];
-
-        // Son noktadaki küçük yuvarlak
-        ctx.beginPath();
-        ctx.arc(last.x, last.y, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
-        ctx.fill();
-        ctx.strokeStyle = ds.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Değer etiketi (son noktanın yanında)
-        const label = fmt(lastVal);
-        ctx.font = 'bold 11px Inter, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-        ctx.fillStyle = ds.color;
-        ctx.fillText(label, last.x - 10, last.y - 6);
-        ctx.textBaseline = 'alphabetic';
-      }
-    });
-  }
-
-  const duration = 700;
-  const start = performance.now();
-  function animate(now) {
-    if (_chartVer !== ver) return;
-    const t = Math.min(1, (now - start) / duration);
-    drawFrame(t);
-    if (t < 1) requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
 }
 
 function drawHeartLineChart(canvasId, labels, datasets, ver) {
