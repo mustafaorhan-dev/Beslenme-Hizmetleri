@@ -1697,7 +1697,7 @@ function renderYemekForm(ad, kalori, alerjen) {
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;margin-bottom:0.75rem">
       <div style="flex:2;min-width:140px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek Adı</label>
-        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: �?EHRIYE ÇORBASI" style="width:100%" />
+        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: �?EHRIYE ÇORBASI" style="width:100%" />
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Kalori</label>
@@ -2331,7 +2331,7 @@ function drawAllCharts() {
             bodyColor: colors.text,
             borderColor: colors.tooltipBorder,
             borderWidth: 1,
-            padding: 10,
+            padding: 12,
             cornerRadius: 8,
             bodyFont: { size: 13, family: 'Inter' },
             titleFont: { size: 14, family: 'Inter', weight: 'bold' },
@@ -2339,7 +2339,7 @@ function drawAllCharts() {
               label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 100 ? Math.round(ctx.parsed.y) : ctx.parsed.y >= 10 ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(2))
             }
           },
-          valueLabels: extra && extra.showValues !== false,
+          valueLabels: false,
         },
         scales: {
           x: {
