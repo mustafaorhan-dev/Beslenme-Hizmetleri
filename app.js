@@ -123,11 +123,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     dishOk = true;
   }
 
-  // Menü verisini Google Sheet'ten al (dish URL veya main URL)
-  const menuUrl = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
-  if (menuUrl) {
+  // Menü verisini Google Sheet'ten al (sadece dish URL varsa)
+  if (gsheetConfig.dishUrl) {
     setLoadingSub('Menü verileri alınıyor...');
     menuOk = await fetchWithRetry(() => syncMenuFromGSheet(), 3, 1000);
+  } else {
+    menuOk = true;
   }
 
   refreshMenuProduction();
@@ -137,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   // Bağlantı durumunu göster
-  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk) && (!menuUrl || menuOk)) {
+  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk) && (!gsheetConfig.dishUrl || menuOk)) {
     setConnectionStatus('ok');
   } else {
     setConnectionStatus('err');
@@ -1784,11 +1785,9 @@ async function syncDishesToGSheets() {
 }
 
 // -- Menu Google Sheet sync --
-const MENU_STORAGE_KEY = 'atik_kontrol_menu';
-
-async function syncMenuFromGSheet() {
-  const url = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
-  if (!url) return false;
+async function fetchMenuData() {
+  const url = gsheetConfig.dishUrl;
+  if (!url) return {};
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -1798,32 +1797,24 @@ async function syncMenuFromGSheet() {
     const json = await res.json();
     if (json.menuData) {
       const parsed = JSON.parse(json.menuData);
-      if (parsed && typeof parsed === 'object') {
-        const keys = Object.keys(parsed);
-        if (keys.length > 0) {
-          localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(parsed));
-        }
-        return keys.length > 0;
-      }
-      return false;
+      return (parsed && typeof parsed === 'object') ? parsed : {};
     }
-    return false;
-  } catch (_) { return false; }
+    return {};
+  } catch (_) { return {}; }
 }
 
-async function syncMenuToGSheet() {
-  const url = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
+async function saveMenuData(allData) {
+  const url = gsheetConfig.dishUrl;
   if (!url) return;
   try {
-    const data = localStorage.getItem(MENU_STORAGE_KEY) || '{}';
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveMenu', menuData: data })
+      body: JSON.stringify({ action: 'saveMenu', menuData: JSON.stringify(allData) })
     });
     const json = await res.json();
-    if (!json.success) showToast('Menü Sheet\'e yedeklenemedi: ' + (json.error || ''), 'error');
-  } catch (_) { showToast('Menü Sheet\'e yedeklenemedi (bağlantı hatası).', 'error'); }
+    if (!json.success) showToast('Menü kaydedilemedi: ' + (json.error || ''), 'error');
+  } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
 }
 
 // -- Live production refresh --
