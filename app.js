@@ -2326,7 +2326,7 @@ function drawAllCharts() {
         plugins: {
           legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
           tooltip: {
-            backgroundColor: colors.tooltipBg,
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
             titleColor: colors.text,
             bodyColor: colors.text,
             borderColor: colors.tooltipBorder,

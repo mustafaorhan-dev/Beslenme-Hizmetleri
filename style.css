@@ -1733,13 +1733,6 @@ body {
 #productionTable td { padding: 0.35rem 0.5rem; vertical-align: middle; }
 #productionTable tr:first-child td { border-top: none; }
 
-/* ---- CHART TOOLTIP OPAQUE FIX ---- */
-.chart-area > div[style*="background"] {
-  background: #ffffff !important;
-  opacity: 1 !important;
-}
-[data-theme="dark"] .chart-area > div[style*="background"] {
-  background: #1e293b !important;
-}
+
 
 
