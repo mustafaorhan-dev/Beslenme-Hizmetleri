@@ -123,13 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     dishOk = true;
   }
 
-  // Menü verisini Google Sheet'ten al (sadece dish URL varsa)
-  if (gsheetConfig.dishUrl) {
-    setLoadingSub('Menü verileri alınıyor...');
-    menuOk = await fetchWithRetry(() => syncMenuFromGSheet(), 3, 1000);
-  } else {
-    menuOk = true;
-  }
+  menuOk = true;
 
   refreshMenuProduction();
   initDishAutocomplete();
@@ -683,7 +677,7 @@ function exportRecordsPDF() {
 }
 
 // ─── TABS ──────────────────────────────────────────────────────────────────────
-function switchTab(name) {
+async function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -693,7 +687,7 @@ function switchTab(name) {
   // Menü seçilince sidebar'ı kapat
   closeSidebar();
   // Sayfa başlığını güncelle
-  if (name === 'menu') renderMenu();
+  if (name === 'menu') await renderMenu();
   const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
@@ -2437,7 +2431,7 @@ function showChartDetailModal(title, records) {
   overlay.style.display = 'flex';
 }
 
-function renderMenu() {
+async function renderMenu() {
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
@@ -2447,7 +2441,7 @@ function renderMenu() {
   document.getElementById('menuWeekLabel').textContent = weekLabel;
   document.getElementById('menuTitle').textContent = weekLabel;
 
-  const allData = loadWeeklyMenu();
+  const allData = await fetchMenuData();
   const weekData = allData[weekKey] || {};
 
   // Gün verilerini topla
@@ -2519,21 +2513,12 @@ function getWeekStartDate(offset) {
   return monday;
 }
 
-function loadWeeklyMenu() {
-  try {
-    const stored = localStorage.getItem(MENU_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function saveWeeklyMenu() {
+async function saveWeeklyMenu() {
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-  const allData = loadWeeklyMenu();
+  const allData = await fetchMenuData();
   const weekData = {};
   GUNLER.forEach((_, i) => {
     const tarih = new Date(monday);
@@ -2548,16 +2533,13 @@ function saveWeeklyMenu() {
     weekData[key] = { yemekler, kisi };
   });
   allData[weekKey] = weekData;
-  try {
-    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData));
-  } catch (e) {}
+  await saveMenuData(allData);
   showToast('Menü kaydedildi.', 'success');
-  syncMenuToGSheet();
 }
 
-function shiftMenuWeek(delta) {
+async function shiftMenuWeek(delta) {
   menuWeekOffset += delta;
-  renderMenu();
+  await renderMenu();
 }
 
 function clearWeeklyMenu() {
@@ -2575,8 +2557,8 @@ function clearWeeklyMenu() {
   showToast('Menü temizlendi.', 'success');
 }
 
-function exportMenuJSON() {
-  const allData = loadWeeklyMenu();
+async function exportMenuJSON() {
+  const allData = await fetchMenuData();
   const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -2591,11 +2573,11 @@ function importMenuJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(ev) {
+  reader.onload = async function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
-      renderMenu();
+      await saveMenuData(data);
+      await renderMenu();
       showToast('Menü yüklendi.', 'success');
     } catch (err) {
       showToast('Menü yükleme hatası: ' + err.message, 'error');
