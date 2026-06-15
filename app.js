@@ -2333,13 +2333,14 @@ function drawAllCharts() {
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
+            yAlign: 'top',
             bodyFont: { size: 13, family: 'Inter' },
             titleFont: { size: 14, family: 'Inter', weight: 'bold' },
             callbacks: {
               label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 100 ? Math.round(ctx.parsed.y) : ctx.parsed.y >= 10 ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(2))
             }
           },
-          valueLabels: false,
+          valueLabels: extra && extra.showValues !== false,
         },
         scales: {
           x: {
