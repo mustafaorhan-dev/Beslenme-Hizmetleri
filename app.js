@@ -1,4 +1,4 @@
-﻿/* =============================================
+﻿﻿/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
    ============================================= */
 
@@ -1872,8 +1872,6 @@ async function syncDishesToGSheets() {
 
 // -- Menu Google Sheet sync --
 const MENU_STORAGE_KEY = 'atik_kontrol_menu';
-const GUNLER = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma'];
-let menuWeekOffset = 0;
 
 async function syncMenuFromGSheet() {
   const url = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
@@ -2328,14 +2326,13 @@ function drawAllCharts() {
         plugins: {
           legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
           tooltip: {
-            backgroundColor: isDark ? '#111111' : '#ffffff',
+            backgroundColor: colors.tooltipBg,
             titleColor: colors.text,
             bodyColor: colors.text,
-            borderColor: isDark ? '#333333' : '#e2e8f0',
+            borderColor: colors.tooltipBorder,
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
-            caretColor: isDark ? '#111111' : '#ffffff',
             bodyFont: { size: 13, family: 'Inter' },
             titleFont: { size: 14, family: 'Inter', weight: 'bold' },
             callbacks: {
@@ -2527,92 +2524,6 @@ function showChartDetailModal(title, records) {
   }
   if (footer) footer.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Kapat</button>';
   overlay.style.display = 'flex';
-}
-
-function getWeekStartDate(offset) {
-  const now = new Date();
-  const day = now.getDay();
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
-  mon.setHours(0, 0, 0, 0);
-  return mon;
-}
-function formatDateStr(d) {
-  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
-}
-function loadWeeklyMenu() {
-  try { return JSON.parse(localStorage.getItem(MENU_STORAGE_KEY)) || {}; } catch (_) { return {}; }
-}
-function saveWeeklyMenu() {
-  const monday = getWeekStartDate(menuWeekOffset);
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-  const allData = loadWeeklyMenu();
-  const days = GUNLER.map((gun, i) => {
-    const tarih = new Date(monday);
-    tarih.setDate(monday.getDate() + i);
-    const key = formatDateStr(tarih);
-    const yemekler = [];
-    for (let c = 0; c < 5; c++) {
-      const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.value : '');
-    }
-    const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
-    return { key, data: { yemekler, kisi } };
-  });
-  const wd = {};
-  days.forEach(d => { wd[d.key] = d.data; });
-  allData[weekKey] = wd;
-  localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData));
-  syncMenuToGSheet();
-  showToast('Menü kaydedildi!', 'success');
-}
-function clearWeeklyMenu() {
-  if (!confirm('Tüm menü verilerini temizlemek istediğinize emin misiniz?')) return;
-  for (let c = 0; c < 5; c++) {
-    for (let i = 0; i < 5; i++) {
-      const el = document.getElementById('m' + c + '_' + i);
-      if (el) el.value = '';
-    }
-  }
-  for (let i = 0; i < 5; i++) {
-    const el = document.getElementById('mk_' + i);
-    if (el) el.value = '0';
-  }
-  refreshMenuProduction();
-  showToast('Menü temizlendi.', 'success');
-}
-function shiftMenuWeek(delta) {
-  menuWeekOffset += delta;
-  renderMenu();
-}
-function exportMenuJSON() {
-  const data = loadWeeklyMenu();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'menu_verisi.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showToast('JSON indirildi.', 'success');
-}
-function importMenuJSON(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
-      renderMenu();
-      showToast('Menü JSON\'dan yüklendi.', 'success');
-    } catch (_) {
-      showToast('Geçersiz JSON dosyası.', 'error');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
 }
 
 function renderMenu() {
