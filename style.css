@@ -1146,6 +1146,29 @@ body {
 .chart-card-full { grid-column: 1 / -1; }
 .chart-note { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim, #94a3b8); text-align: center; line-height: 1.4; }
 
+.today-summary {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  margin: 1rem 0; padding: 0.75rem 1rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+}
+.today-summary-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+}
+.today-summary-header svg { color: var(--accent); }
+.today-summary-body {
+  display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem;
+  font-size: 0.8rem; color: var(--text-secondary);
+}
+.today-summary-body .ts-item { display: flex; align-items: center; gap: 0.35rem; }
+.today-summary-body .ts-label { opacity: 0.7; }
+.today-summary-body .ts-value { font-weight: 600; color: var(--text-primary); }
+.today-summary-body .ts-value.good { color: #10b981; }
+.today-summary-body .ts-value.warn { color: #f59e0b; }
+.today-summary-body .ts-value.bad { color: #ef4444; }
+.today-summary-body .ts-value.muted { color: var(--text-dim); }
+.today-summary-loading { font-size: 0.8rem; color: var(--text-dim); font-style: italic; }
+
 .chart-area {
   position: relative;
   height: 360px;

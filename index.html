@@ -221,6 +221,17 @@
         </div>
       </div>
 
+      <!-- Today's Summary -->
+      <div class="today-summary" id="todaySummary" style="display:none">
+        <div class="today-summary-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Bugünün Özeti</span>
+        </div>
+        <div class="today-summary-body" id="todaySummaryBody">
+          <div class="today-summary-loading">Yükleniyor...</div>
+        </div>
+      </div>
+
       <!-- Data Info -->
       <div class="data-info" id="dataInfo" style="display:none">
         <span id="dataInfoRange"></span>
@@ -283,6 +294,10 @@
           <input type="date" id="filterStart" onchange="filterRecords()" />
           <span>—</span>
           <input type="date" id="filterEnd" onchange="filterRecords()" />
+          <label style="margin-left:0.75rem">Yemek Türü:</label>
+          <select id="filterYemekTuru" onchange="filterRecords()" style="padding:0.25rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.8rem">
+            <option value="">Tümü</option>
+          </select>
           <button class="btn btn-ghost" onclick="clearFilters()">Temizle</button>
         </div>
         <div class="toolbar-actions">
@@ -538,6 +553,17 @@
           <div class="report-item report-item-highlight" style="background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25);">
             <span class="report-label">Atık Tahmini (Gelecek Hafta)</span>
             <span class="report-value" id="rPrediction" style="color:#818cf8;font-size:1.1rem">—</span>
+          </div>
+        </div>
+
+        <div class="section-card" id="wasteByFoodType" style="margin-top:2rem;display:none">
+          <div class="section-header">
+            <h2>Yemek Türü Bazında Atık Analizi</h2>
+          </div>
+          <div id="wasteByFoodTypeBody" style="overflow-x:auto">
+            <div class="empty-state" style="padding:1rem">
+              <p>Yemek türü verisi girilen kayıt bulunamadı.</p>
+            </div>
           </div>
         </div>
 

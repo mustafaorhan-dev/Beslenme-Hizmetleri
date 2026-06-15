@@ -875,10 +875,20 @@ function deleteRecord(id) {
 }
 
 // ─── FILTER ────────────────────────────────────────────────────────────────────
+function populateYemekTuruFilter() {
+  const sel = document.getElementById('filterYemekTuru');
+  if (!sel) return;
+  const current = sel.value;
+  const turler = [...new Set(records.map(r => r.yemek_adi).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Tümü</option>' + turler.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  sel.value = current;
+}
+
 function filterRecords() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
   const start = document.getElementById('filterStart').value;
   const end = document.getElementById('filterEnd').value;
+  const yemekTuru = document.getElementById('filterYemekTuru').value;
 
   filteredRecords = records.filter(r => {
     const tarihStr = r.tarih ? (() => {
@@ -898,7 +908,8 @@ function filterRecords() {
       (r.yemek_adi || '').toLowerCase().includes(query);
     const matchStart = !start || r.tarih >= start;
     const matchEnd = !end || r.tarih <= end;
-    return matchQuery && matchStart && matchEnd;
+    const matchYemek = !yemekTuru || (r.yemek_adi || '') === yemekTuru;
+    return matchQuery && matchStart && matchEnd && matchYemek;
   });
 
   filteredRecords = sortRecords(filteredRecords);
@@ -910,6 +921,8 @@ function clearFilters() {
   document.getElementById('searchInput').value = '';
   document.getElementById('filterStart').value = '';
   document.getElementById('filterEnd').value = '';
+  const sel = document.getElementById('filterYemekTuru');
+  if (sel) sel.value = '';
   filteredRecords = [...records];
   currentPage = 1;
   sortField = 'tarih'; sortDir = -1;
@@ -1197,12 +1210,41 @@ function handleFullBackupImport(e) {
 // ─── RENDER ────────────────────────────────────────────────────────────────────
 function renderAll() {
   renderKPIs();
+  renderTodaySummary();
   renderDataInfo();
   renderLastRecordsTable();
+  populateYemekTuruFilter();
   renderRecordsTable();
   renderReport();
   renderSparklines();
   renderComparison();
+}
+
+function renderTodaySummary() {
+  const el = document.getElementById('todaySummary');
+  const body = document.getElementById('todaySummaryBody');
+  if (!el || !body) return;
+  if (records.length === 0) { el.style.display = 'none'; return; }
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  const todayRec = records.find(r => r.tarih === todayStr);
+  if (!todayRec) {
+    el.style.display = 'flex';
+    body.innerHTML = `<div class="ts-item"><span class="ts-label">Bugün henüz kayıt girilmedi</span></div>`;
+    return;
+  }
+  el.style.display = 'flex';
+  const pct = records.length >= 2 ? ((todayRec.atik||0) / records.reduce((s,r) => s+(r.atik||0),0) * 100).toFixed(1) : '—';
+  const avgAtik = records.length > 0 ? (records.reduce((s,r) => s+(r.atik||0),0) / records.length).toFixed(2) : '—';
+  const atikStatus = (todayRec.atik||0) > parseFloat(avgAtik) * 1.2 ? 'bad' : (todayRec.atik||0) < parseFloat(avgAtik) * 0.8 ? 'good' : 'warn';
+  body.innerHTML = `
+    <div class="ts-item"><span class="ts-label">Üretim:</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">Geçiş:</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">Atık:</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Porsiyon:</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
+    <div class="ts-item"><span class="ts-label">Toplam atığa oranı:</span><span class="ts-value warn">%${pct}</span></div>
+    <div class="ts-item"><span class="ts-label">Ortalama atık:</span><span class="ts-value">${avgAtik} kg</span></div>
+  `;
 }
 
 function renderDataInfo() {
@@ -2077,6 +2119,36 @@ function renderReport() {
 
   const reportTbody = document.getElementById('reportTbody');
   reportTbody.innerHTML = records.map(r => buildRow(r, false)).join('');
+
+  renderWasteByFoodType();
+}
+
+function renderWasteByFoodType() {
+  const section = document.getElementById('wasteByFoodType');
+  const body = document.getElementById('wasteByFoodTypeBody');
+  if (!section || !body) return;
+  const filtered = records.filter(r => r.yemek_adi && r.yemek_adi.trim());
+  if (filtered.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  const groups = {};
+  let totalAtik = 0;
+  filtered.forEach(r => {
+    const key = r.yemek_adi.trim();
+    if (!groups[key]) groups[key] = { ad: key, toplamAtik: 0, kayitSayisi: 0, toplamGecis: 0 };
+    groups[key].toplamAtik += r.atik || 0;
+    groups[key].kayitSayisi++;
+    groups[key].toplamGecis += r.toplam || 0;
+    totalAtik += r.atik || 0;
+  });
+  const sorted = Object.values(groups).sort((a, b) => b.toplamAtik - a.toplamAtik);
+  let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>Yemek Türü</th><th>Kayıt Sayısı</th><th>Toplam Atık (kg)</th><th>Atık Oranı</th><th>Kişi Başı Atık (kg)</th></tr></thead><tbody>';
+  sorted.forEach(g => {
+    const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : '—';
+    const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : '—';
+    html += `<tr><td><strong>${g.ad}</strong></td><td>${g.kayitSayisi}</td><td>${g.toplamAtik.toFixed(1)}</td><td>%${pct}</td><td>${kisiBasi}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
 }
 
 // ─── CHART UTILITY ───────────────────────────────────────────────────────────
@@ -2184,11 +2256,21 @@ function drawAllCharts() {
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22c55e', label: 'Aylık Turnike Geçişi' }
   ], ver);
 
-  drawBarChart('canvasAylik', allMonthLabels, [
+  const prevYearAtik = allMonthLabels.map(m => {
+    const [ay, yil] = m.split('/');
+    const prevLabel = ay + '/' + (parseInt(yil) - 1);
+    return getMonthVal(prevLabel, 'atik');
+  });
+  const hasPrevYear = prevYearAtik.some(v => v > 0);
+  const aylikDataSets = [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#14b8a6', label: 'Aylık Geçiş' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
-  ], ver);
+  ];
+  if (hasPrevYear) {
+    aylikDataSets.push({ data: prevYearAtik, color: '#f9731680', label: 'Geçen Yıl Atık (kg)', dashed: true });
+  }
+  drawBarChart('canvasAylik', allMonthLabels, aylikDataSets, ver);
 
   // Üretim - Geçiş Farkı
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
@@ -2288,6 +2370,41 @@ function drawAllCharts() {
       { data: weekValues, color: '#0ea5e9', label: 'Haftalık Geçiş' }
     ]);
   }
+
+  // Chart click handlers - every chart gets monthly record filtering
+  function getRecordsByLabel(label) {
+    const parts = label.split('/');
+    if (parts.length === 2) {
+      const ay = parseInt(parts[0]), yil = parseInt(parts[1]);
+      if (!isNaN(ay) && !isNaN(yil)) {
+        return records.filter(r => {
+          const d = new Date(r.tarih + 'T00:00:00');
+          return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
+        });
+      }
+    }
+    const range = label.split(' - ');
+    if (range.length === 2) {
+      const parseDM = (s) => { const p = s.split('.'); return p.length === 2 ? { d: parseInt(p[0]), m: parseInt(p[1]) } : null; };
+      const s = parseDM(range[0]), e = parseDM(range[1]);
+      if (s && e) {
+        return records.filter(r => {
+          const d = new Date(r.tarih + 'T00:00:00');
+          if (isNaN(d)) return false;
+          const md = d.getMonth() + 1, dd = d.getDate();
+          if (s.m === e.m) return md === s.m && dd >= s.d && dd <= e.d;
+          return (md > s.m || (md === s.m && dd >= s.d)) && (md < e.m || (md === e.m && dd <= e.d));
+        });
+      }
+    }
+    return null;
+  }
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi'].forEach(id => {
+    setupChartClick(id, allMonthLabels, (label) => getRecordsByLabel(label));
+  });
+  if (weekLabels && weekLabels.length > 0) {
+    setupChartClick('canvasHaftalikGecis', weekLabels, (label) => getRecordsByLabel(label));
+  }
 }
 
 function getCanvasCtx(canvasId) {
@@ -2351,6 +2468,60 @@ function hexToRgba(hex, a) {
 // ─── CHART TOOLTIP ────────────────────────────────────────────────────────────
 // Her canvas için tooltip metaverisini sakla
 const chartMetaMap = new Map();
+
+function showChartDetailModal(title, records) {
+  const overlay = document.getElementById('modalOverlay');
+  const modal = document.getElementById('modal');
+  const header = modal.querySelector('.modal-header h3');
+  const footer = modal.querySelector('.modal-footer');
+  if (header) header.textContent = title;
+  const body = modal.querySelector('.form-grid');
+  if (!body) return;
+  if (records.length === 0) {
+    body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-dim)">Bu dönem için kayıt bulunamadı.</div>';
+  } else {
+    body.innerHTML = `<div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+      <table class="data-table" style="min-width:400px">
+        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Yemek Türü</th></tr></thead>
+        <tbody>${records.slice(0, 100).map(r => `<tr>
+          <td>${new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR')}</td>
+          <td>${r.yemek || '—'}</td>
+          <td>${r.toplam || '—'}</td>
+          <td>${(r.atik||0).toFixed(1)}</td>
+          <td>${r.ogrenci || '—'}</td>
+          <td>${r.yemek_adi || '—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+  if (footer) footer.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Kapat</button>';
+  overlay.style.display = 'flex';
+}
+
+function setupChartClick(canvasId, labels, getRecordsFn) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (canvas.dataset.clickInit) return;
+  canvas.dataset.clickInit = '1';
+  canvas.addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const W = this._w, H = this._h;
+    const pad = { top: 28, right: 24, bottom: 48, left: 64 };
+    const cW = W - pad.left - pad.right;
+    if (my < pad.top || my > H - pad.bottom) return;
+    const n = labels.length;
+    const groupW = cW / n;
+    const gi = Math.round((mx - pad.left) / groupW);
+    if (gi < 0 || gi >= n) return;
+    const groupCenter = pad.left + gi * groupW + groupW / 2;
+    if (Math.abs(mx - groupCenter) > groupW * 0.5) return;
+    const label = labels[gi];
+    const recs = getRecordsFn(label, gi);
+    if (recs) showChartDetailModal(label, recs);
+  });
+}
 
 function setupChartTooltip(canvasId, labels, datasets) {
   const canvas = document.getElementById(canvasId);
@@ -2851,6 +3022,8 @@ function drawBarChart(canvasId, labels, datasets, ver) {
 
     // Bars
     datasets.forEach((ds, di) => {
+      const isDashed = ds.dashed;
+      const alpha = isDashed ? '60' : '';
       const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
       const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
       ds.data.forEach((v, gi) => {
@@ -2893,6 +3066,25 @@ function drawBarChart(canvasId, labels, datasets, ver) {
         ctx.quadraticCurveTo(x, barTop, x + r, barTop);
         ctx.closePath();
         ctx.fill();
+
+        // Dotted/hatched pattern for "Geçen Yıl" bars
+        if (isDashed && barH > 8) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x, barTop, barW, barH);
+          ctx.clip();
+          ctx.strokeStyle = hexToRgba(barColorDarker, 0.35);
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 4]);
+          for (let sy = barTop; sy < barBottom; sy += 6) {
+            ctx.beginPath();
+            ctx.moveTo(x, sy);
+            ctx.lineTo(x + barW, sy);
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
