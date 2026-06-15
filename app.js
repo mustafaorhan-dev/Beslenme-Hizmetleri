@@ -2448,9 +2448,10 @@ function renderMenu() {
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+  const weekLabel = `${formatDateStrTR(monday)} - ${formatDateStrTR(friday)} MENÜ LİSTESİ`;
 
-  document.getElementById('menuWeekLabel').textContent = weekKey + ' MENÜ LİSTESİ';
-  document.getElementById('menuTitle').textContent = weekKey + ' MENÜ LİSTESİ';
+  document.getElementById('menuWeekLabel').textContent = weekLabel;
+  document.getElementById('menuTitle').textContent = weekLabel;
 
   const allData = loadWeeklyMenu();
   const weekData = allData[weekKey] || {};
@@ -2506,6 +2507,12 @@ function formatDateStr(date) {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+function formatDateStrTR(date) {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}.${m}.${y}`;
 }
 
 function getWeekStartDate(offset) {
