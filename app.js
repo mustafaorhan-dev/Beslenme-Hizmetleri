@@ -2953,14 +2953,23 @@ function drawBarChart(canvasId, labels, datasets, ver) {
         yearGroups[parts[1]].push(i);
       }
     });
+    const maxLabelW = Math.max(40, groupW * step - 4);
+    function truncateLabel(text) {
+      if (ctx.measureText(text).width <= maxLabelW) return text;
+      let t = text;
+      while (t.length > 1 && ctx.measureText(t + '…').width > maxLabelW) {
+        t = t.slice(0, -1);
+      }
+      return t + '…';
+    }
     labels.forEach((l, i) => {
       if (i % step === 0 || i === labels.length - 1) {
         const x = pad.left + i * groupW + groupW / 2;
         const parts = l.split('/');
         if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-          ctx.fillText(parts[0], x, H - pad.bottom + 12);
+          ctx.fillText(truncateLabel(parts[0]), x, H - pad.bottom + 12);
         } else {
-          ctx.fillText(l, x, H - pad.bottom + 16);
+          ctx.fillText(truncateLabel(l), x, H - pad.bottom + 16);
         }
       }
     });
@@ -2971,7 +2980,7 @@ function drawBarChart(canvasId, labels, datasets, ver) {
       const firstX = pad.left + indices[0] * groupW + groupW / 2;
       const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
       const cx = (firstX + lastX) / 2;
-      ctx.fillText(year, cx, H - pad.bottom + 24);
+      ctx.fillText(truncateLabel(year), cx, H - pad.bottom + 24);
     }
     ctx.font = '10px Inter, sans-serif';
     ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
