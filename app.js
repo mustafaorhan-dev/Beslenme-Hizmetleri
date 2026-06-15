@@ -1798,11 +1798,14 @@ async function syncMenuFromGSheet() {
     const json = await res.json();
     if (json.menuData) {
       const parsed = JSON.parse(json.menuData);
-      const keys = Object.keys(parsed);
-      if (keys.length > 0) {
-        localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(parsed));
+      if (parsed && typeof parsed === 'object') {
+        const keys = Object.keys(parsed);
+        if (keys.length > 0) {
+          localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return keys.length > 0;
       }
-      return keys.length > 0;
+      return false;
     }
     return false;
   } catch (_) { return false; }
