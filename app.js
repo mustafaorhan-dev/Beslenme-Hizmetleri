@@ -2170,7 +2170,7 @@ function drawAllCharts() {
   drawHeartLineChart('canvasHeart', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim', type: 'line' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#ef4444', label: 'Aylık Geçiş', type: 'line' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)', type: 'bar' }
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)', type: 'line' }
   ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
