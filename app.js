@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     mainOk = true;
   }
 
-  if (gsheetConfig.dishUrl) {
+  if (getMenuUrl()) {
     setLoadingSub('Yemek listesi senkronize ediliyor...');
     dishOk = await fetchWithRetry(() => syncDishesFromGSheets(), 3, 1000);
   } else {
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   // Bağlantı durumunu göster
-  if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk) && (!gsheetConfig.dishUrl || menuOk)) {
+  if ((!getMenuUrl() || (mainOk && dishOk))) {
     setConnectionStatus('ok');
   } else {
     setConnectionStatus('err');
@@ -253,16 +253,20 @@ function loadGSheetConfig() {
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
         lastSync: parsed.lastSync || null,
-        dishUrl: dishUrl || DEFAULT_DISH_URL
+        dishUrl: dishUrl || ''
       };
     } else {
       let dishUrl = '';
       try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl || DEFAULT_DISH_URL };
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl || '' };
     }
   } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: DEFAULT_DISH_URL };
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
   }
+}
+
+function getMenuUrl() {
+  return gsheetConfig.dishUrl || gsheetConfig.webappUrl;
 }
 
 function saveGSheetUrl() {
@@ -280,7 +284,7 @@ function saveAllUrls() {
   const url1 = document.getElementById('gsheetUrl').value.trim();
   const url2 = document.getElementById('gsheetDishUrl').value.trim();
   gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
-  gsheetConfig.dishUrl = url2 || DEFAULT_DISH_URL;
+  gsheetConfig.dishUrl = url2 || '';
   try {
     localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
     if (url2) localStorage.setItem('atik_kontrol_dish_url', url2);
@@ -1717,9 +1721,10 @@ function closeYemekModal() {
 
 // -- Google Sheets dish sync --
 async function syncDishesFromGSheets() {
-  if (!gsheetConfig.dishUrl) return false;
+  const url = getMenuUrl();
+  if (!url) return false;
   try {
-    const res = await fetch(gsheetConfig.dishUrl + '?sheet=Yemek%20Listesi');
+    const res = await fetch(url + '?sheet=Yemek%20Listesi');
     const json = await res.json();
     if (json.data && Array.isArray(json.data)) {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => {
@@ -1767,10 +1772,11 @@ async function syncDishesFromGSheets() {
 }
 
 async function syncDishesToGSheets() {
-  if (!gsheetConfig.dishUrl) return;
+  const url = getMenuUrl();
+  if (!url) return;
   try {
     const list = loadYemekler();
-    await fetch(gsheetConfig.dishUrl, {
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveDishes', dishes: list })
@@ -1780,7 +1786,7 @@ async function syncDishesToGSheets() {
 
 // -- Menu Google Sheet sync --
 async function fetchMenuData() {
-  const url = gsheetConfig.dishUrl;
+  const url = getMenuUrl();
   if (!url) return {};
   try {
     const res = await fetch(url, {
@@ -1798,7 +1804,7 @@ async function fetchMenuData() {
 }
 
 async function saveMenuData(allData) {
-  const url = gsheetConfig.dishUrl;
+  const url = getMenuUrl();
   if (!url) return;
   try {
     const res = await fetch(url, {
