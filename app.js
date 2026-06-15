@@ -2169,10 +2169,10 @@ function drawAllCharts() {
   const ver = _chartVer;
   const karbonDataHeart = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
   drawHeartLineChart('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim', type: 'line' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#ef4444', label: 'Aylık Geçiş', type: 'line' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)', type: 'line' },
-    { data: karbonDataHeart, color: '#22d3ee', label: 'Karbon Ayak İzi (kg CO₂)', type: 'line' }
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim', type: 'line', width: 3 },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş', type: 'line', width: 2.5 },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)', type: 'line', width: 2.5 },
+    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)', type: 'line', width: 2 }
   ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
@@ -2226,10 +2226,10 @@ function drawAllCharts() {
 
   // Chart tooltip'leri kur
   setupChartTooltip('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#ef4444', label: 'Aylık Geçiş' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' },
-    { data: karbonDataHeart, color: '#22d3ee', label: 'Karbon Ayak İzi (kg CO₂)' }
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' },
+    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)' }
   ]);
   setupChartTooltip('canvasAtik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
@@ -2682,7 +2682,7 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
       }
       ctx.strokeStyle = ds.color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = ds.width || 2.5;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.stroke();
