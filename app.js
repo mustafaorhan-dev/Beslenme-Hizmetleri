@@ -2557,40 +2557,50 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
     ctx.clearRect(0, 0, W, H);
 
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const gridColor = isDark ? 'rgba(148,163,184,0.08)' : 'rgba(0,0,0,0.06)';
-    const textColor = isDark ? 'rgba(148,163,184,0.5)' : 'rgba(100,116,139,0.5)';
+    const gridColor = isDark ? 'rgba(148,163,184,0.06)' : 'rgba(0,0,0,0.04)';
+    const textColor = isDark ? 'rgba(148,163,184,0.45)' : 'rgba(100,116,139,0.45)';
+    const axisColor = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(0,0,0,0.1)';
 
-    // Grid
-    const gridLines = 4;
+    // Grid (dashed, minimal)
+    ctx.setLineDash([3, 4]);
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = 0.5;
+    const gridLines = 4;
     for (let i = 0; i <= gridLines; i++) {
       const y = pad.top + (i / gridLines) * cH;
       ctx.beginPath();
       ctx.moveTo(pad.left, y);
       ctx.lineTo(W - pad.right, y);
       ctx.stroke();
+    }
+    ctx.setLineDash([]);
 
+    // Y-axis labels
+    for (let i = 0; i <= gridLines; i++) {
+      const y = pad.top + (i / gridLines) * cH;
       const val = maxV - (i / gridLines) * range;
       ctx.fillStyle = textColor;
-      ctx.font = '9px Inter, sans-serif';
+      ctx.font = '10px Inter, sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(val >= 100 ? Math.round(val) : val.toFixed(1), pad.left - 6, y + 3);
+      ctx.textBaseline = 'middle';
+      const label = val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val >= 100 ? Math.round(val) + '' : val.toFixed(1);
+      ctx.fillText(label, pad.left - 8, y);
     }
 
     // X labels
+    ctx.textBaseline = 'top';
     ctx.fillStyle = textColor;
-    ctx.font = '9px Inter, sans-serif';
+    ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(labels.length / 10));
+    const step = Math.max(1, Math.floor(labels.length / 14));
     labels.forEach((l, i) => {
       if (i % step === 0 || i === labels.length - 1) {
         const parts = l.split('/');
-        ctx.fillText(parts[0], toX(i), H - pad.bottom + 14);
+        ctx.fillText(parts[0], toX(i), H - pad.bottom + 10);
       }
     });
 
-    // Yıl ortalama
+    // Year labels
     const yearGroups = {};
     labels.forEach((l, i) => {
       const parts = l.split('/');
@@ -2599,11 +2609,13 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         yearGroups[parts[1]].push(i);
       }
     });
-    ctx.font = '8px Inter, sans-serif';
+    ctx.font = '9px Inter, sans-serif';
+    ctx.fillStyle = textColor;
     for (const [year, indices] of Object.entries(yearGroups)) {
       const cx = (toX(indices[0]) + toX(indices[indices.length - 1])) / 2;
-      ctx.fillText(year, cx, H - pad.bottom + 24);
+      ctx.fillText(year, cx, H - pad.bottom + 22);
     }
+    ctx.textBaseline = 'alphabetic';
 
     // Bar datasets
     const barDatasets = datasets.filter(d => d.type === 'bar');
@@ -2613,7 +2625,7 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
     barDatasets.forEach((ds) => {
       const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
       const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
-      const barW = Math.min(28, (cW / labels.length) * 0.55);
+      const barW = Math.min(20, (cW / labels.length) * 0.45);
 
       ds.data.forEach((v, i) => {
         const animScale = easeOutCubic(progress);
@@ -2629,7 +2641,7 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         grad.addColorStop(1, barColorDarker);
         ctx.fillStyle = grad;
 
-        const r = Math.min(6, barW / 2);
+        const r = Math.min(4, barW / 2);
         ctx.beginPath();
         ctx.moveTo(x + r, barTop);
         ctx.lineTo(x + barW - r, barTop);
@@ -2641,25 +2653,27 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         ctx.closePath();
         ctx.fill();
 
-        if (progress >= 0.95) {
-          ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
-          ctx.font = 'bold 10px Inter, sans-serif';
+        if (progress >= 0.95 && barW >= 8) {
+          ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+          ctx.font = 'bold 9px Inter, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(fmt(v), x + barW / 2, barTop - 8);
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(fmt(v), x + barW / 2, barTop - 3);
+          ctx.textBaseline = 'alphabetic';
         }
       });
     });
 
     // Line datasets
     const lineDatasets = datasets.filter(d => d.type !== 'bar');
-    lineDatasets.forEach((ds, dsIdx) => {
+    lineDatasets.forEach((ds) => {
       const pts = ds.data.map((v, i) => ({ x: toX(i), y: toY(v) }));
       const drawCount = Math.floor(pts.length * easeOutCubic(progress));
 
-      // Gradient fill
+      // Soft gradient fill under line
       const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-      grad.addColorStop(0, ds.color + '40');
-      grad.addColorStop(0.5, ds.color + '20');
+      grad.addColorStop(0, ds.color + '25');
+      grad.addColorStop(0.6, ds.color + '10');
       grad.addColorStop(1, ds.color + '00');
 
       ctx.beginPath();
@@ -2687,40 +2701,49 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // Dots (only at full progress)
+      // Dots + labels (only at full progress)
       if (progress >= 0.95) {
         for (let i = 0; i < drawCount; i++) {
+          const bgColor = isDark ? '#0f172a' : '#ffffff';
           ctx.beginPath();
           ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = ds.color;
+          ctx.fillStyle = bgColor;
           ctx.fill();
+          ctx.strokeStyle = ds.color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
         }
 
-        // Labels at end
-        ctx.font = 'bold 10px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        for (let i = 0; i < drawCount; i++) {
+        // Value labels (last 12 points only to avoid clutter)
+        const labelStep = Math.max(1, Math.floor(drawCount / 12));
+        for (let i = 0; i < drawCount; i += labelStep) {
           const v = ds.data[i];
-          ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
-          const labelY = pts[i].y < pad.top + 24 ? pts[i].y + 16 : pts[i].y - 10;
+          ctx.font = 'bold 10px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+          const labelY = pts[i].y < pad.top + 20 ? pts[i].y + 18 : pts[i].y - 10;
           ctx.fillText(fmt(v), pts[i].x, labelY);
         }
+        ctx.textBaseline = 'alphabetic';
       }
-
     });
 
     // Legend (all datasets)
-    ctx.font = '10px Inter, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.font = '11px Inter, sans-serif';
     ctx.textAlign = 'left';
     datasets.forEach((ds, i) => {
-      const legendColor = isDark ? lightenColor(ds.color, 60) : ds.color;
-      ctx.fillStyle = legendColor;
+      const lx = pad.left + i * 140 + 8;
+      const ly = 14;
+      ctx.fillStyle = ds.color;
       ctx.beginPath();
-      ctx.arc(pad.left + i * 130 + 8, 12, 5, 0, Math.PI * 2);
+      ctx.arc(lx, ly, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = textColor;
-      ctx.fillText(ds.label, pad.left + i * 130 + 18, 16);
+      ctx.fillText(ds.label, lx + 10, ly);
     });
+    ctx.textBaseline = 'alphabetic';
   }
 
   const duration = 1200;
