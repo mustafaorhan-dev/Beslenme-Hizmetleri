@@ -1,10 +1,10 @@
-/* =============================================
-   ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
+﻿/* =============================================
+   ATIK KONTROL YÃ–NETÄ°M SÄ°STEMÄ° - APP LOGIC
    ============================================= */
 
 'use strict';
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzY5J2Fj-8PkelM9d7mVJiMdSqHwLlOEsOS9N2oEVmZnbbA1KwN64o6hCVwOiZ8r08RFw/exec';
 const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxZifUt3a2HuknThnOpvBG4Cg_XokEFmk_b0R9D5Gj6p54WX1Dg_sXaVQIDwd81aPIe9Q/exec';
 let records = [];
@@ -13,7 +13,7 @@ let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null, dishUrl: '' };
 let yemeklerCache = [];
 
-// ─── THEME ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ THEME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Initial theme is handled by inline script in HTML (reads localStorage)
 function toggleTheme() {
   const html = document.documentElement;
@@ -24,15 +24,15 @@ function toggleTheme() {
   if (typeof drawAllCharts === 'function') drawAllCharts();
 }
 
-// ─── PAGINATION ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAGE_SIZE = 20;
 let currentPage = 1;
 let selectedIds = new Set();
 
-// ─── UNSAVED CHANGES ──────────────────────────────────────────────────────────
+// â”€â”€â”€ UNSAVED CHANGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let formModified = false;
 
-// ─── CHART YEAR FILTER ──────────────────────────────────────────────────────
+// â”€â”€â”€ CHART YEAR FILTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let chartYearFilter = 'all';
 function getAvailableYears() {
   const years = new Set();
@@ -52,7 +52,7 @@ function setChartYear(year) {
   drawAllCharts();
 }
 
-// ─── LOGIN / LOGOUT ─────────────────────────────────────────────────────────
+// â”€â”€â”€ LOGIN / LOGOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function doLogout() {
   localStorage.removeItem('atik_kontrol_login_hash');
@@ -72,20 +72,20 @@ function doLogin() {
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
-    error.textContent = 'Hatalı şifre!';
+    error.textContent = 'HatalÄ± ÅŸifre!';
     error.style.display = 'block';
     input.value = '';
     input.focus();
     if (window._loginAttempts >= 5) {
-      error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
+      error.textContent = 'Ã‡ok fazla hatalÄ± giriÅŸ! Sayfa yenileniyor...';
       setTimeout(() => location.reload(), 2000);
     }
   }
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener('DOMContentLoaded', async () => {
-  // Login kontrolü
+  // Login kontrolÃ¼
   const savedHash = localStorage.getItem('atik_kontrol_login_hash');
   if (savedHash) {
     document.getElementById('loginOverlay').classList.add('hidden');
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadGSheetConfig();
   setConnectionStatus('sync');
-  setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
+  setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets baÄŸlantÄ±sÄ± kuruluyor');
   loadData();
   setCurrentDate();
   renderAll();
@@ -123,10 +123,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     dishOk = true;
   }
 
-  // Menü verisini Google Sheet'ten al (dish URL veya main URL)
+  // MenÃ¼ verisini Google Sheet'ten al (dish URL veya main URL)
   const menuUrl = gsheetConfig.dishUrl || gsheetConfig.webappUrl;
   if (menuUrl) {
-    setLoadingSub('Menü verileri alınıyor...');
+    setLoadingSub('MenÃ¼ verileri alÄ±nÄ±yor...');
     menuOk = await fetchWithRetry(() => syncMenuFromGSheet(), 3, 1000);
   }
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Loading overlay'i kapat
   document.getElementById('loadingOverlay').classList.add('hidden');
 
-  // Bağlantı durumunu göster
+  // BaÄŸlantÄ± durumunu gÃ¶ster
   if ((!gsheetConfig.webappUrl || mainOk) && (!gsheetConfig.dishUrl || dishOk) && (!menuUrl || menuOk)) {
     setConnectionStatus('ok');
   } else {
@@ -144,17 +144,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// ─── DATE ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function normalizeDate(v) {
   if (!v) return '';
-  // Zaten YYYY-MM-DD formatında mı?
+  // Zaten YYYY-MM-DD formatÄ±nda mÄ±?
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-  // Sayısal (Google Sheets serial date)?
+  // SayÄ±sal (Google Sheets serial date)?
   if (/^\d+(\.\d+)?$/.test(String(v))) {
     const d = new Date(1899, 11, 30 + Number(v));
     if (!isNaN(d)) return formatLocalDate(d);
   }
-  // Diğer formatlar (ISO, "Sat Jan 15 2026", vb.)
+  // DiÄŸer formatlar (ISO, "Sat Jan 15 2026", vb.)
   const d = new Date(v);
   if (!isNaN(d)) return formatLocalDate(d);
   return '';
@@ -177,7 +177,7 @@ function setCurrentDate() {
   document.getElementById('fTarih').value = now.toISOString().split('T')[0];
 }
 
-// ─── STORAGE ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ STORAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const STORAGE_KEY = 'atik_kontrol_records';
 
 function loadData() {
@@ -244,14 +244,14 @@ function setLoadingSub(text) {
   if (el) el.textContent = text;
 }
 
-// ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ GSHEET CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadGSheetConfig() {
   try {
     const stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
       const parsed = JSON.parse(stored);
       let dishUrl = parsed.dishUrl || '';
-      // Yedek anahtardan oku (eğer asıl config'de yoksa)
+      // Yedek anahtardan oku (eÄŸer asÄ±l config'de yoksa)
       if (!dishUrl) {
         try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
       }
@@ -310,16 +310,16 @@ function updateSyncUI() {
     const d = new Date(gsheetConfig.lastSync);
     lastLabel.textContent = 'Son senkronizasyon: ' + d.toLocaleString('tr-TR');
   } else {
-    lastLabel.textContent = 'Son senkronizasyon: —';
+    lastLabel.textContent = 'Son senkronizasyon: â€”';
   }
 
   if (gsheetConfig.webappUrl) {
-    statusLabel.textContent = 'URL yapılandırıldı';
-    statusSub.textContent = 'Senkronizasyon butonlarını kullanabilirsiniz';
+    statusLabel.textContent = 'URL yapÄ±landÄ±rÄ±ldÄ±';
+    statusSub.textContent = 'Senkronizasyon butonlarÄ±nÄ± kullanabilirsiniz';
     statusIcon.className = 'sync-status-icon sync-ok';
     statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
   } else {
-    statusLabel.textContent = 'Bağlantı kurulmadı';
+    statusLabel.textContent = 'BaÄŸlantÄ± kurulmadÄ±';
     statusSub.textContent = 'Ayarlardan Web App URL\'sini girin';
     statusIcon.className = 'sync-status-icon';
     statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>';
@@ -339,19 +339,19 @@ function closeSyncPanel() {
 
 async function quickPullFromSheets() {
   if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini ayarlayın (Senkronize Et → URL kaydet).', 'error');
+    showToast('Ã–nce Web App URL\'sini ayarlayÄ±n (Senkronize Et â†’ URL kaydet).', 'error');
     return;
   }
-  try { await syncFromGSheets(); } catch (e) { showToast('Senkronizasyon hatası: ' + e.message, 'error'); }
+  try { await syncFromGSheets(); } catch (e) { showToast('Senkronizasyon hatasÄ±: ' + e.message, 'error'); }
 }
 
 async function syncToGSheets() {
   if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini girin.', 'error');
+    showToast('Ã–nce Web App URL\'sini girin.', 'error');
     return;
   }
   if (records.length === 0) {
-    showToast('Senkronize edilecek kayıt yok.', 'error');
+    showToast('Senkronize edilecek kayÄ±t yok.', 'error');
     return;
   }
   const btn = document.getElementById('syncUploadBtn');
@@ -369,26 +369,26 @@ async function syncToGSheets() {
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
+      showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayÄ±t).', 'success');
     } else {
       showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
     }
   } catch (err) {
     setConnectionStatus('err');
-    showToast('Bağlantı hatası: ' + err.message, 'error');
+    showToast('BaÄŸlantÄ± hatasÄ±: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Yerel → Google Sheet (Yedekle)';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Yerel â†’ Google Sheet (Yedekle)';
   }
 }
 
 async function syncFromGSheets() {
   if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini girin.', 'error');
+    showToast('Ã–nce Web App URL\'sini girin.', 'error');
     return false;
   }
   const btn = document.getElementById('syncDownloadBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'İndiriliyor...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Ä°ndiriliyor...'; }
   try {
     const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
     const data = await res.json();
@@ -409,7 +409,7 @@ async function syncFromGSheets() {
           yemek_adi: r.yemek_adi || ''
         }));
       if (cloudRecords.length === 0) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet â†’ Yerel (Ä°ndir)'; }
         return true;
       }
       records = cloudRecords;
@@ -422,10 +422,10 @@ async function syncFromGSheets() {
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayÄ±t indirildi.', 'success');
       return true;
     } else {
-      if (btn) showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
+      if (btn) showToast('Hata: ' + (data.error || 'Veri alÄ±namadÄ±'), 'error');
       return false;
     }
   } catch (err) {
@@ -434,7 +434,7 @@ async function syncFromGSheets() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet â†’ Yerel (Ä°ndir)';
     }
   }
 }
@@ -443,8 +443,8 @@ async function testGSheetConnection() {
   try {
     const res = await fetch(gsheetConfig.webappUrl + '?action=getAll', { method: 'GET', mode: 'cors' });
     if (res.ok) {
-      document.getElementById('syncStatusLabel').textContent = 'Bağlantı başarılı';
-      document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e erişilebiliyor';
+      document.getElementById('syncStatusLabel').textContent = 'BaÄŸlantÄ± baÅŸarÄ±lÄ±';
+      document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e eriÅŸilebiliyor';
       document.getElementById('syncStatusIcon').className = 'sync-status-icon sync-ok';
       setConnectionStatus('ok');
     }
@@ -453,7 +453,7 @@ async function testGSheetConnection() {
   }
 }
 
-// ─── CARBON FOOTPRINT ────────────────────────────────────────────────────────
+// â”€â”€â”€ CARBON FOOTPRINT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function calcCarbonFootprint(totalAtikKg) {
   return totalAtikKg * 2.5;
 }
@@ -461,7 +461,7 @@ function calcDailyCarbon(atikKg) {
   return atikKg * 2.5;
 }
 
-// ─── PREDICTION ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ PREDICTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function predictNextWaste() {
   if (records.length < 3) return null;
   const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
@@ -485,7 +485,7 @@ function getLast7AvgWaste() {
   return last7.reduce((s, r) => s + r.atik, 0) / last7.length;
 }
 
-// ─── SPARKLINES ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ SPARKLINES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function drawSparkline(canvasId, data, color) {
   const canvas = document.getElementById(canvasId);
   if (!canvas || data.length < 2) return;
@@ -530,21 +530,21 @@ function renderSparklines() {
   drawSparkline('sparklineGecis', gecisData, '#22c55e');
 }
 
-// ─── WASTE DETAIL ────────────────────────────────────────────────────────────
-// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ WASTE DETAIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ PDF EXPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportPDF() {
   if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    showToast('DÄ±ÅŸa aktarÄ±lacak kayÄ±t yok.', 'error');
     return;
   }
   switchTab('report');
   renderReport();
   setTimeout(() => {
     const printWin = window.open('', '_blank', 'width=1100,height=800');
-    if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+    if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
     const cards = [...document.querySelectorAll('#content-report > .section-card')].map(c => c.outerHTML).join('');
     printWin.document.write(`<!DOCTYPE html><html><head>
-      <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
+      <meta charset="UTF-8"><title>AtÄ±k Kontrol Raporu</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
@@ -566,10 +566,10 @@ function exportPDF() {
         .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       </style>
     </head><body>
-      <h1>Atık Kontrol Raporu</h1>
+      <h1>AtÄ±k Kontrol Raporu</h1>
       <div class="date">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</div>
       ${cards}
-      <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+      <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
     printWin.document.close();
     printWin.focus();
@@ -579,8 +579,8 @@ function exportPDF() {
 
 function exportChartsPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  // Canvas'ları resim'e çevir
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
+  // Canvas'larÄ± resim'e Ã§evir
   const canvases = document.querySelectorAll('#content-charts canvas');
   const replacements = [];
   canvases.forEach(c => {
@@ -593,7 +593,7 @@ function exportChartsPDF() {
   let chartsHtml = document.getElementById('content-charts').innerHTML;
   replacements.forEach(r => { chartsHtml = chartsHtml.replace(r.old, r.new); });
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Grafikler - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>Grafikler - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
@@ -607,10 +607,10 @@ function exportChartsPDF() {
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
-    <h1>Grafikler - Atık Kontrol Yönetim Sistemi</h1>
+    <h1>Grafikler - AtÄ±k Kontrol YÃ¶netim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${chartsHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -619,12 +619,12 @@ function exportChartsPDF() {
 
 function exportDashboardPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
   const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
   const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Pano - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>Pano - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
@@ -643,11 +643,11 @@ function exportDashboardPDF() {
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
-    <h1>Yemekhane Atık Kontrol Paneli</h1>
+    <h1>Yemekhane AtÄ±k Kontrol Paneli</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
     ${cardsHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -656,10 +656,10 @@ function exportDashboardPDF() {
 
 function exportRecordsPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>Kayıt yok</p>';
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
+  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>KayÄ±t yok</p>';
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Kayıtlar - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>KayÄ±tlar - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
@@ -671,17 +671,17 @@ function exportRecordsPDF() {
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
-    <h1>Tüm Kayıtlar</h1>
+    <h1>TÃ¼m KayÄ±tlar</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${tableHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
   setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
 }
 
-// ─── TABS ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -689,15 +689,15 @@ function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
-  // Menü seçilince sidebar'ı kapat
+  // MenÃ¼ seÃ§ilince sidebar'Ä± kapat
   closeSidebar();
-  // Sayfa başlığını güncelle
+  // Sayfa baÅŸlÄ±ÄŸÄ±nÄ± gÃ¼ncelle
   if (name === 'menu') renderMenu();
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü' };
+  const labels = { dashboard: 'Panel', records: 'KayÄ±tlar', charts: 'Grafikler', report: 'Rapor', menu: 'MenÃ¼' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
 
-// ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
+// â”€â”€â”€ SIDEBAR TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.body.classList.toggle('sidebar-open');
@@ -710,12 +710,12 @@ function closeSidebar() {
   document.body.classList.remove('sidebar-open');
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
-// Ana içeriğe tıklayınca sidebar'ı kapat
+// Ana iÃ§eriÄŸe tÄ±klayÄ±nca sidebar'Ä± kapat
 document.querySelector('.main-content').addEventListener('click', function(e) {
   if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
 });
 
-// ─── MODAL ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openModal(id = null) {
   editingId = id;
   formModified = false;
@@ -728,17 +728,17 @@ function openModal(id = null) {
   if (id !== null) {
     const rec = records.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Kaydı Düzenle';
-    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Güncelle`;
+    title.textContent = 'KaydÄ± DÃ¼zenle';
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>GÃ¼ncelle`;
     populateForm(rec);
   } else {
-    title.textContent = 'Yeni Kayıt Ekle';
+    title.textContent = 'Yeni KayÄ±t Ekle';
     submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
     const now = new Date();
     document.getElementById('fTarih').value = now.toISOString().split('T')[0];
   }
 
-  // Form değişiklik izleme
+  // Form deÄŸiÅŸiklik izleme
   document.querySelectorAll('#entryForm input').forEach(el => {
     el.addEventListener('input', () => { formModified = true; }, { once: true });
   });
@@ -748,7 +748,7 @@ function openModal(id = null) {
 }
 
 function closeModal() {
-  if (formModified && !confirm('Kaydedilmemiş değişiklikler var. Yine de kapatmak istiyor musunuz?')) return;
+  if (formModified && !confirm('KaydedilmemiÅŸ deÄŸiÅŸiklikler var. Yine de kapatmak istiyor musunuz?')) return;
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
   editingId = null;
@@ -769,11 +769,11 @@ function populateForm(rec) {
   document.getElementById('fToplam').value = rec.toplam;
   document.getElementById('fPorsiyon').value = rec.porsiyon;
   document.getElementById('fOgrenci').value = rec.ogrenci;
-  // Atik alanını formul ile yeniden hesapla - eski manuel değer yerine
+  // Atik alanÄ±nÄ± formul ile yeniden hesapla - eski manuel deÄŸer yerine
   autoCalc();
 }
 
-// ─── AUTO CALC ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ AUTO CALC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function autoCalc() {
   const yemek = parseFloat(document.getElementById('fYemek').value) || 0;
   document.getElementById('fFire').value = (yemek * 0.1).toFixed(2);
@@ -783,7 +783,7 @@ function autoCalc() {
 function autoCalcGecis() {
   const turnike = parseInt(document.getElementById('fTurnike').value) || 0;
   const personel = parseInt(document.getElementById('fPersonel').value) || 0;
-  // Toplam Geçiş = Turnike + Personel (iç personel dahil, öğrenci ayrı kolon)
+  // Toplam GeÃ§iÅŸ = Turnike + Personel (iÃ§ personel dahil, Ã¶ÄŸrenci ayrÄ± kolon)
   document.getElementById('fToplam').value = turnike + personel;
   autoCalcAtik();
 }
@@ -793,41 +793,41 @@ function autoCalcAtik() {
   const fire    = parseFloat(document.getElementById('fFire').value)   || 0;
   const toplam  = parseInt(document.getElementById('fToplam').value)   || 0;
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
-  // Örnek: (550 - 55 - 443) x 400 / 1000 = 20,80 kg
+  // FormÃ¼l: (ÃœretilenYemek - FireMiktarÄ± - ToplamGeÃ§iÅŸ) x Porsiyon / 1000
+  // Ã–rnek: (550 - 55 - 443) x 400 / 1000 = 20,80 kg
   const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
 
-// ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
+// â”€â”€â”€ SAVE / UPDATE RECORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function saveRecord(e) {
   e.preventDefault();
 
-  // Form doğrulama
+  // Form doÄŸrulama
   const fYemek = document.getElementById('fYemek');
   const fTurnike = document.getElementById('fTurnike');
   const fPersonel = document.getElementById('fPersonel');
   const fPorsiyon = document.getElementById('fPorsiyon');
   const fOgrenci = document.getElementById('fOgrenci');
   const errors = [];
-  if (parseFloat(fYemek.value) < 0) errors.push('Üretilen yemek sayısı negatif olamaz.');
-  if (parseInt(fTurnike.value) < 0) errors.push('Turnike geçiş sayısı negatif olamaz.');
-  if (parseInt(fPersonel.value) < 0) errors.push('Personel sayısı negatif olamaz.');
-  if (parseInt(fPorsiyon.value) < 0) errors.push('Porsiyon miktarı negatif olamaz.');
-  if (parseInt(fOgrenci.value) < 0) errors.push('Öğrenci sayısı negatif olamaz.');
+  if (parseFloat(fYemek.value) < 0) errors.push('Ãœretilen yemek sayÄ±sÄ± negatif olamaz.');
+  if (parseInt(fTurnike.value) < 0) errors.push('Turnike geÃ§iÅŸ sayÄ±sÄ± negatif olamaz.');
+  if (parseInt(fPersonel.value) < 0) errors.push('Personel sayÄ±sÄ± negatif olamaz.');
+  if (parseInt(fPorsiyon.value) < 0) errors.push('Porsiyon miktarÄ± negatif olamaz.');
+  if (parseInt(fOgrenci.value) < 0) errors.push('Ã–ÄŸrenci sayÄ±sÄ± negatif olamaz.');
   if (errors.length > 0) {
     showToast(errors.join(' '), 'error');
     return;
   }
 
   const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
-  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;  // autoCalc tarafından hesaplanan değer
+  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;  // autoCalc tarafÄ±ndan hesaplanan deÄŸer
   const turnike = parseInt(document.getElementById('fTurnike').value)   || 0;
   const personel = parseInt(document.getElementById('fPersonel').value) || 0;
   const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
-  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;  // autoCalcGecis tarafından hesaplanan değer
+  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;  // autoCalcGecis tarafÄ±ndan hesaplanan deÄŸer
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
+  // FormÃ¼l: (ÃœretilenYemek - FireMiktarÄ± - ToplamGeÃ§iÅŸ) x Porsiyon / 1000
   const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
 
   const rec = {
@@ -847,10 +847,10 @@ function saveRecord(e) {
   if (editingId !== null) {
     const idx = records.findIndex(r => r.id === editingId);
     if (idx !== -1) records[idx] = rec;
-    showToast('Kayıt başarıyla güncellendi.', 'success');
+    showToast('KayÄ±t baÅŸarÄ±yla gÃ¼ncellendi.', 'success');
   } else {
     records.push(rec);
-    showToast('Yeni kayıt başarıyla eklendi.', 'success');
+    showToast('Yeni kayÄ±t baÅŸarÄ±yla eklendi.', 'success');
   }
 
   // Sort by date desc
@@ -862,26 +862,24 @@ function saveRecord(e) {
   closeModal();
 }
 
-// ─── DELETE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DELETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function deleteRecord(id) {
-  if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  if (!confirm('Bu kaydÄ± silmek istediÄŸinize emin misiniz?')) return;
   records = records.filter(r => r.id !== id);
   selectedIds.delete(id);
   saveData();
   filteredRecords = [...records];
   renderAll();
   drawAllCharts();
-  showToast('Kayıt silindi.', 'success');
+  showToast('KayÄ±t silindi.', 'success');
 }
 
-// ─── FILTER ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ FILTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateYemekTuruFilter() {
-  const sel = document.getElementById('filterYemekTuru');
-  if (!sel) return;
-  const current = sel.value;
+  const selects = document.querySelectorAll('.col-filter[data-field="yemek_adi"]');
   const turler = [...new Set(records.map(r => r.yemek_adi).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Tümü</option>' + turler.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
-  sel.value = current;
+  const opts = '<option value="">TÃ¼mÃ¼</option>' + turler.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  selects.forEach(s => { const v = s.value; s.innerHTML = opts; s.value = v; });
 }
 
 function filterRecords() {
@@ -889,6 +887,21 @@ function filterRecords() {
   const start = document.getElementById('filterStart').value;
   const end = document.getElementById('filterEnd').value;
   const yemekTuru = document.getElementById('filterYemekTuru').value;
+
+  // Collect per-column filters
+  const colFilters = {};
+  document.querySelectorAll('.col-filter').forEach(el => {
+    const field = el.dataset.field;
+    if (!field || !el.value) return;
+    if (field.endsWith('_max')) {
+      const base = field.replace('_max', '');
+      if (!colFilters[base]) colFilters[base] = {};
+      colFilters[base].max = parseFloat(el.value);
+    } else {
+      if (!colFilters[field]) colFilters[field] = {};
+      colFilters[field].val = el.value;
+    }
+  });
 
   filteredRecords = records.filter(r => {
     const tarihStr = r.tarih ? (() => {
@@ -909,7 +922,20 @@ function filterRecords() {
     const matchStart = !start || r.tarih >= start;
     const matchEnd = !end || r.tarih <= end;
     const matchYemek = !yemekTuru || (r.yemek_adi || '') === yemekTuru;
-    return matchQuery && matchStart && matchEnd && matchYemek;
+
+    // Per-column filter matching
+    let matchCol = true;
+    for (const [field, f] of Object.entries(colFilters)) {
+      const val = r[field];
+      if (val === undefined || val === null) { matchCol = false; break; }
+      if (field === 'tarih') {
+        if (!String(r.tarih).includes(f.val)) { matchCol = false; break; }
+      } else {
+        if (f.val !== undefined && f.val !== '' && parseFloat(f.val) !== val) { matchCol = false; break; }
+        if (f.max !== undefined && !isNaN(f.max) && val > f.max) { matchCol = false; break; }
+      }
+    }
+    return matchQuery && matchStart && matchEnd && matchYemek && matchCol;
   });
 
   filteredRecords = sortRecords(filteredRecords);
@@ -923,13 +949,14 @@ function clearFilters() {
   document.getElementById('filterEnd').value = '';
   const sel = document.getElementById('filterYemekTuru');
   if (sel) sel.value = '';
+  document.querySelectorAll('.col-filter').forEach(el => { el.value = ''; });
   filteredRecords = [...records];
   currentPage = 1;
   sortField = 'tarih'; sortDir = -1;
   renderRecordsTable();
 }
 
-// ─── SORT ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let sortField = 'tarih';
 let sortDir = -1; // -1 = desc, 1 = asc
 function toggleSort(field) {
@@ -951,11 +978,11 @@ function sortRecords(arr) {
 function renderSortIndicators() {
   document.querySelectorAll('#recordsTable th[data-field]').forEach(th => {
     const f = th.dataset.field;
-    th.innerHTML = th.innerHTML.replace(/ ?[▲▼]?$/, '') + (f === sortField ? (sortDir === -1 ? ' ▼' : ' ▲') : '');
+    th.innerHTML = th.innerHTML.replace(/ ?[â–²â–¼]?$/, '') + (f === sortField ? (sortDir === -1 ? ' â–¼' : ' â–²') : '');
   });
 }
 
-// ─── PAGINATION ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getPaginatedRecords() {
   const start = (currentPage - 1) * PAGE_SIZE;
   return filteredRecords.slice(start, start + PAGE_SIZE);
@@ -985,11 +1012,11 @@ function renderPagination() {
   html += `<span class="page-info">${currentPage} / ${tp}</span>`;
   html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === tp ? 'disabled' : ''}>&#8250;</button>`;
   html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${tp})" ${currentPage === tp ? 'disabled' : ''}>&#187;</button>`;
-  html += `<span class="page-total">${filteredRecords.length} kayıt</span>`;
+  html += `<span class="page-total">${filteredRecords.length} kayÄ±t</span>`;
   container.innerHTML = html;
 }
 
-// ─── BULK DELETE ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ BULK DELETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSelect(id) {
   if (selectedIds.has(id)) selectedIds.delete(id);
   else selectedIds.add(id);
@@ -1013,7 +1040,7 @@ function updateBulkBar() {
   if (!bar || !count) return;
   if (selectedIds.size > 0) {
     bar.style.display = 'flex';
-    count.textContent = selectedIds.size + ' seçili';
+    count.textContent = selectedIds.size + ' seÃ§ili';
   } else {
     bar.style.display = 'none';
   }
@@ -1021,10 +1048,10 @@ function updateBulkBar() {
 
 function deleteSelected() {
   if (selectedIds.size === 0) {
-    showToast('Seçili kayıt yok.', 'error');
+    showToast('SeÃ§ili kayÄ±t yok.', 'error');
     return;
   }
-  if (!confirm(`Seçili ${selectedIds.size} kaydı silmek istediğinize emin misiniz?`)) return;
+  if (!confirm(`SeÃ§ili ${selectedIds.size} kaydÄ± silmek istediÄŸinize emin misiniz?`)) return;
   records = records.filter(r => !selectedIds.has(r.id));
   selectedIds.clear();
   saveData();
@@ -1032,10 +1059,10 @@ function deleteSelected() {
   currentPage = 1;
   renderAll();
   drawAllCharts();
-  showToast('Seçili kayıtlar silindi.', 'success');
+  showToast('SeÃ§ili kayÄ±tlar silindi.', 'success');
 }
 
-// ─── IMPORT ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ IMPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function triggerImport() {
   document.getElementById('importInput').click();
 }
@@ -1053,14 +1080,14 @@ function handleImport(e) {
         if (!Array.isArray(imported)) imported = [imported];
       } else if (file.name.endsWith('.csv')) {
         const lines = content.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
+        if (lines.length < 2) throw new Error('CSV en az 2 satÄ±r olmalÄ± (baÅŸlÄ±k + veri)');
         const headers = lines[0].split(';').map(h => h.replace(/^"|"$/g, '').trim());
         const fieldMap = {
-          'Tarih': 'tarih', 'Üretilen Yemek Sayısı': 'yemek', '%10 Fire': 'fire',
-          'Turnike Geçiş Sayısı': 'turnike', 'Yemekhanede Çalışan Personel Sayısı': 'personel',
-          'Toplam Geçiş': 'toplam', 'Porsiyon Miktarı (gr)': 'porsiyon',
-          'Atık Miktarı (kg)': 'atik', 'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci',
-          'Yemek Türü': 'yemek_adi',
+          'Tarih': 'tarih', 'Ãœretilen Yemek SayÄ±sÄ±': 'yemek', '%10 Fire': 'fire',
+          'Turnike GeÃ§iÅŸ SayÄ±sÄ±': 'turnike', 'Yemekhanede Ã‡alÄ±ÅŸan Personel SayÄ±sÄ±': 'personel',
+          'Toplam GeÃ§iÅŸ': 'toplam', 'Porsiyon MiktarÄ± (gr)': 'porsiyon',
+          'AtÄ±k MiktarÄ± (kg)': 'atik', 'Yemek Hiz. Yar. Ã–ÄŸr. SayÄ±sÄ±': 'ogrenci',
+          'Yemek TÃ¼rÃ¼': 'yemek_adi',
           'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
           'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
           'atik': 'atik', 'ogrenci': 'ogrenci', 'yemek_adi': 'yemek_adi'
@@ -1086,17 +1113,17 @@ function handleImport(e) {
           }
         }
       } else {
-        throw new Error('Desteklenen dosya türleri: .csv, .json');
+        throw new Error('Desteklenen dosya tÃ¼rleri: .csv, .json');
       }
       if (imported.length === 0) {
-        showToast('İçe aktarılacak kayıt bulunamadı.', 'error');
+        showToast('Ä°Ã§e aktarÄ±lacak kayÄ±t bulunamadÄ±.', 'error');
         return;
       }
-      // Mevcut kayıtlara ekle (çakışma kontrolü yapmadan)
+      // Mevcut kayÄ±tlara ekle (Ã§akÄ±ÅŸma kontrolÃ¼ yapmadan)
       const existingIds = new Set(records.map(r => r.id));
       const newRecords = imported.filter(r => r.id && !existingIds.has(r.id));
       if (newRecords.length === 0 && imported.length > 0) {
-        // ID çakışması varsa yeni ID ata
+        // ID Ã§akÄ±ÅŸmasÄ± varsa yeni ID ata
         imported.forEach(r => { r.id = Date.now() + Math.floor(Math.random() * 10000); });
         newRecords.push(...imported);
       }
@@ -1106,23 +1133,23 @@ function handleImport(e) {
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+      showToast(`${newRecords.length} kayÄ±t iÃ§e aktarÄ±ldÄ±.`, 'success');
     } catch (err) {
-      showToast('İçe aktarma hatası: ' + err.message, 'error');
+      showToast('Ä°Ã§e aktarma hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 }
 
-// ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
+// â”€â”€â”€ DATA MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function clearAllData() {
   if (records.length === 0) {
-    showToast('Silinecek kayıt yok.', 'error');
+    showToast('Silinecek kayÄ±t yok.', 'error');
     return;
   }
-  if (!confirm('TÜM kayıtları silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!')) return;
-  if (!confirm('Son bir kez daha: Tüm veriler silinsin mi?')) return;
+  if (!confirm('TÃœM kayÄ±tlarÄ± silmek istediÄŸinize emin misiniz?\nBu iÅŸlem geri alÄ±namaz!')) return;
+  if (!confirm('Son bir kez daha: TÃ¼m veriler silinsin mi?')) return;
   records = [];
   filteredRecords = [];
   selectedIds.clear();
@@ -1130,12 +1157,12 @@ function clearAllData() {
   saveData();
   renderAll();
   drawAllCharts();
-  showToast('Tüm kayıtlar silindi.', 'success');
+  showToast('TÃ¼m kayÄ±tlar silindi.', 'success');
 }
 
 function exportDataJSON() {
   if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    showToast('DÄ±ÅŸa aktarÄ±lacak kayÄ±t yok.', 'error');
     return;
   }
   const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json;charset=utf-8;' });
@@ -1145,7 +1172,7 @@ function exportDataJSON() {
   link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('JSON dosyası indirildi.', 'success');
+  showToast('JSON dosyasÄ± indirildi.', 'success');
 }
 
 function exportDataSettings() {
@@ -1162,7 +1189,7 @@ function exportDataSettings() {
   link.download = `atik_kontrol_yedek_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Tüm veriler (ayarlar dahil) dışa aktarıldı.', 'success');
+  showToast('TÃ¼m veriler (ayarlar dahil) dÄ±ÅŸa aktarÄ±ldÄ±.', 'success');
 }
 
 function importFullBackup() {
@@ -1177,10 +1204,10 @@ function handleFullBackupImport(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!data.records) {
-        showToast('Geçersiz yedek dosyası.', 'error');
+        showToast('GeÃ§ersiz yedek dosyasÄ±.', 'error');
         return;
       }
-      if (!confirm(`${data.records.length} kayıt içe aktarılsın mı? Mevcut kayıtlar korunacak.`)) return;
+      if (!confirm(`${data.records.length} kayÄ±t iÃ§e aktarÄ±lsÄ±n mÄ±? Mevcut kayÄ±tlar korunacak.`)) return;
       const existingIds = new Set(records.map(r => r.id));
       const newRecords = data.records.filter(r => r.id && !existingIds.has(r.id));
       records.push(...newRecords);
@@ -1198,16 +1225,16 @@ function handleFullBackupImport(e) {
       renderAll();
       drawAllCharts();
       updateSyncUI();
-      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+      showToast(`${newRecords.length} kayÄ±t iÃ§e aktarÄ±ldÄ±.`, 'success');
     } catch (err) {
-      showToast('Yedek yükleme hatası: ' + err.message, 'error');
+      showToast('Yedek yÃ¼kleme hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 }
 
-// ─── RENDER ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAll() {
   renderKPIs();
   renderTodaySummary();
@@ -1230,20 +1257,20 @@ function renderTodaySummary() {
   const todayRec = records.find(r => r.tarih === todayStr);
   if (!todayRec) {
     el.style.display = 'flex';
-    body.innerHTML = `<div class="ts-item"><span class="ts-label">Bugün henüz kayıt girilmedi</span></div>`;
+    body.innerHTML = `<div class="ts-item"><span class="ts-label">BugÃ¼n henÃ¼z kayÄ±t girilmedi</span></div>`;
     return;
   }
   el.style.display = 'flex';
-  const pct = records.length >= 2 ? ((todayRec.atik||0) / records.reduce((s,r) => s+(r.atik||0),0) * 100).toFixed(1) : '—';
-  const avgAtik = records.length > 0 ? (records.reduce((s,r) => s+(r.atik||0),0) / records.length).toFixed(2) : '—';
+  const pct = records.length >= 2 ? ((todayRec.atik||0) / records.reduce((s,r) => s+(r.atik||0),0) * 100).toFixed(1) : 'â€”';
+  const avgAtik = records.length > 0 ? (records.reduce((s,r) => s+(r.atik||0),0) / records.length).toFixed(2) : 'â€”';
   const atikStatus = (todayRec.atik||0) > parseFloat(avgAtik) * 1.2 ? 'bad' : (todayRec.atik||0) < parseFloat(avgAtik) * 0.8 ? 'good' : 'warn';
   body.innerHTML = `
-    <div class="ts-item"><span class="ts-label">Üretim:</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Geçiş:</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Atık:</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Ãœretim:</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">GeÃ§iÅŸ:</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">AtÄ±k:</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
     <div class="ts-item"><span class="ts-label">Porsiyon:</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
-    <div class="ts-item"><span class="ts-label">Toplam atığa oranı:</span><span class="ts-value warn">%${pct}</span></div>
-    <div class="ts-item"><span class="ts-label">Ortalama atık:</span><span class="ts-value">${avgAtik} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Toplam atÄ±ÄŸa oranÄ±:</span><span class="ts-value warn">%${pct}</span></div>
+    <div class="ts-item"><span class="ts-label">Ortalama atÄ±k:</span><span class="ts-value">${avgAtik} kg</span></div>
   `;
 }
 
@@ -1259,10 +1286,10 @@ function renderDataInfo() {
   const dates = records.map(r => r.tarih).filter(Boolean).sort();
   const first = dates[0];
   const last = dates[dates.length - 1];
-  const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('tr-TR') : '—';
+  const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('tr-TR') : 'â€”';
   const totalYemek = records.reduce((s, r) => s + (r.yemek || 0), 0);
   const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
-  rangeEl.textContent = `${records.length} kayıt • ${fmt(first)} — ${fmt(last)} • ${totalYemek.toLocaleString('tr-TR')} üretim • ${totalAtik.toFixed(1)} kg atık`;
+  rangeEl.textContent = `${records.length} kayÄ±t â€¢ ${fmt(first)} â€” ${fmt(last)} â€¢ ${totalYemek.toLocaleString('tr-TR')} Ã¼retim â€¢ ${totalAtik.toFixed(1)} kg atÄ±k`;
 }
 
 function getTrend(_current, arr, field) {
@@ -1281,7 +1308,7 @@ function renderTrend(elId, pct, reverse) {
   if (!el || pct === null) { if (el) el.textContent = ''; return; }
   const up = reverse ? pct < 0 : pct > 0;
   const cls = up ? '#ef4444' : '#10b981';
-  el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? '▲' : '▼'} %${Math.abs(pct).toFixed(1)}</span>`;
+  el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? 'â–²' : 'â–¼'} %${Math.abs(pct).toFixed(1)}</span>`;
 }
 function renderKPIs() {
   const n = records.length;
@@ -1318,11 +1345,11 @@ function renderComparison() {
   const sum = (arr, f) => arr.reduce((s, r) => s + r[f], 0);
   const avg = (arr, f) => arr.length ? sum(arr, f) / arr.length : 0;
   const items = [
-    { label: 'Ort. Atık (kg)', f1: avg(first, 'atik'), f2: avg(second, 'atik'), unit: ' kg', lower: true },
-    { label: 'Ort. Üretim', f1: avg(first, 'yemek'), f2: avg(second, 'yemek'), unit: '', lower: false },
-    { label: 'Ort. Geçiş', f1: avg(first, 'toplam'), f2: avg(second, 'toplam'), unit: '', lower: false },
+    { label: 'Ort. AtÄ±k (kg)', f1: avg(first, 'atik'), f2: avg(second, 'atik'), unit: ' kg', lower: true },
+    { label: 'Ort. Ãœretim', f1: avg(first, 'yemek'), f2: avg(second, 'yemek'), unit: '', lower: false },
+    { label: 'Ort. GeÃ§iÅŸ', f1: avg(first, 'toplam'), f2: avg(second, 'toplam'), unit: '', lower: false },
   ];
-  badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
+  badge.textContent = `${first.length} kayÄ±t â†’ ${second.length} kayÄ±t`;
   grid.innerHTML = items.map(it => {
     const diff = it.f2 - it.f1;
     const pct = it.f1 ? (diff / it.f1) * 100 : 0;
@@ -1330,7 +1357,7 @@ function renderComparison() {
     return `<div class="comparison-item">
       <span class="comparison-label">${it.label}</span>
       <span class="comparison-old">${it.f1.toFixed(1)}${it.unit}</span>
-      <span class="comparison-arrow">→</span>
+      <span class="comparison-arrow">â†’</span>
       <span class="comparison-new">${it.f2.toFixed(1)}${it.unit}</span>
       <span class="comparison-diff" style="color:${good ? '#10b981' : '#ef4444'};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}${it.unit}</span>
     </div>`;
@@ -1344,7 +1371,7 @@ function renderLastRecordsTable() {
   const empty = document.getElementById('emptyStateDashboard');
   const badge = document.getElementById('lastRecordsBadge');
 
-  badge.textContent = records.length + ' kayıt';
+  badge.textContent = records.length + ' kayÄ±t';
 
   if (last5.length === 0) {
     table.style.display = 'none';
@@ -1366,8 +1393,8 @@ function renderRecordsTable() {
     table.style.display = 'none';
     empty.style.display = 'flex';
     document.getElementById('emptyRecordsMsg').textContent = records.length === 0
-      ? 'Gösterilecek kayıt bulunamadı.'
-      : 'Arama kriterlerine uygun kayıt bulunamadı.';
+      ? 'GÃ¶sterilecek kayÄ±t bulunamadÄ±.'
+      : 'Arama kriterlerine uygun kayÄ±t bulunamadÄ±.';
     document.getElementById('emptyClearFilter').style.display = records.length > 0 ? 'inline-flex' : 'none';
     renderPagination();
     return;
@@ -1395,7 +1422,7 @@ function renderRecordsTable() {
 function buildRow(r, showActions) {
   const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', {
     day: '2-digit', month: '2-digit', year: 'numeric'
-  }) : '—';
+  }) : 'â€”';
 
   const checkbox = showActions ? `
     <td>
@@ -1406,7 +1433,7 @@ function buildRow(r, showActions) {
   const actions = showActions ? `
     <td>
       <div style="display:flex;gap:0.4rem">
-        <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">
+        <button class="btn btn-icon" onclick="openModal(${r.id})" title="DÃ¼zenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">
@@ -1457,7 +1484,7 @@ function renderProduction(_weekKey, _weekData, days) {
     return s;
   };
   const fmt = (total, birim) => {
-    if (total <= 0) return '—';
+    if (total <= 0) return 'â€”';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
     if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
@@ -1480,7 +1507,7 @@ function renderProduction(_weekKey, _weekData, days) {
   let html = '';
   days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
+    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kiÅŸi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
 
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
@@ -1488,14 +1515,14 @@ function renderProduction(_weekKey, _weekData, days) {
       if (!name) continue;
       const dish = findDish(name);
 
-      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
+      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Ã‡eÅŸit: ${escapeHtml(name)}</div>`;
 
       if (dish && dish.tarif && dish.tarif.length) {
         dish.tarif.forEach((ing, idx) => {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">â€”</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
         });
       }
       html += '</div>';
@@ -1525,7 +1552,7 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!section) return;
 
   const fmtTotal = (total, birim) => {
-    if (total <= 0) return '—';
+    if (total <= 0) return 'â€”';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
     if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
@@ -1564,15 +1591,15 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  section.innerHTML = `<h3 class="section-title">Haftalık Toplam İhtiyaç Listesi</h3>
+  section.innerHTML = `<h3 class="section-title">HaftalÄ±k Toplam Ä°htiyaÃ§ Listesi</h3>
     <div class="weekly-total-grid">${entries.map((e, idx) => {
       const total = e.total;
       if (total <= 0) return '';
-      return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">â€”</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
     }).filter(Boolean).join('')}</div>`;
 }
 
-// ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
+// â”€â”€â”€ YEMEK LISTESI (DISH POOL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadYemekler() {
   return yemeklerCache;
 }
@@ -1597,22 +1624,22 @@ function renderYemekListesi() {
 
   if (!filtered.length) {
     if (query) {
-      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">"<strong>' + escapeHtml(query) + '</strong>" için eşleşen yemek bulunamadı.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">"<strong>' + escapeHtml(query) + '</strong>" iÃ§in eÅŸleÅŸen yemek bulunamadÄ±.</div>';
     } else {
-      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Henüz yemek eklenmemiş. "+ Yeni Yemek" butonuna tıklayarak ekleyin.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">HenÃ¼z yemek eklenmemiÅŸ. "+ Yeni Yemek" butonuna tÄ±klayarak ekleyin.</div>';
     }
     return;
   }
 
   container.innerHTML = `<table class="data-table" style="width:100%">
-    <thead><tr><th style="width:35%">Yemek Adı</th><th style="width:15%">Kalori</th><th style="width:25%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:60px">İşlem</th></tr></thead>
+    <thead><tr><th style="width:35%">Yemek AdÄ±</th><th style="width:15%">Kalori</th><th style="width:25%">Alerjen</th><th style="width:50px">ReÃ§ete</th><th style="width:60px">Ä°ÅŸlem</th></tr></thead>
     <tbody>${filtered.map(y => `<tr>
       <td><strong>${escapeHtml(y.ad)}</strong></td>
       <td style="font-size:0.8rem">${escapeHtml(y.kalori || '')}</td>
       <td style="font-size:0.8rem;color:var(--text-muted)">${escapeHtml(y.alerjen || '')}</td>
-      <td style="text-align:center">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
+      <td style="text-align:center">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} Ã¼rÃ¼n</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">â€”</span>`}</td>
       <td style="white-space:nowrap">
-        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
+        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="DÃ¼zenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">
@@ -1652,7 +1679,7 @@ function renderYemekForm(ad, kalori, alerjen) {
   const container = document.getElementById('yemekFormContainer');
   const tarifRows = yfTarif.map((t, i) => `
     <tr>
-      <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adı" data-idx="${i}" style="width:100%" /></td>
+      <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adÄ±" data-idx="${i}" style="width:100%" /></td>
       <td style="width:80px"><input type="number" class="yf-miktar" value="${t.miktar_kisi || ''}" step="0.1" min="0" data-idx="${i}" style="width:70px;text-align:center" placeholder="0" /></td>
       <td style="width:60px">
         <select class="yf-birim" data-idx="${i}" style="width:55px;padding:0.3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:0.75rem">
@@ -1662,37 +1689,37 @@ function renderYemekForm(ad, kalori, alerjen) {
           <option value="ml" ${t.birim==='ml'?'selected':''}>ml</option>
         </select>
       </td>
-      <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">✕</button></td>
+      <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">âœ•</button></td>
     </tr>
   `).join('');
 
   container.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;margin-bottom:0.75rem">
       <div style="flex:2;min-width:140px">
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek Adı</label>
-        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: ŞEHRIYE ÇORBASI" style="width:100%" />
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek AdÄ±</label>
+        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Ã–rn: ÅEHRIYE Ã‡ORBASI" style="width:100%" />
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Kalori</label>
-        <input type="text" id="yf_kalori" value="${escapeHtml(kalori)}" placeholder="Örn: 160 KCAL" style="width:100%" />
+        <input type="text" id="yf_kalori" value="${escapeHtml(kalori)}" placeholder="Ã–rn: 160 KCAL" style="width:100%" />
       </div>
       <div style="flex:1;min-width:120px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Alerjen</label>
-        <input type="text" id="yf_alerjen" value="${escapeHtml(alerjen)}" placeholder="Örn: Gluten İçeren Tahıllar" style="width:100%" />
+        <input type="text" id="yf_alerjen" value="${escapeHtml(alerjen)}" placeholder="Ã–rn: Gluten Ä°Ã§eren TahÄ±llar" style="width:100%" />
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="saveYemekForm()">Kaydet</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekFormContainer').style.display='none'">İptal</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekFormContainer').style.display='none'">Ä°ptal</button>
       </div>
     </div>
 
     <div style="border-top:1px solid var(--border);padding-top:0.75rem">
       <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
         <strong style="font-size:0.82rem">Malzemeler</strong>
-        <span style="font-size:0.7rem;color:var(--text-muted)">(kişi başı gram)</span>
+        <span style="font-size:0.7rem;color:var(--text-muted)">(kiÅŸi baÅŸÄ± gram)</span>
       </div>
       <table style="width:100%;font-size:0.8rem">
-        <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">/kişi</th><th style="width:60px">Birim</th><th style="width:30px"></th></tr></thead>
+        <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">/kiÅŸi</th><th style="width:60px">Birim</th><th style="width:30px"></th></tr></thead>
         <tbody id="yfTarif_tbody">${tarifRows}</tbody>
       </table>
       <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">+ Malzeme Ekle</button>
@@ -1718,7 +1745,7 @@ function yfTarifSil(idx) {
 
 function saveYemekForm() {
   const ad = document.getElementById('yf_ad').value.trim();
-  if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
+  if (!ad) { showToast('Yemek adÄ± zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
   const alerjen = document.getElementById('yf_alerjen').value.trim();
 
@@ -1759,7 +1786,7 @@ function editYemek(id) {
 }
 
 function deleteYemek(id) {
-  if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
+  if (!confirm('Bu yemeÄŸi silmek istediÄŸinize emin misiniz?')) return;
   let list = loadYemekler();
   list = list.filter(y => y.id !== id);
   saveYemekler(list);
@@ -1773,7 +1800,7 @@ function openYemekModal() {
   editingYemekId = null;
   document.getElementById('yemekFormContainer').style.display = 'none';
   renderYemekListesi();
-  // Background'da Google Sheets'ten taze veri çek (cache güncelle)
+  // Background'da Google Sheets'ten taze veri Ã§ek (cache gÃ¼ncelle)
   syncDishesFromGSheets().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
@@ -1790,16 +1817,16 @@ async function syncDishesFromGSheets() {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => {
         let tarif = [];
 
-        // 1. JSON tarif sütunu varsa onu dene
+        // 1. JSON tarif sÃ¼tunu varsa onu dene
         if (d.tarif) {
           try { tarif = JSON.parse(d.tarif); } catch (e) {}
         }
 
-        // 2. Yoksa düz sütun formatını dene: ürün N, miktar N, birim N
+        // 2. Yoksa dÃ¼z sÃ¼tun formatÄ±nÄ± dene: Ã¼rÃ¼n N, miktar N, birim N
         if (!tarif.length) {
           const keys = Object.keys(d);
           for (let n = 1; n <= 20; n++) {
-            const urunKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('ürün'+n).toLowerCase());
+            const urunKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('Ã¼rÃ¼n'+n).toLowerCase());
             const miktarKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('miktar'+n).toLowerCase());
             const birimKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('birim'+n).toLowerCase());
             if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
@@ -1823,7 +1850,7 @@ async function syncDishesFromGSheets() {
         };
       });
       yemeklerCache = list;
-      // Menü sekmesi açıksa ürün tablosunu güncelle
+      // MenÃ¼ sekmesi aÃ§Ä±ksa Ã¼rÃ¼n tablosunu gÃ¼ncelle
       if (document.getElementById('productionSection')) refreshMenuProduction();
       return true;
     }
@@ -1876,13 +1903,13 @@ async function syncMenuToGSheet() {
       body: JSON.stringify({ action: 'saveMenu', menuData: data })
     });
     const json = await res.json();
-    if (!json.success) showToast('Menü Sheet\'e yedeklenemedi: ' + (json.error || ''), 'error');
-  } catch (_) { showToast('Menü Sheet\'e yedeklenemedi (bağlantı hatası).', 'error'); }
+    if (!json.success) showToast('MenÃ¼ Sheet\'e yedeklenemedi: ' + (json.error || ''), 'error');
+  } catch (_) { showToast('MenÃ¼ Sheet\'e yedeklenemedi (baÄŸlantÄ± hatasÄ±).', 'error'); }
 }
 
 // -- Live production refresh --
 function refreshMenuProduction() {
-  if (!document.getElementById('mk_0')) return; // menü henüz render edilmemiş
+  if (!document.getElementById('mk_0')) return; // menÃ¼ henÃ¼z render edilmemiÅŸ
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
@@ -2015,7 +2042,7 @@ function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
-// ─── REPORT ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderReport() {
   const n = records.length;
 
@@ -2023,7 +2050,7 @@ function renderReport() {
     ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
      'rTotalGecis','rAvgPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
      'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis','rCarbonFootprint'].forEach(id => {
-      document.getElementById(id).textContent = '—';
+      document.getElementById(id).textContent = 'â€”';
     });
     document.getElementById('reportTbody').innerHTML = '';
     return;
@@ -2044,7 +2071,7 @@ function renderReport() {
   const maxAtikDate = maxAtikRec ? new Date(maxAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
   const minAtikDate = minAtikRec ? new Date(minAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
 
-  // Trend: son 7 gün vs önceki 7 gün
+  // Trend: son 7 gÃ¼n vs Ã¶nceki 7 gÃ¼n
   const sortedByDate = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   const last7 = sortedByDate.slice(0, 7);
   const prev7 = sortedByDate.slice(7, 14);
@@ -2055,11 +2082,11 @@ function renderReport() {
   const trendAtik = avgAtikPrev7 > 0 ? ((avgAtikLast7 - avgAtikPrev7) / avgAtikPrev7 * 100).toFixed(1) : 0;
   const trendGecis = avgGecisPrev7 > 0 ? ((avgGecisLast7 - avgGecisPrev7) / avgGecisPrev7 * 100).toFixed(1) : 0;
 
-  // Haftalık Geçiş Hesaplama
+  // HaftalÄ±k GeÃ§iÅŸ Hesaplama
   const weeklyGecis = {};
   records.forEach(r => {
     const d = new Date(r.tarih + 'T00:00:00');
-    // Haftanın başını (Pazartesi) bul
+    // HaftanÄ±n baÅŸÄ±nÄ± (Pazartesi) bul
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d);
@@ -2073,7 +2100,7 @@ function renderReport() {
     weeklyGecis[weekLabel] = (weeklyGecis[weekLabel] || 0) + r.toplam;
   });
 
-  let maxWeekLabel = '—';
+  let maxWeekLabel = 'â€”';
   let maxWeekVal = 0;
   for (const [w, val] of Object.entries(weeklyGecis)) {
     if (val > maxWeekVal) {
@@ -2089,32 +2116,32 @@ function renderReport() {
   document.getElementById('rTotalTurnike').textContent = totalTurnike.toLocaleString('tr-TR');
   document.getElementById('rTotalGecis').textContent = totalGecis.toLocaleString('tr-TR');
   document.getElementById('rAvgPorsiyon').textContent = avgPorsiyon.toFixed(0) + ' gr';
-  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Geçiş)</span>` : '—';
+  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== 'â€”' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} GeÃ§iÅŸ)</span>` : 'â€”';
   document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
   document.getElementById('rMaxAtik').innerHTML = `${maxAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${maxAtikDate}</span>`;
   document.getElementById('rMinAtik').innerHTML = `${minAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${minAtikDate}</span>`;
 
-  // Karbon Ayak İzi = toplam atık (kg) × 2.5 kg CO₂e/kg
+  // Karbon Ayak Ä°zi = toplam atÄ±k (kg) Ã— 2.5 kg COâ‚‚e/kg
   const carbonFootprint = totalAtik * 2.5;
   const carbonEl = document.getElementById('rCarbonFootprint');
   if (carbonEl) {
-    carbonEl.innerHTML = `${carbonFootprint.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg CO₂<br><span class="report-subdate">atık × 2.5 CO₂e/kg</span>`;
+    carbonEl.innerHTML = `${carbonFootprint.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg COâ‚‚<br><span class="report-subdate">atÄ±k Ã— 2.5 COâ‚‚e/kg</span>`;
   }
 
   // Trend
   const trendAtikEl = document.getElementById('rTrendAtik');
   const trendGecisEl = document.getElementById('rTrendGecis');
   if (trendAtikEl) {
-    const sign = trendAtik > 0 ? '↑' : trendAtik < 0 ? '↓' : '→';
+    const sign = trendAtik > 0 ? 'â†‘' : trendAtik < 0 ? 'â†“' : 'â†’';
     const cls = trendAtik > 0 ? 'trend-up' : trendAtik < 0 ? 'trend-down' : 'trend-flat';
-    trendAtikEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendAtik)}</span><span class="report-subdate">son 7 kayıt / önceki 7</span>`;
+    trendAtikEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendAtik)}</span><span class="report-subdate">son 7 kayÄ±t / Ã¶nceki 7</span>`;
   }
   if (trendGecisEl) {
-    const sign = trendGecis > 0 ? '↑' : trendGecis < 0 ? '↓' : '→';
+    const sign = trendGecis > 0 ? 'â†‘' : trendGecis < 0 ? 'â†“' : 'â†’';
     const cls = trendGecis > 0 ? 'trend-up' : trendGecis < 0 ? 'trend-down' : 'trend-flat';
-    trendGecisEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendGecis)}</span><span class="report-subdate">son 7 kayıt / önceki 7</span>`;
+    trendGecisEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendGecis)}</span><span class="report-subdate">son 7 kayÄ±t / Ã¶nceki 7</span>`;
   }
 
   const reportTbody = document.getElementById('reportTbody');
@@ -2141,43 +2168,63 @@ function renderWasteByFoodType() {
     totalAtik += r.atik || 0;
   });
   const sorted = Object.values(groups).sort((a, b) => b.toplamAtik - a.toplamAtik);
-  let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>Yemek Türü</th><th>Kayıt Sayısı</th><th>Toplam Atık (kg)</th><th>Atık Oranı</th><th>Kişi Başı Atık (kg)</th></tr></thead><tbody>';
+  let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>Yemek TÃ¼rÃ¼</th><th>KayÄ±t SayÄ±sÄ±</th><th>Toplam AtÄ±k (kg)</th><th>AtÄ±k OranÄ±</th><th>KiÅŸi BaÅŸÄ± AtÄ±k (kg)</th></tr></thead><tbody>';
   sorted.forEach(g => {
-    const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : '—';
-    const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : '—';
+    const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : 'â€”';
+    const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : 'â€”';
     html += `<tr><td><strong>${g.ad}</strong></td><td>${g.kayitSayisi}</td><td>${g.toplamAtik.toFixed(1)}</td><td>%${pct}</td><td>${kisiBasi}</td></tr>`;
   });
   html += '</tbody></table>';
   body.innerHTML = html;
 }
 
-// ─── CHART UTILITY ───────────────────────────────────────────────────────────
+// â”€â”€â”€ CHART UTILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmt(v) {
-  // Trailing zero'ları at, tam sayıysa .00 gösterme
+  // Trailing zero'larÄ± at, tam sayÄ±ysa .00 gÃ¶sterme
   return v.toFixed(2).replace(/\.?0+$/, '');
 }
 
-// ─── CHARTS ────────────────────────────────────────────────────────────────────
-// Pure canvas chart renderer (no external dependencies)
+// â”€â”€â”€ CHARTS (Chart.js) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function renderChartYearFilter() {
   const container = document.getElementById('chartYearFilter');
   if (!container) return;
   const years = getAvailableYears();
   if (years.length === 0) { container.innerHTML = ''; return; }
-  let html = '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">Tümü</button>';
+  let html = '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">TÃ¼mÃ¼</button>';
   years.forEach(y => {
     html += '<button class="year-btn' + (chartYearFilter === String(y) ? ' active' : '') + '" data-year="' + y + '" onclick="setChartYear(\'' + y + '\')">' + y + '</button>';
   });
   container.innerHTML = html;
 }
 
+const chartInstances = new Map();
+const chartValueLabelPlugin = {
+  id: 'valueLabels',
+  afterDraw(chart) {
+    if (!chart.options.plugins.valueLabels) return;
+    const ctx = chart.ctx;
+    chart.data.datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((bar, idx) => {
+        const val = ds.data[idx];
+        if (val === undefined || val === null) return;
+        ctx.fillStyle = chart.options.plugins.legend.labels.color || '#334155';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
+        ctx.fillText(display, bar.x, bar.y - 4);
+      });
+    });
+  }
+};
+
 let _chartVer = 0;
 function drawAllCharts() {
   _chartVer++;
   renderChartYearFilter();
 
-  // Yıl filtresi uygula
   let chartRecords = records;
   if (chartYearFilter !== 'all') {
     chartRecords = records.filter(r => {
@@ -2202,7 +2249,6 @@ function drawAllCharts() {
     return;
   }
 
-  // Show canvases, hide empties
   emptyIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -2214,7 +2260,6 @@ function drawAllCharts() {
 
   const sorted = [...chartRecords].sort((a,b) => new Date(a.tarih) - new Date(b.tarih));
 
-  // Aylık Gruplandırma (önce hesapla ki tüm grafikler kullanabilsin)
   const monthlyData = {};
   sorted.forEach(r => {
     const date = new Date(r.tarih + 'T00:00:00');
@@ -2229,7 +2274,6 @@ function drawAllCharts() {
     monthlyData[monthKey].ogrenci += r.ogrenci;
   });
 
-  // Tüm ayları kapsayan etiketler (veri olmayan aylar dahil)
   const chartYears = chartYearFilter !== 'all'
     ? [Number(chartYearFilter)]
     : [...new Set(sorted.map(r => new Date(r.tarih + 'T00:00:00').getFullYear()))].sort();
@@ -2237,141 +2281,94 @@ function drawAllCharts() {
   chartYears.forEach(y => {
     for (let m = 1; m <= 12; m++) allMonthLabels.push(m + '/' + y);
   });
-  // Varsayılan: veri varsa onu kullan, yoksa 0
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
 
-  const ver = _chartVer;
-  const karbonDataHeart = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
+  // Destroy old Chart.js instances
+  chartInstances.forEach(c => c.destroy());
+  chartInstances.clear();
 
-  // Aylık Atık (canvasAtik) — tüm 12 ay göster
-  drawBarChart('canvasAtik', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
-  ], ver);
-
-  drawBarChart('canvasYemek', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim Sayısı' }
-  ], ver);
-
-  drawBarChart('canvasTurnike', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22c55e', label: 'Aylık Turnike Geçişi' }
-  ], ver);
-
-  const prevYearAtik = allMonthLabels.map(m => {
-    const [ay, yil] = m.split('/');
-    const prevLabel = ay + '/' + (parseInt(yil) - 1);
-    return getMonthVal(prevLabel, 'atik');
-  });
-  const hasPrevYear = prevYearAtik.some(v => v > 0);
-  const aylikDataSets = [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#1e40af', label: 'Aylık Üretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#14b8a6', label: 'Aylık Geçiş' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
-  ];
-  if (hasPrevYear) {
-    aylikDataSets.push({ data: prevYearAtik, color: '#f9731680', label: 'Geçen Yıl Atık (kg)', dashed: true });
-  }
-  drawBarChart('canvasAylik', allMonthLabels, aylikDataSets, ver);
-
-  // Üretim - Geçiş Farkı
-  const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
-  drawBarChart('canvasFark', allMonthLabels, [
-    { data: farkData, color: '#8b5cf6', label: 'Üretim - Geçiş Farkı' }
-  ], ver);
-
-  // Aylık Atık Oranı % = (aylık atik / aylık yemek) * 100
-  const aylikOran = allMonthLabels.map(m => {
-    const yemek = getMonthVal(m, 'yemek');
-    const atik = getMonthVal(m, 'atik');
-    return yemek > 0 ? (atik / yemek * 100) : 0;
-  });
-  const totalYemekSum = sorted.reduce((s, r) => s + r.yemek, 0);
-  const totalAtikSum = sorted.reduce((s, r) => s + r.atik, 0);
-  const avgOran = totalYemekSum > 0 ? (totalAtikSum / totalYemekSum * 100) : 0;
-
-  drawBarChart('canvasAtikOran', allMonthLabels, [
-    { data: aylikOran, color: '#ef4444', label: 'Aylık Atık Oranı %' }
-  ], ver);
-
-  drawBarChart('canvasOgrenci', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }
-  ], ver);
-
-  // Karbon Ayak İzi = aylık atık × 2.5
-  const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  drawBarChart('canvasKarbon', allMonthLabels, [
-    { data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO₂)' }
-  ], ver);
-
-  // Kişi Başı Atık = aylık atik / aylık toplam geçiş
-  const atikPerKisi = allMonthLabels.map(m => {
-    const t = getMonthVal(m, 'toplam');
-    const a = getMonthVal(m, 'atik');
-    return t > 0 ? a / t : 0;
-  });
-  drawBarChart('canvasAtikPerKisi', allMonthLabels, [
-    { data: atikPerKisi, color: '#d946ef', label: 'Kişi Başı Atık (kg/kişi)' }
-  ], ver);
-
-  // Haftalık Geçiş Toplamı
-  const weeklyData = {};
-  sorted.forEach(r => {
-    const d = new Date(r.tarih + 'T00:00:00');
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(d);
-    monday.setDate(diff);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    const fmt = (date) => date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-    const label = `${fmt(monday)} - ${fmt(sunday)}`;
-    if (!weeklyData[label]) weeklyData[label] = 0;
-    weeklyData[label] += r.toplam;
-  });
-  const weekLabels = Object.keys(weeklyData);
-  const weekValues = weekLabels.map(l => weeklyData[l]);
-  if (weekLabels.length > 0) {
-    drawBarChart('canvasHaftalikGecis', weekLabels, [
-      { data: weekValues, color: '#0ea5e9', label: 'Haftalık Geçiş' }
-    ], ver);
+  function makeChart(id, labels, datasets, extra) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    const w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+    const h = Math.min(parent.offsetHeight || 280, parent.clientHeight || 280);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const colors = {
+      text: isDark ? '#e2e8f0' : '#334155',
+      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+      tooltipBg: isDark ? '#1e293b' : '#ffffff',
+      tooltipBorder: isDark ? '#334155' : '#e2e8f0',
+    };
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: datasets.map(d => ({
+          label: d.label,
+          data: d.data,
+          backgroundColor: d.dashed ? d.color + '60' : d.color,
+          borderColor: d.dashed ? d.color + '40' : d.color,
+          borderWidth: d.dashed ? 1 : 0,
+          borderRadius: 6,
+          barPercentage: 0.85,
+          categoryPercentage: 0.8,
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutCubic' },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: colors.text, font: { size: 11, family: 'Inter' } } },
+          tooltip: {
+            backgroundColor: colors.tooltipBg,
+            titleColor: colors.text,
+            bodyColor: colors.text,
+            borderColor: colors.tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            bodyFont: { size: 12, family: 'Inter' },
+            titleFont: { size: 12, family: 'Inter', weight: 'bold' },
+            callbacks: {
+              label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 100 ? Math.round(ctx.parsed.y) : ctx.parsed.y >= 10 ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(2))
+            }
+          },
+          valueLabels: extra && extra.showValues !== false,
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: colors.text, font: { size: 10, family: 'Inter' },
+              maxRotation: labels.length > 20 ? 90 : 0,
+              autoSkip: false,
+              maxTicksLimit: labels.length,
+            },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
+            grid: { color: colors.grid }
+          }
+        },
+        onClick: (e, elements) => {
+          if (elements.length > 0 && extra && extra.onClick) {
+            extra.onClick(labels[elements[0].index]);
+          }
+        }
+      },
+      plugins: [chartValueLabelPlugin]
+    });
+    chartInstances.set(id, chart);
+    return chart;
   }
 
-  // Chart tooltip'leri kur
-  setupChartTooltip('canvasAtik', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
-  ]);
-  setupChartTooltip('canvasYemek', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim Sayısı' }
-  ]);
-  setupChartTooltip('canvasTurnike', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylık Turnike Geçişi' }
-  ]);
-  setupChartTooltip('canvasAylik', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
-  ]);
-  setupChartTooltip('canvasFark', allMonthLabels, [
-    { data: farkData, color: '#8b5cf6', label: 'Üretim - Geçiş Farkı' }
-  ]);
-  setupChartTooltip('canvasAtikOran', allMonthLabels, [
-    { data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }
-  ]);
-  setupChartTooltip('canvasOgrenci', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }
-  ]);
-  setupChartTooltip('canvasKarbon', allMonthLabels, [
-    { data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO₂)' }
-  ]);
-  setupChartTooltip('canvasAtikPerKisi', allMonthLabels, [
-    { data: atikPerKisi, color: '#d946ef', label: 'Kişi Başı Atık (kg/kişi)' }
-  ]);
-  if (weekLabels && weekLabels.length > 0) {
-    setupChartTooltip('canvasHaftalikGecis', weekLabels, [
-      { data: weekValues, color: '#0ea5e9', label: 'Haftalık Geçiş' }
-    ]);
-  }
-
-  // Chart click handlers - every chart gets monthly record filtering
   function getRecordsByLabel(label) {
     const parts = label.split('/');
     if (parts.length === 2) {
@@ -2399,31 +2396,66 @@ function drawAllCharts() {
     }
     return null;
   }
-  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi'].forEach(id => {
-    setupChartClick(id, allMonthLabels, (label) => getRecordsByLabel(label));
+  const clickHandler = (label) => { const r = getRecordsByLabel(label); if (r) showChartDetailModal(label, r); };
+
+  // --- Charts ---
+  makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylik Atik (kg)' }], { onClick: clickHandler });
+  makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim Sayisi' }], { onClick: clickHandler });
+  makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylik Turnike Gecisi' }], { onClick: clickHandler });
+
+  const prevYearAtik = allMonthLabels.map(m => {
+    const [ay, yil] = m.split('/');
+    return getMonthVal(ay + '/' + (parseInt(yil) - 1), 'atik');
   });
-  if (weekLabels && weekLabels.length > 0) {
-    setupChartClick('canvasHaftalikGecis', weekLabels, (label) => getRecordsByLabel(label));
+  const hasPrevYear = prevYearAtik.some(v => v > 0);
+  const aylikSets = [
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylik Gecis' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
+  ];
+  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
+  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler });
+
+  const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
+  makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim - Gecis Farki' }], { onClick: clickHandler });
+
+  const aylikOran = allMonthLabels.map(m => {
+    const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
+    return y > 0 ? (a / y * 100) : 0;
+  });
+  makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylik Atik Orani %' }], { onClick: clickHandler });
+  makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylik Ogrenci Sayisi' }], { onClick: clickHandler });
+
+  const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
+  makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak Izi (kg CO2)' }], { onClick: clickHandler });
+
+  const atikPerKisi = allMonthLabels.map(m => {
+    const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
+    return t > 0 ? a / t : 0;
+  });
+  makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kisi Basi Atik (kg/kisi)' }], { onClick: clickHandler });
+
+  // Weekly
+  const weeklyData = {};
+  sorted.forEach(r => {
+    const d = new Date(r.tarih + 'T00:00:00');
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d); monday.setDate(diff);
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+    const fmt = (date) => date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+    const label = fmt(monday) + ' - ' + fmt(sunday);
+    if (!weeklyData[label]) weeklyData[label] = 0;
+    weeklyData[label] += r.toplam;
+  });
+  const weekLabels = Object.keys(weeklyData);
+  const weekValues = weekLabels.map(l => weeklyData[l]);
+  if (weekLabels.length > 0) {
+    makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
   }
 }
 
-function getCanvasCtx(canvasId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-  const parent = canvas.parentElement;
-  const dpr = window.devicePixelRatio || 1;
-  const w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
-  const h = Math.min(parent.offsetHeight || 280, parent.clientHeight || 280);
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas._w = w;
-  canvas._h = h;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  return ctx;
-}
+
 function getGridColor() {
   return getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || 'rgba(255,255,255,0.05)';
 }
@@ -2465,10 +2497,6 @@ function hexToRgba(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
-// ─── CHART TOOLTIP ────────────────────────────────────────────────────────────
-// Her canvas için tooltip metaverisini sakla
-const chartMetaMap = new Map();
-
 function showChartDetailModal(title, records) {
   const overlay = document.getElementById('modalOverlay');
   const modal = document.getElementById('modal');
@@ -2478,18 +2506,18 @@ function showChartDetailModal(title, records) {
   const body = modal.querySelector('.form-grid');
   if (!body) return;
   if (records.length === 0) {
-    body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-dim)">Bu dönem için kayıt bulunamadı.</div>';
+    body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-dim)">Bu dÃ¶nem iÃ§in kayÄ±t bulunamadÄ±.</div>';
   } else {
     body.innerHTML = `<div style="overflow-x:auto;max-height:400px;overflow-y:auto">
       <table class="data-table" style="min-width:400px">
-        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Yemek Türü</th></tr></thead>
+        <thead><tr><th>Tarih</th><th>Ãœretim</th><th>GeÃ§iÅŸ</th><th>AtÄ±k</th><th>Ã–ÄŸrenci</th><th>Yemek TÃ¼rÃ¼</th></tr></thead>
         <tbody>${records.slice(0, 100).map(r => `<tr>
           <td>${new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR')}</td>
-          <td>${r.yemek || '—'}</td>
-          <td>${r.toplam || '—'}</td>
+          <td>${r.yemek || 'â€”'}</td>
+          <td>${r.toplam || 'â€”'}</td>
           <td>${(r.atik||0).toFixed(1)}</td>
-          <td>${r.ogrenci || '—'}</td>
-          <td>${r.yemek_adi || '—'}</td>
+          <td>${r.ogrenci || 'â€”'}</td>
+          <td>${r.yemek_adi || 'â€”'}</td>
         </tr>`).join('')}</tbody>
       </table>
     </div>`;
@@ -2498,1131 +2526,19 @@ function showChartDetailModal(title, records) {
   overlay.style.display = 'flex';
 }
 
-function setupChartClick(canvasId, labels, getRecordsFn) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  if (canvas.dataset.clickInit) return;
-  canvas.dataset.clickInit = '1';
-  canvas.addEventListener('click', function(e) {
-    const rect = this.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const W = this._w, H = this._h;
-    const pad = { top: 28, right: 24, bottom: 48, left: 64 };
-    const cW = W - pad.left - pad.right;
-    if (my < pad.top || my > H - pad.bottom) return;
-    const n = labels.length;
-    const groupW = cW / n;
-    const gi = Math.round((mx - pad.left) / groupW);
-    if (gi < 0 || gi >= n) return;
-    const groupCenter = pad.left + gi * groupW + groupW / 2;
-    if (Math.abs(mx - groupCenter) > groupW * 0.5) return;
-    const label = labels[gi];
-    const recs = getRecordsFn(label, gi);
-    if (recs) showChartDetailModal(label, recs);
-  });
-}
-
-function setupChartTooltip(canvasId, labels, datasets) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const tipId = canvasId + 'Tooltip';
-  let tip = document.getElementById(tipId);
-  if (!tip) {
-    tip = document.createElement('div');
-    tip.id = tipId;
-    tip.className = 'chart-tooltip';
-    canvas.parentElement.appendChild(tip);
-  }
-  chartMetaMap.set(canvasId, { labels, datasets, tip });
-
-  // Mousemove'i ilk seferde bağla
-  if (!canvas.dataset.tooltipInit) {
-    canvas.dataset.tooltipInit = '1';
-    canvas.addEventListener('mousemove', function(e) {
-      const meta = chartMetaMap.get(this.id);
-      if (!meta || !meta.labels.length) return;
-      const rect = this.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const W = this._w;
-      const H = this._h;
-      const pad = { top: 28, right: 24, bottom: 48, left: 64 };
-      const cW = W - pad.left - pad.right;
-      const n = meta.labels.length;
-      // Grafik alanı dışı (üst/alt boşluk)? Gizle
-      if (my < pad.top || my > H - pad.bottom) { meta.tip.style.display = 'none'; return; }
-      const groupW = cW / n;
-      // Hangi group? En yakın grubu bul, yuvarla
-      const rawIdx = (mx - pad.left) / groupW;
-      const gi = Math.round(rawIdx);
-      if (gi < 0 || gi >= n) { meta.tip.style.display = 'none'; return; }
-      // Her group için geçerli bölge: group'ün %80'i (kenarlarda biraz boşluk)
-      const groupCenter = pad.left + gi * groupW + groupW / 2;
-      if (Math.abs(mx - groupCenter) > groupW * 0.5) { meta.tip.style.display = 'none'; return; }
-      // Değerleri topla
-      const label = meta.labels[gi];
-      const lines = meta.datasets.map(d => {
-        const val = d.data[gi];
-        const text = val !== undefined ? fmt(val) : '—';
-        return `<span style="color:${d.color}">●</span> ${d.label}: <strong>${text}</strong>`;
-      });
-      meta.tip.innerHTML = `<div class="tip-label">${label}</div>` + lines.join('<br>');
-      // Tooltip konumu
-      let tipX = e.clientX - rect.left + 12;
-      let tipY = e.clientY - rect.top - 10;
-      // Taşma kontrolü
-      const tipW = meta.tip.offsetWidth || 120;
-      if (tipX + tipW > W - 8) tipX = e.clientX - rect.left - tipW - 8;
-      meta.tip.style.left = tipX + 'px';
-      meta.tip.style.top = tipY + 'px';
-      meta.tip.style.display = 'block';
-    });
-    canvas.addEventListener('mouseleave', function() {
-      const meta = chartMetaMap.get(this.id);
-      if (meta) meta.tip.style.display = 'none';
-    });
-  }
-}
-
-function drawLineChart(canvasId, labels, datasets) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Gather all values
-  const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(...allVals, 0);
-  const maxV = Math.max(...allVals, 1);
-  const range = maxV - minV || 1;
-
-  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
-
-  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
-  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
-
-  // Grid
-  const gridLines = 5;
-  ctx.strokeStyle = getGridColor();
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= gridLines; i++) {
-    const y = pad.top + (i / gridLines) * cH;
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(W - pad.right, y);
-    ctx.stroke();
-
-    const val = maxV - (i / gridLines) * range;
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.6)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(val.toFixed(val >= 100 ? 0 : 1), pad.left - 6, y + 4);
-  }
-
-  // Datasets
-  datasets.forEach(ds => {
-    if (ds.data.length === 0) return;
-
-    // Gradient fill
-    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-    grad.addColorStop(0, ds.color + '30');
-    grad.addColorStop(1, ds.color + '00');
-
-    ctx.beginPath();
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.lineTo(toX(ds.data.length - 1), H - pad.bottom);
-    ctx.lineTo(toX(0), H - pad.bottom);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Line
-    ctx.beginPath();
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.strokeStyle = ds.color;
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // Dots
-    ds.data.forEach((v, i) => {
-      const x = toX(i), y = toY(v);
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = ds.color;
-      ctx.fill();
-      ctx.strokeStyle = '#0a0f1e';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
-  });
-
-  // X labels
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-  ctx.font = '10px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(labels.length / 10));
-  // Yıl ortalamak için grup bul
-  const yearGroups = {};
-  labels.forEach((l, i) => {
-    const parts = l.split('/');
-    if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-      if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-      yearGroups[parts[1]].push(i);
-    }
-  });
-  labels.forEach((l, i) => {
-    if (i % step === 0 || i === labels.length - 1) {
-      const x = toX(i);
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        ctx.fillText(parts[0], x, H - pad.bottom + 12);
-      } else {
-        ctx.fillText(l, x, H - pad.bottom + 16);
-      }
-    }
-  });
-  // Yılları ortala
-  ctx.font = '8px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-  ctx.textAlign = 'center';
-  for (const [year, indices] of Object.entries(yearGroups)) {
-    const firstX = toX(indices[0]);
-    const lastX = toX(indices[indices.length - 1]);
-    const cx = (firstX + lastX) / 2;
-    ctx.fillText(year, cx, H - pad.bottom + 24);
-  }
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-
-  // Legend
-  const legendX = pad.left;
-  const legendY = 8;
-  datasets.forEach((ds, i) => {
-    const x = legendX + i * 130;
-    ctx.fillStyle = ds.color;
-    ctx.fillRect(x, legendY, 20, 3);
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(226,232,240,0.8)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(ds.label, x + 24, legendY + 6);
-  });
-}
-
-function drawHeartLineChart(canvasId, labels, datasets, ver) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 32, right: 20, bottom: 44, left: 56 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(...allVals, 0);
-  const maxV = Math.max(...allVals, 1);
-  const range = maxV - minV || 1;
-  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
-
-  function toX(i) { return pad.left + (labels.length > 1 ? i * xStep : cW / 2); }
-  function toY(v) { return pad.top + cH - ((v - minV) / range) * cH; }
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  // Smooth control point helper
-  function controlPoints(prev, curr, next, smooth) {
-    const p = prev || curr;
-    const n = next || curr;
-    const d = smooth || 0.25;
-    return {
-      cp1x: curr.x + (p.x - curr.x) * d,
-      cp1y: curr.y + (p.y - curr.y) * d,
-      cp2x: curr.x + (n.x - curr.x) * d,
-      cp2y: curr.y + (n.y - curr.y) * d,
-    };
-  }
-
-  function drawFrame(progress) {
-    ctx.clearRect(0, 0, W, H);
-
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const gridColor = isDark ? 'rgba(148,163,184,0.06)' : 'rgba(0,0,0,0.04)';
-    const textColor = isDark ? 'rgba(148,163,184,0.45)' : 'rgba(100,116,139,0.45)';
-    const axisColor = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(0,0,0,0.1)';
-
-    // Grid (dashed, minimal)
-    ctx.setLineDash([3, 4]);
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 0.5;
-    const gridLines = 4;
-    for (let i = 0; i <= gridLines; i++) {
-      const y = pad.top + (i / gridLines) * cH;
-      ctx.beginPath();
-      ctx.moveTo(pad.left, y);
-      ctx.lineTo(W - pad.right, y);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // Y-axis labels
-    for (let i = 0; i <= gridLines; i++) {
-      const y = pad.top + (i / gridLines) * cH;
-      const val = maxV - (i / gridLines) * range;
-      ctx.fillStyle = textColor;
-      ctx.font = '10px Inter, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      const label = val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val >= 100 ? Math.round(val) + '' : val.toFixed(1);
-      ctx.fillText(label, pad.left - 8, y);
-    }
-
-    // X labels
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = textColor;
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(labels.length / 14));
-    labels.forEach((l, i) => {
-      if (i % step === 0 || i === labels.length - 1) {
-        const parts = l.split('/');
-        ctx.fillText(parts[0], toX(i), H - pad.bottom + 10);
-      }
-    });
-
-    // Year labels
-    const yearGroups = {};
-    labels.forEach((l, i) => {
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-        yearGroups[parts[1]].push(i);
-      }
-    });
-    ctx.font = '9px Inter, sans-serif';
-    ctx.fillStyle = textColor;
-    for (const [year, indices] of Object.entries(yearGroups)) {
-      const cx = (toX(indices[0]) + toX(indices[indices.length - 1])) / 2;
-      ctx.fillText(year, cx, H - pad.bottom + 22);
-    }
-    ctx.textBaseline = 'alphabetic';
-
-    // Bar datasets
-    const barDatasets = datasets.filter(d => d.type === 'bar');
-    const barScale = cH / range;
-    const zeroY = pad.top + maxV * barScale;
-
-    barDatasets.forEach((ds) => {
-      const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
-      const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
-      const barW = Math.min(20, (cW / labels.length) * 0.45);
-
-      ds.data.forEach((v, i) => {
-        const animScale = easeOutCubic(progress);
-        const currentH = v * barScale * animScale;
-        const barTop = zeroY - currentH;
-        const barBottom = zeroY;
-        const x = toX(i) - barW / 2;
-
-        if (currentH < 0.5) return;
-
-        const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
-        grad.addColorStop(0, barColor);
-        grad.addColorStop(1, barColorDarker);
-        ctx.fillStyle = grad;
-
-        const r = Math.min(4, barW / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + r, barTop);
-        ctx.lineTo(x + barW - r, barTop);
-        ctx.quadraticCurveTo(x + barW, barTop, x + barW, barTop + r);
-        ctx.lineTo(x + barW, barBottom);
-        ctx.lineTo(x, barBottom);
-        ctx.lineTo(x, barTop + r);
-        ctx.quadraticCurveTo(x, barTop, x + r, barTop);
-        ctx.closePath();
-        ctx.fill();
-
-        if (progress >= 0.95 && barW >= 8) {
-          ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
-          ctx.font = 'bold 9px Inter, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(fmt(v), x + barW / 2, barTop - 3);
-          ctx.textBaseline = 'alphabetic';
-        }
-      });
-    });
-
-    // Line datasets
-    const lineDatasets = datasets.filter(d => d.type !== 'bar');
-    lineDatasets.forEach((ds) => {
-      const pts = ds.data.map((v, i) => ({ x: toX(i), y: toY(v) }));
-      const drawCount = Math.floor(pts.length * easeOutCubic(progress));
-
-      // Soft gradient fill under line
-      const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-      grad.addColorStop(0, ds.color + '25');
-      grad.addColorStop(0.6, ds.color + '10');
-      grad.addColorStop(1, ds.color + '00');
-
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, H - pad.bottom);
-      ctx.lineTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < drawCount; i++) {
-        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
-        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
-      }
-      ctx.lineTo(pts[Math.max(0, drawCount - 1)].x, H - pad.bottom);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Line
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < drawCount; i++) {
-        const cp = controlPoints(pts[i - 1], pts[i], pts[i + 1] || pts[i], 0.2);
-        ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, pts[i].x, pts[i].y);
-      }
-      ctx.strokeStyle = ds.color;
-      ctx.lineWidth = ds.width || 2.5;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // Dots + labels (only at full progress)
-      if (progress >= 0.95) {
-        for (let i = 0; i < drawCount; i++) {
-          const bgColor = isDark ? '#0f172a' : '#ffffff';
-          ctx.beginPath();
-          ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = bgColor;
-          ctx.fill();
-          ctx.strokeStyle = ds.color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-        // Value labels (last 12 points only to avoid clutter)
-        const labelStep = Math.max(1, Math.floor(drawCount / 12));
-        for (let i = 0; i < drawCount; i += labelStep) {
-          const v = ds.data[i];
-          ctx.font = 'bold 10px Inter, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
-          const labelY = pts[i].y < pad.top + 20 ? pts[i].y + 18 : pts[i].y - 10;
-          ctx.fillText(fmt(v), pts[i].x, labelY);
-        }
-        ctx.textBaseline = 'alphabetic';
-      }
-    });
-
-    // Legend (all datasets)
-    ctx.textBaseline = 'middle';
-    ctx.font = '11px Inter, sans-serif';
-    ctx.textAlign = 'left';
-    datasets.forEach((ds, i) => {
-      const lx = pad.left + i * 140 + 8;
-      const ly = 14;
-      ctx.fillStyle = ds.color;
-      ctx.beginPath();
-      ctx.arc(lx, ly, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = textColor;
-      ctx.fillText(ds.label, lx + 10, ly);
-    });
-    ctx.textBaseline = 'alphabetic';
-  }
-
-  const duration = 1200;
-  const start = performance.now();
-  function animate(now) {
-    if (_chartVer !== ver) return;
-    const t = Math.min(1, (now - start) / duration);
-    drawFrame(t);
-    if (t < 1) requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
-}
-
-function drawBarChart(canvasId, labels, datasets, ver) {
-  const ctx = getCanvasCtx(canvasId);
-  if (!ctx) return;
-  const W = ctx.canvas._w;
-  const H = ctx.canvas._h;
-  const pad = { top: 24, right: 24, bottom: 48, left: 56 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-  const allVals = datasets.flatMap(d => d.data);
-  const minV = Math.min(0, ...allVals);
-  const maxV = Math.max(1, ...allVals);
-  const range = maxV - minV;
-  const n = labels.length;
-  const numDs = datasets.length;
-  const groupW = cW / n;
-  const barW = Math.max(4, (groupW * 0.85) / numDs);
-  const barGap = barW * 0.12;
-
-  const scale = cH / range;
-  const zeroY = pad.top + maxV * scale;
-
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  function drawFrame(progress) {
-    ctx.clearRect(0, 0, W, H);
-
-    // Grid
-    const gridLines = 5;
-    ctx.strokeStyle = getGridColor();
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= gridLines; i++) {
-      const y = pad.top + (i / gridLines) * cH;
-      ctx.beginPath();
-      ctx.moveTo(pad.left, y);
-      ctx.lineTo(W - pad.right, y);
-      ctx.stroke();
-
-      const val = maxV - (i / gridLines) * range;
-      ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-      ctx.font = '10px Inter, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(val >= 100 ? Math.round(val) : val >= 10 ? val.toFixed(1) : val.toFixed(2), pad.left - 6, y + 4);
-    }
-
-    // Zero çizgisi (eğer negatif değer varsa)
-    if (minV < 0) {
-      ctx.strokeStyle = 'rgba(148,163,184,0.25)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(pad.left, zeroY);
-      ctx.lineTo(W - pad.right, zeroY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // Bars
-    datasets.forEach((ds, di) => {
-      const isDashed = ds.dashed;
-      const alpha = isDashed ? '60' : '';
-      const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
-      const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
-      ds.data.forEach((v, gi) => {
-        const animScale = easeOutCubic(progress);
-        const currentH = v * scale * animScale;
-        let barTop, barBottom, barH;
-
-        if (v >= 0) {
-          barH = currentH;
-          barTop = zeroY - barH;
-          barBottom = zeroY;
-        } else {
-          barH = -currentH;
-          barTop = zeroY;
-          barBottom = zeroY + barH;
-        }
-
-        const groupStart = pad.left + gi * groupW + (groupW - numDs * barW - (numDs - 1) * barGap) / 2;
-        const x = groupStart + di * (barW + barGap);
-
-        if (barH < 0.5) return;
-
-        ctx.shadowColor = barColor + '40';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-
-        const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
-        grad.addColorStop(0, barColor);
-        grad.addColorStop(1, barColorDarker);
-        ctx.fillStyle = grad;
-
-        const r = Math.min(6, barW / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + r, barTop);
-        ctx.lineTo(x + barW - r, barTop);
-        ctx.quadraticCurveTo(x + barW, barTop, x + barW, barTop + r);
-        ctx.lineTo(x + barW, barBottom);
-        ctx.lineTo(x, barBottom);
-        ctx.lineTo(x, barTop + r);
-        ctx.quadraticCurveTo(x, barTop, x + r, barTop);
-        ctx.closePath();
-        ctx.fill();
-
-        // Dotted/hatched pattern for "Geçen Yıl" bars
-        if (isDashed && barH > 8) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(x, barTop, barW, barH);
-          ctx.clip();
-          ctx.strokeStyle = hexToRgba(barColorDarker, 0.35);
-          ctx.lineWidth = 1;
-          ctx.setLineDash([3, 4]);
-          for (let sy = barTop; sy < barBottom; sy += 6) {
-            ctx.beginPath();
-            ctx.moveTo(x, sy);
-            ctx.lineTo(x + barW, sy);
-            ctx.stroke();
-          }
-          ctx.setLineDash([]);
-          ctx.restore();
-        }
-
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-
-        if (progress >= 0.95) {
-          ctx.fillStyle = hexToRgba(barColor, 0.35);
-          ctx.fillRect(x + r, barTop + 1, barW - r * 2, 2);
-
-          if (barW >= 10) {
-            ctx.fillStyle = cssVar('--chart-bar-label', 'rgba(255,255,255,0.95)');
-            const textVal = v !== undefined ? fmt(v) : '—';
-
-            let fontSize = 13;
-            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-            let textWidth = ctx.measureText(textVal).width;
-
-            while (textWidth > barW - 2 && fontSize > 9) {
-              fontSize--;
-              ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-              textWidth = ctx.measureText(textVal).width;
-            }
-
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'alphabetic';
-
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = 3;
-            ctx.shadowOffsetY = 1;
-
-            if (barH > fontSize + 10) {
-              ctx.fillText(textVal, x + barW / 2, barTop + fontSize + 4);
-            } else {
-              ctx.shadowColor = 'transparent';
-              ctx.shadowBlur = 0;
-              ctx.shadowOffsetY = 0;
-              ctx.fillStyle = cssVar('--chart-bar-label-outside', 'rgba(226,232,240,0.9)');
-              ctx.fillText(textVal, x + barW / 2, barTop - 6);
-            }
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-          }
-        }
-      });
-    });
-
-    // X labels (tüm çubuklara etiket)
-    const useRotation = groupW < 22;
-    const xStep = useRotation ? Math.max(1, Math.floor(labels.length > 52 ? labels.length / 30 : 1)) : 1;
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    const yearGroups = {};
-    labels.forEach((l, i) => {
-      const parts = l.split('/');
-      if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-        if (!yearGroups[parts[1]]) yearGroups[parts[1]] = [];
-        yearGroups[parts[1]].push(i);
-      }
-    });
-    function truncateLabel(text, maxW) {
-      if (ctx.measureText(text).width <= maxW) return text;
-      let t = text;
-      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) {
-        t = t.slice(0, -1);
-      }
-      return t + '…';
-    }
-    if (useRotation) {
-      labels.forEach((l, i) => {
-        if (i % xStep !== 0 && i !== labels.length - 1) return;
-        const x = pad.left + i * groupW + groupW / 2;
-        const parts = l.split('/');
-        const raw = (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) ? parts[0] : l;
-        ctx.save();
-        ctx.translate(x, H - 6);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = 'left';
-        ctx.fillText(truncateLabel(raw, H - pad.bottom - 12), 0, 0);
-        ctx.restore();
-      });
-    } else {
-      labels.forEach((l, i) => {
-        const x = pad.left + i * groupW + groupW / 2;
-        const parts = l.split('/');
-        const isMonth = parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4;
-        const raw = isMonth ? parts[0] : l;
-        const maxW = Math.max(30, groupW - 2);
-        ctx.fillText(truncateLabel(raw, maxW), x, H - pad.bottom + (isMonth ? 12 : 16));
-      });
-    }
-    ctx.font = '8px Inter, sans-serif';
-    ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
-    ctx.textAlign = 'center';
-    for (const [year, indices] of Object.entries(yearGroups)) {
-      const firstX = pad.left + indices[0] * groupW + groupW / 2;
-      const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
-      const cx = (firstX + lastX) / 2;
-      ctx.fillText(year, cx, H - pad.bottom + 24);
-    }
-    ctx.font = '10px Inter, sans-serif';
-    ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
-
-    // Legend
-    datasets.forEach((ds, i) => {
-      const x = pad.left + i * 130;
-      const y = 10;
-      ctx.beginPath();
-      ctx.arc(x + 8, y + 5, 5, 0, Math.PI * 2);
-      const legendColor = isDark ? lightenColor(ds.color, 60) : ds.color;
-      ctx.fillStyle = legendColor;
-      ctx.fill();
-      ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.7)');
-      ctx.font = '11px Inter, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(ds.label, x + 18, y + 9);
-    });
-  }
-
-  // Animasyon
-  const duration = 900;
-  const start = performance.now();
-  function animate(now) {
-    if (_chartVer !== ver) return;
-    const t = Math.min(1, (now - start) / duration);
-    drawFrame(t);
-    if (t < 1) requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
-}
-
-// Redraw charts on window resize
-window.addEventListener('resize', () => {
-  if (document.getElementById('content-charts').classList.contains('active')) {
-    drawAllCharts();
-  }
-});
-
-// ─── EXPORT CSV ────────────────────────────────────────────────────────────────
-function exportData() {
-  if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
-    return;
-  }
-
-  const headers = [
-    'Tarih',
-    'Üretilen Yemek Sayısı',
-    '%10 Fire',
-    'Turnike Geçiş Sayısı',
-    'Yemekhanede Çalışan Personel Sayısı',
-    'Toplam Geçiş',
-    'Porsiyon Miktarı (gr)',
-    'Atık Miktarı (kg)',
-    'Yemek Hiz. Yar. Öğr. Sayısı',
-    'Yemek Türü'
-  ];
-
-  const rows = records.map(r => [
-    r.tarih,
-    r.yemek,
-    r.fire,
-    r.turnike,
-    r.personel,
-    r.toplam,
-    r.porsiyon,
-    r.atik,
-    r.ogrenci,
-    r.yemek_adi || ''
-  ].map(v => `"${v}"`).join(';'));
-
-  const bom = '\uFEFF';
-  const csvContent = bom + [headers.join(';'), ...rows].join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV dosyası indirildi.', 'success');
-}
-
-// ─── PRINT ─────────────────────────────────────────────────────────────────────
-function printReport() {
-  exportPDF();
-}
-
-// ─── TOAST ─────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const container = document.getElementById('toastContainer');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-
-  const icon = type === 'success'
-    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
-
-  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${escapeHtml(msg)}</span>`;
-  container.appendChild(toast);
-
-  const timer = setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease forwards';
-    setTimeout(() => { try { toast.remove(); } catch(e) {} }, 300);
-  }, 3000);
-  toast._timer = timer;
-}
-
-// ─── KEYBOARD ──────────────────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeSyncPanel(); }
-
-  // Ctrl+N: Yeni kayıt
-  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-    e.preventDefault();
-    if (!document.getElementById('modalOverlay').classList.contains('open')) openModal();
-  }
-  // Ctrl+F: Arama kutusuna odaklan
-  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-    e.preventDefault();
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) { searchInput.focus(); searchInput.select(); }
-  }
-  // Ctrl+E: CSV dışa aktar
-  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-    e.preventDefault();
-    exportData();
-  }
-  // ? : Kısayol yardımı
-  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
-    e.preventDefault();
-    const el = document.getElementById('shortcutsHelp');
-    if (el) el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-  }
-});
-
-// ─── WEEKLY MENU ──────────────────────────────────────────────────────────────
-const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-let menuWeekOffset = 0;
-
-function getWeekStartDate(offset) {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1) + offset * 7;
-  const monday = new Date(now);
-  monday.setDate(diff);
-  return monday;
-}
-
-function formatDateStr(d) {
-  const gun = String(d.getDate()).padStart(2, '0');
-  const ay = String(d.getMonth() + 1).padStart(2, '0');
-  const yil = d.getFullYear();
-  return gun + '.' + ay + '.' + yil;
-}
-
-function loadWeeklyMenu() {
-  try {
-    const stored = localStorage.getItem(MENU_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch (e) { return {}; }
-}
-
-function saveWeeklyMenu() {
-  const monday = getWeekStartDate(menuWeekOffset);
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-
-  const menuData = {};
-  GUNLER.forEach((gun, i) => {
-    const tarih = new Date(monday);
-    tarih.setDate(monday.getDate() + i);
-    const key = formatDateStr(tarih);
-    menuData[key] = {
-      yemekler: [
-        document.getElementById('m0_' + i).value,
-        document.getElementById('m1_' + i).value,
-        document.getElementById('m2_' + i).value,
-        document.getElementById('m3_' + i).value,
-        document.getElementById('m4_' + i).value
-      ],
-      kisi: parseInt(document.getElementById('mk_' + i).value) || 0
-    };
-  });
-
-  const allData = loadWeeklyMenu();
-  allData[weekKey] = menuData;
-  try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData)); } catch (e) {}
-  refreshMenuProduction();
-  syncMenuToGSheet().catch(() => {});
-  showToast('Haftalık menü kaydedildi.', 'success');
-}
-
-function clearWeeklyMenu() {
-  if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
-  GUNLER.forEach((_, i) => {
-    for (let c = 0; c < 5; c++) {
-      const el = document.getElementById('m' + c + '_' + i);
-      if (el) el.value = '';
-    }
-    const kisiEl = document.getElementById('mk_' + i);
-    if (kisiEl) kisiEl.value = '';
-  });
-  refreshMenuProduction();
-  syncMenuToGSheet().catch(() => {});
-  showToast('Menü temizlendi.', 'success');
-}
-
-function shiftMenuWeek(dir) {
-  menuWeekOffset += dir;
-  renderMenu();
-}
-
-function exportMenuPDF() {
-  const monday = getWeekStartDate(menuWeekOffset);
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-
-  const allData = loadWeeklyMenu();
-  const weekData = allData[weekKey] || {};
-  const days = GUNLER.map((gun, i) => {
-    const tarih = new Date(monday);
-    tarih.setDate(monday.getDate() + i);
-    const key = formatDateStr(tarih);
-    const dayData = weekData[key] || { yemekler: ['','','','',''], kisi: 0 };
-    return { gun, key, data: dayData };
-  });
-
-  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
-
-  // Production breakdown for PDF — per-day independent mini-tables
-  const yemekler = loadYemekler();
-  const parseDishName = (val) => val.trim().split('\n')[0].replace(/ - \(.*/, '').trim();
-  const findDish = (name) => {
-    const lower = name.toLowerCase();
-    const exact = yemekler.find(y => y.ad.toLowerCase() === lower);
-    if (exact) return exact;
-    return yemekler.find(y => {
-      const yLower = y.ad.toLowerCase();
-      return yLower.startsWith(lower) || lower.startsWith(yLower);
-    });
-  };
-  const normBirim = (b) => {
-    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
-    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'lt';
-    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
-    return s;
-  };
-  const fmtPdf = (total, birim) => {
-    if (total <= 0) return '—';
-    if (birim === 'gr') return total >= 1000 ? (Math.round(total/10)/100)+' kg' : Math.round(total)+' gr';
-    if (birim === 'ml') return total >= 1000 ? (Math.round(total/10)/100)+' lt' : Math.round(total)+' ml';
-    if (birim === 'lt') return (Math.round(total*100)/100)+' lt';
-    return Math.round(total)+' '+birim;
-  };
-
-  const hasAnyProd = days.some(d => {
-    for (let ci = 0; ci < 5; ci++) {
-      const raw = d.data.yemekler[ci] || '';
-      const name = parseDishName(raw);
-      const dish = name ? findDish(name) : null;
-      if (dish && dish.tarif && dish.tarif.length) return true;
-    }
-    return false;
-  });
-
-  let prodHtml = '';
-  if (hasAnyProd) {
-    prodHtml = `<h3 style="margin-top:30px;font-size:14pt">Ürün İhtiyaç Listesi</h3>${days.map(d => {
-      const kisi = d.data.kisi || 0;
-      let section = `<div class="prod-day-pdf"><div style="border:1px solid #ccc;border-radius:8px">`;
-      section += `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f5f5ff;border-bottom:1px solid #ccc;font-size:12pt;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#666"></span><span style="color:#555">${d.gun}</span><span style="margin-left:auto;font-size:9pt;font-weight:500;color:#888;background:#eee;padding:2px 10px;border-radius:12px">${kisi} kişi</span></div>`;
-      section += `<div style="padding:10px 14px"><div style="display:flex;gap:1rem;flex-wrap:wrap">`;
-      section += `<div style="display:flex;gap:1rem;flex-wrap:wrap">`;
-      for (let ci = 0; ci < 5; ci++) {
-        const raw = d.data.yemekler[ci] || '';
-        const name = parseDishName(raw);
-        if (!name) continue;
-        const dish = findDish(name);
-        section += `<div style="flex:1;min-width:140px"><div style="font-weight:600;margin:0 0 2px 0;white-space:nowrap">${ci+1}. Çeşit: ${escapeHtml(name)}</div>`;
-        if (dish && dish.tarif && dish.tarif.length) {
-          dish.tarif.forEach((ing, idx) => {
-            const mk = ing.miktar_kisi || ing.miktar || 0;
-            const total = mk * kisi;
-            const birim = normBirim(ing.birim);
-            section += `<div style="padding-left:8px;font-size:9pt;line-height:1.7;white-space:nowrap;display:flex;gap:4px"><span style="width:20px;text-align:right;flex-shrink:0">${idx+1}.</span><span style="flex:1">${escapeHtml(ing.malzeme.trim())}</span><span style="width:12px;text-align:center;flex-shrink:0">—</span><span style="width:60px;text-align:right;flex-shrink:0;font-weight:500">${fmtPdf(total, birim)}</span></div>`;
-          });
-        }
-        section += '</div>';
-      }
-      section += '</div></div></div></div>';
-      return section;
-    }).join('')}`;
-  }
-
-  // Weekly total for PDF
-  let weeklyTotalHtml = '';
-  const pdfDishEntries = [];
-  days.forEach(d => {
-    for (let ci = 0; ci < 5; ci++) {
-      const raw = d.data.yemekler[ci] || '';
-      const name = parseDishName(raw);
-      const dish = name ? findDish(name) : null;
-      if (dish && dish.tarif && dish.tarif.length && !pdfDishEntries.find(x => x.ad === dish.ad)) {
-        pdfDishEntries.push(dish);
-      }
-    }
-  });
-  if (pdfDishEntries.length) {
-    const agg = {};
-    pdfDishEntries.forEach(dish => {
-      if (!dish.tarif) return;
-      dish.tarif.forEach(ing => {
-        const mk = ing.miktar_kisi || ing.miktar || 0;
-        const birim = normBirim(ing.birim);
-        const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-        if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, totals: days.map(() => 0) };
-        days.forEach((d, i) => {
-          const kisi = d.data.kisi || 0;
-          const adMatch = d.data.yemekler.find(y => {
-            const t = y.trim().split('\n')[0].replace(/ - \(.*/, '').trim().toLowerCase();
-            return t === dish.ad.toLowerCase() || t.startsWith(dish.ad.toLowerCase()) || dish.ad.toLowerCase().startsWith(t);
-          });
-          if (adMatch) agg[key].totals[i] += kisi * mk;
-        });
-      });
-    });
-    const entries = Object.values(agg);
-    if (entries.length) {
-      weeklyTotalHtml = `<div class="weekly-section"><h3 style="font-size:14pt;margin-bottom:8px">Haftalık Toplam İhtiyaç Listesi</h3>
-      <div style="display:flex;flex-wrap:wrap;gap:4px 32px">${entries.map((e, idx) => {
-        const total = e.totals.reduce((s,v) => s+v, 0);
-        if (total <= 0) return '';
-        return `<div style="display:flex;gap:4px;white-space:nowrap;min-width:140px;font-size:10pt;line-height:1.7"><span style="width:20px;text-align:right;flex-shrink:0;color:#999">${idx+1}.</span><span style="flex:1">${escapeHtml(e.ad)}</span><span style="flex-shrink:0;color:#999">—</span><span style="width:60px;text-align:right;flex-shrink:0;font-weight:600">${fmtPdf(total, e.birim)}</span></div>`;
-      }).filter(Boolean).join('')}</div></div>`;
-    }
-  }
-
-  let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>Menü ${weekKey}</title>
-    <style>
-      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 2cm; color: #1a1a1a; }
-      h2 { text-align: center; font-size: 18pt; margin-bottom: 6px; }
-      table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 12px; }
-      th, td { border: 1px solid #999; padding: 5px 7px; text-align: left; vertical-align: top; }
-      th { background: #f0f0f0; font-weight: 600; text-align: center; }
-      td:first-child { font-weight: 600; white-space: nowrap; }
-      .prod-day-pdf { page-break-inside: avoid; margin-bottom: 20px; }
-      .prod-day-pdf > div { border: 1px solid #ccc; border-radius: 8px; }
-      .weekly-section { page-break-inside: avoid; margin-top: 40px; }
-      .weekly-section h3 { margin-top: 0; }
-      .footer { text-align: center; margin-top: 30px; font-size: 9pt; color: #666; }
-    </style>
-  </head><body>
-    <h2>${weekKey} HAFTALIK MENÜ LİSTESİ</h2>
-    <table>
-      <thead><tr>
-        <th style="width:100px">Çeşit</th>
-        ${days.map(d => `<th>${d.gun}<br><span style="font-weight:400;font-size:9pt;color:#666">${d.key}</span></th>`).join('')}
-      </tr></thead>
-      <tbody>
-        ${cesitler.map((label, ci) => `<tr>
-          <td><strong>${label}</strong></td>
-          ${days.map(d => {
-            const val = d.data.yemekler[ci] || '';
-            return `<td style="white-space:pre-line">${escapeHtml(val)}</td>`;
-          }).join('')}
-        </tr>`).join('')}
-        <tr>
-          <td><strong>Kişi Sayısı</strong></td>
-          ${days.map(d => `<td style="text-align:center">${d.data.kisi || 0}</td>`).join('')}
-        </tr>
-      </tbody>
-    </table>
-    ${prodHtml}
-    ${weeklyTotalHtml}
-    <div class="footer">Bu belge otomatik oluşturulmuştur.</div>
-  </body></html>`;
-
-  const w = window.open('', '_blank');
-  if (!w) { showToast('Pop-up engelleyiciyi kapatın veya manuel yazdırma kullanın.', 'error'); return; }
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  setTimeout(() => { try { w.print(); } catch(e) {} }, 500);
-}
-
-function exportMenuJSON() {
-  const allData = loadWeeklyMenu();
-  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'menu_verisi_' + new Date().toISOString().slice(0,10) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
-  showToast('Menü JSON dosyası indirildi.', 'success');
-}
-
-function importMenuJSON(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
-      menuWeekOffset = 0;
-      renderMenu();
-      syncMenuToGSheet().catch(() => {});
-      showToast('Menü JSON dosyası yüklendi.', 'success');
-    } catch (err) {
-      showToast('JSON dosyası okunamadı: ' + err.message, 'error');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
 function renderMenu() {
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
 
-  document.getElementById('menuWeekLabel').textContent = weekKey + ' MENÜ LİSTESİ';
-  document.getElementById('menuTitle').textContent = weekKey + ' MENÜ LİSTESİ';
+  document.getElementById('menuWeekLabel').textContent = weekKey + ' MENÃœ LÄ°STESÄ°';
+  document.getElementById('menuTitle').textContent = weekKey + ' MENÃœ LÄ°STESÄ°';
 
   const allData = loadWeeklyMenu();
   const weekData = allData[weekKey] || {};
 
-  // Gün verilerini topla
+  // GÃ¼n verilerini topla
   const days = GUNLER.map((gun, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
@@ -3631,21 +2547,21 @@ function renderMenu() {
     return { gun, key, data: dayData };
   });
 
-  // Başlık satırı
+  // BaÅŸlÄ±k satÄ±rÄ±
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
-    <th style="width:100px">Çeşit</th>
+    <th style="width:100px">Ã‡eÅŸit</th>
     ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${escapeHtml(d.key)}</span></th>`).join('')}
   </tr>`;
 
-  // Cache henüz dolmamışsa 500ms sonra tekrar dene
+  // Cache henÃ¼z dolmamÄ±ÅŸsa 500ms sonra tekrar dene
   if (!yemeklerCache.length) {
     if (window._menuRetryTimer) clearTimeout(window._menuRetryTimer);
     window._menuRetryTimer = setTimeout(refreshMenuProduction, 500);
   }
 
-  // Gövde: her çeşit için bir satır + kişi sayısı satırı
-  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  // GÃ¶vde: her Ã§eÅŸit iÃ§in bir satÄ±r + kiÅŸi sayÄ±sÄ± satÄ±rÄ±
+  const cesitler = ['1. Ã‡eÅŸit', '2. Ã‡eÅŸit', '3. Ã‡eÅŸit', '4. Ã‡eÅŸit', '5. Ã‡eÅŸit'];
   const tbody = document.getElementById('menuTbody');
   tbody.innerHTML = cesitler.map((label, ci) => {
     return `<tr>
@@ -3656,7 +2572,7 @@ function renderMenu() {
       }).join('')}
     </tr>`;
   }).join('') + `<tr>
-    <td><strong>Kişi Sayısı</strong></td>
+    <td><strong>KiÅŸi SayÄ±sÄ±</strong></td>
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" /></td>`;
     }).join('')}
