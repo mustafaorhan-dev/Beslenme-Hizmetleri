@@ -2165,10 +2165,12 @@ function drawAllCharts() {
   // Varsayılan: veri varsa onu kullan, yoksa 0
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
 
-  // Kalp grafiği (neon çizgi) — Üretim Trendi
+  // Kalp grafiği (neon çizgi + bar) — Üretim / Geçiş / Atık Trendi
   const ver = _chartVer;
   drawHeartLineChart('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' }
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim', type: 'line' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#ef4444', label: 'Aylık Geçiş', type: 'line' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)', type: 'bar' }
   ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
@@ -2222,7 +2224,9 @@ function drawAllCharts() {
 
   // Chart tooltip'leri kur
   setupChartTooltip('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' }
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#22c55e', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#ef4444', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }
   ]);
   setupChartTooltip('canvasAtik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
@@ -2598,8 +2602,68 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
       ctx.fillText(year, cx, H - pad.bottom + 24);
     }
 
-    // Datasets
-    datasets.forEach((ds, dsIdx) => {
+    // Bar datasets
+    const barDatasets = datasets.filter(d => d.type === 'bar');
+    const barScale = cH / range;
+    const zeroY = pad.top + maxV * barScale;
+
+    barDatasets.forEach((ds) => {
+      const barColor = isDark ? lightenColor(ds.color, 60) : ds.color;
+      const barColorDarker = isDark ? lightenColor(ds.color, 30) : darkenColor(ds.color, 25);
+      const barW = Math.min(28, (cW / labels.length) * 0.55);
+
+      ds.data.forEach((v, i) => {
+        const animScale = easeOutCubic(progress);
+        const currentH = v * barScale * animScale;
+        const barTop = zeroY - currentH;
+        const barBottom = zeroY;
+        const x = toX(i) - barW / 2;
+
+        if (currentH < 0.5) return;
+
+        ctx.shadowColor = barColor + '40';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 2;
+
+        const grad = ctx.createLinearGradient(0, barTop, 0, barBottom);
+        grad.addColorStop(0, barColor);
+        grad.addColorStop(1, barColorDarker);
+        ctx.fillStyle = grad;
+
+        const r = Math.min(6, barW / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, barTop);
+        ctx.lineTo(x + barW - r, barTop);
+        ctx.quadraticCurveTo(x + barW, barTop, x + barW, barTop + r);
+        ctx.lineTo(x + barW, barBottom);
+        ctx.lineTo(x, barBottom);
+        ctx.lineTo(x, barTop + r);
+        ctx.quadraticCurveTo(x, barTop, x + r, barTop);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        if (progress >= 0.95) {
+          ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
+          ctx.font = 'bold 10px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = 'rgba(0,0,0,0.3)';
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetY = 1;
+          ctx.fillText(v >= 100 ? Math.round(v) : v.toFixed(1), x + barW / 2, barTop - 8);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+        }
+      });
+    });
+
+    // Line datasets
+    const lineDatasets = datasets.filter(d => d.type !== 'bar');
+    lineDatasets.forEach((ds, dsIdx) => {
       const pts = ds.data.map((v, i) => ({ x: toX(i), y: toY(v) }));
       const drawCount = Math.floor(pts.length * easeOutCubic(progress));
 
@@ -2663,15 +2727,19 @@ function drawHeartLineChart(canvasId, labels, datasets, ver) {
         ctx.shadowBlur = 0;
       }
 
-      // Legend
-      ctx.font = '10px Inter, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillStyle = ds.color;
+    });
+
+    // Legend (all datasets)
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    datasets.forEach((ds, i) => {
+      const legendColor = isDark ? lightenColor(ds.color, 60) : ds.color;
+      ctx.fillStyle = legendColor;
       ctx.beginPath();
-      ctx.arc(pad.left + dsIdx * 130 + 8, 12, 5, 0, Math.PI * 2);
+      ctx.arc(pad.left + i * 130 + 8, 12, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = textColor;
-      ctx.fillText(ds.label, pad.left + dsIdx * 130 + 18, 16);
+      ctx.fillText(ds.label, pad.left + i * 130 + 18, 16);
     });
   }
 
