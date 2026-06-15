@@ -2203,10 +2203,13 @@ const chartValueLabelPlugin = {
   id: 'valueLabels',
   afterDraw(chart) {
     if (!chart.options.plugins.valueLabels) return;
+    const active = chart.getActiveElements();
+    const skipSet = new Set(active.map(e => e.datasetIndex + ':' + e.index));
     const ctx = chart.ctx;
     chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
+        if (skipSet.has(di + ':' + idx)) return;
         const val = ds.data[idx];
         if (val === undefined || val === null) return;
         ctx.fillStyle = chart.options.plugins.legend.labels.color || '#334155';
@@ -2333,7 +2336,6 @@ function drawAllCharts() {
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
-            yAlign: 'top',
             bodyFont: { size: 13, family: 'Inter' },
             titleFont: { size: 14, family: 'Inter', weight: 'bold' },
             callbacks: {
