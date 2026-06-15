@@ -2116,11 +2116,11 @@ function drawAllCharts() {
   }
 
   if (chartRecords.length === 0) {
-  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
+  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'block';
     });
-  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2128,11 +2128,11 @@ function drawAllCharts() {
   }
 
   // Show canvases, hide empties
-  ['chartHeartEmpty','chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
+  ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  ['canvasHeart','canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
+  ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
   });
@@ -2165,15 +2165,8 @@ function drawAllCharts() {
   // Varsayılan: veri varsa onu kullan, yoksa 0
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
 
-  // Kalp grafiği (neon çizgi + bar) — Üretim / Geçiş / Atık Trendi
   const ver = _chartVer;
   const karbonDataHeart = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  drawHeartLineChart('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim', type: 'line', width: 3 },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş', type: 'line', width: 2.5 },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)', type: 'line', width: 2.5 },
-    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)', type: 'line', width: 2 }
-  ], ver);
 
   // Aylık Atık (canvasAtik) — tüm 12 ay göster
   drawBarChart('canvasAtik', allMonthLabels, [
@@ -2225,12 +2218,6 @@ function drawAllCharts() {
   ], ver);
 
   // Chart tooltip'leri kur
-  setupChartTooltip('canvasHeart', allMonthLabels, [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#10b981', label: 'Aylık Üretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#f43f5e', label: 'Aylık Geçiş' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' },
-    { data: karbonDataHeart, color: '#6366f1', label: 'Karbon Ayak İzi (kg CO₂)' }
-  ]);
   setupChartTooltip('canvasAtik', allMonthLabels, [
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' }
   ]);
