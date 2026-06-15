@@ -2203,7 +2203,7 @@ const chartValueLabelPlugin = {
   id: 'valueLabels',
   afterDraw(chart) {
     if (!chart.options.plugins.valueLabels) return;
-    if (chart.getActiveElements().length > 0) return;
+    if (chart.tooltip && chart.tooltip.opacity > 0) return;
     const ctx = chart.ctx;
     chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
