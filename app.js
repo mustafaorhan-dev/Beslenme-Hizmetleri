@@ -2493,3 +2493,137 @@ function renderMenu() {
   </tr>`;
   renderProduction(weekKey, weekData, days);
 }
+
+// ─── MENU HELPERS ──────────────────────────────────────────────────────────
+const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+let menuWeekOffset = 0;
+
+function formatDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getWeekStartDate(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1) + offset * 7;
+  const monday = new Date(now);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function loadWeeklyMenu() {
+  try {
+    const stored = localStorage.getItem(MENU_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveWeeklyMenu() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+  const allData = loadWeeklyMenu();
+  const weekData = {};
+  GUNLER.forEach((_, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    const yemekler = [];
+    for (let c = 0; c < 5; c++) {
+      const el = document.getElementById('m' + c + '_' + i);
+      yemekler.push(el ? el.value : '');
+    }
+    const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
+    weekData[key] = { yemekler, kisi };
+  });
+  allData[weekKey] = weekData;
+  try {
+    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(allData));
+  } catch (e) {}
+  showToast('Menü kaydedildi.', 'success');
+  syncMenuToGSheet();
+}
+
+function shiftMenuWeek(delta) {
+  menuWeekOffset += delta;
+  renderMenu();
+}
+
+function clearWeeklyMenu() {
+  if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
+  const monday = getWeekStartDate(menuWeekOffset);
+  GUNLER.forEach((_, i) => {
+    for (let c = 0; c < 5; c++) {
+      const el = document.getElementById('m' + c + '_' + i);
+      if (el) el.value = '';
+    }
+    const el = document.getElementById('mk_' + i);
+    if (el) el.value = '0';
+  });
+  refreshMenuProduction();
+  showToast('Menü temizlendi.', 'success');
+}
+
+function exportMenuJSON() {
+  const allData = loadWeeklyMenu();
+  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `menu_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('Menü JSON olarak indirildi.', 'success');
+}
+
+function importMenuJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(data));
+      renderMenu();
+      showToast('Menü yüklendi.', 'success');
+    } catch (err) {
+      showToast('Menü yükleme hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function exportMenuPDF() {
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  const menuHtml = document.querySelector('#content-menu .section-card')?.outerHTML || '<p>Menü yok</p>';
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Haftalık Menü</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+      .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
+      .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
+      .menu-date-nav, .btn, .toolbar-actions, .menu-hint, #productionSection { display: none; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+    </style>
+  </head><body>
+    <h1>Haftalık Menü Listesi</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${menuHtml}
+    <div class="footer">Yemekhane Menü ve Atık Yönetim Sistemi</div>
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
