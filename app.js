@@ -874,88 +874,6 @@ function deleteRecord(id) {
   showToast('Kayıt silindi.', 'success');
 }
 
-// ─── FILTER ────────────────────────────────────────────────────────────────────
-function populateYemekTuruFilter() {
-  const selects = document.querySelectorAll('.col-filter[data-field="yemek_adi"]');
-  const turler = [...new Set(records.map(r => r.yemek_adi).filter(Boolean))].sort();
-  const opts = '<option value="">Tümü</option>' + turler.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
-  selects.forEach(s => { const v = s.value; s.innerHTML = opts; s.value = v; });
-}
-
-function filterRecords() {
-  const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  const start = document.getElementById('filterStart').value;
-  const end = document.getElementById('filterEnd').value;
-  const yemekTuru = document.getElementById('filterYemekTuru').value;
-
-  // Collect per-column filters
-  const colFilters = {};
-  document.querySelectorAll('.col-filter').forEach(el => {
-    const field = el.dataset.field;
-    if (!field || !el.value) return;
-    if (field.endsWith('_max')) {
-      const base = field.replace('_max', '');
-      if (!colFilters[base]) colFilters[base] = {};
-      colFilters[base].max = parseFloat(el.value);
-    } else {
-      if (!colFilters[field]) colFilters[field] = {};
-      colFilters[field].val = el.value;
-    }
-  });
-
-  filteredRecords = records.filter(r => {
-    const tarihStr = r.tarih ? (() => {
-      const d = new Date(r.tarih + 'T00:00:00');
-      if (isNaN(d)) return r.tarih;
-      const gun = String(d.getDate()).padStart(2, '0');
-      const ay = String(d.getMonth() + 1).padStart(2, '0');
-      const yil = d.getFullYear();
-      return [gun + '.' + ay + '.' + yil, gun + '.' + ay, gun, ay + '.' + yil, yil].join(' ');
-    })() : '';
-    const matchQuery = !query ||
-      r.tarih.includes(query) ||
-      tarihStr.includes(query) ||
-      String(r.yemek).includes(query) ||
-      String(r.atik).includes(query) ||
-      String(r.ogrenci).includes(query) ||
-      (r.yemek_adi || '').toLowerCase().includes(query);
-    const matchStart = !start || r.tarih >= start;
-    const matchEnd = !end || r.tarih <= end;
-    const matchYemek = !yemekTuru || (r.yemek_adi || '') === yemekTuru;
-
-    // Per-column filter matching
-    let matchCol = true;
-    for (const [field, f] of Object.entries(colFilters)) {
-      const val = r[field];
-      if (val === undefined || val === null) { matchCol = false; break; }
-      if (field === 'tarih') {
-        if (!String(r.tarih).includes(f.val)) { matchCol = false; break; }
-      } else {
-        if (f.val !== undefined && f.val !== '' && parseFloat(f.val) !== val) { matchCol = false; break; }
-        if (f.max !== undefined && !isNaN(f.max) && val > f.max) { matchCol = false; break; }
-      }
-    }
-    return matchQuery && matchStart && matchEnd && matchYemek && matchCol;
-  });
-
-  filteredRecords = sortRecords(filteredRecords);
-  currentPage = 1;
-  renderRecordsTable();
-}
-
-function clearFilters() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('filterStart').value = '';
-  document.getElementById('filterEnd').value = '';
-  const sel = document.getElementById('filterYemekTuru');
-  if (sel) sel.value = '';
-  document.querySelectorAll('.col-filter').forEach(el => { el.value = ''; });
-  filteredRecords = [...records];
-  currentPage = 1;
-  sortField = 'tarih'; sortDir = -1;
-  renderRecordsTable();
-}
-
 // ─── SORT ──────────────────────────────────────────────────────────────────────
 let sortField = 'tarih';
 let sortDir = -1; // -1 = desc, 1 = asc
@@ -1240,7 +1158,6 @@ function renderAll() {
   renderTodaySummary();
   renderDataInfo();
   renderLastRecordsTable();
-  populateYemekTuruFilter();
   renderRecordsTable();
   renderReport();
   renderSparklines();
@@ -1392,16 +1309,12 @@ function renderRecordsTable() {
   if (filteredRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
-    document.getElementById('emptyRecordsMsg').textContent = records.length === 0
-      ? 'Gösterilecek kayıt bulunamadı.'
-      : 'Arama kriterlerine uygun kayıt bulunamadı.';
-    document.getElementById('emptyClearFilter').style.display = records.length > 0 ? 'inline-flex' : 'none';
+    document.getElementById('emptyRecordsMsg').textContent = 'Gösterilecek kayıt bulunamadı.';
     renderPagination();
     return;
   }
 
   empty.style.display = 'none';
-  document.getElementById('emptyClearFilter').style.display = 'none';
   table.style.display = 'table';
   const page = getPaginatedRecords();
   tbody.innerHTML = page.map(r => buildRow(r, true)).join('');
@@ -2321,6 +2234,7 @@ function drawAllCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
         animation: { duration: 900, easing: 'easeOutCubic' },
         interaction: { mode: 'index', intersect: false },
         plugins: {

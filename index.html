@@ -286,21 +286,6 @@
     <!-- ===== RECORDS TAB ===== -->
     <div class="tab-content" id="content-records">
       <div class="toolbar">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input type="text" id="searchInput" placeholder="Kayıt ara... (Ctrl+F)" oninput="filterRecords()" />
-        </div>
-        <div class="filter-group">
-          <label>Tarih Aralığı:</label>
-          <input type="date" id="filterStart" onchange="filterRecords()" />
-          <span>—</span>
-          <input type="date" id="filterEnd" onchange="filterRecords()" />
-          <label style="margin-left:0.75rem">Yemek Türü:</label>
-          <select id="filterYemekTuru" onchange="filterRecords()" style="padding:0.25rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.8rem">
-            <option value="">Tümü</option>
-          </select>
-          <button class="btn btn-ghost" onclick="clearFilters()">Temizle</button>
-        </div>
         <div class="toolbar-actions">
           <button class="btn btn-secondary btn-sm" onclick="triggerImport()" title="CSV veya JSON içe aktar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -321,7 +306,6 @@
               <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
             </svg>
             <p id="emptyRecordsMsg">Gösterilecek kayıt bulunamadı.</p>
-            <button class="btn btn-ghost btn-sm" onclick="clearFilters()" id="emptyClearFilter" style="display:none">Filtreyi Temizle</button>
           </div>
           <div class="bulk-bar" id="bulkBar" style="display:none">
             <span id="bulkCount">0 seçili</span>
@@ -346,20 +330,7 @@
                 <th data-field="yemek_adi" onclick="toggleSort('yemek_adi')" style="cursor:pointer">Yemek Türü</th>
                 <th>İşlem</th>
               </tr>
-              <tr class="filter-row">
-                <th></th>
-                <th><input type="text" class="col-filter" data-field="tarih" placeholder="Gün/Ay/Yıl" oninput="filterRecords()" /></th>
-                <th><input type="number" class="col-filter" data-field="yemek" placeholder="min" oninput="filterRecords()" style="width:48%"/><input type="number" class="col-filter" data-field="yemek_max" placeholder="maks" oninput="filterRecords()" style="width:48%" /></th>
-                <th></th>
-                <th><input type="number" class="col-filter" data-field="turnike" placeholder="min" oninput="filterRecords()" style="width:48%"/><input type="number" class="col-filter" data-field="turnike_max" placeholder="maks" oninput="filterRecords()" style="width:48%" /></th>
-                <th></th>
-                <th><input type="number" class="col-filter" data-field="toplam" placeholder="min" oninput="filterRecords()" style="width:48%"/><input type="number" class="col-filter" data-field="toplam_max" placeholder="maks" oninput="filterRecords()" style="width:48%" /></th>
-                <th></th>
-                <th><input type="number" class="col-filter" data-field="atik" placeholder="min" oninput="filterRecords()" style="width:48%"/><input type="number" class="col-filter" data-field="atik_max" placeholder="maks" oninput="filterRecords()" style="width:48%" /></th>
-                <th><input type="number" class="col-filter" data-field="ogrenci" placeholder="min" oninput="filterRecords()" style="width:48%"/><input type="number" class="col-filter" data-field="ogrenci_max" placeholder="maks" oninput="filterRecords()" style="width:48%" /></th>
-                <th><select class="col-filter" data-field="yemek_adi" onchange="filterRecords()" style="width:100%"><option value="">Tümü</option></select></th>
-                <th></th>
-              </tr>
+
             </thead>
             <tbody id="recordsTbody"></tbody>
           </table>
@@ -792,7 +763,6 @@
       </div>
       <div class="shortcuts-body">
         <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>N</kbd><span>Yeni kayıt ekle</span></div>
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Arama kutusuna odaklan</span></div>
         <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>E</kbd><span>CSV dışa aktar</span></div>
         <div class="shortcut-row"><kbd>Esc</kbd><span>Formu / paneli kapat</span></div>
         <div class="shortcut-row"><kbd>?</kbd><span>Bu yardımı göster/gizle</span></div>

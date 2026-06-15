@@ -745,30 +745,6 @@ body {
 }
 .search-box input::placeholder { color: var(--text-muted); }
 
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  flex-wrap: wrap;
-}
-
-.filter-group input[type="date"] {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: var(--font);
-  font-size: 0.82rem;
-  padding: 0.45rem 0.7rem;
-  cursor: pointer;
-  outline: none;
-  transition: border-color var(--transition);
-  color-scheme: var(--color-scheme, dark);
-}
-.filter-group input[type="date"]:focus { border-color: var(--accent-cyan); }
-
 /* ---- TABLE ---- */
 .table-wrapper {
   overflow-x: auto;
@@ -808,14 +784,6 @@ body {
 .data-table tr:last-child td { border-bottom: none; }
 
 .data-table td:first-child { color: var(--text-primary); font-weight: 500; }
-.filter-row th { padding: 0.25rem 0.3rem !important; vertical-align: top; }
-.col-filter {
-  padding: 0.2rem 0.35rem; border: 1px solid var(--border); border-radius: 4px;
-  background: var(--bg-input); color: var(--text-primary); font-size: 0.7rem;
-  box-sizing: border-box; outline: none; transition: border-color 0.2s;
-}
-.col-filter:focus { border-color: var(--accent); }
-
 .td-atik { color: var(--accent-orange) !important; font-weight: 600; }
 .td-gecis { color: var(--accent-green) !important; font-weight: 600; }
 
