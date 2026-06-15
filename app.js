@@ -2940,11 +2940,12 @@ function drawBarChart(canvasId, labels, datasets, ver) {
       });
     });
 
-    // X labels
+    // X labels (tüm çubuklara etiket)
+    const useRotation = groupW < 22;
+    const xStep = useRotation ? Math.max(1, Math.floor(labels.length > 52 ? labels.length / 30 : 1)) : 1;
     ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
     ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(labels.length / 10));
     const yearGroups = {};
     labels.forEach((l, i) => {
       const parts = l.split('/');
@@ -2953,26 +2954,37 @@ function drawBarChart(canvasId, labels, datasets, ver) {
         yearGroups[parts[1]].push(i);
       }
     });
-    const maxLabelW = Math.max(40, groupW * step - 4);
-    function truncateLabel(text) {
-      if (ctx.measureText(text).width <= maxLabelW) return text;
+    function truncateLabel(text, maxW) {
+      if (ctx.measureText(text).width <= maxW) return text;
       let t = text;
-      while (t.length > 1 && ctx.measureText(t + '…').width > maxLabelW) {
+      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) {
         t = t.slice(0, -1);
       }
       return t + '…';
     }
-    labels.forEach((l, i) => {
-      if (i % step === 0 || i === labels.length - 1) {
+    if (useRotation) {
+      labels.forEach((l, i) => {
+        if (i % xStep !== 0 && i !== labels.length - 1) return;
         const x = pad.left + i * groupW + groupW / 2;
         const parts = l.split('/');
-        if (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) {
-          ctx.fillText(truncateLabel(parts[0]), x, H - pad.bottom + 12);
-        } else {
-          ctx.fillText(truncateLabel(l), x, H - pad.bottom + 16);
-        }
-      }
-    });
+        const raw = (parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4) ? parts[0] : l;
+        ctx.save();
+        ctx.translate(x, H - 6);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'left';
+        ctx.fillText(truncateLabel(raw, H - pad.bottom - 12), 0, 0);
+        ctx.restore();
+      });
+    } else {
+      labels.forEach((l, i) => {
+        const x = pad.left + i * groupW + groupW / 2;
+        const parts = l.split('/');
+        const isMonth = parts.length === 2 && !isNaN(parts[0]) && parts[1].length === 4;
+        const raw = isMonth ? parts[0] : l;
+        const maxW = Math.max(30, groupW - 2);
+        ctx.fillText(truncateLabel(raw, maxW), x, H - pad.bottom + (isMonth ? 12 : 16));
+      });
+    }
     ctx.font = '8px Inter, sans-serif';
     ctx.fillStyle = cssVar('--chart-text-dim', 'rgba(148,163,184,0.5)');
     ctx.textAlign = 'center';
@@ -2980,7 +2992,7 @@ function drawBarChart(canvasId, labels, datasets, ver) {
       const firstX = pad.left + indices[0] * groupW + groupW / 2;
       const lastX = pad.left + indices[indices.length - 1] * groupW + groupW / 2;
       const cx = (firstX + lastX) / 2;
-      ctx.fillText(truncateLabel(year), cx, H - pad.bottom + 24);
+      ctx.fillText(year, cx, H - pad.bottom + 24);
     }
     ctx.font = '10px Inter, sans-serif';
     ctx.fillStyle = cssVar('--chart-text', 'rgba(148,163,184,0.7)');
