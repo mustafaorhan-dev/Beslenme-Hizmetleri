@@ -59,7 +59,7 @@ function doLogout() {
   location.reload();
 }
 
-const LOGIN_PASSWORD = '4056';
+const LOGIN_PASSWORD = '2525';
 
 function doLogin() {
   const input = document.getElementById('loginPassword');
@@ -2119,7 +2119,7 @@ const chartValueLabelPlugin = {
         const val = ds.data[idx];
         if (val === undefined || val === null) return;
         ctx.fillStyle = chart.options.plugins.legend.labels.color || '#334155';
-        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.font = 'bold 11px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
@@ -2207,24 +2207,30 @@ function drawAllCharts() {
     const ctx = canvas.getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const colors = {
-      text: isDark ? '#e2e8f0' : '#334155',
+      text: isDark ? '#e2e8f0' : '#1e293b',
       grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-      tooltipBg: isDark ? '#1e293b' : '#ffffff',
-      tooltipBorder: isDark ? '#334155' : '#e2e8f0',
+      tooltipBg: '#000000',
+      tooltipBorder: 'rgba(255,255,255,0.2)',
     };
+    const chartType = extra?.type || 'bar';
+    const isLine = chartType === 'line';
     const chart = new Chart(ctx, {
-      type: 'bar',
+      type: chartType,
       data: {
         labels,
         datasets: datasets.map(d => ({
           label: d.label,
           data: d.data,
-          backgroundColor: d.dashed ? d.color + '60' : d.color,
-          borderColor: d.dashed ? d.color + '40' : d.color,
-          borderWidth: d.dashed ? 1 : 0,
-          borderRadius: 6,
-          barPercentage: 0.85,
-          categoryPercentage: 0.8,
+          backgroundColor: isLine ? d.color + '20' : (d.dashed ? d.color + '60' : d.color),
+          borderColor: d.color,
+          borderWidth: isLine ? 2 : (d.dashed ? 1 : 0),
+          borderRadius: isLine ? 0 : 6,
+          barPercentage: isLine ? undefined : 0.85,
+          categoryPercentage: isLine ? undefined : 0.8,
+          pointRadius: isLine ? 3 : undefined,
+          pointHoverRadius: isLine ? 5 : undefined,
+          fill: isLine ? true : undefined,
+          tension: isLine ? 0.3 : undefined,
         }))
       },
       options: {
@@ -2237,14 +2243,16 @@ function drawAllCharts() {
           legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
           tooltip: {
             backgroundColor: colors.tooltipBg,
-            titleColor: colors.text,
-            bodyColor: colors.text,
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
             borderColor: colors.tooltipBorder,
             borderWidth: 1,
-            padding: 12,
+            padding: 10,
             cornerRadius: 8,
-            bodyFont: { size: 13, family: 'Inter' },
-            titleFont: { size: 14, family: 'Inter', weight: 'bold' },
+            caretPadding: 4,
+            caretSize: 5,
+            bodyFont: { size: 11, family: 'Inter' },
+            titleFont: { size: 11, family: 'Inter', weight: 'bold' },
             callbacks: {
               label: ctx => ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y >= 100 ? Math.round(ctx.parsed.y) : ctx.parsed.y >= 10 ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(2))
             }
@@ -2276,6 +2284,45 @@ function drawAllCharts() {
       plugins: [chartValueLabelPlugin]
     });
     chartInstances.set(id, chart);
+
+    // Force tooltip styles via MutationObserver (Chart.js overrides inline styles on hover)
+    const forceTooltip = () => {
+      const tooltipEl = document.getElementById('chartjs-tooltip-' + chart.id);
+      if (tooltipEl) {
+        tooltipEl.style.setProperty('background', '#000000', 'important');
+        tooltipEl.style.setProperty('color', '#ffffff', 'important');
+        tooltipEl.style.setProperty('opacity', '1', 'important');
+      }
+    };
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'childList' && m.addedNodes.length) {
+          for (const node of m.addedNodes) {
+            if (node.id && node.id.startsWith('chartjs-tooltip')) {
+              const el = node;
+              el.style.setProperty('background', '#000000', 'important');
+              el.style.setProperty('color', '#ffffff', 'important');
+              el.style.setProperty('opacity', '1', 'important');
+              el.style.setProperty('transition', 'none', 'important');
+              el.style.setProperty('backdrop-filter', 'blur(20px)', 'important');
+              el.style.setProperty('-webkit-backdrop-filter', 'blur(20px)', 'important');
+              el.style.setProperty('box-shadow', '0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)', 'important');
+              el.style.setProperty('border', '1px solid rgba(255,255,255,0.2)', 'important');
+              el.style.setProperty('z-index', '1000', 'important');
+            }
+          }
+        }
+        if (m.type === 'attributes' && m.attributeName === 'style' && m.target.id && m.target.id.startsWith('chartjs-tooltip')) {
+          m.target.style.setProperty('opacity', '1', 'important');
+        }
+      }
+    });
+    observer.observe(parent, { childList: true, subtree: false, attributes: true, attributeFilter: ['style'] });
+
+    // Initial attempt
+    setTimeout(forceTooltip, 100);
+    setTimeout(forceTooltip, 500);
+
     return chart;
   }
 
@@ -2324,7 +2371,7 @@ function drawAllCharts() {
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
   ];
   if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
-  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler });
+  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'line' });
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
   makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim - Gecis Farki' }], { onClick: clickHandler });
