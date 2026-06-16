@@ -867,17 +867,32 @@ function deleteHaccpRecord(type, id) {
   showToast('Kayıt silindi.', 'success');
 }
 
+function haccpSettingsRowHtml(d, i) {
+  const ad = d.ad || ('Depo ' + (i + 1));
+  const min = d.min != null ? d.min : 0;
+  const max = d.max != null ? d.max : 4;
+  return `<div class="hsett-row" data-idx="${i}" style="display:grid;grid-template-columns:1fr 80px 80px auto;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+    <input type="text" class="hsett-ad" value="${ad}" placeholder="Depo adı" style="width:100%" />
+    <input type="number" class="hsett-min" value="${min}" step="1" placeholder="Min" style="width:70px;text-align:center" title="Min sıcaklık" />
+    <input type="number" class="hsett-max" value="${max}" step="1" placeholder="Max" style="width:70px;text-align:center" title="Max sıcaklık" />
+    <button type="button" class="btn-icon hsett-del" onclick="this.closest('.hsett-row').remove()" title="Kaldır" style="color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+  </div>`;
+}
+
 function showHaccpSettings() {
   const config = loadHaccpConfig();
   const body = document.getElementById('haccpSettingsBody');
   body.innerHTML = `<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem">Her depo için ad ve sıcaklık aralığını ayarlayın:</p>
-    ${config.map((d, i) => `<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
-      <input type="text" id="hsett_ad_${i}" value="${d.ad}" placeholder="Depo adı" style="width:100%" />
-      <input type="number" id="hsett_min_${i}" value="${d.min}" step="1" placeholder="Min" style="width:70px;text-align:center" title="Min sıcaklık" />
-      <input type="number" id="hsett_max_${i}" value="${d.max}" step="1" placeholder="Max" style="width:70px;text-align:center" title="Max sıcaklık" />
-    </div>`).join('')}`;
+    <div id="hsettRows">${config.map((d, i) => haccpSettingsRowHtml(d, i)).join('')}</div>
+    <button type="button" class="btn btn-sm btn-outline" onclick="haccpAddDepoRow()" style="margin-top:0.5rem">+ Yeni Depo Ekle</button>`;
   document.getElementById('haccpSettingsModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function haccpAddDepoRow() {
+  const container = document.getElementById('hsettRows');
+  const idx = container.children.length;
+  container.insertAdjacentHTML('beforeend', haccpSettingsRowHtml({ ad: '', min: 0, max: 4 }, idx));
 }
 
 function closeHaccpSettings() {
@@ -886,15 +901,20 @@ function closeHaccpSettings() {
 }
 
 function saveHaccpSettings() {
-  const config = loadHaccpConfig();
-  config.forEach((d, i) => {
-    const ad = document.getElementById('hsett_ad_' + i);
-    const min = document.getElementById('hsett_min_' + i);
-    const max = document.getElementById('hsett_max_' + i);
-    if (ad) d.ad = ad.value.trim() || 'Depo ' + (i + 1);
-    if (min) d.min = parseFloat(min.value) || 0;
-    if (max) d.max = parseFloat(max.value) || 4;
+  const rows = document.querySelectorAll('#hsettRows .hsett-row');
+  const config = [];
+  let no = 1;
+  rows.forEach(row => {
+    const ad = row.querySelector('.hsett-ad').value.trim();
+    const min = parseFloat(row.querySelector('.hsett-min').value) || 0;
+    const max = parseFloat(row.querySelector('.hsett-max').value) || 4;
+    if (!ad) return;
+    config.push({ no: no++, ad, min, max });
   });
+  if (config.length === 0) {
+    showToast('En az bir depo tanımlanmalı.', 'error');
+    return;
+  }
   saveHaccpConfig(config);
   renderHaccp();
   showToast('Depo ayarları kaydedildi.', 'success');
