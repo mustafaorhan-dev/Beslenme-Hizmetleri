@@ -24,6 +24,22 @@ function toggleTheme() {
   if (typeof drawAllCharts === 'function') drawAllCharts();
 }
 
+// ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
+function showToast(message, type) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + (type || 'info');
+  toast.textContent = message;
+  container.appendChild(toast);
+  requestAnimationFrame(() => { toast.classList.add('toast-visible'); });
+  setTimeout(() => {
+    toast.classList.remove('toast-visible');
+    toast.classList.add('toast-hiding');
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+  }, 3000);
+}
+
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
 const PAGE_SIZE = 20;
 let currentPage = 1;
@@ -576,6 +592,10 @@ function exportPDF() {
   }, 400);
 }
 
+function printReport() {
+  exportPDF();
+}
+
 function exportChartsPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
@@ -858,6 +878,7 @@ function saveRecord(e) {
   filteredRecords = [...records];
   renderAll();
   drawAllCharts();
+  formModified = false;
   closeModal();
 }
 
@@ -1075,6 +1096,10 @@ function clearAllData() {
   renderAll();
   drawAllCharts();
   showToast('Tüm kayıtlar silindi.', 'success');
+}
+
+function exportData() {
+  exportDataJSON();
 }
 
 function exportDataJSON() {
