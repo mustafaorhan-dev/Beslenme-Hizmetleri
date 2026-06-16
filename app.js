@@ -230,15 +230,45 @@ async function syncToSheetSilent() {
   } catch (_) {}
 }
 
-async function syncHaccpSilent() {
-  if (!gsheetConfig.webappUrl || haccpRecords.length === 0) return;
+async function syncHaccpToGSheets() {
+  if (!gsheetConfig.webappUrl) {
+    showToast('Önce Web App URL\'sini ayarlayın (Senkronizasyon paneli).', 'error');
+    return;
+  }
+  if (haccpRecords.length === 0) {
+    showToast('Senkronize edilecek Gıda Güvenliği kaydı yok.', 'error');
+    return;
+  }
   try {
-    await fetch(gsheetConfig.webappUrl, {
+    const res = await fetch(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords })
     });
-  } catch (_) {}
+    const data = await res.json();
+    if (data.success) {
+      showToast('Gıda Güvenliği verileri senkronize edildi (' + data.count + ' kayıt).', 'success');
+    } else {
+      showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
+    }
+  } catch (err) {
+    showToast('Bağlantı hatası: ' + err.message, 'error');
+  }
+}
+
+let haccpSyncTimer = null;
+function syncHaccpSilent() {
+  if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
+  haccpSyncTimer = setTimeout(async () => {
+    if (!gsheetConfig.webappUrl || haccpRecords.length === 0) return;
+    try {
+      await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords })
+      });
+    } catch (_) {}
+  }, 400);
 }
 
 async function syncHaccpFromGSheets() {
@@ -487,6 +517,9 @@ async function syncFromGSheets() {
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
+      await syncHaccpFromGSheets();
+      saveHaccpData();
+      renderHaccp();
       if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
       return true;
     } else {
