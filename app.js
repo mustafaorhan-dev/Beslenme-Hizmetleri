@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
+  loadHaccpData();
   setCurrentDate();
   renderAll();
   drawAllCharts();
@@ -586,10 +587,317 @@ function exportPDF() {
       ${cards}
       <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
-  }, 400);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
+// ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
+const HACCP_STORAGE_KEY = 'haccp_records';
+let haccpRecords = [];
+let editingHaccpId = null;
+let editingHaccpType = null;
+
+const defaultDepoConfig = [
+  { no: 1, ad: 'Soğuk Depo 1', min: 0, max: 4 },
+  { no: 2, ad: 'Soğuk Depo 2', min: 0, max: 4 },
+  { no: 3, ad: 'Derin Dondurucu 1', min: -24, max: -18 },
+  { no: 4, ad: 'Derin Dondurucu 2', min: -24, max: -18 }
+];
+
+function loadHaccpConfig() {
+  try {
+    const stored = localStorage.getItem('haccp_config');
+    if (stored) return JSON.parse(stored);
+  } catch (_) {}
+  return JSON.parse(JSON.stringify(defaultDepoConfig));
+}
+
+function saveHaccpConfig(config) {
+  try { localStorage.setItem('haccp_config', JSON.stringify(config)); } catch (_) {}
+}
+
+function loadHaccpData() {
+  try {
+    const stored = localStorage.getItem(HACCP_STORAGE_KEY);
+    haccpRecords = stored ? JSON.parse(stored) : [];
+  } catch (_) { haccpRecords = []; }
+  renderHaccp();
+}
+
+function saveHaccpData() {
+  try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+}
+
+function renderHaccp() {
+  renderHaccpSicaklik();
+  renderHaccpNumune();
+  renderHaccpHijyen();
+}
+
+function getHaccpRecords(type) {
+  return haccpRecords.filter(r => r.type === type).sort((a, b) => b.tarih + b.saat > a.tarih + a.saat ? 1 : -1);
+}
+
+function sicaklikDurum(sicaklik, depoNo) {
+  const config = loadHaccpConfig();
+  const depo = config.find(d => d.no === depoNo);
+  if (!depo) return { text: 'Belirlenemiyor', cls: '' };
+  const v = parseFloat(sicaklik);
+  if (isNaN(v)) return { text: '—', cls: '' };
+  if (v >= depo.min && v <= depo.max) return { text: 'Uygun', cls: 'badge badge-ok' };
+  if (v < depo.min) return { text: 'Düşük', cls: 'badge badge-warn' };
+  return { text: 'Yüksek', cls: 'badge badge-err' };
+}
+
+function renderHaccpSicaklik() {
+  const tbody = document.getElementById('haccpSicaklikTbody');
+  const table = document.getElementById('haccpSicaklikTable');
+  const empty = document.getElementById('haccpSicaklikEmpty');
+  const records = getHaccpRecords('sicaklik');
+  const config = loadHaccpConfig();
+
+  if (records.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = records.map(r => {
+    const depo = config.find(d => d.no === r.depoNo) || { ad: 'Depo ' + r.depoNo };
+    const durum = sicaklikDurum(r.sicaklik, r.depoNo);
+    return `<tr>
+      <td>${r.tarih}</td>
+      <td>${r.saat || '—'}</td>
+      <td>${depo.ad}</td>
+      <td class="${durum.cls}"><strong>${r.sicaklik}</strong></td>
+      <td><span class="${durum.cls}">${durum.text}</span></td>
+      <td>${r.not || '—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editHaccpRecord('sicaklik',${r.id})" title="Düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon" onclick="deleteHaccpRecord('sicaklik',${r.id})" title="Sil" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHaccpNumune() {
+  const tbody = document.getElementById('haccpNumuneTbody');
+  const table = document.getElementById('haccpNumuneTable');
+  const empty = document.getElementById('haccpNumuneEmpty');
+  const records = getHaccpRecords('numune');
+
+  if (records.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = records.map(r => `<tr>
+    <td>${r.tarih}</td>
+    <td>${r.ogun || '—'}</td>
+    <td>${r.yemekAdi || '—'}</td>
+    <td>${r.miktar || '—'}</td>
+    <td>${r.saklamaSicakligi || '—'}</td>
+    <td>${r.imhaTarihi || '—'}</td>
+    <td>
+      <button class="btn-icon" onclick="editHaccpRecord('numune',${r.id})" title="Düzenle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="btn-icon" onclick="deleteHaccpRecord('numune',${r.id})" title="Sil" style="color:var(--danger)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderHaccpHijyen() {
+  const tbody = document.getElementById('haccpHijyenTbody');
+  const table = document.getElementById('haccpHijyenTable');
+  const empty = document.getElementById('haccpHijyenEmpty');
+  const records = getHaccpRecords('hijyen');
+
+  if (records.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  tbody.innerHTML = records.map(r => `<tr>
+    <td>${r.tarih}</td>
+    <td>${r.alan || '—'}</td>
+    <td>${r.yapilacakIs || '—'}</td>
+    <td>${r.yapanKisi || '—'}</td>
+    <td><span class="${r.yapildiMi ? 'badge badge-ok' : 'badge badge-warn'}">${r.yapildiMi ? 'Yapıldı' : 'Yapılmadı'}</span></td>
+    <td>${r.not || '—'}</td>
+    <td>
+      <button class="btn-icon" onclick="editHaccpRecord('hijyen',${r.id})" title="Düzenle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="btn-icon" onclick="deleteHaccpRecord('hijyen',${r.id})" title="Sil" style="color:var(--danger)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </button>
+    </td>
+  </tr>`).join('');
+}
+
+function openHaccpModal(type, id) {
+  editingHaccpType = type;
+  editingHaccpId = id || null;
+
+  const overlay = document.getElementById('haccpModal');
+  const title = document.getElementById('haccpModalTitle');
+  const body = document.getElementById('haccpFormBody');
+
+  const titles = { sicaklik: 'Depo Sıcaklık Kaydı', numune: 'Numune Kaydı', hijyen: 'Hijyen Kontrol Kaydı' };
+  title.textContent = titles[type] || 'Yeni Kayıt';
+
+  let rec = null;
+  if (id) rec = haccpRecords.find(r => r.id === id && r.type === type);
+
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  const saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const config = loadHaccpConfig();
+
+  if (type === 'sicaklik') {
+    const depoOptions = config.map(d => `<option value="${d.no}" ${rec && rec.depoNo === d.no ? 'selected' : ''}>${d.ad} (${d.min}°C ~ ${d.max}°C)</option>`).join('');
+    body.innerHTML = `
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
+        <div class="form-group"><label>Saat</label><input type="time" id="hfSaat" value="${rec ? rec.saat : saat}" required /></div>
+        <div class="form-group"><label>Depo</label><select id="hfDepo">${depoOptions}</select></div>
+        <div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0" required /></div>
+        <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
+      </div>`;
+  } else if (type === 'numune') {
+    body.innerHTML = `
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
+        <div class="form-group"><label>Öğün</label><select id="hfOgun"><option value="Sabah" ${rec && rec.ogun === 'Sabah' ? 'selected' : ''}>Sabah</option><option value="Öğle" ${rec && rec.ogun === 'Öğle' ? 'selected' : ''}>Öğle</option><option value="Akşam" ${rec && rec.ogun === 'Akşam' ? 'selected' : ''}>Akşam</option></select></div>
+        <div class="form-group"><label>Yemek Adı</label><input type="text" id="hfYemekAdi" value="${rec ? rec.yemekAdi : ''}" placeholder="Örn: Mercimek Çorbası" required /></div>
+        <div class="form-group"><label>Miktar (gr)</label><input type="text" id="hfMiktar" value="${rec ? rec.miktar : ''}" placeholder="200" /></div>
+        <div class="form-group"><label>Saklama Sıcaklığı</label><input type="text" id="hfSaklama" value="${rec ? rec.saklamaSicakligi : '+4°C'}" placeholder="+4°C" /></div>
+        <div class="form-group"><label>İmha Tarihi</label><input type="date" id="hfImha" value="${rec ? rec.imhaTarihi : ''}" /></div>
+      </div>`;
+  } else if (type === 'hijyen') {
+    body.innerHTML = `
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
+        <div class="form-group"><label>Alan</label><input type="text" id="hfAlan" value="${rec ? rec.alan : ''}" placeholder="Örn: Tezgah" required /></div>
+        <div class="form-group" style="grid-column:span 2"><label>Yapılacak İş</label><input type="text" id="hfIs" value="${rec ? rec.yapilacakIs : ''}" placeholder="Örn: Temizlik ve dezenfeksiyon" required /></div>
+        <div class="form-group"><label>Yapan Kişi</label><input type="text" id="hfYapan" value="${rec ? rec.yapanKisi : ''}" placeholder="Ad Soyad" required /></div>
+        <div class="form-group"><label>Durum</label><select id="hfYapildiMi"><option value="1" ${rec && rec.yapildiMi ? 'selected' : ''}>Yapıldı</option><option value="0" ${rec && !rec.yapildiMi ? 'selected' : ''}>Yapılmadı</option></select></div>
+        <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
+      </div>`;
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHaccpModal() {
+  document.getElementById('haccpModal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingHaccpId = null;
+  editingHaccpType = null;
+}
+
+function saveHaccpRecord(e) {
+  e.preventDefault();
+  const type = editingHaccpType;
+  let rec = { id: editingHaccpId || Date.now(), type };
+
+  if (type === 'sicaklik') {
+    rec.tarih = document.getElementById('hfTarih').value;
+    rec.saat = document.getElementById('hfSaat').value;
+    rec.depoNo = parseInt(document.getElementById('hfDepo').value);
+    rec.sicaklik = document.getElementById('hfSicaklik').value;
+    rec.not = document.getElementById('hfNot').value.trim();
+  } else if (type === 'numune') {
+    rec.tarih = document.getElementById('hfTarih').value;
+    rec.ogun = document.getElementById('hfOgun').value;
+    rec.yemekAdi = document.getElementById('hfYemekAdi').value.trim();
+    rec.miktar = document.getElementById('hfMiktar').value.trim();
+    rec.saklamaSicakligi = document.getElementById('hfSaklama').value.trim();
+    rec.imhaTarihi = document.getElementById('hfImha').value;
+  } else if (type === 'hijyen') {
+    rec.tarih = document.getElementById('hfTarih').value;
+    rec.alan = document.getElementById('hfAlan').value.trim();
+    rec.yapilacakIs = document.getElementById('hfIs').value.trim();
+    rec.yapanKisi = document.getElementById('hfYapan').value.trim();
+    rec.yapildiMi = document.getElementById('hfYapildiMi').value === '1';
+    rec.not = document.getElementById('hfNot').value.trim();
+  }
+
+  if (editingHaccpId) {
+    const idx = haccpRecords.findIndex(r => r.id === editingHaccpId);
+    if (idx !== -1) haccpRecords[idx] = rec;
+    showToast('Kayıt güncellendi.', 'success');
+  } else {
+    haccpRecords.push(rec);
+    showToast('Kayıt eklendi.', 'success');
+  }
+
+  saveHaccpData();
+  renderHaccp();
+  closeHaccpModal();
+}
+
+function editHaccpRecord(type, id) {
+  openHaccpModal(type, id);
+}
+
+function deleteHaccpRecord(type, id) {
+  if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  haccpRecords = haccpRecords.filter(r => !(r.id === id && r.type === type));
+  saveHaccpData();
+  renderHaccp();
+  showToast('Kayıt silindi.', 'success');
+}
+
+function showHaccpSettings() {
+  const config = loadHaccpConfig();
+  const body = document.getElementById('haccpSettingsBody');
+  body.innerHTML = `<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem">Her depo için ad ve sıcaklık aralığını ayarlayın:</p>
+    ${config.map((d, i) => `<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+      <input type="text" id="hsett_ad_${i}" value="${d.ad}" placeholder="Depo adı" style="width:100%" />
+      <input type="number" id="hsett_min_${i}" value="${d.min}" step="1" placeholder="Min" style="width:70px;text-align:center" title="Min sıcaklık" />
+      <input type="number" id="hsett_max_${i}" value="${d.max}" step="1" placeholder="Max" style="width:70px;text-align:center" title="Max sıcaklık" />
+    </div>`).join('')}`;
+  document.getElementById('haccpSettingsModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHaccpSettings() {
+  document.getElementById('haccpSettingsModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveHaccpSettings() {
+  const config = loadHaccpConfig();
+  config.forEach((d, i) => {
+    const ad = document.getElementById('hsett_ad_' + i);
+    const min = document.getElementById('hsett_min_' + i);
+    const max = document.getElementById('hsett_max_' + i);
+    if (ad) d.ad = ad.value.trim() || 'Depo ' + (i + 1);
+    if (min) d.min = parseFloat(min.value) || 0;
+    if (max) d.max = parseFloat(max.value) || 4;
+  });
+  saveHaccpConfig(config);
+  renderHaccp();
+  showToast('Depo ayarları kaydedildi.', 'success');
+  closeHaccpSettings();
 }
 
 function printReport() {
@@ -712,7 +1020,8 @@ async function switchTab(name) {
   closeSidebar();
   // Sayfa başlığını güncelle
   if (name === 'menu') await renderMenu();
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü' };
+  if (name === 'haccp') loadHaccpData();
+  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü', haccp: 'Gıda Güvenliği' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
 }
 
