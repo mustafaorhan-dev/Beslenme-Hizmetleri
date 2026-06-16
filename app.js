@@ -954,7 +954,8 @@ function haccpSettingsRowHtml(d, i) {
   const ad = d.ad || ('Depo ' + (i + 1));
   const min = d.min != null ? d.min : 0;
   const max = d.max != null ? d.max : 4;
-  return `<div class="hsett-row" data-idx="${i}" style="display:grid;grid-template-columns:1fr 80px 80px auto;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
+  const noAttr = d.no != null ? ` data-no="${d.no}"` : '';
+  return `<div class="hsett-row"${noAttr} style="display:grid;grid-template-columns:1fr 80px 80px auto;gap:0.5rem;align-items:center;margin-bottom:0.5rem">
     <input type="text" class="hsett-ad" value="${ad}" placeholder="Depo adı" style="width:100%" />
     <input type="number" class="hsett-min" value="${min}" step="1" placeholder="Min" style="width:70px;text-align:center" title="Min sıcaklık" />
     <input type="number" class="hsett-max" value="${max}" step="1" placeholder="Max" style="width:70px;text-align:center" title="Max sıcaklık" />
@@ -986,13 +987,15 @@ function closeHaccpSettings() {
 function saveHaccpSettings() {
   const rows = document.querySelectorAll('#hsettRows .hsett-row');
   const config = [];
-  let no = 1;
+  let nextNo = 1;
   rows.forEach(row => {
     const ad = row.querySelector('.hsett-ad').value.trim();
     const min = parseFloat(row.querySelector('.hsett-min').value) || 0;
     const max = parseFloat(row.querySelector('.hsett-max').value) || 4;
     if (!ad) return;
-    config.push({ no: no++, ad, min, max });
+    const no = row.dataset.no ? parseInt(row.dataset.no) : nextNo++;
+    config.push({ no, ad, min, max });
+    if (no >= nextNo) nextNo = no + 1;
   });
   if (config.length === 0) {
     showToast('En az bir depo tanımlanmalı.', 'error');
