@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzY5J2Fj-8PkelM9d7mVJiMdSqHwLlOEsOS9N2oEVmZnbbA1KwN64o6hCVwOiZ8r08RFw/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxmvbqA-KI6PG99BAtq1CRorivrD-qdOJttJwbbk7BZExxeUvGHPNxhX5DD5k8TU1VaWA/exec';
 const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxZifUt3a2HuknThnOpvBG4Cg_XokEFmk_b0R9D5Gj6p54WX1Dg_sXaVQIDwd81aPIe9Q/exec';
 let records = [];
 let editingId = null;
@@ -140,6 +140,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     dishOk = true;
   }
 
+  // HACCP verilerini indir
+  if (gsheetConfig.webappUrl) {
+    setLoadingSub('Gıda Güvenliği verileri indiriliyor...');
+    await fetchWithRetry(() => syncHaccpFromGSheets(), 2, 1000);
+    saveHaccpData();
+    renderHaccp();
+  }
+
   menuOk = true;
 
   refreshMenuProduction();
@@ -220,6 +228,47 @@ async function syncToSheetSilent() {
       body: JSON.stringify({ action: 'saveAll', records })
     });
   } catch (_) {}
+}
+
+async function syncHaccpSilent() {
+  if (!gsheetConfig.webappUrl || haccpRecords.length === 0) return;
+  try {
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords })
+    });
+  } catch (_) {}
+}
+
+async function syncHaccpFromGSheets() {
+  if (!gsheetConfig.webappUrl) return false;
+  try {
+    const res = await fetch(gsheetConfig.webappUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
+    const data = await res.json();
+    if (data.data && data.data.length > 0) {
+      haccpRecords = data.data.map(r => ({
+        id: Number(r.id) || Date.now() + Math.random(),
+        type: r.type || 'sicaklik',
+        tarih: r.tarih || '',
+        saat: r.saat || '',
+        depoNo: r.depoNo != null ? Number(r.depoNo) : undefined,
+        sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
+        not: r.not_ || '',
+        ogun: r.ogun || '',
+        yemekAdi: r.yemekAdi || '',
+        miktar: r.miktar || '',
+        saklamaSicakligi: r.saklamaSicakligi || '',
+        imhaTarihi: r.imhaTarihi || '',
+        alan: r.alan || '',
+        yapilacakIs: r.yapilacakIs || '',
+        yapanKisi: r.yapanKisi || '',
+        yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
+      }));
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
 }
 
 // -- Retry helper --
@@ -628,6 +677,7 @@ function loadHaccpData() {
 
 function saveHaccpData() {
   try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+  syncHaccpSilent();
 }
 
 function renderHaccp() {

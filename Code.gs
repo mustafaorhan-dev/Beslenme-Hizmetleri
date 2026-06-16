@@ -1,14 +1,17 @@
 const SHEET_NAME = 'Atık Kontrol Sistemi';
 const DISH_SHEET_NAME = 'Yemek Listesi';
+const HACCP_SHEET_NAME = 'Gıda Güvenliği';
 
 function doGet(e) {
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) {
-    // Yemek Listesi sayfası yoksa otomatik oluştur
     if (sheetName === DISH_SHEET_NAME) {
       sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(DISH_SHEET_NAME);
       sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'ürün 1', 'miktar 1', 'birim 1', 'ürün 2', 'miktar 2', 'birim 2', 'ürün 3', 'miktar 3', 'birim 3', 'ürün 4', 'miktar 4', 'birim 4', 'ürün 5', 'miktar 5', 'birim 5', 'ürün 6', 'miktar 6', 'birim 6', 'ürün 7', 'miktar 7', 'birim 7', 'ürün 8', 'miktar 8', 'birim 8', 'ürün 9', 'miktar 9', 'birim 9', 'ürün 10', 'miktar 10', 'birim 10']);
+    } else if (sheetName === HACCP_SHEET_NAME) {
+      sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(HACCP_SHEET_NAME);
+      sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
     } else {
       return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
     }
@@ -34,6 +37,51 @@ function doPost(e) {
 
     if (action === 'getDishes' || action === 'saveDishes') {
       return handleDishAction(action, body);
+    }
+
+    // HACCP işlemleri
+    if (action === 'saveHaccp') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(HACCP_SHEET_NAME);
+      if (!sheet) {
+        sheet = ss.insertSheet(HACCP_SHEET_NAME);
+        sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
+      }
+      const records = body.records || [];
+      const headers = ['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
+      if (records.length > 0) {
+        const rows = records.map(function(r) {
+          return [
+            String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
+            r.saat || '', r.depoNo != null ? Number(r.depoNo) : '',
+            r.sicaklik != null ? Number(r.sicaklik) : '', r.not || '',
+            r.ogun || '', r.yemekAdi || '', r.miktar || '',
+            r.saklamaSicakligi || '', r.imhaTarihi || '',
+            r.alan || '', r.yapilacakIs || '', r.yapanKisi || '',
+            r.yapildiMi != null ? Number(r.yapildiMi) : '', new Date().toISOString()
+          ];
+        });
+        sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+      }
+      return jsonResponse({ success: true, count: records.length, action: 'saveHaccp' });
+    }
+
+    if (action === 'getHaccp') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(HACCP_SHEET_NAME);
+      if (!sheet) return jsonResponse({ data: [] });
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return jsonResponse({ data: [] });
+      const headers = data[0].map(function(h) { return h.toString().trim(); });
+      const rows = [];
+      for (var i = 1; i < data.length; i++) {
+        var row = {};
+        headers.forEach(function(h, idx) { row[h] = data[i][idx]; });
+        rows.push(row);
+      }
+      return jsonResponse({ data: rows });
     }
 
     // Menü işlemleri
