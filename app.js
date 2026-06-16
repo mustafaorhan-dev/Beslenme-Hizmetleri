@@ -2308,12 +2308,20 @@ function drawAllCharts() {
               el.style.setProperty('-webkit-backdrop-filter', 'blur(20px)', 'important');
               el.style.setProperty('box-shadow', '0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)', 'important');
               el.style.setProperty('border', '1px solid rgba(255,255,255,0.2)', 'important');
-              el.style.setProperty('z-index', '1000', 'important');
+              el.style.setProperty('z-index', '99999', 'important');
+              el.style.setProperty('transform', 'translateZ(0)', 'important');
             }
           }
         }
         if (m.type === 'attributes' && m.attributeName === 'style' && m.target.id && m.target.id.startsWith('chartjs-tooltip')) {
+          m.target.style.setProperty('background', '#000000', 'important');
+          m.target.style.setProperty('background-color', '#000000', 'important');
+          m.target.style.setProperty('color', '#ffffff', 'important');
           m.target.style.setProperty('opacity', '1', 'important');
+          m.target.style.setProperty('z-index', '99999', 'important');
+          m.target.style.setProperty('position', 'absolute', 'important');
+          m.target.style.setProperty('transform', 'translateZ(0)', 'important');
+          m.target.style.setProperty('backdrop-filter', 'blur(20px)', 'important');
         }
       }
     });
