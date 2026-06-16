@@ -587,9 +587,10 @@ function exportPDF() {
       ${cards}
       <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
-  printWin.document.close();
-  printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  }, 500);
 }
 
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
