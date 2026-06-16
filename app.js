@@ -1854,24 +1854,23 @@ function initDishAutocomplete() {
   dishSuggestionsEl.style.display = 'none';
   document.body.appendChild(dishSuggestionsEl);
 
-  const tbody = document.getElementById('menuTbody');
-  if (!tbody) return;
-
-  tbody.addEventListener('focusin', function(e) {
+  document.addEventListener('focusin', function(e) {
     if (e.target.tagName === 'TEXTAREA' && e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
       activeDishTextarea = e.target;
       showDishDropdown(e.target);
     }
   });
 
-  tbody.addEventListener('input', function(e) {
+  document.addEventListener('input', function(e) {
     if (e.target === activeDishTextarea) {
       showDishDropdown(e.target);
     }
-    refreshMenuProduction();
+    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+      refreshMenuProduction();
+    }
   });
 
-  tbody.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function(e) {
     if (e.target !== activeDishTextarea) return;
     const items = dishSuggestionsEl.querySelectorAll('.dish-suggestion-item');
     if (!items.length) return;
