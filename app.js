@@ -2756,6 +2756,7 @@ function drawAllCharts() {
           pointHoverRadius: isLine ? 5 : undefined,
           fill: isLine ? true : undefined,
           tension: isLine ? 0.3 : undefined,
+          spanGaps: isLine ? true : undefined,
         }))
       },
       options: {
