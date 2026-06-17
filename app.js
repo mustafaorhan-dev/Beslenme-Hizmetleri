@@ -283,9 +283,9 @@ async function syncHaccpToGSheets() {
 }
 
 let haccpSyncTimer = null;
-function syncHaccpSilent() {
+function syncHaccpSilent(forceDepoOnly) {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
-  if (haccpRecords.length === 0 && !localStorage.getItem(HACCP_DEPO_KEY)) return;
+  if (haccpRecords.length === 0 && !forceDepoOnly) return;
   haccpSyncTimer = setTimeout(async () => {
     if (!gsheetConfig.webappUrl) return;
     try {
@@ -730,7 +730,7 @@ function loadHaccpDepoAdlari() {
 
 function saveHaccpDepoAdlari(list) {
   try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(list)); } catch (_) {}
-  syncHaccpSilent();
+  syncHaccpSilent(true);
 }
 
 function getHaccpDepoAdlari() {

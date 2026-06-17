@@ -63,9 +63,9 @@ function doPost(e) {
       if (currentHeaders.join() !== headers.join()) {
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       }
-      var lastRow = sheet.getLastRow();
-      if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
       if (records.length > 0) {
+        var lastRow = sheet.getLastRow();
+        if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
         const rows = records.map(function(r) {
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
