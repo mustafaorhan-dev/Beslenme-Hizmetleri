@@ -2625,8 +2625,8 @@ function drawAllCharts() {
     });
   }
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpSicaklik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpSicaklik','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -2904,7 +2904,13 @@ function drawAllCharts() {
   // --- HACCP Sicaklik Chart ---
   var sicaklikEmpty = document.getElementById('chartHaccpSicaklikEmpty');
   var sicaklikCanvas = document.getElementById('canvasHaccpSicaklik');
-  var sicaklikKayitlari = haccpRecords.filter(function(r) { return r.type === 'sicaklik'; });
+  var sicaklikKayitlari = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik') return false;
+    if (chartYearFilter === 'all') return true;
+    if (!r.tarih) return false;
+    var y = new Date(r.tarih + 'T00:00:00').getFullYear();
+    return y === Number(chartYearFilter);
+  });
   if (sicaklikKayitlari.length > 0) {
     if (sicaklikEmpty) sicaklikEmpty.style.display = 'none';
     if (sicaklikCanvas) sicaklikCanvas.style.display = 'block';
@@ -2937,6 +2943,58 @@ function drawAllCharts() {
   } else {
     if (sicaklikEmpty) sicaklikEmpty.style.display = 'block';
     if (sicaklikCanvas) sicaklikCanvas.style.display = 'none';
+  }
+
+  // --- Aylik Ortalama Depo Sicaklik Chart ---
+  var aylikSicaklikEmpty = document.getElementById('chartHaccpAylikEmpty');
+  var aylikSicaklikCanvas = document.getElementById('canvasHaccpAylik');
+  var aylikSicaklikKayitlari = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik') return false;
+    if (chartYearFilter === 'all') return true;
+    if (!r.tarih) return false;
+    var y = new Date(r.tarih + 'T00:00:00').getFullYear();
+    return y === Number(chartYearFilter);
+  });
+  if (aylikSicaklikKayitlari.length > 0) {
+    if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'none';
+    if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'block';
+    var aylikGruplar = {};
+    aylikSicaklikKayitlari.forEach(function(r) {
+      if (!r.tarih) return;
+      var d = new Date(r.tarih + 'T00:00:00');
+      var ayKey = (d.getMonth() + 1) + '/' + d.getFullYear();
+      if (!aylikGruplar[ayKey]) aylikGruplar[ayKey] = {};
+      var ad = r.depoAd || 'Bilinmeyen';
+      if (!aylikGruplar[ayKey][ad]) aylikGruplar[ayKey][ad] = [];
+      aylikGruplar[ayKey][ad].push(parseFloat(r.sicaklik));
+    });
+    var aylikAyLabels = Object.keys(aylikGruplar).sort(function(a, b) {
+      var pa = a.split('/'), pb = b.split('/');
+      return parseInt(pa[1]) - parseInt(pb[1]) || parseInt(pa[0]) - parseInt(pb[0]);
+    });
+    var aylikDepoIsimleri = [];
+    aylikAyLabels.forEach(function(ay) {
+      Object.keys(aylikGruplar[ay]).forEach(function(ad) {
+        if (aylikDepoIsimleri.indexOf(ad) === -1) aylikDepoIsimleri.push(ad);
+      });
+    });
+    var depoRenkler2 = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    var aylikDatasets = aylikDepoIsimleri.map(function(ad, idx) {
+      return {
+        data: aylikAyLabels.map(function(ay) {
+          var vals = (aylikGruplar[ay] && aylikGruplar[ay][ad]) || [];
+          if (vals.length === 0) return null;
+          var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+          return Math.round(sum / vals.length * 10) / 10;
+        }),
+        color: depoRenkler2[idx % depoRenkler2.length],
+        label: ad
+      };
+    });
+    makeChart('canvasHaccpAylik', aylikAyLabels, aylikDatasets, { type: 'line', showValues: false });
+  } else {
+    if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
+    if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
   }
 }
 
