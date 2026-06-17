@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxmvbqA-KI6PG99BAtq1CRorivrD-qdOJttJwbbk7BZExxeUvGHPNxhX5DD5k8TU1VaWA/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
 const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxZifUt3a2HuknThnOpvBG4Cg_XokEFmk_b0R9D5Gj6p54WX1Dg_sXaVQIDwd81aPIe9Q/exec';
 let records = [];
 let editingId = null;
@@ -712,7 +712,7 @@ function exportPDF() {
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
 const HACCP_STORAGE_KEY = 'haccp_records';
 const HACCP_DEPO_KEY = 'haccp_depo_adlari';
-const DEFAULT_DEPO_ADLARI = ['Soğuk Depo 1', 'Soğuk Depo 2', 'Soğuk Depo 3', 'Soğuk Depo 4', 'Derin Dondurucu 1', 'Derin Dondurucu 2'];
+const DEFAULT_DEPO_ADLARI = ['Soğuk Hava Deposu 5', 'Soğuk Hava Deposu 6', 'Soğuk Hava Deposu 7', 'Soğuk Hava Deposu 8'];
 let haccpRecords = [];
 let editingHaccpId = null;
 let editingHaccpType = null;

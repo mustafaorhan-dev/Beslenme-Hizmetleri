@@ -1,6 +1,8 @@
 const SHEET_NAME = 'Atık Kontrol Sistemi';
 const DISH_SHEET_NAME = 'Yemek Listesi';
 const HACCP_SHEET_NAME = 'Gıda Güvenliği';
+const DEPO_ADLARI_SHEET = 'Depo Adları';
+const HACCP_DEPO_KEY = 'HACCP_DEPO_ADLARI';
 
 function formatCellValue(val, header) {
   if (Object.prototype.toString.call(val) === '[object Date]' && !isNaN(val)) {
@@ -11,6 +13,64 @@ function formatCellValue(val, header) {
   }
   return val;
 }
+
+// === DEPO ADLARI: Sheet'te kalıcı (PropertiesService yedek) ===
+
+function getDepoAdlari() {
+  var list = [];
+  // 1. Sheet'ten oku
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(DEPO_ADLARI_SHEET);
+    if (sheet) {
+      var data = sheet.getDataRange().getValues();
+      for (var i = 1; i < data.length; i++) {
+        var name = String(data[i][0] || '').trim();
+        if (name) list.push(name);
+      }
+    }
+  } catch (_) {}
+  if (list.length > 0) return list;
+  // 2. PropertiesService
+  try {
+    var str = PropertiesService.getDocumentProperties().getProperty(HACCP_DEPO_KEY);
+    if (str) { var p = JSON.parse(str); if (Array.isArray(p) && p.length > 0) return p; }
+  } catch (_) {}
+  return ['Soğuk Hava Deposu 5', 'Soğuk Hava Deposu 6', 'Soğuk Hava Deposu 7', 'Soğuk Hava Deposu 8'];
+}
+
+function saveDepoAdlari(list) {
+  if (!Array.isArray(list) || list.length === 0) return;
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(DEPO_ADLARI_SHEET);
+    if (!sheet) sheet = ss.insertSheet(DEPO_ADLARI_SHEET);
+    sheet.clear();
+    var rows = list.map(function(n) { return [n]; });
+    sheet.getRange(1, 1, rows.length, 1).setValues(rows);
+  } catch (_) {}
+  try { PropertiesService.getDocumentProperties().setProperty(HACCP_DEPO_KEY, JSON.stringify(list)); } catch (_) {}
+}
+
+function depoNoToName(val) {
+  if (!val) return '';
+  var s = String(val).trim();
+  var list = getDepoAdlari();
+  // Tam eşleşme?
+  if (list.indexOf(s) >= 0) return s;
+  // Sayısal depoNo -> listeden isim bul
+  var num = parseInt(s, 10);
+  if (!isNaN(num) && num >= 1 && num <= list.length) {
+    return list[num - 1];
+  }
+  // listede ad olarak geçiyor mu? (küçük/büyük harf duyarsız)
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].toLowerCase() === s.toLowerCase()) return list[i];
+  }
+  return 'Depo ' + s;
+}
+
+// === DO GET ===
 
 function doGet(e) {
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
@@ -27,28 +87,36 @@ function doGet(e) {
     }
   }
   const data = sheet.getDataRange().getValues();
-  if (data.length === 0) return jsonResponse({ data: [] });
-  const headers = data[0].map(h => h.toString().trim());
-  const rows = [];
-  for (let i = 1; i < data.length; i++) {
-    const row = {};
-    headers.forEach((h, idx) => { row[h] = formatCellValue(data[i][idx], h); });
-    // depoNo -> depoAd uyumluluğu
-    if (row.depoNo !== undefined && row.depoAd === undefined) {
-      row.depoAd = row.depoNo;
+  var response = { data: [] };
+  if (data.length > 0) {
+    const headers = data[0].map(function(h) { return String(h).trim(); });
+    const rows = [];
+    var depoAdIdx = -1, depoNoIdx = -1;
+    headers.forEach(function(h, i) { if (h === 'depoAd') depoAdIdx = i; if (h === 'depoNo') depoNoIdx = i; });
+    for (var i = 1; i < data.length; i++) {
+      var row = {};
+      headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
+      // depoNo varsa depoAd'e çevir (isim listesinden bak)
+      if (depoNoIdx >= 0 && depoAdIdx < 0) {
+        row.depoAd = depoNoToName(data[i][depoNoIdx]);
+      } else if (depoNoIdx >= 0 && depoAdIdx >= 0 && !row.depoAd) {
+        row.depoAd = depoNoToName(data[i][depoNoIdx]);
+      }
+      rows.push(row);
     }
-    rows.push(row);
+    response.data = rows;
   }
-  // HACCP sayfası ise depo adlarını da ekle
-  var response = { data: rows };
   if (sheetName === HACCP_SHEET_NAME) {
-    var depoAdlariStr = PropertiesService.getDocumentProperties().getProperty('HACCP_DEPO_ADLARI');
-    response.depoAdlari = depoAdlariStr ? JSON.parse(depoAdlariStr) : null;
+    response.depoAdlari = getDepoAdlari();
   }
   return jsonResponse(response);
 }
 
+// === MENU SHEET ===
+
 const MENU_SHEET_NAME = 'Menü Verisi';
+
+// === DO POST ===
 
 function doPost(e) {
   try {
@@ -70,8 +138,7 @@ function doPost(e) {
       const records = body.records || [];
       const headers = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
       var currentHeaders = sheet.getDataRange().getValues()[0] || [];
-      // Mevcut başlık depoNo ise depoAd olarak değiştir
-      var fixedHeaders = currentHeaders.map(function(h) { return h.toString().trim() === 'depoNo' ? 'depoAd' : h.toString().trim(); });
+      var fixedHeaders = currentHeaders.map(function(h) { return String(h).trim() === 'depoNo' ? 'depoAd' : String(h).trim(); });
       if (fixedHeaders.join() !== headers.join()) {
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       }
@@ -81,7 +148,7 @@ function doPost(e) {
         const rows = records.map(function(r) {
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', r.depoAd || r.depoNo || ('Depo ' + (r.depoNo || '')),
+            r.saat || '', depoNoToName(r.depoAd || r.depoNo || ''),
             r.sicaklik != null ? Number(r.sicaklik) : '', r.not || '',
             r.ogun || '', r.yemekAdi || '', r.miktar || '',
             r.saklamaSicakligi || '', r.imhaTarihi || '',
@@ -91,9 +158,8 @@ function doPost(e) {
         });
         sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
       }
-      // Depo adlarını PropertiesService'te sakla (Google Sheets dokümanında kalıcı)
       if (body.depoAdlari && Array.isArray(body.depoAdlari)) {
-        PropertiesService.getDocumentProperties().setProperty('HACCP_DEPO_ADLARI', JSON.stringify(body.depoAdlari));
+        saveDepoAdlari(body.depoAdlari);
       }
       return jsonResponse({ success: true, count: records.length, action: 'saveHaccp' });
     }
@@ -101,23 +167,22 @@ function doPost(e) {
     if (action === 'getHaccp') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       let sheet = ss.getSheetByName(HACCP_SHEET_NAME);
-      if (!sheet) return jsonResponse({ data: [] });
+      if (!sheet) return jsonResponse({ data: [], depoAdlari: getDepoAdlari() });
       const data = sheet.getDataRange().getValues();
-      if (data.length <= 1) return jsonResponse({ data: [] });
-      const headers = data[0].map(function(h) { return h.toString().trim(); });
+      if (!data || data.length <= 1) return jsonResponse({ data: [], depoAdlari: getDepoAdlari() });
+      const headers = data[0].map(function(h) { return String(h).trim(); });
       const rows = [];
+      var depoAdIdx = -1, depoNoIdx = -1;
+      headers.forEach(function(h, i) { if (h === 'depoAd') depoAdIdx = i; if (h === 'depoNo') depoNoIdx = i; });
       for (var i = 1; i < data.length; i++) {
         var row = {};
         headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
-        // depoNo -> depoAd uyumluluğu
-        if (row.depoNo !== undefined && row.depoAd === undefined) {
-          row.depoAd = row.depoNo;
+        if (depoNoIdx >= 0 && (depoAdIdx < 0 || !row.depoAd)) {
+          row.depoAd = depoNoToName(data[i][depoNoIdx]);
         }
         rows.push(row);
       }
-      var depoAdlariStr = PropertiesService.getDocumentProperties().getProperty('HACCP_DEPO_ADLARI');
-      var depoAdlari = depoAdlariStr ? JSON.parse(depoAdlariStr) : null;
-      return jsonResponse({ data: rows, depoAdlari: depoAdlari });
+      return jsonResponse({ data: rows, depoAdlari: getDepoAdlari() });
     }
 
     // Menü işlemleri
@@ -207,12 +272,10 @@ function handleDishAction(action, body) {
     const dishes = [];
     for (let i = 1; i < data.length; i++) {
       let tarif = [];
-      // JSON tarif sütunu varsa
       const tarifIdx = headers.indexOf('tarif');
       if (tarifIdx >= 0) {
         try { tarif = JSON.parse(data[i][tarifIdx] || '[]'); } catch (e) {}
       }
-      // Düz sütun formatı (ürün N, miktar N, birim N)
       if (!tarif.length) {
         for (let n = 1; n <= 20; n++) {
           const urunIdx = headers.indexOf('ürün ' + n);
@@ -239,12 +302,10 @@ function handleDishAction(action, body) {
 
   if (action === 'saveDishes') {
     const dishes = body.dishes || [];
-    // En fazla kaç malzeme var?
     let maxIng = 0;
     dishes.forEach(function(d) { if (d.tarif && d.tarif.length > maxIng) maxIng = d.tarif.length; });
     if (maxIng < 10) maxIng = 10;
 
-    // Başlık satırı: sabit sütunlar + malzeme üçlüleri
     var headerRow = ['id', 'ad', 'kalori', 'alerjen'];
     for (var n = 1; n <= maxIng; n++) {
       headerRow.push('ürün ' + n, 'miktar ' + n, 'birim ' + n);
