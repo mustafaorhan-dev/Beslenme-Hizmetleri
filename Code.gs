@@ -33,9 +33,19 @@ function doGet(e) {
   for (let i = 1; i < data.length; i++) {
     const row = {};
     headers.forEach((h, idx) => { row[h] = formatCellValue(data[i][idx], h); });
+    // depoNo -> depoAd uyumluluğu
+    if (row.depoNo !== undefined && row.depoAd === undefined) {
+      row.depoAd = row.depoNo;
+    }
     rows.push(row);
   }
-  return jsonResponse({ data: rows });
+  // HACCP sayfası ise depo adlarını da ekle
+  var response = { data: rows };
+  if (sheetName === HACCP_SHEET_NAME) {
+    var depoAdlariStr = PropertiesService.getDocumentProperties().getProperty('HACCP_DEPO_ADLARI');
+    response.depoAdlari = depoAdlariStr ? JSON.parse(depoAdlariStr) : null;
+  }
+  return jsonResponse(response);
 }
 
 const MENU_SHEET_NAME = 'Menü Verisi';
@@ -60,7 +70,9 @@ function doPost(e) {
       const records = body.records || [];
       const headers = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
       var currentHeaders = sheet.getDataRange().getValues()[0] || [];
-      if (currentHeaders.join() !== headers.join()) {
+      // Mevcut başlık depoNo ise depoAd olarak değiştir
+      var fixedHeaders = currentHeaders.map(function(h) { return h.toString().trim() === 'depoNo' ? 'depoAd' : h.toString().trim(); });
+      if (fixedHeaders.join() !== headers.join()) {
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       }
       if (records.length > 0) {
@@ -69,7 +81,7 @@ function doPost(e) {
         const rows = records.map(function(r) {
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', r.depoAd || ('Depo ' + (r.depoNo || '')),
+            r.saat || '', r.depoAd || r.depoNo || ('Depo ' + (r.depoNo || '')),
             r.sicaklik != null ? Number(r.sicaklik) : '', r.not || '',
             r.ogun || '', r.yemekAdi || '', r.miktar || '',
             r.saklamaSicakligi || '', r.imhaTarihi || '',
@@ -97,6 +109,10 @@ function doPost(e) {
       for (var i = 1; i < data.length; i++) {
         var row = {};
         headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
+        // depoNo -> depoAd uyumluluğu
+        if (row.depoNo !== undefined && row.depoAd === undefined) {
+          row.depoAd = row.depoNo;
+        }
         rows.push(row);
       }
       var depoAdlariStr = PropertiesService.getDocumentProperties().getProperty('HACCP_DEPO_ADLARI');
