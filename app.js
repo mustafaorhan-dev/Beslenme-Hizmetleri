@@ -48,8 +48,9 @@ let selectedIds = new Set();
 // ─── UNSAVED CHANGES ──────────────────────────────────────────────────────────
 let formModified = false;
 
-// ─── CHART YEAR FILTER ──────────────────────────────────────────────────────
+// ─── CHART YEAR / MONTH FILTER ──────────────────────────────────────────────
 let chartYearFilter = 'all';
+let chartMonthFilter = 0;
 function getAvailableYears() {
   const years = new Set();
   records.forEach(r => {
@@ -67,7 +68,13 @@ function setChartYear(year) {
   });
   drawAllCharts();
 }
-
+function setChartMonth(month) {
+  chartMonthFilter = Number(month);
+  document.querySelectorAll('.month-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.month) === chartMonthFilter);
+  });
+  drawAllCharts();
+}
 // ─── LOGIN / LOGOUT ─────────────────────────────────────────────────────────
 
 function doLogout() {
@@ -2582,10 +2589,19 @@ function renderChartYearFilter() {
   if (!container) return;
   const years = getAvailableYears();
   if (years.length === 0) { container.innerHTML = ''; return; }
-  let html = '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">Tümü</button>';
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"><span style="font-size:0.75rem;color:var(--text-muted);padding:4px 0">Yıl:</span>';
+  html += '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">Tümü</button>';
   years.forEach(y => {
     html += '<button class="year-btn' + (chartYearFilter === String(y) ? ' active' : '') + '" data-year="' + y + '" onclick="setChartYear(\'' + y + '\')">' + y + '</button>';
   });
+  html += '</div>';
+  var months = ['Tümü','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  html += '<div style="display:flex;flex-wrap:wrap;gap:4px"><span style="font-size:0.75rem;color:var(--text-muted);padding:4px 0">Ay:</span>';
+  months.forEach(function(m, i) {
+    var active = i === chartMonthFilter ? ' active' : '';
+    html += '<button class="year-btn month-btn' + active + '" data-month="' + i + '" onclick="setChartMonth(' + i + ')">' + m + '</button>';
+  });
+  html += '</div>';
   container.innerHTML = html;
 }
 
@@ -2904,41 +2920,48 @@ function drawAllCharts() {
   // --- HACCP Sicaklik Chart ---
   var sicaklikEmpty = document.getElementById('chartHaccpSicaklikEmpty');
   var sicaklikCanvas = document.getElementById('canvasHaccpSicaklik');
-  var sicaklikKayitlari = haccpRecords.filter(function(r) {
+  function haccpFilter(r) {
     if (r.type !== 'sicaklik') return false;
-    if (chartYearFilter === 'all') return true;
     if (!r.tarih) return false;
-    var y = new Date(r.tarih + 'T00:00:00').getFullYear();
-    return y === Number(chartYearFilter);
-  });
+    var d = new Date(r.tarih + 'T00:00:00');
+    if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return false;
+    if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
+    return true;
+  }
+  var sicaklikKayitlari = haccpRecords.filter(haccpFilter);
   if (sicaklikKayitlari.length > 0) {
     if (sicaklikEmpty) sicaklikEmpty.style.display = 'none';
     if (sicaklikCanvas) sicaklikCanvas.style.display = 'block';
-    sicaklikKayitlari.sort(function(a, b) { return (a.tarih + ' ' + a.saat).localeCompare(b.tarih + ' ' + b.saat); });
-    var depoGruplari = {};
+    // Gunluk grupla (her depo icin gunluk ortalama)
+    var gunlukVeri = {};
     sicaklikKayitlari.forEach(function(r) {
+      if (!r.tarih) return;
       var ad = r.depoAd || 'Bilinmeyen';
-      if (!depoGruplari[ad]) depoGruplari[ad] = [];
-      depoGruplari[ad].push(r);
+      if (!gunlukVeri[r.tarih]) gunlukVeri[r.tarih] = {};
+      if (!gunlukVeri[r.tarih][ad]) gunlukVeri[r.tarih][ad] = [];
+      var v = parseFloat(r.sicaklik);
+      if (!isNaN(v)) gunlukVeri[r.tarih][ad].push(v);
     });
+    var gunlukTarihler = Object.keys(gunlukVeri).sort();
     var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
-    var renkIdx = 0;
-    var sicaklikLabels = sicaklikKayitlari.map(function(r) {
-      var p = (r.tarih || '').split('-');
-      return p.length === 3 ? p[2] + '/' + p[1] + ' ' + (r.saat || '') : (r.tarih || '') + ' ' + (r.saat || '');
+    var tumDepolar = [];
+    gunlukTarihler.forEach(function(t) { Object.keys(gunlukVeri[t]).forEach(function(d) { if (tumDepolar.indexOf(d) === -1) tumDepolar.push(d); }); });
+    var sicaklikLabels = gunlukTarihler.map(function(t) {
+      var p = t.split('-');
+      return p.length === 3 ? p[2] + '/' + p[1] : t;
     });
-    var sicaklikDatasets = [];
-    for (var depoAd in depoGruplari) {
-      if (!depoGruplari.hasOwnProperty(depoAd)) continue;
-      var depoData = new Array(sicaklikKayitlari.length).fill(null);
-      var renk = depoRenkler[renkIdx % depoRenkler.length];
-      renkIdx++;
-      depoGruplari[depoAd].forEach(function(r) {
-        var idx = sicaklikKayitlari.indexOf(r);
-        if (idx !== -1) depoData[idx] = parseFloat(r.sicaklik);
-      });
-      sicaklikDatasets.push({ data: depoData, color: renk, label: depoAd });
-    }
+    var sicaklikDatasets = tumDepolar.map(function(ad, idx) {
+      return {
+        data: gunlukTarihler.map(function(t) {
+          var vals = (gunlukVeri[t] && gunlukVeri[t][ad]) || [];
+          if (vals.length === 0) return null;
+          var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+          return Math.round(sum / vals.length * 10) / 10;
+        }),
+        color: depoRenkler[idx % depoRenkler.length],
+        label: ad
+      };
+    });
     makeChart('canvasHaccpSicaklik', sicaklikLabels, sicaklikDatasets, { type: 'line', showValues: false });
   } else {
     if (sicaklikEmpty) sicaklikEmpty.style.display = 'block';
@@ -2948,13 +2971,7 @@ function drawAllCharts() {
   // --- Aylik Ortalama Depo Sicaklik Chart ---
   var aylikSicaklikEmpty = document.getElementById('chartHaccpAylikEmpty');
   var aylikSicaklikCanvas = document.getElementById('canvasHaccpAylik');
-  var aylikSicaklikKayitlari = haccpRecords.filter(function(r) {
-    if (r.type !== 'sicaklik') return false;
-    if (chartYearFilter === 'all') return true;
-    if (!r.tarih) return false;
-    var y = new Date(r.tarih + 'T00:00:00').getFullYear();
-    return y === Number(chartYearFilter);
-  });
+  var aylikSicaklikKayitlari = haccpRecords.filter(haccpFilter);
   if (aylikSicaklikKayitlari.length > 0) {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'none';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'block';
