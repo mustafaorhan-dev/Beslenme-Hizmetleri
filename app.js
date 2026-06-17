@@ -63,9 +63,6 @@ function getAvailableYears() {
 }
 function setChartYear(year) {
   chartYearFilter = year;
-  document.querySelectorAll('.year-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.year === year);
-  });
   drawAllCharts();
 }
 function setChartMonth(month) {
@@ -2588,15 +2585,17 @@ function renderChartYearFilter() {
   const container = document.getElementById('chartYearFilter');
   if (!container) return;
   const years = getAvailableYears();
-  if (years.length === 0) { container.innerHTML = ''; return; }
-  let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"><span style="font-size:0.75rem;color:var(--text-muted);padding:4px 0">Yıl:</span>';
-  html += '<button class="year-btn' + (chartYearFilter === 'all' ? ' active' : '') + '" data-year="all" onclick="setChartYear(\'all\')">Tümü</button>';
-  years.forEach(y => {
-    html += '<button class="year-btn' + (chartYearFilter === String(y) ? ' active' : '') + '" data-year="' + y + '" onclick="setChartYear(\'' + y + '\')">' + y + '</button>';
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">Yıl:</label>';
+  html += '<select onchange="setChartYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+  html += '<option value="all" ' + (chartYearFilter === 'all' ? 'selected' : '') + '>Tümü</option>';
+  years.forEach(function(y) {
+    var sel = chartYearFilter === String(y) ? ' selected' : '';
+    html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
   });
-  html += '</div>';
+  html += '</select>';
+  html += '<span style="font-size:0.8rem;color:var(--text-muted);margin-left:4px">Ay:</span>';
   var months = ['Tümü','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-  html += '<div style="display:flex;flex-wrap:wrap;gap:4px"><span style="font-size:0.75rem;color:var(--text-muted);padding:4px 0">Ay:</span>';
   months.forEach(function(m, i) {
     var active = i === chartMonthFilter ? ' active' : '';
     html += '<button class="year-btn month-btn' + active + '" data-month="' + i + '" onclick="setChartMonth(' + i + ')">' + m + '</button>';
