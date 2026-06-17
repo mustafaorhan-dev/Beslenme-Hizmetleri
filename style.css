@@ -587,16 +587,22 @@ body {
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-/* Grafikler sekmesi için dikey kaydırma */
+/* Grafikler sekmesi için kaydırma */
 #content-charts.active {
-  max-height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px);
+}
+#content-charts.active .charts-grid {
+  flex: 1;
   overflow-y: auto;
   padding-right: 6px;
+  min-height: 0;
 }
-#content-charts.active::-webkit-scrollbar { width: 6px; }
-#content-charts.active::-webkit-scrollbar-track { background: transparent; }
-#content-charts.active::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
-#content-charts.active::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+#content-charts.active .charts-grid::-webkit-scrollbar { width: 6px; }
+#content-charts.active .charts-grid::-webkit-scrollbar-track { background: transparent; }
+#content-charts.active .charts-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+#content-charts.active .charts-grid::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
