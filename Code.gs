@@ -55,17 +55,21 @@ function doPost(e) {
       let sheet = ss.getSheetByName(HACCP_SHEET_NAME);
       if (!sheet) {
         sheet = ss.insertSheet(HACCP_SHEET_NAME);
-        sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
+        sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
       }
       const records = body.records || [];
-      const headers = ['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
-      const lastRow = sheet.getLastRow();
+      const headers = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+      var currentHeaders = sheet.getDataRange().getValues()[0] || [];
+      if (currentHeaders.join() !== headers.join()) {
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      }
+      var lastRow = sheet.getLastRow();
       if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
       if (records.length > 0) {
         const rows = records.map(function(r) {
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', r.depoNo != null ? Number(r.depoNo) : '',
+            r.saat || '', r.depoAd || ('Depo ' + (r.depoNo || '')),
             r.sicaklik != null ? Number(r.sicaklik) : '', r.not || '',
             r.ogun || '', r.yemekAdi || '', r.miktar || '',
             r.saklamaSicakligi || '', r.imhaTarihi || '',
