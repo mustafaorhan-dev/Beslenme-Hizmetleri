@@ -249,18 +249,23 @@ async function syncHaccpToGSheets() {
     if (haccpRecords.length === 0) {
       var pulled = await syncHaccpFromGSheets();
       if (pulled) {
-        showToast('Google Sheets\'ten ' + haccpRecords.length + ' kayıt alındı.', 'success');
-        saveHaccpData();
-        renderHaccp();
+        if (haccpRecords.length > 0) {
+          showToast('Google Sheets\'ten ' + haccpRecords.length + ' kayıt alındı.', 'success');
+          saveHaccpData();
+          renderHaccp();
+        } else {
+          showToast('Depo adları Google Sheets\'ten alındı.', 'success');
+        }
       } else {
         showToast('Google Sheets\'te kayıt bulunamadı.', 'info');
       }
       return;
     }
+    var depoAdlari = loadHaccpDepoAdlari();
     const res = await fetch(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords })
+      body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
     });
     const data = await res.json();
     if (data.success) {
@@ -276,14 +281,15 @@ async function syncHaccpToGSheets() {
 let haccpSyncTimer = null;
 function syncHaccpSilent() {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
-  if (haccpRecords.length === 0) return;
+  if (haccpRecords.length === 0 && !localStorage.getItem(HACCP_DEPO_KEY)) return;
   haccpSyncTimer = setTimeout(async () => {
     if (!gsheetConfig.webappUrl) return;
     try {
+      var depoAdlari = loadHaccpDepoAdlari();
       await fetch(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords })
+        body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
       });
     } catch (_) {}
   }, 400);
@@ -314,7 +320,13 @@ async function syncHaccpFromGSheets() {
         yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
       }));
     }
+    var hasDepo = false;
+    if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
+      try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(data.depoAdlari)); } catch (_) {}
+      hasDepo = true;
+    }
     if (data.data && data.data.length > 0) return true;
+    if (hasDepo) return true;
     return false;
   } catch (_) { return false; }
 }
@@ -703,13 +715,18 @@ let editingHaccpType = null;
 
 function loadHaccpDepoAdlari() {
   try {
-    const stored = localStorage.getItem(HACCP_DEPO_KEY);
-    return stored ? JSON.parse(stored) : [...DEFAULT_DEPO_ADLARI];
-  } catch (_) { return [...DEFAULT_DEPO_ADLARI]; }
+    var stored = localStorage.getItem(HACCP_DEPO_KEY);
+    if (stored !== null) {
+      var parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (_) {}
+  return [...DEFAULT_DEPO_ADLARI];
 }
 
 function saveHaccpDepoAdlari(list) {
   try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(list)); } catch (_) {}
+  syncHaccpSilent();
 }
 
 function getHaccpDepoAdlari() {

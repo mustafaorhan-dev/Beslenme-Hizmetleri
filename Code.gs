@@ -79,6 +79,10 @@ function doPost(e) {
         });
         sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
       }
+      // Depo adlarını PropertiesService'te sakla (Google Sheets dokümanında kalıcı)
+      if (body.depoAdlari && Array.isArray(body.depoAdlari)) {
+        PropertiesService.getDocumentProperties().setProperty('HACCP_DEPO_ADLARI', JSON.stringify(body.depoAdlari));
+      }
       return jsonResponse({ success: true, count: records.length, action: 'saveHaccp' });
     }
 
@@ -95,7 +99,9 @@ function doPost(e) {
         headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
         rows.push(row);
       }
-      return jsonResponse({ data: rows });
+      var depoAdlariStr = PropertiesService.getDocumentProperties().getProperty('HACCP_DEPO_ADLARI');
+      var depoAdlari = depoAdlariStr ? JSON.parse(depoAdlariStr) : null;
+      return jsonResponse({ data: rows, depoAdlari: depoAdlari });
     }
 
     // Menü işlemleri
