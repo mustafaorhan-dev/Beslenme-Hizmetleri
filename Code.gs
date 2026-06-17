@@ -18,13 +18,13 @@ function formatCellValue(val, header) {
 
 function getDepoAdlari() {
   var list = [];
-  // 1. Sheet'ten oku
+  // 1. Sheet'ten oku (başlık satırı yok, 0-indeks)
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(DEPO_ADLARI_SHEET);
     if (sheet) {
       var data = sheet.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
+      for (var i = 0; i < data.length; i++) {
         var name = String(data[i][0] || '').trim();
         if (name) list.push(name);
       }
@@ -56,16 +56,21 @@ function depoNoToName(val) {
   if (!val) return '';
   var s = String(val).trim();
   var list = getDepoAdlari();
-  // Tam eşleşme?
+  // Tam eşleşme (isim zaten listede)
   if (list.indexOf(s) >= 0) return s;
-  // Sayısal depoNo -> listeden isim bul
-  var num = parseInt(s, 10);
-  if (!isNaN(num) && num >= 1 && num <= list.length) {
-    return list[num - 1];
-  }
-  // listede ad olarak geçiyor mu? (küçük/büyük harf duyarsız)
+  // Küçük/büyük harf duyarsız eşleşme
   for (var i = 0; i < list.length; i++) {
     if (list[i].toLowerCase() === s.toLowerCase()) return list[i];
+  }
+  // Sayısal değer ara: listede sonu bu sayıyla biten ismi bul
+  var num = parseInt(s, 10);
+  if (!isNaN(num)) {
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i].match(/(\d+)$/);
+      if (m && parseInt(m[1], 10) === num) return list[i];
+    }
+    // Sıra indeksi dene (1-indexed)
+    if (num >= 1 && num <= list.length) return list[num - 1];
   }
   return 'Depo ' + s;
 }
@@ -96,11 +101,9 @@ function doGet(e) {
     for (var i = 1; i < data.length; i++) {
       var row = {};
       headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
-      // depoNo varsa depoAd'e çevir (isim listesinden bak)
-      if (depoNoIdx >= 0 && depoAdIdx < 0) {
-        row.depoAd = depoNoToName(data[i][depoNoIdx]);
-      } else if (depoNoIdx >= 0 && depoAdIdx >= 0 && !row.depoAd) {
-        row.depoAd = depoNoToName(data[i][depoNoIdx]);
+      // Her durumda depoAd değerini isim listesinden dönüştür
+      if (row.depoAd || row.depoNo) {
+        row.depoAd = depoNoToName(row.depoAd || row.depoNo);
       }
       rows.push(row);
     }
@@ -177,8 +180,8 @@ function doPost(e) {
       for (var i = 1; i < data.length; i++) {
         var row = {};
         headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
-        if (depoNoIdx >= 0 && (depoAdIdx < 0 || !row.depoAd)) {
-          row.depoAd = depoNoToName(data[i][depoNoIdx]);
+        if (row.depoAd || row.depoNo) {
+          row.depoAd = depoNoToName(row.depoAd || row.depoNo);
         }
         rows.push(row);
       }
