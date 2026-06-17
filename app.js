@@ -832,21 +832,32 @@ function sicaklikDurum(sicaklik, depoAd) {
   return { text: 'Yüksek', cls: 'badge badge-err' };
 }
 
+var haccpSicaklikPage = 0;
+var haccpSicaklikPageSize = 5;
+
 function renderHaccpSicaklik() {
   const tbody = document.getElementById('haccpSicaklikTbody');
   const table = document.getElementById('haccpSicaklikTable');
   const empty = document.getElementById('haccpSicaklikEmpty');
+  const nav = document.getElementById('haccpSicaklikNav');
   const records = getHaccpRecords('sicaklik');
 
   if (records.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    if (nav) nav.style.display = 'none';
     return;
   }
   table.style.display = 'table';
   empty.style.display = 'none';
 
-  tbody.innerHTML = records.map(r => {
+  var totalPages = Math.ceil(records.length / haccpSicaklikPageSize);
+  if (haccpSicaklikPage >= totalPages) haccpSicaklikPage = 0;
+  if (haccpSicaklikPage < 0) haccpSicaklikPage = totalPages - 1;
+  var start = haccpSicaklikPage * haccpSicaklikPageSize;
+  var pageRecords = records.slice(start, start + haccpSicaklikPageSize);
+
+  tbody.innerHTML = pageRecords.map(r => {
     const depoAd = r.depoAd || ('Depo ' + r.depoNo);
     const durum = sicaklikDurum(r.sicaklik, depoAd);
     return `<tr>
@@ -865,6 +876,23 @@ function renderHaccpSicaklik() {
       </td>
     </tr>`;
   }).join('');
+
+  if (nav) {
+    nav.style.display = totalPages > 1 ? 'block' : 'none';
+    document.getElementById('haccpSicaklikPageInfo').textContent = 'Sayfa ' + (haccpSicaklikPage + 1) + ' / ' + totalPages + ' (' + records.length + ' kayıt)';
+    document.getElementById('haccpSicaklikPrevBtn').disabled = haccpSicaklikPage === 0;
+    document.getElementById('haccpSicaklikNextBtn').disabled = haccpSicaklikPage >= totalPages - 1;
+  }
+}
+
+function haccpSicaklikPagePrev() {
+  if (haccpSicaklikPage > 0) { haccpSicaklikPage--; renderHaccpSicaklik(); }
+}
+
+function haccpSicaklikPageNext() {
+  var records = getHaccpRecords('sicaklik');
+  var totalPages = Math.ceil(records.length / haccpSicaklikPageSize);
+  if (haccpSicaklikPage < totalPages - 1) { haccpSicaklikPage++; renderHaccpSicaklik(); }
 }
 
 function renderHaccpNumune() {
