@@ -21,7 +21,7 @@ function doGet(e) {
       sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'ürün 1', 'miktar 1', 'birim 1', 'ürün 2', 'miktar 2', 'birim 2', 'ürün 3', 'miktar 3', 'birim 3', 'ürün 4', 'miktar 4', 'birim 4', 'ürün 5', 'miktar 5', 'birim 5', 'ürün 6', 'miktar 6', 'birim 6', 'ürün 7', 'miktar 7', 'birim 7', 'ürün 8', 'miktar 8', 'birim 8', 'ürün 9', 'miktar 9', 'birim 9', 'ürün 10', 'miktar 10', 'birim 10']);
     } else if (sheetName === HACCP_SHEET_NAME) {
       sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(HACCP_SHEET_NAME);
-      sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoNo', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
+      sheet.appendRow(['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified']);
     } else {
       return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
     }

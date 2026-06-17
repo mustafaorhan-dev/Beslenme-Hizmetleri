@@ -245,11 +245,18 @@ async function syncHaccpToGSheets() {
     showToast('Önce Web App URL\'sini ayarlayın (Senkronizasyon paneli).', 'error');
     return;
   }
-  if (haccpRecords.length === 0) {
-    showToast('Senkronize edilecek Gıda Güvenliği kaydı yok.', 'error');
-    return;
-  }
   try {
+    if (haccpRecords.length === 0) {
+      var pulled = await syncHaccpFromGSheets();
+      if (pulled) {
+        showToast('Google Sheets\'ten ' + haccpRecords.length + ' kayıt alındı.', 'success');
+        saveHaccpData();
+        renderHaccp();
+      } else {
+        showToast('Google Sheets\'te kayıt bulunamadı.', 'info');
+      }
+      return;
+    }
     const res = await fetch(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -269,8 +276,9 @@ async function syncHaccpToGSheets() {
 let haccpSyncTimer = null;
 function syncHaccpSilent() {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
+  if (haccpRecords.length === 0) return;
   haccpSyncTimer = setTimeout(async () => {
-    if (!gsheetConfig.webappUrl || haccpRecords.length === 0) return;
+    if (!gsheetConfig.webappUrl) return;
     try {
       await fetch(gsheetConfig.webappUrl, {
         method: 'POST',
