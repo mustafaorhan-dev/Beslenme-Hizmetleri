@@ -2,6 +2,16 @@ const SHEET_NAME = 'Atık Kontrol Sistemi';
 const DISH_SHEET_NAME = 'Yemek Listesi';
 const HACCP_SHEET_NAME = 'Gıda Güvenliği';
 
+function formatCellValue(val, header) {
+  if (Object.prototype.toString.call(val) === '[object Date]' && !isNaN(val)) {
+    if (header === 'saat') {
+      return Utilities.formatDate(val, Session.getScriptTimeZone(), 'HH:mm');
+    }
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return val;
+}
+
 function doGet(e) {
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
@@ -22,7 +32,7 @@ function doGet(e) {
   const rows = [];
   for (let i = 1; i < data.length; i++) {
     const row = {};
-    headers.forEach((h, idx) => { row[h] = data[i][idx]; });
+    headers.forEach((h, idx) => { row[h] = formatCellValue(data[i][idx], h); });
     rows.push(row);
   }
   return jsonResponse({ data: rows });
@@ -78,7 +88,7 @@ function doPost(e) {
       const rows = [];
       for (var i = 1; i < data.length; i++) {
         var row = {};
-        headers.forEach(function(h, idx) { row[h] = data[i][idx]; });
+        headers.forEach(function(h, idx) { row[h] = formatCellValue(data[i][idx], h); });
         rows.push(row);
       }
       return jsonResponse({ data: rows });

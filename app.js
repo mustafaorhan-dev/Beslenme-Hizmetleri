@@ -187,6 +187,16 @@ function formatLocalDate(d) {
   return `${y}-${m}-${day}`;
 }
 
+function normalizeSaat(v) {
+  if (!v) return '';
+  if (/^\d{2}:\d{2}$/.test(v)) return v;
+  const d = new Date(v);
+  if (!isNaN(d)) {
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  return v;
+}
+
 function setCurrentDate() {
   const el = document.getElementById('currentDate');
   const now = new Date();
@@ -280,8 +290,8 @@ async function syncHaccpFromGSheets() {
       haccpRecords = data.data.map(r => ({
         id: Number(r.id) || Date.now() + Math.random(),
         type: r.type || 'sicaklik',
-        tarih: r.tarih || '',
-        saat: r.saat || '',
+        tarih: normalizeDate(r.tarih || ''),
+        saat: normalizeSaat(r.saat || ''),
         depoNo: r.depoNo != null ? Number(r.depoNo) : undefined,
         sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
         not: r.not_ || '',
