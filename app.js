@@ -2608,8 +2608,8 @@ function drawAllCharts() {
     });
   }
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpSicaklik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -2882,6 +2882,44 @@ function drawAllCharts() {
   const weekValues = weekLabels.map(l => weeklyData[l]);
   if (weekLabels.length > 0) {
     makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
+  }
+
+  // --- HACCP Sicaklik Chart ---
+  var sicaklikEmpty = document.getElementById('chartHaccpSicaklikEmpty');
+  var sicaklikCanvas = document.getElementById('canvasHaccpSicaklik');
+  var sicaklikKayitlari = haccpRecords.filter(function(r) { return r.type === 'sicaklik'; });
+  if (sicaklikKayitlari.length > 0) {
+    if (sicaklikEmpty) sicaklikEmpty.style.display = 'none';
+    if (sicaklikCanvas) sicaklikCanvas.style.display = 'block';
+    sicaklikKayitlari.sort(function(a, b) { return (a.tarih + ' ' + a.saat).localeCompare(b.tarih + ' ' + b.saat); });
+    var depoGruplari = {};
+    sicaklikKayitlari.forEach(function(r) {
+      var ad = r.depoAd || 'Bilinmeyen';
+      if (!depoGruplari[ad]) depoGruplari[ad] = [];
+      depoGruplari[ad].push(r);
+    });
+    var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    var renkIdx = 0;
+    var sicaklikLabels = sicaklikKayitlari.map(function(r) {
+      var p = (r.tarih || '').split('-');
+      return p.length === 3 ? p[2] + '/' + p[1] + ' ' + (r.saat || '') : (r.tarih || '') + ' ' + (r.saat || '');
+    });
+    var sicaklikDatasets = [];
+    for (var depoAd in depoGruplari) {
+      if (!depoGruplari.hasOwnProperty(depoAd)) continue;
+      var depoData = new Array(sicaklikKayitlari.length).fill(null);
+      var renk = depoRenkler[renkIdx % depoRenkler.length];
+      renkIdx++;
+      depoGruplari[depoAd].forEach(function(r) {
+        var idx = sicaklikKayitlari.indexOf(r);
+        if (idx !== -1) depoData[idx] = parseFloat(r.sicaklik);
+      });
+      sicaklikDatasets.push({ data: depoData, color: renk, label: depoAd });
+    }
+    makeChart('canvasHaccpSicaklik', sicaklikLabels, sicaklikDatasets, { type: 'line', showValues: false });
+  } else {
+    if (sicaklikEmpty) sicaklikEmpty.style.display = 'block';
+    if (sicaklikCanvas) sicaklikCanvas.style.display = 'none';
   }
 }
 
