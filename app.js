@@ -721,33 +721,20 @@ function addHaccpDepoAdi(name) {
 function removeHaccpDepoAdi(name) {
   const list = loadHaccpDepoAdlari().filter(n => n !== name);
   saveHaccpDepoAdlari(list);
+  renderHaccpDepoListesi();
+  renderHaccpSicaklikDepoSelect();
   return list;
 }
 
 function showHaccpDepoYonetim() {
-  const list = loadHaccpDepoAdlari();
-  const existing = document.getElementById('haccpDepoYonetimModal');
-  if (existing) existing.remove();
+  document.getElementById('haccpDepoModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderHaccpDepoListesi();
+}
 
-  const modal = document.createElement('div');
-  modal.id = 'haccpDepoYonetimModal';
-  modal.className = 'modal-overlay';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
-  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
-
-  modal.innerHTML = '<div class="modal" style="max-width:450px">' +
-    '<div class="modal-header"><h2>Depo Adları</h2><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>' +
-    '<div class="modal-body" style="padding:1rem">' +
-    '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-    '<input type="text" id="haccpYeniDepoInput" placeholder="Yeni depo adı..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px" />' +
-    '<button class="btn btn-primary btn-sm" onclick="addHaccpDepoAdiFromInput()">Ekle</button></div>' +
-    '<div id="haccpDepoListesi">' + list.map(function(n) {
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
-        '<span>' + n + '</span>' +
-        '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\');renderHaccpDepoListesi()">Sil</button></div>';
-    }).join('') + '</div></div></div>';
-
-  document.body.appendChild(modal);
+function closeHaccpDepoModal() {
+  document.getElementById('haccpDepoModal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function addHaccpDepoAdiFromInput() {
@@ -756,6 +743,7 @@ function addHaccpDepoAdiFromInput() {
   addHaccpDepoAdi(input.value.trim());
   input.value = '';
   renderHaccpDepoListesi();
+  renderHaccpSicaklikDepoSelect();
 }
 
 function renderHaccpDepoListesi() {
@@ -765,7 +753,18 @@ function renderHaccpDepoListesi() {
   container.innerHTML = list.map(function(n) {
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
       '<span>' + n + '</span>' +
-      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\');renderHaccpDepoListesi()">Sil</button></div>';
+      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button></div>';
+  }).join('');
+}
+
+function renderHaccpSicaklikDepoSelect() {
+  const select = document.getElementById('hfDepoAd');
+  if (!select) return;
+  const currentVal = select.value;
+  const list = getHaccpDepoAdlari();
+  select.innerHTML = list.map(function(d) {
+    var sel = d === currentVal ? ' selected' : '';
+    return '<option value="' + d.replace(/"/g,'&quot;') + '"' + sel + '>' + d + '</option>';
   }).join('');
 }
 

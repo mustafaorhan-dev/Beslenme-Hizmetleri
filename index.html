@@ -971,6 +971,28 @@
     </div>
   </div>
 
+  <!-- ===== HACCP DEPO YONETIM MODAL ===== -->
+  <div class="modal-overlay" id="haccpDepoModal" onclick="if(event.target===this)closeHaccpDepoModal()">
+    <div class="modal" style="max-width:450px">
+      <div class="modal-header">
+        <h2>Depo Adları</h2>
+        <button class="modal-close" onclick="closeHaccpDepoModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="haccpYeniDepoInput" placeholder="Yeni depo adı..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px" />
+          <button class="btn btn-primary btn-sm" onclick="addHaccpDepoAdiFromInput()">Ekle</button>
+        </div>
+        <div id="haccpDepoListesi"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeHaccpDepoModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast-container" id="toastContainer"></div>
 
