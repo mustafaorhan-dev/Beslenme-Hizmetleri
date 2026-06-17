@@ -675,6 +675,10 @@
       <div class="section-card">
         <div class="section-header">
           <h2>Soğuk Depo Sıcaklık Kayıtları</h2>
+          <button class="btn btn-outline btn-sm" onclick="showHaccpDepoYonetim()" title="Depo adlarını düzenle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Depo Adları
+          </button>
           <button class="btn btn-primary btn-sm" onclick="openHaccpModal('sicaklik')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
             Yeni Kayıt
@@ -686,7 +690,7 @@
           </div>
           <table class="data-table" id="haccpSicaklikTable" style="display:none">
             <thead>
-              <tr><th>Tarih</th><th>Saat</th><th>Depo</th><th>Sıcaklık (°C)</th><th>Durum</th><th>Not</th><th>İşlem</th></tr>
+              <tr><th>Tarih</th><th>Saat</th><th>Depo Adı</th><th>Sıcaklık (°C)</th><th>Not</th><th>İşlem</th></tr>
             </thead>
             <tbody id="haccpSicaklikTbody"></tbody>
           </table>

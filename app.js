@@ -687,9 +687,87 @@ function exportPDF() {
 
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
 const HACCP_STORAGE_KEY = 'haccp_records';
+const HACCP_DEPO_KEY = 'haccp_depo_adlari';
+const DEFAULT_DEPO_ADLARI = ['Soğuk Depo 1', 'Soğuk Depo 2', 'Soğuk Depo 3', 'Soğuk Depo 4', 'Derin Dondurucu 1', 'Derin Dondurucu 2'];
 let haccpRecords = [];
 let editingHaccpId = null;
 let editingHaccpType = null;
+
+function loadHaccpDepoAdlari() {
+  try {
+    const stored = localStorage.getItem(HACCP_DEPO_KEY);
+    return stored ? JSON.parse(stored) : [...DEFAULT_DEPO_ADLARI];
+  } catch (_) { return [...DEFAULT_DEPO_ADLARI]; }
+}
+
+function saveHaccpDepoAdlari(list) {
+  try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(list)); } catch (_) {}
+}
+
+function getHaccpDepoAdlari() {
+  return loadHaccpDepoAdlari();
+}
+
+function addHaccpDepoAdi(name) {
+  const list = loadHaccpDepoAdlari();
+  name = name.trim();
+  if (name && !list.includes(name)) {
+    list.push(name);
+    saveHaccpDepoAdlari(list);
+  }
+  return list;
+}
+
+function removeHaccpDepoAdi(name) {
+  const list = loadHaccpDepoAdlari().filter(n => n !== name);
+  saveHaccpDepoAdlari(list);
+  return list;
+}
+
+function showHaccpDepoYonetim() {
+  const list = loadHaccpDepoAdlari();
+  const existing = document.getElementById('haccpDepoYonetimModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'haccpDepoYonetimModal';
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = '<div class="modal" style="max-width:450px">' +
+    '<div class="modal-header"><h2>Depo Adları</h2><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>' +
+    '<div class="modal-body" style="padding:1rem">' +
+    '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+    '<input type="text" id="haccpYeniDepoInput" placeholder="Yeni depo adı..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px" />' +
+    '<button class="btn btn-primary btn-sm" onclick="addHaccpDepoAdiFromInput()">Ekle</button></div>' +
+    '<div id="haccpDepoListesi">' + list.map(function(n) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
+        '<span>' + n + '</span>' +
+        '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\');renderHaccpDepoListesi()">Sil</button></div>';
+    }).join('') + '</div></div></div>';
+
+  document.body.appendChild(modal);
+}
+
+function addHaccpDepoAdiFromInput() {
+  const input = document.getElementById('haccpYeniDepoInput');
+  if (!input || !input.value.trim()) return;
+  addHaccpDepoAdi(input.value.trim());
+  input.value = '';
+  renderHaccpDepoListesi();
+}
+
+function renderHaccpDepoListesi() {
+  const list = loadHaccpDepoAdlari();
+  const container = document.getElementById('haccpDepoListesi');
+  if (!container) return;
+  container.innerHTML = list.map(function(n) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span>' + n + '</span>' +
+      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\');renderHaccpDepoListesi()">Sil</button></div>';
+  }).join('');
+}
 
 function loadHaccpData() {
   try {
@@ -748,7 +826,6 @@ function renderHaccpSicaklik() {
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
       <td class="${durum.cls}"><strong>${r.sicaklik}</strong></td>
-      <td><span class="${durum.cls}">${durum.text}</span></td>
       <td>${r.not || '—'}</td>
       <td>
         <button class="btn-icon" onclick="editHaccpRecord('sicaklik',${r.id})" title="Düzenle">
@@ -845,15 +922,17 @@ function openHaccpModal(type, id) {
   const saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
   if (type === 'sicaklik') {
-    var depoList = [...new Set(haccpRecords.filter(r => r.type === 'sicaklik' && r.depoAd).map(r => r.depoAd))].sort();
+    var depoAdlari = getHaccpDepoAdlari();
     var depoVal = rec ? (rec.depoAd || '') : '';
-    var depoOptions = depoList.map(function(d) { return '<option value="' + d.replace(/"/g,'&quot;') + '">' + d + '</option>'; }).join('');
-    var datalistId = 'hfDepoList';
+    var depoOptions = depoAdlari.map(function(d) {
+      var sel = d === depoVal ? ' selected' : '';
+      return '<option value="' + d.replace(/"/g,'&quot;') + '"' + sel + '>' + d + '</option>';
+    }).join('');
     body.innerHTML = `
       <div class="form-grid" style="grid-template-columns:1fr 1fr">
         <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
         <div class="form-group"><label>Saat</label><input type="time" id="hfSaat" value="${rec ? rec.saat : saat}" required /></div>
-        <div class="form-group"><label>Depo Adı</label><input type="text" id="hfDepoAd" list="${datalistId}" value="${depoVal}" placeholder="Örn: Soğuk Depo 1" required /><datalist id="${datalistId}">${depoOptions}</datalist></div>
+        <div class="form-group"><label>Depo Adı</label><select id="hfDepoAd" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">${depoOptions}</select></div>
         <div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0" required /></div>
         <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
       </div>`;
