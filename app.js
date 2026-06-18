@@ -1022,6 +1022,35 @@ function renderHaccpSicaklik() {
   }
 }
 
+function haccpSicaklikPrint() {
+  var records = getHaccpRecords('sicaklik');
+  var filter = document.getElementById('haccpSicaklikDepoFilter');
+  var depo = filter ? filter.value : '';
+  if (depo) records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === depo; });
+  records.sort(function(a, b) {
+    if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
+    return (a.saat || '') > (b.saat || '') ? -1 : 1;
+  });
+  var rows = records.map(function(r) {
+    var da = r.depoAd || ('Depo ' + r.depoNo);
+    var durum = sicaklikDurum(r.sicaklik, da);
+    return '<tr><td>' + formatTarihTR(r.tarih) + '</td><td>' + (r.saat || '\u2014') + '</td><td>' + da + '</td><td>' + r.sicaklik + '</td><td class="' + durum.cls + '">' + durum.text + '</td></tr>';
+  }).join('');
+  var win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><title>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131</title><style>');
+  win.document.write('body{font-family:Arial,sans-serif;margin:20px;color:#333}h1{font-size:18px;margin-bottom:4px}p{font-size:12px;color:#666;margin-bottom:15px}');
+  win.document.write('table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #ddd}th{background:#f5f5f5;font-weight:600}');
+  win.document.write('.badge-ok{color:#10b981}.badge-warn{color:#f59e0b}.badge-err{color:#ef4444}');
+  win.document.write('@media print{body{margin:10mm}button{display:none}}');
+  win.document.write('</style></head><body>');
+  win.document.write('<h1>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131</h1>');
+  win.document.write('<p>' + (depo || 'T\u00fcm depolar') + ' &mdash; ' + records.length + ' kay\u0131t</p>');
+  win.document.write('<table><thead><tr><th>Tarih</th><th>Saat</th><th>Depo</th><th>S\u0131cakl\u0131k</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>');
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function() { win.print(); }, 500);
+}
+
 function haccpSicaklikPagePrev() {
   if (haccpSicaklikPage > 0) { haccpSicaklikPage--; renderHaccpSicaklik(); }
 }
