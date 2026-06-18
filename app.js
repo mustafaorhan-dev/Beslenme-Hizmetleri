@@ -85,6 +85,7 @@ function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
   if (input.value === LOGIN_PASSWORD) {
+    localStorage.setItem('atik_kontrol_login_hash', btoa(LOGIN_PASSWORD));
     document.getElementById('loginOverlay').classList.add('hidden');
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
   } else {
@@ -102,11 +103,16 @@ function doLogin() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('loginPassword').focus();
-  await new Promise(resolve => {
-    window._loginResolve = resolve;
-    window._loginAttempts = 0;
-  });
+  const savedHash = localStorage.getItem('atik_kontrol_login_hash');
+  if (savedHash) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+  } else {
+    document.getElementById('loginPassword').focus();
+    await new Promise(resolve => {
+      window._loginResolve = resolve;
+      window._loginAttempts = 0;
+    });
+  }
 
   loadGSheetConfig();
   setConnectionStatus('sync');
