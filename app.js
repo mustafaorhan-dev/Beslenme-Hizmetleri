@@ -157,7 +157,60 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     setConnectionStatus('err');
   }
+
+  // Otomatik polling: 30 sn'de bir Google Sheets'ten güncel verileri çek
+  startAutoSync();
 });
+
+let autoSyncTimer = null;
+
+function startAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  if (!gsheetConfig.webappUrl) return;
+  autoSyncTimer = setInterval(async () => {
+    await autoPull();
+  }, 30000);
+}
+
+let lastPollData = null;
+
+async function autoPull() {
+  try {
+    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
+    const data = await res.json();
+    if (!data.data || data.data.length === 0) return;
+
+    const cloudRecords = data.data
+      .filter(r => r.id)
+      .map(r => ({
+        id: Number(r.id) || Date.now(),
+        tarih: normalizeDate(r.tarih),
+        yemek: Number(r.yemek) || 0,
+        fire: Number(r.fire) || 0,
+        turnike: Number(r.turnike) || 0,
+        personel: Number(r.personel) || 0,
+        toplam: Number(r.toplam) || 0,
+        porsiyon: Number(r.porsiyon) || 0,
+        atik: Number(r.atik) || 0,
+        ogrenci: Number(r.ogrenci) || 0,
+        yemek_adi: r.yemek_adi || ''
+      }));
+
+    const serialized = JSON.stringify(cloudRecords);
+    if (serialized === lastPollData) return;
+
+    lastPollData = serialized;
+    records = cloudRecords;
+    records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+    saveData();
+    filteredRecords = [...records];
+    renderAll();
+    drawAllCharts();
+    setConnectionStatus('ok');
+  } catch (_) {
+    setConnectionStatus('err');
+  }
+}
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
 function normalizeDate(v) {
@@ -222,6 +275,8 @@ function saveData() {
     // Storage full or unavailable - ignore silently
   }
   syncToSheetSilent();
+  // Polling karşılaştırması için cloud verisini güncelle
+  lastPollData = null;
 }
 
 async function syncToSheetSilent() {
