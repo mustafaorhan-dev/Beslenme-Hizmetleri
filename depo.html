@@ -259,8 +259,15 @@
       renderDepoGrid();
     }
 
+    function formatTarihTR(t) {
+      if (!t) return '—';
+      var m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? m[3] + '.' + m[2] + '.' + m[1] : t;
+    }
+
     // ─── RENDER DETAIL ────────────────────────────────────────────────────────────
     function renderDetail() {
+      console.log('haccpRecords:', haccpRecords.length, 'selectedDepo:', selectedDepo);
       var today = todayStr();
       var todayRecs = haccpRecords.filter(function(r) {
         return r.type === 'sicaklik' && r.depoAd === selectedDepo && r.tarih === today;
@@ -295,7 +302,7 @@
       } else {
         tbody.innerHTML = allRecs.map(function(r) {
           var durum = sicaklikDurum(r.sicaklik, selectedDepo);
-          var dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) : '--';
+          var dateStr = formatTarihTR(r.tarih);
           return '<tr>' +
             '<td>' + dateStr + '</td>' +
             '<td>' + (r.saat || '--:--') + '</td>' +
@@ -321,18 +328,84 @@
       el._timer = setTimeout(function() { el.classList.remove('show'); }, 2500);
     }
 
-    // ─── INIT ────────────────────────────────────────────────────────────────────
-    loadData();
-    var directDepo = getUrlParam('depo');
-    if (directDepo && allDepos.indexOf(directDepo) >= 0) {
-      selectDepo(directDepo);
-    } else if (directDepo) {
-      // Depo listede yoksa yine de seç
-      allDepos.push(directDepo);
-      selectDepo(directDepo);
-    } else {
-      renderDepoGrid();
+    // ─── NORMALIZE ───────────────────────────────────────────────────────────────
+    function normalizeDate(v) {
+      if (!v) return '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+      if (/^\d+(\.\d+)?$/.test(String(v))) {
+        var d = new Date(1899, 11, 30 + Number(v));
+        if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      }
+      var d = new Date(v);
+      if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      return '';
     }
+    function normalizeSaat(v) {
+      if (!v) return '';
+      if (/^\d{2}:\d{2}$/.test(v)) return v;
+      var d = new Date(v);
+      if (!isNaN(d)) return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      return v;
+    }
+
+    // ─── FETCH FROM GSHEETS ──────────────────────────────────────────────────────
+    async function fetchFromGSheets(webappUrl) {
+      try {
+        var res = await fetch(webappUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
+        var data = await res.json();
+        if (data.data && data.data.length > 0) {
+          haccpRecords = data.data.map(function(r) {
+            return {
+              id: Number(r.id) || Date.now() + Math.random(),
+              type: r.type || 'sicaklik',
+              tarih: normalizeDate(r.tarih || ''),
+              saat: normalizeSaat(r.saat || ''),
+              depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
+              sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
+              not: r.not_ || '',
+              ogun: r.ogun || '',
+              yemekAdi: r.yemekAdi || '',
+              miktar: r.miktar || '',
+              saklamaSicakligi: r.saklamaSicakligi || '',
+              imhaTarihi: r.imhaTarihi || '',
+              alan: r.alan || '',
+              yapilacakIs: r.yapilacakIs || '',
+              yapanKisi: r.yapanKisi || '',
+              yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
+            };
+          });
+        }
+        if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
+          allDepos = data.depoAdlari;
+        }
+        return true;
+      } catch (e) {
+        console.error('Google Sheets veri çekme hatası:', e);
+        return false;
+      }
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    (async function() {
+      loadData();
+      var directDepo = getUrlParam('depo');
+      var gsUrl = getUrlParam('url');
+
+      // QR'dan gelen URL varsa Google Sheets'ten veri çek
+      if (gsUrl) {
+        document.getElementById('pageSub').textContent = 'Google\'dan veriler al\u0131n\u0131yor...';
+        await fetchFromGSheets(gsUrl);
+      }
+
+      if (directDepo && allDepos.indexOf(directDepo) >= 0) {
+        selectDepo(directDepo);
+      } else if (directDepo) {
+        allDepos.push(directDepo);
+        selectDepo(directDepo);
+      } else {
+        renderDepoGrid();
+      }
+    })();
   </script>
 </body>
 </html>

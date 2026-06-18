@@ -792,7 +792,8 @@ function getBaseUrl() {
 }
 
 function getQrUrl(depoAdi) {
-  return getBaseUrl() + 'depo.html?depo=' + encodeURIComponent(depoAdi);
+  const url = gsheetConfig.webappUrl || DEFAULT_GSHEET_URL;
+  return getBaseUrl() + 'depo.html?depo=' + encodeURIComponent(depoAdi) + '&url=' + encodeURIComponent(url);
 }
 
 function showQrModal(depoAdi) {
