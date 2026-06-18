@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Depo Sıcaklık Takibi</title>
+  <title>Soğuk Depo Sıcaklık Kayıtları</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -11,7 +11,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --text2: #475569; --text3: #94a3b8;
-      --border: #e2e8f0; --accent: #6366f1; --cyan: #22d3ee; --green: #10b981; --red: #ef4444; --orange: #f59e0b;
+      --border: #e2e8f0; --accent: #6366f1; --green: #10b981; --red: #ef4444; --orange: #f59e0b;
       --radius: 14px; --shadow: 0 4px 16px rgba(0,0,0,0.06);
     }
     @media (prefers-color-scheme: dark) {
@@ -27,8 +27,6 @@
       padding: 0; margin: 0;
     }
     .container { max-width: 600px; margin: 0 auto; padding: 1rem; }
-
-    /* Header */
     .header {
       background: var(--card); border-bottom: 1px solid var(--border);
       padding: 1rem 1.25rem; position: sticky; top: 0; z-index: 10;
@@ -37,84 +35,70 @@
     .header-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 0.75rem; }
     .header h1 { font-size: 1.1rem; font-weight: 700; flex: 1; }
     .header .sub { font-size: 0.75rem; color: var(--text3); font-weight: 400; display: block; margin-top: 2px; }
-    .btn-back {
-      background: none; border: 1px solid var(--border); border-radius: 10px;
-      padding: 0.5rem 0.7rem; cursor: pointer; color: var(--text2);
-      font-size: 1.1rem; display: flex; align-items: center; gap: 0.3rem;
+
+    .filter-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.75rem 1rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow);
+    }
+    .filter-bar label { font-size: 0.85rem; color: var(--text2); font-weight: 600; white-space: nowrap; }
+    .filter-bar select {
+      flex: 1; padding: 0.5rem 0.6rem; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg); color: var(--text);
+      font-size: 0.85rem; font-family: inherit;
+    }
+    .btn-qr {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      display: flex; align-items: center; gap: 0.4rem;
+      transition: opacity 0.2s; white-space: nowrap;
+    }
+    .btn-qr:active { opacity: 0.7; }
+
+    .table-wrapper {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th {
+      text-align: left; padding: 0.65rem 0.75rem;
+      color: var(--text3); font-weight: 600; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border);
+    }
+    .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text2); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700;
+    }
+    .badge-ok { background: rgba(16,185,129,0.12); color: var(--green); }
+    .badge-warn { background: rgba(245,158,11,0.12); color: var(--orange); }
+    .badge-err { background: rgba(239,68,68,0.12); color: var(--red); }
+
+    .empty-state {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--text3); font-size: 0.9rem;
+    }
+    .empty-state p { margin-bottom: 0.25rem; }
+
+    .nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .nav button {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.4rem 0.75rem; cursor: pointer;
+      color: var(--text2); font-size: 0.85rem; font-family: inherit;
       transition: all 0.2s;
     }
-    .btn-back:hover { background: rgba(99,102,241,0.08); border-color: var(--accent); }
-
-    /* Depot Grid */
-    .depo-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
-      padding: 1rem 0;
-    }
-    .depo-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem 1rem;
-      cursor: pointer; transition: all 0.2s;
-      text-align: center; box-shadow: var(--shadow);
-    }
-    .depo-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.15); }
-    .depo-card:active { transform: scale(0.97); }
-    .depo-card .depo-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
-    .depo-card .depo-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .depo-card .depo-status {
-      display: inline-block; margin-top: 0.4rem; padding: 0.15rem 0.6rem;
-      border-radius: 999px; font-size: 0.7rem; font-weight: 600;
-    }
-    .depo-status.ok { background: rgba(16,185,129,0.12); color: var(--green); }
-    .depo-status.warn { background: rgba(245,158,11,0.12); color: var(--orange); }
-    .depo-status.err { background: rgba(239,68,68,0.12); color: var(--red); }
-    .depo-status.na { background: rgba(100,116,139,0.1); color: var(--text3); }
-
-    /* Detail Screen */
-    .screen { display: none; }
-    .screen.active { display: block; animation: fadeIn 0.25s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    .section-title {
-      font-size: 0.85rem; font-weight: 700; color: var(--text2);
-      margin: 1.25rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem;
-    }
-    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    /* Today Readings */
-    .reading-list { display: flex; flex-direction: column; gap: 0.5rem; }
-    .reading-item {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 0.85rem 1rem;
-      display: flex; align-items: center; gap: 0.75rem;
-      box-shadow: var(--shadow);
-    }
-    .reading-time { font-size: 0.75rem; color: var(--text3); min-width: 50px; font-weight: 600; }
-    .reading-temp {
-      font-size: 1.2rem; font-weight: 800; min-width: 70px;
-    }
-    .reading-temp.ok { color: var(--green); }
-    .reading-temp.warn { color: var(--orange); }
-    .reading-temp.err { color: var(--red); }
-    .reading-status { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; }
-    .reading-note { font-size: 0.75rem; color: var(--text3); flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .reading-empty {
-      text-align: center; padding: 2rem; color: var(--text3);
-      font-size: 0.85rem; background: var(--card); border-radius: 12px;
-      border: 1px dashed var(--border);
-    }
-
-    /* Recent Readings Table */
-    .recent-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .recent-table th {
-      text-align: left; padding: 0.5rem 0.6rem;
-      color: var(--text3); font-weight: 600; font-size: 0.7rem;
-      text-transform: uppercase; border-bottom: 1px solid var(--border);
-    }
-    .recent-table td {
-      padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border);
-      color: var(--text2);
-    }
-    .recent-table tr:last-child td { border-bottom: none; }
+    .nav button:disabled { opacity: 0.3; cursor: default; }
+    .nav button:not(:disabled):active { background: rgba(99,102,241,0.08); }
+    .nav .page-info { font-size: 0.8rem; color: var(--text3); }
 
     .toast {
       position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
@@ -122,220 +106,261 @@
       border-radius: 12px; padding: 0.75rem 1.25rem;
       font-size: 0.85rem; font-weight: 500; color: var(--text);
       box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      z-index: 100; display: none;
-      animation: toastIn 0.25s ease;
+      z-index: 100; display: none; white-space: nowrap;
     }
     .toast.show { display: block; }
-    .toast.success { border-color: rgba(16,185,129,0.3); }
-    .toast.error { border-color: rgba(239,68,68,0.3); }
-    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
     @media (max-width: 400px) {
-      .depo-grid { grid-template-columns: 1fr; }
       .container { padding: 0.75rem; }
-      .reading-temp { font-size: 1rem; min-width: 55px; }
+      .filter-bar { flex-wrap: wrap; }
+      .filter-bar select { min-width: 100px; }
+      .data-table { font-size: 0.78rem; }
+      .data-table th, .data-table td { padding: 0.5rem 0.5rem; }
     }
+
+    /* QR Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border-radius: var(--radius);
+      padding: 1.5rem; max-width: 360px; width: 100%;
+      text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    }
+    .modal-box h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .modal-box p { font-size: 0.8rem; color: var(--text3); margin-bottom: 1rem; }
+    .modal-box img { max-width: 100%; height: auto; border-radius: 8px; }
+    .modal-box .btn-close {
+      margin-top: 1rem; background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.5rem 1.5rem; cursor: pointer;
+      color: var(--text2); font-size: 0.85rem; font-family: inherit;
+    }
+    .modal-box .btn-close:active { background: rgba(99,102,241,0.08); }
   </style>
 </head>
 <body>
 
   <div class="header">
     <div class="header-inner">
-      <button class="btn-back" id="backBtn" onclick="goBack()" style="display:none">←</button>
-      <h1 id="pageTitle">Depo Sıcaklık Takibi <span class="sub" id="pageSub">QR Kod ile Hızlı Giriş</span></h1>
+      <h1>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131 <span class="sub" id="pageSub">QR Kod ile H\u0131zl\u0131 G\u00f6r\u00fcnt\u00fcleme</span></h1>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- === SELECTION SCREEN === -->
-    <div class="screen active" id="selectScreen">
-      <p style="font-size:0.85rem;color:var(--text3);margin-bottom:0.5rem;padding-top:0.25rem">
-        Sıcaklığını görüntülemek istediğiniz depoyu seçin:
-      </p>
-      <div class="depo-grid" id="depoGrid"></div>
+    <div class="filter-bar">
+      <label>Depo Filtresi:</label>
+      <select id="depoFilter" onchange="depoDegisti()"></select>
+      <button class="btn-qr" onclick="qrOlustur()">QR</button>
     </div>
 
-    <!-- === DETAIL SCREEN === -->
-    <div class="screen" id="detailScreen">
-      <div class="section-title">📋 Bugünkü Kayıtlar</div>
-      <div class="reading-list" id="todayReadings"></div>
-
-      <div class="section-title">📊 Son Kayıtlar</div>
-      <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden">
-        <table class="recent-table" id="recentTable">
-          <thead><tr><th>Tarih</th><th>Saat</th><th>Sıcaklık</th><th>Durum</th></tr></thead>
-          <tbody id="recentTbody"></tbody>
-        </table>
+    <div class="table-wrapper">
+      <div class="empty-state" id="emptyState">
+        <p>Bu depoya ait kay\u0131t bulunamad\u0131.</p>
       </div>
-      <div style="height:2rem"></div>
+      <table class="data-table" id="dataTable" style="display:none">
+        <thead>
+          <tr><th>Tarih</th><th>Saat</th><th>S\u0131cakl\u0131k</th><th>Durum</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="nav" id="tableNav" style="display:none">
+        <button onclick="oncekiSayfa()" id="prevBtn">\u2039 \u00d6nceki</button>
+        <span class="page-info" id="pageInfo"></span>
+        <button onclick="sonrakiSayfa()" id="nextBtn">Sonraki \u203a</button>
+      </div>
     </div>
 
   </div>
 
   <div class="toast" id="toast"></div>
 
+  <!-- QR Modal -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-box">
+      <h3 id="qrModalTitle">QR Kod</h3>
+      <p id="qrModalSub">Depo s\u0131cakl\u0131k kay\u0131tlar\u0131n\u0131 i\u00e7erir</p>
+      <img id="qrImage" style="display:none" alt="QR Kod" />
+      <p id="qrFallback" style="font-size:0.8rem;color:var(--text3);word-break:break-all"></p>
+      <button class="btn-close" onclick="qrKapat()">Kapat</button>
+    </div>
+  </div>
+
   <script>
-    // ─── STATE ───────────────────────────────────────────────────────────────────
-    const STORAGE_KEY = 'haccp_records';
-    const DEPO_KEY = 'haccp_depo_adlari';
-    const DEFAULT_DEPOLAR = ['So\u011fuk Hava Deposu 5', 'So\u011fuk Hava Deposu 6', 'So\u011fuk Hava Deposu 7', 'So\u011fuk Hava Deposu 8'];
-    let haccpRecords = [];
-    let selectedDepo = null;
-    let allDepos = [];
+    var STORAGE_KEY = 'haccp_records';
+    var DEPO_KEY = 'haccp_depo_adlari';
+    var DEFAULT_DEPOLAR = ['So\u011fuk Hava Deposu 5', 'So\u011fuk Hava Deposu 6', 'So\u011fuk Hava Deposu 7', 'So\u011fuk Hava Deposu 8'];
+    var haccpRecords = [];
+    var allDepos = [];
+    var seciliDepo = '';
+    var sayfa = 0;
+    var sayfaBoyutu = 10;
 
-    // ─── STORAGE ─────────────────────────────────────────────────────────────────
     function loadData() {
-      try {
-        var s = localStorage.getItem(STORAGE_KEY);
-        haccpRecords = s ? JSON.parse(s) : [];
-      } catch (e) { haccpRecords = []; }
-      try {
-        var d = localStorage.getItem(DEPO_KEY);
-        allDepos = d ? JSON.parse(d) : [...DEFAULT_DEPOLAR];
-      } catch (e) { allDepos = [...DEFAULT_DEPOLAR]; }
-    }
-
-    // ─── SICAKLIK DURUM ──────────────────────────────────────────────────────────
-    function sicaklikDurum(v, depoAd) {
-      var val = parseFloat(v);
-      if (isNaN(val)) return { text: '\u2014', cls: 'na', emoji: '\u2753' };
-      var min, max;
-      if (depoAd && depoAd.toLowerCase().includes('dondurucu')) { min = -24; max = -18; }
-      else { min = 0; max = 4; }
-      if (val >= min && val <= max) return { text: 'Uygun', cls: 'ok', emoji: '\u2705' };
-      if (val < min) return { text: 'D\u00fc\u015f\u00fck', cls: 'warn', emoji: '\u26A0\uFE0F' };
-      return { text: 'Y\u00fcksek', cls: 'err', emoji: '\u274C' };
-    }
-
-    // ─── TODAY ───────────────────────────────────────────────────────────────────
-    function todayStr() {
-      var d = new Date();
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
-
-    // ─── RENDER DEPO GRID ────────────────────────────────────────────────────────
-    function renderDepoGrid() {
-      var grid = document.getElementById('depoGrid');
-      var today = todayStr();
-      grid.innerHTML = allDepos.map(function(ad) {
-        var todayRecs = haccpRecords.filter(function(r) {
-          return r.type === 'sicaklik' && r.depoAd === ad && r.tarih === today;
-        });
-        var last = todayRecs.length > 0 ? todayRecs[todayRecs.length - 1] : null;
-        var statusHtml = '';
-        if (last) {
-          var durum = sicaklikDurum(last.sicaklik, ad);
-          statusHtml = '<span class="depo-status ' + durum.cls + '">' + durum.emoji + ' ' + last.sicaklik + '\u00B0C</span>';
-        } else {
-          statusHtml = '<span class="depo-status na">Kay\u0131t yok</span>';
-        }
-        return '<div class="depo-card" onclick="selectDepo(\'' + ad.replace(/'/g, "\\'") + '\')">' +
-          '<div class="depo-icon">\uD83C\uDFCA</div>' +
-          '<div class="depo-name">' + ad + '</div>' +
-          statusHtml + '</div>';
-      }).join('');
-    }
-
-    // ─── SELECT DEPO ─────────────────────────────────────────────────────────────
-    function selectDepo(ad) {
-      selectedDepo = ad;
-      document.getElementById('selectScreen').classList.remove('active');
-      document.getElementById('detailScreen').classList.add('active');
-      document.getElementById('backBtn').style.display = 'flex';
-      document.getElementById('pageTitle').textContent = ad;
-      document.getElementById('pageSub').textContent = 'Bug\u00fcn: ' + new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-      renderDetail();
-    }
-
-    function goBack() {
-      selectedDepo = null;
-      document.getElementById('selectScreen').classList.add('active');
-      document.getElementById('detailScreen').classList.remove('active');
-      document.getElementById('backBtn').style.display = 'none';
-      document.getElementById('pageTitle').textContent = 'Depo S\u0131cakl\u0131k Takibi';
-      document.getElementById('pageSub').textContent = 'QR Kod ile H\u0131zl\u0131 Giri\u015f';
-      loadData();
-      renderDepoGrid();
+      try { var s = localStorage.getItem(STORAGE_KEY); haccpRecords = s ? JSON.parse(s) : []; } catch (e) { haccpRecords = []; }
+      try { var d = localStorage.getItem(DEPO_KEY); allDepos = d ? JSON.parse(d) : [...DEFAULT_DEPOLAR]; } catch (e) { allDepos = [...DEFAULT_DEPOLAR]; }
     }
 
     function formatTarihTR(t) {
-      if (!t) return '—';
+      if (!t) return '\u2014';
       var m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return m ? m[3] + '.' + m[2] + '.' + m[1] : t;
     }
 
-    // ─── RENDER DETAIL ────────────────────────────────────────────────────────────
-    function renderDetail() {
-      console.log('haccpRecords:', haccpRecords.length, 'selectedDepo:', selectedDepo);
-      var today = todayStr();
-      var todayRecs = haccpRecords.filter(function(r) {
-        return r.type === 'sicaklik' && r.depoAd === selectedDepo && r.tarih === today;
-      }).sort(function(a, b) { return (a.saat || '') > (b.saat || '') ? 1 : -1; });
+    function sicaklikDurum(sicaklik, depoAd) {
+      var v = parseFloat(sicaklik);
+      if (isNaN(v)) return { text: '\u2014', cls: '' };
+      var min, max;
+      var da = String(depoAd || '').toLowerCase();
+      if (da.includes('dondurucu')) { min = -24; max = -18; }
+      else if (da.includes('so\u011fuk') || da.includes('soguk')) { min = 0; max = 4; }
+      else return { text: '\u2014', cls: '' };
+      if (v >= min && v <= max) return { text: 'Uygun', cls: 'badge-ok' };
+      if (v < min) return { text: 'D\u00fc\u015f\u00fck', cls: 'badge-warn' };
+      return { text: 'Y\u00fcksek', cls: 'badge-err' };
+    }
 
-      var todayEl = document.getElementById('todayReadings');
-      if (todayRecs.length === 0) {
-        todayEl.innerHTML = '<div class="reading-empty">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>';
-      } else {
-        todayEl.innerHTML = todayRecs.map(function(r) {
-          var durum = sicaklikDurum(r.sicaklik, selectedDepo);
-          return '<div class="reading-item">' +
-            '<span class="reading-time">' + (r.saat || '--:--') + '</span>' +
-            '<span class="reading-temp ' + durum.cls + '">' + r.sicaklik + '\u00B0C</span>' +
-            '<span class="reading-status badge-' + durum.cls + '" style="font-size:0.7rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(16,185,129,0.1);color:var(--' + (durum.cls === 'ok' ? 'green' : durum.cls === 'warn' ? 'orange' : 'red') + ')">' + durum.text + '</span>' +
-            '<span class="reading-note">' + (r.not || '') + '</span>' +
-          '</div>';
-        }).join('');
-      }
+    function depoDegisti() {
+      var s = document.getElementById('depoFilter');
+      seciliDepo = s ? s.value : '';
+      sayfa = 0;
+      renderTablosu();
+    }
 
-      // Recent (last 20, all dates)
-      var allRecs = haccpRecords.filter(function(r) {
-        return r.type === 'sicaklik' && r.depoAd === selectedDepo;
-      }).sort(function(a, b) {
+    function depoListesiDoldur() {
+      var s = document.getElementById('depoFilter');
+      if (!s) return;
+      var cur = s.value;
+      s.innerHTML = '<option value="">T\u00fcm\u00fc</option>' + allDepos.map(function(d) {
+        var sel = d === cur ? ' selected' : '';
+        return '<option value="' + d.replace(/"/g,'&quot;') + '"' + sel + '>' + d + '</option>';
+      }).join('');
+    }
+
+    function getFiltrelenmis() {
+      var r = haccpRecords.filter(function(x) { return x.type === 'sicaklik'; });
+      if (seciliDepo) r = r.filter(function(x) { return (x.depoAd || '') === seciliDepo; });
+      r.sort(function(a, b) {
         if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
         return (a.saat || '') > (b.saat || '') ? -1 : 1;
-      }).slice(0, 20);
+      });
+      return r;
+    }
 
-      var tbody = document.getElementById('recentTbody');
-      if (allRecs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1.5rem">Hen\u00fcz kay\u0131t yok</td></tr>';
-      } else {
-        tbody.innerHTML = allRecs.map(function(r) {
-          var durum = sicaklikDurum(r.sicaklik, selectedDepo);
-          var dateStr = formatTarihTR(r.tarih);
-          return '<tr>' +
-            '<td>' + dateStr + '</td>' +
-            '<td>' + (r.saat || '--:--') + '</td>' +
-            '<td style="font-weight:700;color:var(--' + (durum.cls === 'ok' ? 'green' : durum.cls === 'warn' ? 'orange' : 'red') + ')">' + r.sicaklik + '\u00B0C</td>' +
-            '<td><span style="font-size:0.7rem;font-weight:600;padding:0.1rem 0.4rem;border-radius:999px;background:rgba(16,185,129,0.1);color:var(--' + (durum.cls === 'ok' ? 'green' : durum.cls === 'warn' ? 'orange' : 'red') + ')">' + durum.text + '</span></td>' +
-          '</tr>';
-        }).join('');
+    function renderTablosu() {
+      var records = getFiltrelenmis();
+      var table = document.getElementById('dataTable');
+      var empty = document.getElementById('emptyState');
+      var nav = document.getElementById('tableNav');
+      var tbody = document.getElementById('tableBody');
+
+      if (records.length === 0) {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        if (nav) nav.style.display = 'none';
+        return;
+      }
+      table.style.display = 'table';
+      empty.style.display = 'none';
+
+      var totalPages = Math.ceil(records.length / sayfaBoyutu);
+      if (sayfa >= totalPages) sayfa = 0;
+      if (sayfa < 0) sayfa = totalPages - 1;
+      var start = sayfa * sayfaBoyutu;
+      var pageRecords = records.slice(start, start + sayfaBoyutu);
+
+      tbody.innerHTML = pageRecords.map(function(r) {
+        var depoAd = r.depoAd || '';
+        var durum = sicaklikDurum(r.sicaklik, depoAd);
+        return '<tr>' +
+          '<td>' + formatTarihTR(r.tarih) + '</td>' +
+          '<td>' + (r.saat || '\u2014') + '</td>' +
+          '<td style="font-weight:700">' + r.sicaklik + '</td>' +
+          '<td><span class="badge ' + durum.cls + '">' + durum.text + '</span></td>' +
+        '</tr>';
+      }).join('');
+
+      if (nav) {
+        nav.style.display = totalPages > 1 ? 'flex' : 'none';
+        document.getElementById('pageInfo').textContent = 'Sayfa ' + (sayfa + 1) + ' / ' + totalPages + ' (' + records.length + ' kay\u0131t)';
+        document.getElementById('prevBtn').disabled = sayfa === 0;
+        document.getElementById('nextBtn').disabled = sayfa >= totalPages - 1;
       }
     }
 
-    // ─── HANDLE URL PARAM ────────────────────────────────────────────────────────
+    function oncekiSayfa() { if (sayfa > 0) { sayfa--; renderTablosu(); } }
+    function sonrakiSayfa() {
+      var records = getFiltrelenmis();
+      var totalPages = Math.ceil(records.length / sayfaBoyutu);
+      if (sayfa < totalPages - 1) { sayfa++; renderTablosu(); }
+    }
+
+    function qrOlustur() {
+      var depo = document.getElementById('depoFilter').value;
+      if (!depo) { gosterToast('L\u00fctfen bir depo se\u00e7in.'); return; }
+
+      var records = haccpRecords.filter(function(r) {
+        return r.type === 'sicaklik' && (r.depoAd || '') === depo;
+      }).sort(function(a, b) {
+        if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
+        return (a.saat || '') > (b.saat || '') ? -1 : 1;
+      });
+
+      var text = depo;
+      if (records.length > 0) {
+        text += ' | ' + records.map(function(r) {
+          return formatTarihTR(r.tarih) + ' ' + (r.saat || '--:--') + ' ' + r.sicaklik + 'C';
+        }).join(' | ');
+      }
+
+      var modal = document.getElementById('qrModal');
+      var img = document.getElementById('qrImage');
+      var fallback = document.getElementById('qrFallback');
+      var title = document.getElementById('qrModalTitle');
+      var sub = document.getElementById('qrModalSub');
+
+      title.textContent = depo;
+      sub.textContent = records.length + ' kay\u0131t i\u00e7erir';
+
+      var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text);
+      img.src = url;
+      img.style.display = 'block';
+      img.onerror = function() {
+        img.style.display = 'none';
+        fallback.textContent = text;
+      };
+      img.onload = function() { fallback.textContent = ''; };
+
+      modal.classList.add('open');
+    }
+
+    function qrKapat() {
+      document.getElementById('qrModal').classList.remove('open');
+    }
+    document.getElementById('qrModal').addEventListener('click', function(e) {
+      if (e.target === this) qrKapat();
+    });
+
+    function gosterToast(msg) {
+      var el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(el._timer);
+      el._timer = setTimeout(function() { el.classList.remove('show'); }, 2500);
+    }
+
     function getUrlParam(name) {
       var match = location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
       return match ? decodeURIComponent(match[1].replace(/\+/g, ' ')) : null;
     }
 
-    // ─── TOAST ────────────────────────────────────────────────────────────────────
-    function showToast(msg, type) {
-      var el = document.getElementById('toast');
-      el.textContent = msg;
-      el.className = 'toast show ' + (type || '');
-      clearTimeout(el._timer);
-      el._timer = setTimeout(function() { el.classList.remove('show'); }, 2500);
-    }
-
-    // ─── NORMALIZE ───────────────────────────────────────────────────────────────
     function normalizeDate(v) {
       if (!v) return '';
       if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-      if (/^\d+(\.\d+)?$/.test(String(v))) {
-        var d = new Date(1899, 11, 30 + Number(v));
-        if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      }
+      if (/^\d+(\.\d+)?$/.test(String(v))) { var d = new Date(1899, 11, 30 + Number(v)); if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
       var d = new Date(v);
       if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
       return '';
@@ -348,44 +373,36 @@
       return v;
     }
 
-    // ─── INIT ────────────────────────────────────────────────────────────────────
     (function() {
       loadData();
+
       var directDepo = getUrlParam('depo');
       var dataStr = getUrlParam('v');
-      var subEl = document.getElementById('pageSub');
 
-      // QR'dan gelen veri varsa (depo.html?depo=X&v=tarih|saat|sicaklik,...)
       if (dataStr) {
         var items = dataStr.split(',').filter(Boolean);
         items.forEach(function(item) {
           var parts = item.split('|');
           if (parts.length >= 3) {
-            haccpRecords.push({
-              id: Date.now() + Math.random(),
-              type: 'sicaklik',
-              tarih: parts[0],
-              saat: parts[1],
-              depoAd: directDepo,
-              sicaklik: parseFloat(parts[2]),
-              not: ''
-            });
+            haccpRecords.push({ id: Date.now() + Math.random(), type: 'sicaklik', tarih: parts[0], saat: parts[1], depoAd: directDepo, sicaklik: parseFloat(parts[2]), not: '' });
           }
         });
-        if (haccpRecords.length > 0 && directDepo && allDepos.indexOf(directDepo) < 0) {
-          allDepos.push(directDepo);
-        }
+        if (haccpRecords.length > 0 && directDepo && allDepos.indexOf(directDepo) < 0) allDepos.push(directDepo);
       }
 
-      if (directDepo && allDepos.indexOf(directDepo) >= 0) {
-        selectDepo(directDepo);
-      } else if (directDepo) {
-        allDepos.push(directDepo);
-        selectDepo(directDepo);
-      } else {
-        renderDepoGrid();
+      depoListesiDoldur();
+
+      if (directDepo) {
+        document.getElementById('depoFilter').value = directDepo;
+        seciliDepo = directDepo;
       }
+
+      renderTablosu();
+
+      var subEl = document.getElementById('pageSub');
+      if (directDepo) subEl.textContent = directDepo;
     })();
   </script>
+
 </body>
 </html>
