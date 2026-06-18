@@ -77,29 +77,37 @@ function depoNoToName(val) {
 
 // === DEPO HTML (QR'da telefon gösterimi) ===
 
-function getDepoData(depoAdi) {
-  var data = [];
+function serveDepoHtml(depoAdi) {
+  var jsonData = '[]';
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(HACCP_SHEET_NAME);
+    var sheet = ss.getSheetByName('G\u0131da G\u00fcvenli\u011fi');
     if (sheet) {
       var rows = sheet.getDataRange().getValues();
       if (rows.length > 1) {
-        var headers = rows[0].map(function(h) { return String(h).trim(); });
+        var h = rows[0];
+        var data = [];
         for (var i = 1; i < rows.length; i++) {
           var row = {};
-          headers.forEach(function(h, idx) { row[h] = formatCellValue(rows[i][idx], h); });
-          if (row.depoAd || row.depoNo) row.depoAd = depoNoToName(row.depoAd || row.depoNo);
+          for (var j = 0; j < h.length; j++) {
+            var v = rows[i][j];
+            if (Object.prototype.toString.call(v) === '[object Date]') {
+              if (String(h[j]).trim() === 'saat') {
+                v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm');
+              } else {
+                v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+              }
+            }
+            row[String(h[j]).trim()] = v;
+          }
           data.push(row);
         }
+        jsonData = JSON.stringify(data);
       }
     }
-  } catch (e) {}
-  return JSON.stringify(data);
-}
-
-function serveDepoHtml(depoAdi) {
-  var jsonData = getDepoData(depoAdi);
+  } catch (e) {
+    jsonData = '[]';
+  }
   var html = '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/><title>' + depoAdi + '</title><style>';
   html += '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}';
   html += ':root{--bg:#f1f5f9;--card:#fff;--text:#1e293b;--text2:#475569;--text3:#94a3b8;--border:#e2e8f0;--accent:#6366f1;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--radius:14px;--shadow:0 4px 16px rgba(0,0,0,0.06)}';
@@ -109,37 +117,35 @@ function serveDepoHtml(depoAdi) {
   html += '.header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.25rem;position:sticky;top:0;z-index:10}';
   html += '.header h1{font-size:1.1rem;font-weight:700}.header .sub{font-size:0.75rem;color:var(--text3);display:block;margin-top:2px}';
   html += '.section-title{font-size:0.85rem;font-weight:700;color:var(--text2);margin:1.25rem 0 0.75rem;display:flex;align-items:center;gap:0.5rem}';
-  html += '.section-title::after{content:\'\';flex:1;height:1px;background:var(--border)}';
-  html += '.reading-list{display:flex;flex-direction:column;gap:0.5rem}';
+  html += '.reading-list{display:flex;flex-direction:column;gap:0.5rem;padding-bottom:1rem}';
   html += '.reading-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;box-shadow:var(--shadow)}';
   html += '.reading-time{font-size:0.75rem;color:var(--text3);min-width:50px;font-weight:600}';
   html += '.reading-temp{font-size:1.2rem;font-weight:800;min-width:70px}';
   html += '.reading-temp.ok{color:var(--green)}.reading-temp.warn{color:var(--orange)}.reading-temp.err{color:var(--red)}';
-  html += '.reading-empty{text-align:center;padding:2rem;color:var(--text3);font-size:0.85rem;background:var(--card);border-radius:12px;border:1px dashed var(--border)}';
-  html += '.loading{text-align:center;padding:3rem;color:var(--text3);font-size:1rem}';
+  html += '.reading-empty{text-align:center;padding:2rem;color:var(--text3);font-size:0.9rem;background:var(--card);border-radius:12px;border:1px dashed var(--border);margin-bottom:1rem}';
   html += '</style></head><body>';
-  html += '<div class="header"><h1>' + depoAdi + '</h1><span class="sub" id="pageSub">Y\u00fckleniyor...</span></div>';
-  html += '<div class="container" id="mainContainer"><div class="loading">Veriler haz\u0131rlan\u0131yor...</div></div>';
+  html += '<div class="header"><h1>' + depoAdi + '</h1><span class="sub" id="pageSub"></span></div>';
+  html += '<div class="container" id="mainContainer"></div>';
   html += '<script>';
   html += 'var DATA=' + jsonData + ';';
   html += 'var DEPO=\'' + depoAdi.replace(/'/g, "\\'") + '\';';
   html += 'var recs=DATA.filter(function(r){return r.type===\'sicaklik\'&&r.depoAd===DEPO;}).sort(function(a,b){return a.tarih>b.tarih?-1:1;});';
-  html += 'var today=new Date(),ts=today.getFullYear()+\'-\'+(today.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(today.getDate()+"").padStart(2,\'0\');';
-  html += 'var todayRecs=recs.filter(function(r){return r.tarih===ts;}).sort(function(a,b){return (a.saat||"")>(b.saat||"")?1:-1;});';
+  html += 'var ts=new Date(),td=ts.getFullYear()+\'-\'+(ts.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(ts.getDate()+"").padStart(2,\'0\');';
+  html += 'var tdRecs=recs.filter(function(r){return r.tarih===td;}).sort(function(a,b){return (a.saat||"")>(b.saat||"")?1:-1;});';
   html += 'var h="";';
   html += 'h+=\'<div class="section-title">Bug\u00fcnk\u00fc Kay\u0131tlar</div><div class="reading-list">\';';
-  html += 'if(todayRecs.length===0){h+=\'<div class="reading-empty">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>\';}';
-  html += 'else{todayRecs.forEach(function(r){var v=parseFloat(r.sicaklik),c="ok";if(v<0){c="warn"}else if(v>4){c="err"}';
-  html += 'h+=\'<div class="reading-item"><span class="reading-time">\'+(r.saat||"--:--")+\'</span><span class="reading-temp \'+c+\'">\'+r.sicaklik+\'&deg;C</span></div>\';});}';
+  html += 'if(tdRecs.length===0){h+=\'<div class="reading-empty">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>\';}';
+  html += 'else{tdRecs.forEach(function(r){var v=parseFloat(r.sicaklik),c="ok";if(v<0){c="warn"}else if(v>4){c="err"}';
+  html += 'h+=\'<div class="reading-item"><span class="reading-time">\'+(r.saat||"--:--")+\'</span><span class="reading-temp \'+c+\'">\'+r.sicaklik+\'\u00b0C</span></div>\';});}';
   html += 'h+=\'</div>\';';
   html += 'h+=\'<div class="section-title">Son Kay\u0131tlar</div><div class="reading-list">\';';
   html += 'if(recs.length===0){h+=\'<div class="reading-empty">Hen\u00fcz kay\u0131t yok</div>\';}';
   html += 'else{recs.slice(0,20).forEach(function(r){var d=r.tarih?r.tarih.slice(8,10)+\'.\'+r.tarih.slice(5,7)+\'.\'+r.tarih.slice(0,4):"--";';
   html += 'var v=parseFloat(r.sicaklik),c="ok";if(v<0){c="warn"}else if(v>4){c="err"}';
-  html += 'h+=\'<div class="reading-item"><span class="reading-time">\'+d+\'</span><span class="reading-time">\'+(r.saat||"--:--")+\'</span><span class="reading-temp \'+c+\'">\'+r.sicaklik+\'&deg;C</span></div>\';});}';
+  html += 'h+=\'<div class="reading-item"><span class="reading-time">\'+d+\'</span><span class="reading-time">\'+(r.saat||"--:--")+\'</span><span class="reading-temp \'+c+\'">\'+r.sicaklik+\'\u00b0C</span></div>\';});}';
   html += 'h+=\'</div>\';';
   html += 'document.getElementById(\'mainContainer\').innerHTML=h;';
-  html += 'document.getElementById(\'pageSub\').textContent=recs.length+\' kay\u0131t - \'+new Date().toLocaleDateString(\'tr-TR\',{day:\'numeric\',month:\'long\',year:\'numeric\'});';
+  html += 'document.getElementById(\'pageSub\').textContent=recs.length+\' kay\u0131t\';';
   html += '</script>';
   html += '</body></html>';
   return HtmlService.createHtmlOutput(html).setTitle(depoAdi + ' - S\u0131cakl\u0131k Takibi');
