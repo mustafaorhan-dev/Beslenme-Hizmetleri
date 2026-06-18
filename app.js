@@ -780,18 +780,11 @@ function exportPDF() {
 
 function showQrModal(depoAdi) {
   document.getElementById('qrDepoAdi').textContent = depoAdi;
-  var recs = haccpRecords.filter(function(r) {
-    return r.type === 'sicaklik' && r.depoAd === depoAdi;
-  }).slice(0, 20);
-  var lines = [depoAdi];
-  recs.forEach(function(r) {
-    var d = r.tarih ? r.tarih.slice(8, 10) + '.' + r.tarih.slice(5, 7) + '.' + r.tarih.slice(0, 4) : '--';
-    lines.push(d + ' ' + (r.saat || '--:--') + ' ' + r.sicaklik + 'C');
-  });
-  var text = lines.join(' | ');
-  var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text);
+  var baseUrl = 'https://mustafaorhan-dev.github.io/depo-sicaklik/';
+  var pageUrl = baseUrl + '?depo=' + encodeURIComponent(depoAdi);
+  var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(pageUrl);
   document.getElementById('qrImage').src = url;
-  document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun';
+  document.getElementById('qrUrlDisplay').textContent = pageUrl;
   document.getElementById('qrModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }

@@ -200,16 +200,42 @@
   <script>
     var STORAGE_KEY = 'haccp_records';
     var DEPO_KEY = 'haccp_depo_adlari';
+    var GAS_KEY = 'gsheet_webapp_url';
     var DEFAULT_DEPOLAR = ['So\u011fuk Hava Deposu 5', 'So\u011fuk Hava Deposu 6', 'So\u011fuk Hava Deposu 7', 'So\u011fuk Hava Deposu 8'];
     var haccpRecords = [];
     var allDepos = [];
     var seciliDepo = '';
     var sayfa = 0;
     var sayfaBoyutu = 10;
+    var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
+    var gasUrl = getUrlParam('gas') || DEFAULT_GAS_URL;
 
     function loadData() {
       try { var s = localStorage.getItem(STORAGE_KEY); haccpRecords = s ? JSON.parse(s) : []; } catch (e) { haccpRecords = []; }
       try { var d = localStorage.getItem(DEPO_KEY); allDepos = d ? JSON.parse(d) : [...DEFAULT_DEPOLAR]; } catch (e) { allDepos = [...DEFAULT_DEPOLAR]; }
+      if (!gasUrl) { try { gasUrl = localStorage.getItem(GAS_KEY) || ''; } catch (e) {} }
+    }
+
+    async function gasVeriCek() {
+      if (!gasUrl) return false;
+      try {
+        var res = await fetch(gasUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
+        var data = await res.json();
+        if (data.data && data.data.length > 0) {
+          haccpRecords = data.data.map(function(r) { return {
+            id: Number(r.id) || Date.now() + Math.random(),
+            type: r.type || 'sicaklik',
+            tarih: normalizeDate(r.tarih || ''),
+            saat: normalizeSaat(r.saat || ''),
+            depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
+            sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
+            not: r.not_ || r.not || ''
+          };});
+          if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) allDepos = data.depoAdlari;
+          return true;
+        }
+      } catch (e) {}
+      return false;
     }
 
     function formatTarihTR(t) {
@@ -310,19 +336,7 @@
       var depo = document.getElementById('depoFilter').value;
       if (!depo) { gosterToast('L\u00fctfen bir depo se\u00e7in.'); return; }
 
-      var records = haccpRecords.filter(function(r) {
-        return r.type === 'sicaklik' && (r.depoAd || '') === depo;
-      }).sort(function(a, b) {
-        if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
-        return (a.saat || '') > (b.saat || '') ? -1 : 1;
-      });
-
-      var text = depo;
-      if (records.length > 0) {
-        text += ' | ' + records.map(function(r) {
-          return formatTarihTR(r.tarih) + ' ' + (r.saat || '--:--') + ' ' + r.sicaklik + 'C';
-        }).join(' | ');
-      }
+      var pageUrl = location.protocol + '//' + location.host + location.pathname + '?depo=' + encodeURIComponent(depo);
 
       var modal = document.getElementById('qrModal');
       var img = document.getElementById('qrImage');
@@ -331,16 +345,16 @@
       var sub = document.getElementById('qrModalSub');
 
       title.textContent = depo;
-      sub.textContent = records.length + ' kay\u0131t i\u00e7erir';
+      sub.textContent = 'Canl\u0131 veri QR kodu';
 
-      var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text);
+      var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(pageUrl);
       img.src = url;
       img.style.display = 'block';
       img.onerror = function() {
         img.style.display = 'none';
-        fallback.textContent = text;
+        fallback.textContent = pageUrl;
       };
-      img.onload = function() { fallback.textContent = ''; };
+      img.onload = function() { fallback.textContent = pageUrl; };
 
       modal.classList.add('open');
     }
@@ -381,21 +395,38 @@
       return v;
     }
 
-    (function() {
+    (async function() {
       loadData();
 
       var directDepo = getUrlParam('depo');
       var dataStr = getUrlParam('v');
+      var liveOk = false;
 
-      if (dataStr) {
-        var items = dataStr.split(',').filter(Boolean);
-        items.forEach(function(item) {
-          var parts = item.split('|');
-          if (parts.length >= 3) {
-            haccpRecords.push({ id: Date.now() + Math.random(), type: 'sicaklik', tarih: parts[0], saat: parts[1], depoAd: directDepo, sicaklik: parseFloat(parts[2]), not: '' });
-          }
-        });
-        if (haccpRecords.length > 0 && directDepo && allDepos.indexOf(directDepo) < 0) allDepos.push(directDepo);
+      // Önce canlı veri dene (GAS)
+      if (!dataStr && gasUrl) {
+        gosterToast('Veriler y\u00fckleniyor...');
+        liveOk = await gasVeriCek();
+      }
+
+      // Canlı gelmezse localStorage veya QR verisi dene
+      if (!liveOk) {
+        if (dataStr) {
+          var items = dataStr.split(',').filter(Boolean);
+          items.forEach(function(item) {
+            var parts = item.split('|');
+            if (parts.length >= 3) {
+              haccpRecords.push({ id: Date.now() + Math.random(), type: 'sicaklik', tarih: parts[0], saat: parts[1], depoAd: directDepo, sicaklik: parseFloat(parts[2]), not: '' });
+            }
+          });
+          if (haccpRecords.length > 0 && directDepo && allDepos.indexOf(directDepo) < 0) allDepos.push(directDepo);
+        }
+      }
+
+      var subEl = document.getElementById('pageSub');
+      if (liveOk) {
+        subEl.textContent = 'Canl\u0131 veri (' + haccpRecords.length + ' kay\u0131t)';
+      } else if (dataStr) {
+        subEl.textContent = (directDepo || 'Depo') + ' - QR verisi';
       }
 
       depoListesiDoldur();
@@ -406,9 +437,6 @@
       }
 
       renderTablosu();
-
-      var subEl = document.getElementById('pageSub');
-      if (directDepo) subEl.textContent = directDepo;
     })();
   </script>
 
