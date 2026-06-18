@@ -175,10 +175,13 @@ function doGet(e) {
       return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
     }
   }
+  // Başlıkları düzelt (not → not_ vb.)
+  var expectedHeaders = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+  sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
   const data = sheet.getDataRange().getValues();
   var response = { data: [] };
   if (data.length > 0) {
-    const headers = data[0].map(function(h) { return String(h).trim(); });
+    const headers = expectedHeaders;
     const rows = [];
     var depoAdIdx = -1, depoNoIdx = -1;
     headers.forEach(function(h, i) { if (h === 'depoAd') depoAdIdx = i; if (h === 'depoNo') depoNoIdx = i; });
