@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setCurrentDate();
   renderAll();
   drawAllCharts();
+  await restoreActiveTab();
   updateSyncUI();
 
   // Retry'li senkronizasyon
@@ -1315,6 +1316,13 @@ function exportRecordsPDF() {
 }
 
 // ─── TABS ──────────────────────────────────────────────────────────────────────
+async function restoreActiveTab() {
+  const saved = localStorage.getItem('atik_kontrol_active_tab');
+  if (saved && saved !== 'dashboard') {
+    await switchTab(saved);
+  }
+}
+
 async function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1322,13 +1330,12 @@ async function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
-  // Menü seçilince sidebar'ı kapat
   closeSidebar();
-  // Sayfa başlığını güncelle
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
   const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü', haccp: 'Gıda Güvenliği' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
+  localStorage.setItem('atik_kontrol_active_tab', name);
 }
 
 // ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
