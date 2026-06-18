@@ -139,6 +139,13 @@
       color: var(--text2); font-size: 0.85rem; font-family: inherit;
     }
     .modal-box .btn-close:active { background: rgba(99,102,241,0.08); }
+    @media print {
+      .header, .filter-bar, .nav, .btn-qr, .toast, .modal-overlay { display: none !important; }
+      .container { padding: 0; max-width: 100%; }
+      .table-wrapper { box-shadow: none; border: 1px solid #ccc; }
+      .data-table th { background: #f5f5f5; }
+      body { background: #fff; }
+    }
   </style>
 </head>
 <body>
@@ -155,6 +162,7 @@
       <label>Depo Filtresi:</label>
       <select id="depoFilter" onchange="depoDegisti()"></select>
       <button class="btn-qr" onclick="qrOlustur()">QR</button>
+      <button class="btn-qr" onclick="window.print()" style="background:var(--green)">PDF</button>
     </div>
 
     <div class="table-wrapper">

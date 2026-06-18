@@ -175,13 +175,18 @@ function doGet(e) {
       return jsonResponse({ data: [], error: 'Sayfa bulunamadı: ' + sheetName });
     }
   }
-  // Başlıkları düzelt (not → not_ vb.)
-  var expectedHeaders = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
-  sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
+  // Başlıkları düzelt
+  if (sheetName === HACCP_SHEET_NAME) {
+    var haccpHeaders = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+    sheet.getRange(1, 1, 1, haccpHeaders.length).setValues([haccpHeaders]);
+  } else if (sheetName === SHEET_NAME) {
+    var atikHeaders = ['id', 'tarih', 'yemek', 'fire', 'turnike', 'personel', 'toplam', 'porsiyon', 'atik', 'ogrenci', 'yemek_adi', 'lastModified'];
+    sheet.getRange(1, 1, 1, atikHeaders.length).setValues([atikHeaders]);
+  }
   const data = sheet.getDataRange().getValues();
   var response = { data: [] };
   if (data.length > 0) {
-    const headers = expectedHeaders;
+    const headers = data[0].map(function(h) { return String(h).trim(); });
     const rows = [];
     var depoAdIdx = -1, depoNoIdx = -1;
     headers.forEach(function(h, i) { if (h === 'depoAd') depoAdIdx = i; if (h === 'depoNo') depoNoIdx = i; });
