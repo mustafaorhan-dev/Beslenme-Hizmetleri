@@ -1548,12 +1548,13 @@ function handleImport(e) {
       }
       // Mevcut kayıtlara ekle (çakışma kontrolü yapmadan)
       const existingIds = new Set(records.map(r => r.id));
-      const newRecords = imported.filter(r => r.id && !existingIds.has(r.id));
-      if (newRecords.length === 0 && imported.length > 0) {
-        // ID çakışması varsa yeni ID ata
-        imported.forEach(r => { r.id = Date.now() + Math.floor(Math.random() * 10000); });
-        newRecords.push(...imported);
-      }
+      const newRecords = [];
+      imported.forEach(r => {
+        if (r.id && existingIds.has(r.id)) {
+          r.id = Date.now() + Math.floor(Math.random() * 10000);
+        }
+        newRecords.push(r);
+      });
       records.push(...newRecords);
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
       saveData();
@@ -2642,8 +2643,8 @@ const chartValueLabelPlugin = {
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
         const val = ds.data[idx];
-        if (val === undefined || val === null) return;
-        ctx.fillStyle = chart.options.plugins.legend.labels.color || '#334155';
+        if (val === undefined || val === null || isNaN(val)) return;
+        ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
         ctx.font = 'bold 11px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
