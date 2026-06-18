@@ -75,9 +75,68 @@ function depoNoToName(val) {
   return 'Depo ' + s;
 }
 
+// === DEPO HTML (QR'da telefon gösterimi) ===
+
+function serveDepoHtml(depoAdi) {
+  var html = '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/><title>' + depoAdi + '</title><style>';
+  html += '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}';
+  html += ':root{--bg:#f1f5f9;--card:#fff;--text:#1e293b;--text2:#475569;--text3:#94a3b8;--border:#e2e8f0;--accent:#6366f1;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--radius:14px;--shadow:0 4px 16px rgba(0,0,0,0.06)}';
+  html += '@media(prefers-color-scheme:dark){:root{--bg:#0a0f1e;--card:#131d35;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--border:rgba(255,255,255,0.08);--shadow:0 4px 20px rgba(0,0,0,0.4)}}';
+  html += 'html{height:100%}body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100%}';
+  html += '.container{max-width:600px;margin:0 auto;padding:1rem}';
+  html += '.header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.25rem;position:sticky;top:0;z-index:10}';
+  html += '.header h1{font-size:1.1rem;font-weight:700}.header .sub{font-size:0.75rem;color:var(--text3);display:block;margin-top:2px}';
+  html += '.section-title{font-size:0.85rem;font-weight:700;color:var(--text2);margin:1.25rem 0 0.75rem;display:flex;align-items:center;gap:0.5rem}';
+  html += '.section-title::after{content:\'\';flex:1;height:1px;background:var(--border)}';
+  html += '.reading-list{display:flex;flex-direction:column;gap:0.5rem}';
+  html += '.reading-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.85rem 1rem;display:flex;align-items:center;gap:0.75rem;box-shadow:var(--shadow)}';
+  html += '.reading-time{font-size:0.75rem;color:var(--text3);min-width:50px;font-weight:600}';
+  html += '.reading-temp{font-size:1.2rem;font-weight:800;min-width:70px}';
+  html += '.reading-temp.ok{color:var(--green)}.reading-temp.warn{color:var(--orange)}.reading-temp.err{color:var(--red)}';
+  html += '.reading-status{font-size:0.7rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:999px}';
+  html += '.reading-empty{text-align:center;padding:2rem;color:var(--text3);font-size:0.85rem;background:var(--card);border-radius:12px;border:1px dashed var(--border)}';
+  html += '.loading{text-align:center;padding:2rem;color:var(--text3);font-size:0.9rem}';
+  html += '.loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin-bottom:0.75rem}';
+  html += '@keyframes spin{to{transform:rotate(360deg)}}';
+  html += '</style></head><body>';
+  html += '<div class="header"><h1>' + depoAdi + '</h1><span class="sub" id="pageSub">Veriler y\u00fckleniyor...</span></div>';
+  html += '<div class="container">';
+  html += '<div class="section-title">📋 Bug\u00fcnk\u00fc Kay\u0131tlar</div><div class="reading-list" id="todayReadings"><div class="loading"><div class="spinner"></div><div>Y\u00fckleniyor...</div></div></div>';
+  html += '<div class="section-title">📊 Son Kay\u0131tlar</div><div id="recentContainer"><div class="loading"><div class="spinner"></div><div>Y\u00fckleniyor...</div></div></div>';
+  html += '</div>';
+  html += '<script>';
+  html += 'var DEPO=\'' + depoAdi.replace(/'/g, "\\'") + '\';';
+  html += 'fetch(window.location.href.split(\'?\')[0] + \'?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi\').then(function(r){return r.json()}).then(function(d){';
+  html += 'var recs=(d.data||[]).filter(function(r){return r.type===\'sicaklik\'&&r.depoAd===DEPO;}).sort(function(a,b){return a.tarih>b.tarih?-1:1;});';
+  html += 'var today=new Date(),ts=today.getFullYear()+\'-\'+(today.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(today.getDate()+"").padStart(2,\'0\');';
+  html += 'var todayRecs=recs.filter(function(r){return r.tarih===ts;}).sort(function(a,b){return (a.saat||"")>(b.saat||"")?1:-1;});';
+  html += 'var todayEl=document.getElementById(\'todayReadings\');';
+  html += 'if(todayRecs.length===0){todayEl.innerHTML=\'<div class="reading-empty">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>\';}';
+  html += 'else{todayEl.innerHTML=todayRecs.map(function(r){var v=parseFloat(r.sicaklik),cls=\'ok\';if(v<0||v>4)cls=\'err\';if(v<0)cls=\'warn\';';
+  html += 'return \'<div class="reading-item"><span class="reading-time">\'+(r.saat||\'--:--\')+\'</span><span class="reading-temp \'+cls+\'">\'+r.sicaklik+\'°C</span></div>\';}).join(\'\');}';
+  html += 'var recentEl=document.getElementById(\'recentContainer\');';
+  html += 'if(recs.length===0){recentEl.innerHTML=\'<div class="reading-empty">Hen\u00fcz kay\u0131t yok</div>\';}';
+  html += 'else{var rows=recs.slice(0,20).map(function(r){var d=r.tarih?r.tarih.slice(8,10)+\'.\'+r.tarih.slice(5,7)+\'.\'+r.tarih.slice(0,4):\'--\';';
+  html += 'var v=parseFloat(r.sicaklik),cls=\'ok\';if(v<0||v>4)cls=\'err\';if(v<0)cls=\'warn\';';
+  html += 'return \'<div class="reading-item"><span class="reading-time">\'+d+\'</span><span class="reading-time">\'+(r.saat||\'--:--\')+\'</span><span class="reading-temp \'+cls+\'">\'+r.sicaklik+\'°C</span></div>\';}).join(\'\');';
+  html += 'recentEl.innerHTML=\'<div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden"><div class="reading-list" style="gap:0">\'+rows+\'</div></div>\';}';
+  html += 'document.getElementById(\'pageSub\').textContent=new Date().toLocaleDateString(\'tr-TR\',{day:\'numeric\',month:\'long\',year:\'numeric\'});';
+  html += '}).catch(function(){document.getElementById(\'todayReadings\').innerHTML=\'<div class="reading-empty">Veri al\u0131namad\u0131</div>\';';
+  html += 'document.getElementById(\'recentContainer\').innerHTML=\'<div class="reading-empty">Veri al\u0131namad\u0131</div>\';';
+  html += 'document.getElementById(\'pageSub\').textContent=\'Ba\u011flant\u0131 hatas\u0131\';});';
+  html += '<\/script>';
+  html += '</body></html>';
+  return HtmlService.createHtmlOutput(html).setTitle(depoAdi + ' - S\u0131cakl\u0131k Takibi');
+}
+
 // === DO GET ===
 
 function doGet(e) {
+  var page = e && e.parameter && e.parameter.page;
+  if (page === 'depo') {
+    var depoAd = (e && e.parameter && e.parameter.depo) || '';
+    if (depoAd) return serveDepoHtml(depoAd);
+  }
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) {
