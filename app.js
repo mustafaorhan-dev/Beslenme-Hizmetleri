@@ -229,7 +229,7 @@ function showSyncTime(msg) {
   if (!el) return;
   const now = new Date();
   const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  el.textContent = msg ? `⏱ ${time} (${msg})` : `⏱ ${time}`;
+  el.textContent = msg ? `Bağlı • ${time} (${msg})` : `Bağlı • ${time}`;
 }
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -962,6 +962,12 @@ function sicaklikDurum(sicaklik, depoAd) {
 var haccpSicaklikPage = 0;
 var haccpSicaklikPageSize = 5;
 
+function formatTarihTR(t) {
+  if (!t) return '—';
+  const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? m[3] + '.' + m[2] + '.' + m[1] : t;
+}
+
 function renderHaccpSicaklik() {
   const tbody = document.getElementById('haccpSicaklikTbody');
   const table = document.getElementById('haccpSicaklikTable');
@@ -988,7 +994,7 @@ function renderHaccpSicaklik() {
     const depoAd = r.depoAd || ('Depo ' + r.depoNo);
     const durum = sicaklikDurum(r.sicaklik, depoAd);
     return `<tr>
-      <td>${r.tarih}</td>
+      <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
       <td class="${durum.cls}"><strong>${r.sicaklik}</strong></td>
@@ -1037,12 +1043,12 @@ function renderHaccpNumune() {
   empty.style.display = 'none';
 
   tbody.innerHTML = records.map(r => `<tr>
-    <td>${r.tarih}</td>
+    <td>${formatTarihTR(r.tarih)}</td>
     <td>${r.ogun || '—'}</td>
     <td>${r.yemekAdi || '—'}</td>
     <td>${r.miktar || '—'}</td>
     <td>${r.saklamaSicakligi || '—'}</td>
-    <td>${r.imhaTarihi || '—'}</td>
+    <td>${formatTarihTR(r.imhaTarihi)}</td>
     <td>
       <button class="btn-icon" onclick="editHaccpRecord('numune',${r.id})" title="Düzenle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1069,7 +1075,7 @@ function renderHaccpHijyen() {
   empty.style.display = 'none';
 
   tbody.innerHTML = records.map(r => `<tr>
-    <td>${r.tarih}</td>
+    <td>${formatTarihTR(r.tarih)}</td>
     <td>${r.alan || '—'}</td>
     <td>${r.yapilacakIs || '—'}</td>
     <td>${r.yapanKisi || '—'}</td>
