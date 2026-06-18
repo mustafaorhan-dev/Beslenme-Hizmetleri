@@ -207,7 +207,7 @@
     var seciliDepo = '';
     var sayfa = 0;
     var sayfaBoyutu = 10;
-    var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
+    var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzY5J2Fj-8PkelM9d7mVJiMdSqHwLlOEsOS9N2oEVmZnbbA1KwN64o6hCVwOiZ8r08RFw/exec';
     var gasUrl = getUrlParam('gas') || DEFAULT_GAS_URL;
 
     function loadData() {
@@ -217,10 +217,13 @@
     }
 
     async function gasVeriCek() {
-      if (!gasUrl) return false;
+      if (!gasUrl) { gosterToast('GAS URL eksik!', 'error'); return false; }
       try {
+        gosterToast('Veriler y\u00fckleniyor... (' + gasUrl.substring(0,50) + '...)');
         var res = await fetch(gasUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
+        if (!res.ok) { gosterToast('Sunucu hatas\u0131: ' + res.status, 'error'); return false; }
         var data = await res.json();
+        if (data.error) { gosterToast('GAS hatas\u0131: ' + data.error, 'error'); return false; }
         if (data.data && data.data.length > 0) {
           haccpRecords = data.data.map(function(r) { return {
             id: Number(r.id) || Date.now() + Math.random(),
@@ -232,10 +235,16 @@
             not: r.not_ || r.not || ''
           };});
           if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) allDepos = data.depoAdlari;
+          gosterToast(haccpRecords.length + ' kay\u0131t y\u00fcklendi', 'success');
           return true;
+        } else {
+          gosterToast('GAS\'tan veri geldi ama bo\u015f', 'info');
+          return false;
         }
-      } catch (e) {}
-      return false;
+      } catch (e) {
+        gosterToast('Ba\u011flant\u0131 hatas\u0131: ' + e.message, 'error');
+        return false;
+      }
     }
 
     function formatTarihTR(t) {
