@@ -224,11 +224,7 @@ function doPost(e) {
       }
       const records = body.records || [];
       const headers = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
-      var currentHeaders = sheet.getDataRange().getValues()[0] || [];
-      var fixedHeaders = currentHeaders.map(function(h) { return String(h).trim() === 'depoNo' ? 'depoAd' : String(h).trim(); });
-      if (fixedHeaders.join() !== headers.join()) {
-        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-      }
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       if (records.length > 0) {
         var lastRow = sheet.getLastRow();
         if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
