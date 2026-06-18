@@ -778,56 +778,28 @@ function exportPDF() {
 
 // ─── QR KOD ────────────────────────────────────────────────────────────────────
 
-function makeDepoPage(depoAdi) {
-  var recs = haccpRecords.filter(function(r) {
-    return r.type === 'sicaklik' && r.depoAd === depoAdi;
-  }).map(function(r) {
-    return { d: r.tarih, s: r.saat, v: r.sicaklik };
-  });
-  var json = JSON.stringify(recs);
-  function esc(s) { return s.replace(/'/g, "\\'").replace(/</g, '&lt;'); }
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'
-    + esc(depoAdi) + '</title><style>'
-    + '*{margin:0;padding:0;box-sizing:border-box}'
-    + 'body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#1e293b;padding:1rem}'
-    + 'h1{font-size:1.1rem;margin-bottom:.5rem}'
-    + '.s{font-size:.85rem;font-weight:700;color:#475569;margin:1rem 0 .5rem}'
-    + '.c{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:.8rem 1rem;display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}'
-    + '.t{font-size:.8rem;color:#94a3b8;min-width:50px;font-weight:600}'
-    + '.v{font-size:1.2rem;font-weight:800;min-width:70px}'
-    + '.g{color:#10b981}.o{color:#f59e0b}.r{color:#ef4444}'
-    + '.e{text-align:center;padding:2rem;color:#94a3b8}'
-    + '</style></head><body><h1>' + esc(depoAdi) + '</h1><div id=c></div><script>'
-    + 'var D=' + json + ';'
-    + 'D.sort(function(a,b){return a.d>b.d?-1:1});'
-    + 'var td=new Date(),ts=td.getFullYear()+\'-\'+(td.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(td.getDate()+"").padStart(2,\'0\');'
-    + 'var tD=D.filter(function(r){return r.d===ts}).sort(function(a,b){return(a.s||"")>(b.s||"")?1:-1});'
-    + 'var h=\'<div class="s">Bug\u00fcnk\u00fc Kay\u0131tlar</div>\';'
-    + 'if(tD.length===0){h+=\'<div class="e">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>\'}'
-    + 'else{tD.forEach(function(r){var v=parseFloat(r.v),c="g";if(v<0)c="o";if(v>4)c="r";'
-    + 'h+=\'<div class="c"><span class="t">\'+(r.s||"--:--")+\'</span><span class="v \'+c+\'">\'+r.v+\'\u00b0C</span></div>\'})}'
-    + 'h+=\'<div class="s">Son Kay\u0131tlar</div>\';'
-    + 'if(D.length===0){h+=\'<div class="e">Hen\u00fcz kay\u0131t yok</div>\'}'
-    + 'else{D.slice(0,20).forEach(function(r){var d=r.d?r.d.slice(8,10)+\'.\'+r.d.slice(5,7)+\'.\'+r.d.slice(0,4):"--";'
-    + 'var v=parseFloat(r.v),c="g";if(v<0)c="o";if(v>4)c="r";'
-    + 'h+=\'<div class="c"><span class="t">\'+d+\'</span><span class="t">\'+(r.s||"--:--")+\'</span><span class="v \'+c+\'">\'+r.v+\'\u00b0C</span></div>\'})}'
-    + 'document.getElementById(\'c\').innerHTML=h;'
-    + '</script></body></html>';
-  return 'data:text/html,' + encodeURIComponent(html);
-}
-
 function showQrModal(depoAdi) {
   document.getElementById('qrDepoAdi').textContent = depoAdi;
-  var dataUri = makeDepoPage(depoAdi);
   var canvas = document.getElementById('qrCanvas');
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   try {
+    var recs = haccpRecords.filter(function(r) {
+      return r.type === 'sicaklik' && r.depoAd === depoAdi;
+    }).map(function(r) {
+      return { d: r.tarih, s: r.saat, v: r.sicaklik };
+    });
+    var lines = ['Depo: ' + depoAdi, 'Kay�t: ' + recs.length, ''];
+    recs.slice(0, 20).forEach(function(r) {
+      var d = r.d ? r.d.slice(8, 10) + '.' + r.d.slice(5, 7) + '.' + r.d.slice(0, 4) : '--';
+      lines.push(d + ' ' + (r.s || '--:--') + '  ' + r.v + '°C');
+    });
+    var text = lines.join('\n');
     var qr = QRCode(0, 'M');
-    qr.addData(dataUri);
+    qr.addData(text);
     qr.make();
-    var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     var moduleCount = qr.getModuleCount();
     var cellSize = Math.floor(canvas.width / moduleCount);
     var margin = Math.floor((canvas.width - moduleCount * cellSize) / 2);
@@ -840,13 +812,12 @@ function showQrModal(depoAdi) {
       }
     }
   } catch (e) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#000';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('QR oluşturulamadı', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('QR hatas�: ' + e.message, canvas.width / 2, canvas.height / 2);
   }
-  document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun, internet gerekmez';
+  document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun';
   document.getElementById('qrModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
