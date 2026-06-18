@@ -348,101 +348,32 @@
       return v;
     }
 
-    // ─── FETCH FROM GSHEETS ──────────────────────────────────────────────────────
-    async function fetchFromGSheets(webappUrl) {
-      var cleanUrl = webappUrl.split('?')[0].split('#')[0];
-      // 1. önce GET ?sheet= dene
-      try {
-        var res = await fetch(cleanUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
-        var data = await res.json();
-        if (data && data.data) {
-          if (data.data.length > 0) {
-            haccpRecords = data.data.map(function(r) {
-              return {
-                id: Number(r.id) || Date.now() + Math.random(),
-                type: r.type || 'sicaklik',
-                tarih: normalizeDate(r.tarih || ''),
-                saat: normalizeSaat(r.saat || ''),
-                depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
-                sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
-                not: r.not_ || '',
-                ogun: r.ogun || '',
-                yemekAdi: r.yemekAdi || '',
-                miktar: r.miktar || '',
-                saklamaSicakligi: r.saklamaSicakligi || '',
-                imhaTarihi: r.imhaTarihi || '',
-                alan: r.alan || '',
-                yapilacakIs: r.yapilacakIs || '',
-                yapanKisi: r.yapanKisi || '',
-                yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
-              };
-            });
-          }
-          if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
-            allDepos = data.depoAdlari;
-          }
-          console.log('GET ?sheet= ile al\u0131nan kay\u0131t:', haccpRecords.length);
-          return true;
-        }
-      } catch (e) {
-        console.log('GET ?sheet= hatas\u0131, POST action=getHaccp deneniyor...', e);
-      }
-      // 2. POST action=getHaccp dene
-      try {
-        var res2 = await fetch(cleanUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'getHaccp' })
-        });
-        var data2 = await res2.json();
-        if (data2 && data2.data) {
-          if (data2.data.length > 0) {
-            haccpRecords = data2.data.map(function(r) {
-              return {
-                id: Number(r.id) || Date.now() + Math.random(),
-                type: r.type || 'sicaklik',
-                tarih: normalizeDate(r.tarih || ''),
-                saat: normalizeSaat(r.saat || ''),
-                depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
-                sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
-                not: r.not_ || '',
-                ogun: r.ogun || '',
-                yemekAdi: r.yemekAdi || '',
-                miktar: r.miktar || '',
-                saklamaSicakligi: r.saklamaSicakligi || '',
-                imhaTarihi: r.imhaTarihi || '',
-                alan: r.alan || '',
-                yapilacakIs: r.yapilacakIs || '',
-                yapanKisi: r.yapanKisi || '',
-                yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
-              };
-            });
-          }
-          if (data2.depoAdlari && Array.isArray(data2.depoAdlari) && data2.depoAdlari.length > 0) {
-            allDepos = data2.depoAdlari;
-          }
-          console.log('POST action=getHaccp ile al\u0131nan kay\u0131t:', haccpRecords.length);
-          return true;
-        }
-      } catch (e2) {
-        console.error('POST action=getHaccp de hatas\u0131:', e2);
-      }
-      document.getElementById('pageSub').textContent = 'Veri al\u0131namad\u0131, localStorage kullan\u0131l\u0131yor';
-      return false;
-    }
-
     // ─── INIT ────────────────────────────────────────────────────────────────────
-    (async function() {
+    (function() {
       loadData();
       var directDepo = getUrlParam('depo');
-      var gsUrl = getUrlParam('url');
+      var dataStr = getUrlParam('v');
       var subEl = document.getElementById('pageSub');
 
-      if (gsUrl) {
-        subEl.textContent = 'Google\'dan veriler al\u0131n\u0131yor...';
-        var ok = await fetchFromGSheets(gsUrl);
-        if (haccpRecords.length > 0) {
-          subEl.textContent = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      // QR'dan gelen veri varsa (depo.html?depo=X&v=tarih|saat|sicaklik,...)
+      if (dataStr) {
+        var items = dataStr.split(',').filter(Boolean);
+        items.forEach(function(item) {
+          var parts = item.split('|');
+          if (parts.length >= 3) {
+            haccpRecords.push({
+              id: Date.now() + Math.random(),
+              type: 'sicaklik',
+              tarih: parts[0],
+              saat: parts[1],
+              depoAd: directDepo,
+              sicaklik: parseFloat(parts[2]),
+              not: ''
+            });
+          }
+        });
+        if (haccpRecords.length > 0 && directDepo && allDepos.indexOf(directDepo) < 0) {
+          allDepos.push(directDepo);
         }
       }
 

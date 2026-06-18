@@ -792,8 +792,16 @@ function getBaseUrl() {
 }
 
 function getQrUrl(depoAdi) {
-  const url = gsheetConfig.webappUrl || DEFAULT_GSHEET_URL;
-  return getBaseUrl() + 'depo.html?depo=' + encodeURIComponent(depoAdi) + '&url=' + encodeURIComponent(url);
+  var base = getBaseUrl();
+  var recent = haccpRecords.filter(function(r) {
+    return r.type === 'sicaklik' && r.depoAd === depoAdi;
+  }).sort(function(a, b) {
+    if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
+    return (a.saat || '') > (b.saat || '') ? -1 : 1;
+  }).slice(0, 10).map(function(r) {
+    return (r.tarih || '') + '|' + (r.saat || '') + '|' + (r.sicaklik != null ? r.sicaklik : '');
+  }).join(',');
+  return base + 'depo.html?depo=' + encodeURIComponent(depoAdi) + '&v=' + encodeURIComponent(recent);
 }
 
 function showQrModal(depoAdi) {
