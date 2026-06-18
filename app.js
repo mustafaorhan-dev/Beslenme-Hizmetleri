@@ -819,8 +819,33 @@ function makeDepoPage(depoAdi) {
 function showQrModal(depoAdi) {
   document.getElementById('qrDepoAdi').textContent = depoAdi;
   var dataUri = makeDepoPage(depoAdi);
-  var qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(dataUri);
-  document.getElementById('qrImage').src = qrImageUrl;
+  var canvas = document.getElementById('qrCanvas');
+  try {
+    var qr = QRCode(0, 'M');
+    qr.addData(dataUri);
+    qr.make();
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var moduleCount = qr.getModuleCount();
+    var cellSize = Math.floor(canvas.width / moduleCount);
+    var margin = Math.floor((canvas.width - moduleCount * cellSize) / 2);
+    ctx.fillStyle = '#000';
+    for (var r = 0; r < moduleCount; r++) {
+      for (var c = 0; c < moduleCount; c++) {
+        if (qr.isDark(r, c)) {
+          ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+  } catch (e) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR oluşturulamadı', canvas.width / 2, canvas.height / 2);
+  }
   document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun, internet gerekmez';
   document.getElementById('qrModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -833,7 +858,8 @@ function closeQrModal() {
 
 function printQr() {
   var depoAdi = document.getElementById('qrDepoAdi').textContent;
-  var qrImageSrc = document.getElementById('qrImage').src;
+  var canvas = document.getElementById('qrCanvas');
+  var qrImageSrc = canvas.toDataURL('image/png');
   var printWin = window.open('', '_blank', 'width=400,height=500');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Kod - ' + depoAdi + '</title>' +

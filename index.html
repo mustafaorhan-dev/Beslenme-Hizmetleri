@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0f1e" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -1032,7 +1033,7 @@
       <div class="modal-body" style="padding:1.5rem">
         <p id="qrDepoAdi" style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text-primary)"></p>
         <div id="qrContainer" style="background:#fff;border-radius:12px;padding:1rem;display:inline-block;margin-bottom:0.75rem">
-          <img id="qrImage" src="" alt="QR Kod" style="width:220px;height:220px;display:block" />
+          <canvas id="qrCanvas" width="220" height="220" style="width:220px;height:220px;display:block"></canvas>
         </div>
         <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem" id="qrUrlDisplay"></p>
         <p style="font-size:0.72rem;color:var(--text-muted)">
