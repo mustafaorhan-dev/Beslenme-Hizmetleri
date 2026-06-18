@@ -379,7 +379,7 @@ async function syncHaccpFromGSheets() {
         saat: normalizeSaat(r.saat || ''),
         depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
         sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
-        not: r.not_ || '',
+        not: r.not_ || r.not || '',
         ogun: r.ogun || '',
         yemekAdi: r.yemekAdi || '',
         miktar: r.miktar || '',
