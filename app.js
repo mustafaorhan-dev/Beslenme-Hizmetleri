@@ -703,10 +703,66 @@ function exportPDF() {
       ${cards}
       <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
-  }, 500);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
+// ─── QR KOD ────────────────────────────────────────────────────────────────────
+function getBaseUrl() {
+  var base = window.location.href;
+  // Eğer index.html ile bitiyorsa veya kök dizinse
+  if (base.indexOf('index.html') >= 0) {
+    base = base.substring(0, base.lastIndexOf('/') + 1);
+  } else if (base.indexOf('?') >= 0) {
+    base = base.substring(0, base.indexOf('?'));
+  } else if (base.indexOf('#') >= 0) {
+    base = base.substring(0, base.indexOf('#'));
+  }
+  if (!base.endsWith('/')) base = base.substring(0, base.lastIndexOf('/') + 1);
+  return base;
+}
+
+function getQrUrl(depoAdi) {
+  return getBaseUrl() + 'depo.html?depo=' + encodeURIComponent(depoAdi);
+}
+
+function showQrModal(depoAdi) {
+  document.getElementById('qrDepoAdi').textContent = depoAdi;
+  var url = getQrUrl(depoAdi);
+  var qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(url);
+  document.getElementById('qrImage').src = qrImageUrl;
+  document.getElementById('qrUrlDisplay').textContent = url;
+  document.getElementById('qrModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeQrModal() {
+  document.getElementById('qrModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function printQr() {
+  var depoAdi = document.getElementById('qrDepoAdi').textContent;
+  var url = getQrUrl(depoAdi);
+  var qrImageSrc = document.getElementById('qrImage').src;
+  var printWin = window.open('', '_blank', 'width=400,height=500');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Kod - ' + depoAdi + '</title>' +
+    '<style>body{text-align:center;font-family:Arial,sans-serif;padding:20px;margin:0}' +
+    'h1{font-size:1.2rem;margin-bottom:0.3rem}' +
+    '.sub{font-size:0.85rem;color:#666;margin-bottom:1.5rem}' +
+    'img{width:280px;height:280px;border:2px solid #ddd;border-radius:12px;padding:10px;background:#fff}' +
+    '.url{font-size:0.7rem;color:#999;margin-top:1rem;word-break:break-all}' +
+    '</style></head><body>' +
+    '<h1>' + depoAdi + '</h1>' +
+    '<div class="sub">S\u0131cakl\u0131k kayd\u0131 i\u00e7in QR kodu okutun</div>' +
+    '<img src="' + qrImageSrc + '" alt="QR Kod" />' +
+    '<div class="url">' + url + '</div>' +
+    '</body></html>');
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(function() { try { printWin.print(); } catch(e) {} }, 500);
 }
 
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
@@ -782,7 +838,10 @@ function renderHaccpDepoListesi() {
   container.innerHTML = list.map(function(n) {
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
       '<span>' + n + '</span>' +
-      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button></div>';
+      '<div style="display:flex;gap:4px">' +
+      '<button class="btn btn-ghost btn-sm" onclick="showQrModal(\'' + n.replace(/'/g, "\\'") + '\')" title="QR Kod">\uD83D\uDCF7 QR</button>' +
+      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button>' +
+      '</div></div>';
   }).join('');
 }
 
