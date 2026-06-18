@@ -707,6 +707,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Depo adlarını düzenleyip <strong>QR</strong> butonuyla her depo için QR kod oluşturabilir, kapıya asabilirsiniz.</span>
         </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+          <label style="font-size:0.85rem;color:var(--text-muted)">Depo Filtresi:</label>
+          <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+            <option value="">Tümü</option>
+          </select>
+        </div>
         <div class="table-wrapper">
           <div class="empty-state" id="haccpSicaklikEmpty">
             <p>Henüz sıcaklık kaydı girilmemiş.</p>

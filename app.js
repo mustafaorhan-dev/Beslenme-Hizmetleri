@@ -939,9 +939,9 @@ function sicaklikDurum(sicaklik, depoAd) {
   const v = parseFloat(sicaklik);
   if (isNaN(v)) return { text: '—', cls: '' };
   var min, max;
-  if (depoAd && depoAd.toLowerCase().includes('dondurucu')) { min = -24; max = -18; }
-  else if (depoAd && (depoAd.toLowerCase().includes('soğuk') || depoAd.toLowerCase().includes('soguk'))) { min = 0; max = 4; }
-  else { return { text: '—', cls: '' }; }
+  var da = String(depoAd || '').toLowerCase();
+  if (da.includes('dondurucu')) { min = -24; max = -18; }
+  else if (da.includes('so\u011fuk') || da.includes('soguk')) { min = 0; max = 4; }
   if (v >= min && v <= max) return { text: 'Uygun', cls: 'badge badge-ok' };
   if (v < min) return { text: 'Düşük', cls: 'badge badge-warn' };
   return { text: 'Yüksek', cls: 'badge badge-err' };
@@ -961,7 +961,23 @@ function renderHaccpSicaklik() {
   const table = document.getElementById('haccpSicaklikTable');
   const empty = document.getElementById('haccpSicaklikEmpty');
   const nav = document.getElementById('haccpSicaklikNav');
-  const records = getHaccpRecords('sicaklik');
+  const filterSelect = document.getElementById('haccpSicaklikDepoFilter');
+  let records = getHaccpRecords('sicaklik');
+
+  // populate filter options
+  if (filterSelect) {
+    var curVal = filterSelect.value;
+    var depoSet = {};
+    records.forEach(function(r) { depoSet[r.depoAd || ('Depo ' + r.depoNo)] = true; });
+    var depoList = Object.keys(depoSet).sort();
+    filterSelect.innerHTML = '<option value="">T\u00fcm\u00fc</option>' +
+      depoList.map(function(d) { return '<option value="' + d.replace(/"/g,'&quot;') + '"' + (d === curVal ? ' selected' : '') + '>' + d + '</option>'; }).join('');
+  }
+
+  // apply filter
+  if (filterSelect && filterSelect.value) {
+    records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === filterSelect.value; });
+  }
 
   if (records.length === 0) {
     table.style.display = 'none';
