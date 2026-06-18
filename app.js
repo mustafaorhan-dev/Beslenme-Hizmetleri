@@ -706,6 +706,7 @@ function exportPDF() {
   printWin.document.close();
   printWin.focus();
   setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  });
 }
 
 // ─── QR KOD ────────────────────────────────────────────────────────────────────
