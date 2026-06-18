@@ -86,8 +86,17 @@ function serveDepoHtml(depoAdi) {
       var rows = sheet.getDataRange().getValues();
       if (rows.length > 1) {
         var h = rows[0];
+        var depoAdIdx = -1, typeIdx = -1;
+        for (var j = 0; j < h.length; j++) {
+          var hh = String(h[j]).trim();
+          if (hh === 'depoAd') depoAdIdx = j;
+          if (hh === 'type') typeIdx = j;
+        }
         var data = [];
         for (var i = 1; i < rows.length; i++) {
+          var rowDepo = String(rows[i][depoAdIdx] || '').trim();
+          var rowType = String(rows[i][typeIdx] || '').trim();
+          if (rowType !== 'sicaklik' || rowDepo !== depoAdi) continue;
           var row = {};
           for (var j = 0; j < h.length; j++) {
             var v = rows[i][j];
@@ -127,9 +136,8 @@ function serveDepoHtml(depoAdi) {
   html += '<div class="header"><h1>' + depoAdi + '</h1><span class="sub" id="pageSub"></span></div>';
   html += '<div class="container" id="mainContainer"></div>';
   html += '<script>';
-  html += 'var DATA=' + jsonData + ';';
-  html += 'var DEPO=\'' + depoAdi.replace(/'/g, "\\'") + '\';';
-  html += 'var recs=DATA.filter(function(r){return r.type===\'sicaklik\'&&r.depoAd===DEPO;}).sort(function(a,b){return a.tarih>b.tarih?-1:1;});';
+  html += 'var recs=' + jsonData + ';';
+  html += 'recs.sort(function(a,b){return a.tarih>b.tarih?-1:1;});';
   html += 'var ts=new Date(),td=ts.getFullYear()+\'-\'+(ts.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(ts.getDate()+"").padStart(2,\'0\');';
   html += 'var tdRecs=recs.filter(function(r){return r.tarih===td;}).sort(function(a,b){return (a.saat||"")>(b.saat||"")?1:-1;});';
   html += 'var h="";';
@@ -148,7 +156,7 @@ function serveDepoHtml(depoAdi) {
   html += 'document.getElementById(\'pageSub\').textContent=recs.length+\' kay\u0131t\';';
   html += '</script>';
   html += '</body></html>';
-  return HtmlService.createHtmlOutput(html).setTitle(depoAdi + ' - S\u0131cakl\u0131k Takibi');
+  return ContentService.createTextOutput(html).setMimeType(ContentService.MimeType.HTML);
 }
 
 // === DO GET ===
