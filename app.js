@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
    ============================================= */
 
@@ -776,47 +776,21 @@ function exportPDF() {
   });
 }
 
-// ─── QR KOD ────────────────────────────────────────────────────────────────────
+// --- QR KOD -----------------------------------------------------------------
 
 function showQrModal(depoAdi) {
   document.getElementById('qrDepoAdi').textContent = depoAdi;
-  var canvas = document.getElementById('qrCanvas');
-  var ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  try {
-    var recs = haccpRecords.filter(function(r) {
-      return r.type === 'sicaklik' && r.depoAd === depoAdi;
-    }).map(function(r) {
-      return { d: r.tarih, s: r.saat, v: r.sicaklik };
-    });
-    var lines = ['Depo: ' + depoAdi, 'Kay�t: ' + recs.length, ''];
-    recs.slice(0, 20).forEach(function(r) {
-      var d = r.d ? r.d.slice(8, 10) + '.' + r.d.slice(5, 7) + '.' + r.d.slice(0, 4) : '--';
-      lines.push(d + ' ' + (r.s || '--:--') + '  ' + r.v + '°C');
-    });
-    var text = lines.join('\n');
-    var qr = QRCode(0, 'M');
-    qr.addData(text);
-    qr.make();
-    var moduleCount = qr.getModuleCount();
-    var cellSize = Math.floor(canvas.width / moduleCount);
-    var margin = Math.floor((canvas.width - moduleCount * cellSize) / 2);
-    ctx.fillStyle = '#000';
-    for (var r = 0; r < moduleCount; r++) {
-      for (var c = 0; c < moduleCount; c++) {
-        if (qr.isDark(r, c)) {
-          ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
-        }
-      }
-    }
-  } catch (e) {
-    ctx.fillStyle = '#000';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('QR hatas�: ' + e.message, canvas.width / 2, canvas.height / 2);
-  }
+  var recs = haccpRecords.filter(function(r) {
+    return r.type === 'sicaklik' && r.depoAd === depoAdi;
+  }).slice(0, 20);
+  var lines = [depoAdi];
+  recs.forEach(function(r) {
+    var d = r.tarih ? r.tarih.slice(8, 10) + '.' + r.tarih.slice(5, 7) + '.' + r.tarih.slice(0, 4) : '--';
+    lines.push(d + ' ' + (r.saat || '--:--') + ' ' + r.sicaklik + 'C');
+  });
+  var text = lines.join(' | ');
+  var url = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text);
+  document.getElementById('qrImage').src = url;
   document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun';
   document.getElementById('qrModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -829,10 +803,9 @@ function closeQrModal() {
 
 function printQr() {
   var depoAdi = document.getElementById('qrDepoAdi').textContent;
-  var canvas = document.getElementById('qrCanvas');
-  var qrImageSrc = canvas.toDataURL('image/png');
+  var img = document.getElementById('qrImage');
   var printWin = window.open('', '_blank', 'width=400,height=500');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapat' + String.fromCharCode(305) + 'n.', 'error'); return; }
   printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Kod - ' + depoAdi + '</title>' +
     '<style>body{text-align:center;font-family:Arial,sans-serif;padding:20px;margin:0}' +
     'h1{font-size:1.2rem;margin-bottom:0.3rem}' +
@@ -840,8 +813,8 @@ function printQr() {
     'img{width:280px;height:280px;border:2px solid #ddd;border-radius:12px;padding:10px;background:#fff}' +
     '</style></head><body>' +
     '<h1>' + depoAdi + '</h1>' +
-    '<div class="sub">S\u0131cakl\u0131k kayd\u0131 i\u00e7in QR kodu okutun</div>' +
-    '<img src="' + qrImageSrc + '" alt="QR Kod" />' +
+    '<div class="sub">S' + String.fromCharCode(305) + 'cakl' + String.fromCharCode(305) + 'k kayd' + String.fromCharCode(305) + ' i' + String.fromCharCode(231) + 'in QR kodu okutun</div>' +
+    '<img src="' + img.src + '" alt="QR Kod" />' +
     '</body></html>');
   printWin.document.close();
   printWin.focus();
