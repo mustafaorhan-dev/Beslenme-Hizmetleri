@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Otomatik polling: 30 sn'de bir Google Sheets'ten güncel verileri çek
   startAutoSync();
+  showSyncTime('başlatıldı');
 });
 
 let autoSyncTimer = null;
@@ -197,7 +198,10 @@ async function autoPull() {
       }));
 
     const serialized = JSON.stringify(cloudRecords);
-    if (serialized === lastPollData) return;
+    if (serialized === lastPollData) {
+      showSyncTime();
+      return;
+    }
 
     lastPollData = serialized;
     records = cloudRecords;
@@ -207,9 +211,18 @@ async function autoPull() {
     renderAll();
     drawAllCharts();
     setConnectionStatus('ok');
+    showSyncTime('Veri güncellendi');
   } catch (_) {
     setConnectionStatus('err');
   }
+}
+
+function showSyncTime(msg) {
+  const el = document.getElementById('connSyncTime');
+  if (!el) return;
+  const now = new Date();
+  const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  el.textContent = msg ? `⏱ ${time} (${msg})` : `⏱ ${time}`;
 }
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────
@@ -277,6 +290,7 @@ function saveData() {
   syncToSheetSilent();
   // Polling karşılaştırması için cloud verisini güncelle
   lastPollData = null;
+  showSyncTime('kaydedildi');
 }
 
 async function syncToSheetSilent() {
