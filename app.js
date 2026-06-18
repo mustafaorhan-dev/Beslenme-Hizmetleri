@@ -377,7 +377,7 @@ async function syncHaccpFromGSheets() {
         type: r.type || 'sicaklik',
         tarih: normalizeDate(r.tarih || ''),
         saat: normalizeSaat(r.saat || ''),
-        depoAd: r.depoAd || ('Depo ' + (r.depoNo || '')),
+        depoAd: (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, ''),
         sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
         not: r.not_ || r.not || '',
         ogun: r.ogun || '',
