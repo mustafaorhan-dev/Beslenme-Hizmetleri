@@ -162,11 +162,6 @@ function serveDepoHtml(depoAdi) {
 // === DO GET ===
 
 function doGet(e) {
-  var page = e && e.parameter && e.parameter.page;
-  if (page === 'depo') {
-    var depoAd = (e && e.parameter && e.parameter.depo) || '';
-    if (depoAd) return serveDepoHtml(depoAd);
-  }
   const sheetName = (e && e.parameter && e.parameter.sheet) || SHEET_NAME;
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) {

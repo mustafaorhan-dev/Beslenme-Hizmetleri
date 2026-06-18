@@ -777,31 +777,51 @@ function exportPDF() {
 }
 
 // ─── QR KOD ────────────────────────────────────────────────────────────────────
-function getBaseUrl() {
-  var base = window.location.href;
-  // Eğer index.html ile bitiyorsa veya kök dizinse
-  if (base.indexOf('index.html') >= 0) {
-    base = base.substring(0, base.lastIndexOf('/') + 1);
-  } else if (base.indexOf('?') >= 0) {
-    base = base.substring(0, base.indexOf('?'));
-  } else if (base.indexOf('#') >= 0) {
-    base = base.substring(0, base.indexOf('#'));
-  }
-  if (!base.endsWith('/')) base = base.substring(0, base.lastIndexOf('/') + 1);
-  return base;
-}
 
-function getQrUrl(depoAdi) {
-  var webappUrl = gsheetConfig.webappUrl || DEFAULT_GSHEET_URL;
-  return webappUrl + '?page=depo&depo=' + encodeURIComponent(depoAdi);
+function makeDepoPage(depoAdi) {
+  var recs = haccpRecords.filter(function(r) {
+    return r.type === 'sicaklik' && r.depoAd === depoAdi;
+  }).map(function(r) {
+    return { d: r.tarih, s: r.saat, v: r.sicaklik };
+  });
+  var json = JSON.stringify(recs);
+  function esc(s) { return s.replace(/'/g, "\\'").replace(/</g, '&lt;'); }
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'
+    + esc(depoAdi) + '</title><style>'
+    + '*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#1e293b;padding:1rem}'
+    + 'h1{font-size:1.1rem;margin-bottom:.5rem}'
+    + '.s{font-size:.85rem;font-weight:700;color:#475569;margin:1rem 0 .5rem}'
+    + '.c{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:.8rem 1rem;display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}'
+    + '.t{font-size:.8rem;color:#94a3b8;min-width:50px;font-weight:600}'
+    + '.v{font-size:1.2rem;font-weight:800;min-width:70px}'
+    + '.g{color:#10b981}.o{color:#f59e0b}.r{color:#ef4444}'
+    + '.e{text-align:center;padding:2rem;color:#94a3b8}'
+    + '</style></head><body><h1>' + esc(depoAdi) + '</h1><div id=c></div><script>'
+    + 'var D=' + json + ';'
+    + 'D.sort(function(a,b){return a.d>b.d?-1:1});'
+    + 'var td=new Date(),ts=td.getFullYear()+\'-\'+(td.getMonth()+1+"").padStart(2,\'0\')+\'-\'+(td.getDate()+"").padStart(2,\'0\');'
+    + 'var tD=D.filter(function(r){return r.d===ts}).sort(function(a,b){return(a.s||"")>(b.s||"")?1:-1});'
+    + 'var h=\'<div class="s">Bug\u00fcnk\u00fc Kay\u0131tlar</div>\';'
+    + 'if(tD.length===0){h+=\'<div class="e">Bug\u00fcn hen\u00fcz kay\u0131t girilmedi</div>\'}'
+    + 'else{tD.forEach(function(r){var v=parseFloat(r.v),c="g";if(v<0)c="o";if(v>4)c="r";'
+    + 'h+=\'<div class="c"><span class="t">\'+(r.s||"--:--")+\'</span><span class="v \'+c+\'">\'+r.v+\'\u00b0C</span></div>\'})}'
+    + 'h+=\'<div class="s">Son Kay\u0131tlar</div>\';'
+    + 'if(D.length===0){h+=\'<div class="e">Hen\u00fcz kay\u0131t yok</div>\'}'
+    + 'else{D.slice(0,20).forEach(function(r){var d=r.d?r.d.slice(8,10)+\'.\'+r.d.slice(5,7)+\'.\'+r.d.slice(0,4):"--";'
+    + 'var v=parseFloat(r.v),c="g";if(v<0)c="o";if(v>4)c="r";'
+    + 'h+=\'<div class="c"><span class="t">\'+d+\'</span><span class="t">\'+(r.s||"--:--")+\'</span><span class="v \'+c+\'">\'+r.v+\'\u00b0C</span></div>\'})}'
+    + 'document.getElementById(\'c\').innerHTML=h;'
+    + '</script></body></html>';
+  return 'data:text/html,' + encodeURIComponent(html);
 }
 
 function showQrModal(depoAdi) {
   document.getElementById('qrDepoAdi').textContent = depoAdi;
-  var url = getQrUrl(depoAdi);
-  var qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(url);
+  var dataUri = makeDepoPage(depoAdi);
+  var qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(dataUri);
   document.getElementById('qrImage').src = qrImageUrl;
-  document.getElementById('qrUrlDisplay').textContent = url;
+  document.getElementById('qrUrlDisplay').textContent = 'QR kodu okutun, internet gerekmez';
   document.getElementById('qrModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -813,7 +833,6 @@ function closeQrModal() {
 
 function printQr() {
   var depoAdi = document.getElementById('qrDepoAdi').textContent;
-  var url = getQrUrl(depoAdi);
   var qrImageSrc = document.getElementById('qrImage').src;
   var printWin = window.open('', '_blank', 'width=400,height=500');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
@@ -822,12 +841,10 @@ function printQr() {
     'h1{font-size:1.2rem;margin-bottom:0.3rem}' +
     '.sub{font-size:0.85rem;color:#666;margin-bottom:1.5rem}' +
     'img{width:280px;height:280px;border:2px solid #ddd;border-radius:12px;padding:10px;background:#fff}' +
-    '.url{font-size:0.7rem;color:#999;margin-top:1rem;word-break:break-all}' +
     '</style></head><body>' +
     '<h1>' + depoAdi + '</h1>' +
     '<div class="sub">S\u0131cakl\u0131k kayd\u0131 i\u00e7in QR kodu okutun</div>' +
     '<img src="' + qrImageSrc + '" alt="QR Kod" />' +
-    '<div class="url">' + url + '</div>' +
     '</body></html>');
   printWin.document.close();
   printWin.focus();
