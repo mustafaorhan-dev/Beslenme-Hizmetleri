@@ -759,7 +759,8 @@ function exportPDF() {
         .trend-down { color: #10b981; font-weight: 700; }
         .trend-flat { color: #64748b; font-weight: 700; }
         .badge, .btn, .toolbar, .year-btn { display: none; }
-        .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      .note-input { width: 100%; max-width: 120px; padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.7rem; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       </style>
     </head><body>
       <h1>Atık Kontrol Raporu</h1>
@@ -3341,7 +3342,7 @@ async function renderMenu() {
     <td><strong>Not ${ni + 1}</strong></td>
     ${days.map((d, di) => {
       const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-      return `<td><input type="text" class="kisi-input" id="mn_${ni}_${di}" value="${val}" placeholder="..." /></td>`;
+      return `<td><input type="text" class="note-input" id="mn_${ni}_${di}" value="${val}" placeholder="..." /></td>`;
     }).join('')}
   </tr>`).join('');
   renderProduction(weekKey, weekData, days);
@@ -3460,7 +3461,13 @@ function importMenuJSON(event) {
 function exportMenuPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  const menuHtml = document.querySelector('#content-menu .section-card')?.outerHTML || '<p>Menü yok</p>';
+  // Klonla ve input değerlerini attribute'a yaz (outerHTML için)
+  var clone = document.querySelector('#content-menu .section-card');
+  if (!clone) { printWin.document.write('<p>Menü yok</p>'); printWin.document.close(); return; }
+  clone = clone.cloneNode(true);
+  clone.querySelectorAll('input').forEach(function(inp) { if (inp.value) inp.setAttribute('value', inp.value); });
+  clone.querySelectorAll('textarea').forEach(function(ta) { ta.textContent = ta.value; });
+  const menuHtml = clone.outerHTML;
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Haftalık Menü</title>
     <style>

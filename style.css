@@ -1692,6 +1692,7 @@ body {
 .menu-table textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(34,211,238,0.1); }
 .menu-table textarea { line-height: 1.4; min-height: 50px; }
 .menu-table input.kisi-input { text-align: center; font-weight: 600; }
+.menu-table input.note-input { width: 100%; min-width: 80px; max-width: 160px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); font-size: 0.75rem; }
 .menu-hint {
   display: flex;
   align-items: center;
