@@ -7,6 +7,8 @@ const DEPO_ADLARI_SHEET = 'Depo Adları';
 const HACCP_DEPO_KEY = 'HACCP_DEPO_ADLARI';
 
 var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+var DISH_HEADERS = ['id', 'ad', 'kalori', 'alerjen'];
+for (var di = 1; di <= 18; di++) { DISH_HEADERS.push('ürün ' + di, 'miktar ' + di, 'birim ' + di); }
 
 function formatCellValue(val, header) {
   if (Object.prototype.toString.call(val) === '[object Date]' && !isNaN(val)) {
@@ -216,7 +218,7 @@ function doGet(e) {
   if (!sheet) {
     if (sheetName === DISH_SHEET_NAME) {
       sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(DISH_SHEET_NAME);
-      sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'ürün 1', 'miktar 1', 'birim 1', 'ürün 2', 'miktar 2', 'birim 2', 'ürün 3', 'miktar 3', 'birim 3', 'ürün 4', 'miktar 4', 'birim 4', 'ürün 5', 'miktar 5', 'birim 5', 'ürün 6', 'miktar 6', 'birim 6', 'ürün 7', 'miktar 7', 'birim 7', 'ürün 8', 'miktar 8', 'birim 8', 'ürün 9', 'miktar 9', 'birim 9', 'ürün 10', 'miktar 10', 'birim 10']);
+      sheet.appendRow(DISH_HEADERS);
     } else if (sheetName === HACCP_SHEET_NAME || sheetName === NUMUNE_SHEET_NAME || sheetName === HIJYEN_SHEET_NAME) {
       sheet = getSheetOrCreate(sheetName, HACCP_HEADERS);
     } else {
@@ -228,6 +230,8 @@ function doGet(e) {
   } else if (sheetName === SHEET_NAME) {
     var atikHeaders = ['id', 'tarih', 'yemek', 'fire', 'turnike', 'personel', 'toplam', 'porsiyon', 'atik', 'ogrenci', 'yemek_adi', 'lastModified'];
     sheet.getRange(1, 1, 1, atikHeaders.length).setValues([atikHeaders]);
+  } else if (sheetName === DISH_SHEET_NAME) {
+    sheet.getRange(1, 1, 1, DISH_HEADERS.length).setValues([DISH_HEADERS]);
   }
   var response = { data: readSheetData(sheet) };
   if (sheetName === HACCP_SHEET_NAME || sheetName === NUMUNE_SHEET_NAME || sheetName === HIJYEN_SHEET_NAME) {
@@ -394,7 +398,7 @@ function handleDishAction(action, body) {
   let sheet = ss.getSheetByName(DISH_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(DISH_SHEET_NAME);
-    sheet.appendRow(['id', 'ad', 'kalori', 'alerjen', 'ürün 1', 'miktar 1', 'birim 1', 'ürün 2', 'miktar 2', 'birim 2', 'ürün 3', 'miktar 3', 'birim 3', 'ürün 4', 'miktar 4', 'birim 4', 'ürün 5', 'miktar 5', 'birim 5', 'ürün 6', 'miktar 6', 'birim 6', 'ürün 7', 'miktar 7', 'birim 7', 'ürün 8', 'miktar 8', 'birim 8', 'ürün 9', 'miktar 9', 'birim 9', 'ürün 10', 'miktar 10', 'birim 10']);
+    sheet.appendRow(DISH_HEADERS);
   }
 
   if (action === 'getDishes') {
