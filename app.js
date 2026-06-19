@@ -352,7 +352,11 @@ function syncHaccpSilent(forceDepoOnly) {
 async function syncHaccpFromGSheets() {
   if (!gsheetConfig.webappUrl) return false;
   try {
-    const res = await fetch(gsheetConfig.webappUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
+    const res = await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getHaccp' })
+    });
     const data = await res.json();
     if (data.data && data.data.length > 0) {
       haccpRecords = data.data.map(r => {
