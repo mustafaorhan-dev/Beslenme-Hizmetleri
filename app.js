@@ -23,6 +23,23 @@ function toggleTheme() {
   if (typeof drawAllCharts === 'function') drawAllCharts();
 }
 
+function loadAccent() {
+  const saved = localStorage.getItem('atik_kontrol_accent') || 'blue';
+  document.documentElement.setAttribute('data-accent', saved);
+  document.querySelectorAll('.accent-dot').forEach(b => {
+    b.classList.toggle('active', b.dataset.accent === saved);
+  });
+}
+
+function setAccent(name) {
+  document.documentElement.setAttribute('data-accent', name);
+  localStorage.setItem('atik_kontrol_accent', name);
+  document.querySelectorAll('.accent-dot').forEach(b => {
+    b.classList.toggle('active', b.dataset.accent === name);
+  });
+  if (typeof drawAllCharts === 'function') drawAllCharts();
+}
+
 // ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
 function showToast(message, type) {
   const container = document.getElementById('toastContainer');
@@ -114,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadGSheetConfig();
+  loadAccent();
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
@@ -916,7 +934,61 @@ function saveHaccpData() {
   syncHaccpSilent();
 }
 
+function renderHaccpDepoSummary() {
+  var el = document.getElementById('haccpDepoSummary');
+  if (!el) return;
+  var recs = haccpRecords.filter(function(r) { return r.type === 'sicaklik' && r.tarih && r.sicaklik != null; });
+  if (recs.length === 0) { el.innerHTML = ''; return; }
+
+  var today = new Date();
+  var yediGunOnce = new Date(today);
+  yediGunOnce.setDate(yediGunOnce.getDate() - 7);
+  var yediGunOnceStr = yediGunOnce.toISOString().split('T')[0];
+  var son7 = recs.filter(function(r) { return r.tarih >= yediGunOnceStr; });
+
+  if (son7.length === 0) { el.innerHTML = ''; return; }
+
+  var depoMap = {};
+  son7.forEach(function(r) {
+    var ad = r.depoAd || 'Bilinmeyen';
+    if (!depoMap[ad]) depoMap[ad] = [];
+    depoMap[ad].push(parseFloat(r.sicaklik));
+  });
+
+  var html = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap">';
+  var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+  var ri = 0;
+  Object.keys(depoMap).sort().forEach(function(ad) {
+    var vals = depoMap[ad];
+    if (vals.length === 0) return;
+    var min = Math.min.apply(null, vals);
+    var max = Math.max.apply(null, vals);
+    var avg = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
+    var da = ad.toLowerCase();
+    var minOk, maxOk;
+    if (da.includes('dondurucu')) { minOk = -24; maxOk = -18; }
+    else { minOk = 0; maxOk = 4; }
+    var durum = min >= minOk && max <= maxOk ? 'Uygun' : (max > maxOk ? 'Yüksek' : 'Düşük');
+    var durumRenk = durum === 'Uygun' ? '#10b981' : (durum === 'Yüksek' ? '#ef4444' : '#f59e0b');
+    renk = depoRenkler[ri % depoRenkler.length]; ri++;
+    html += '<div style="flex:1;min-width:140px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.02)">' +
+      '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem">' +
+      '<span style="width:8px;height:8px;border-radius:50%;background:' + renk + ';flex-shrink:0"></span>' +
+      '<span style="font-size:0.78rem;font-weight:600;color:var(--text-primary)">' + ad + '</span>' +
+      '<span style="margin-left:auto;font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:999px;background:' + durumRenk + '22;color:' + durumRenk + ';font-weight:600">' + durum + '</span></div>' +
+      '<div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--text-muted)">' +
+      '<span>Min: <strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + '°C</strong></span>' +
+      '<span>Ort: <strong style="color:var(--text-primary)">' + avg.toFixed(1) + '°C</strong></span>' +
+      '<span>Maks: <strong style="color:' + (max > maxOk || max < minOk ? '#ef4444' : 'var(--text-primary)') + '">' + max.toFixed(1) + '°C</strong></span>' +
+      '<span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted)">' + vals.length + ' kayıt</span>' +
+      '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderHaccp() {
+  renderHaccpDepoSummary();
   renderHaccpSicaklik();
   renderHaccpNumune();
   renderHaccpHijyen();
@@ -1847,26 +1919,27 @@ function renderTodaySummary() {
   const el = document.getElementById('todaySummary');
   const body = document.getElementById('todaySummaryBody');
   if (!el || !body) return;
-  if (records.length === 0) { el.style.display = 'none'; return; }
+  if (records.length === 0) {
+    body.innerHTML = `<div class="ts-item"><span class="ts-label">Henüz kayıt girilmedi</span></div>`;
+    return;
+  }
   const today = new Date();
   const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
   const todayRec = records.find(r => r.tarih === todayStr);
   if (!todayRec) {
-    el.style.display = 'flex';
     body.innerHTML = `<div class="ts-item"><span class="ts-label">Bugün henüz kayıt girilmedi</span></div>`;
     return;
   }
-  el.style.display = 'flex';
   const pct = records.length >= 2 ? ((todayRec.atik||0) / records.reduce((s,r) => s+(r.atik||0),0) * 100).toFixed(1) : '—';
   const avgAtik = records.length > 0 ? (records.reduce((s,r) => s+(r.atik||0),0) / records.length).toFixed(2) : '—';
   const atikStatus = (todayRec.atik||0) > parseFloat(avgAtik) * 1.2 ? 'bad' : (todayRec.atik||0) < parseFloat(avgAtik) * 0.8 ? 'good' : 'warn';
   body.innerHTML = `
-    <div class="ts-item"><span class="ts-label">Üretim:</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Geçiş:</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Atık:</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
-    <div class="ts-item"><span class="ts-label">Porsiyon:</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
-    <div class="ts-item"><span class="ts-label">Toplam atığa oranı:</span><span class="ts-value warn">%${pct}</span></div>
-    <div class="ts-item"><span class="ts-label">Ortalama atık:</span><span class="ts-value">${avgAtik} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Üretim</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">Geçiş</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
+    <div class="ts-item"><span class="ts-label">Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Porsiyon</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
+    <div class="ts-item"><span class="ts-label">Atık Oranı</span><span class="ts-value warn">%${pct}</span></div>
+    <div class="ts-item"><span class="ts-label">Ort. Atık</span><span class="ts-value">${avgAtik} kg</span></div>
   `;
 }
 
@@ -1914,6 +1987,9 @@ function renderKPIs() {
     document.getElementById('kpiAvgAtik').textContent = '0';
     document.getElementById('kpiLastGecis').textContent = '0';
     document.getElementById('kpiTotalAtik').textContent = '0';
+    document.getElementById('kpiBugunYemek').textContent = '—';
+    document.getElementById('kpiBugunAtik').textContent = '—';
+    document.getElementById('kpiHaccpAlarm').textContent = '0';
     renderTrend('trendAvgAtik', null);
     renderTrend('trendTotalAtik', null);
     return;
@@ -1927,6 +2003,56 @@ function renderKPIs() {
   document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
+
+  // Bugünkü Üretim & Atık
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayRec = records.find(r => r.tarih === todayStr);
+  const elBugunYemek = document.getElementById('kpiBugunYemek');
+  const elBugunAtik = document.getElementById('kpiBugunAtik');
+  const elBugunAtikDurum = document.getElementById('kpiBugunAtikDurum');
+  const elBugunYemekSub = document.getElementById('kpiBugunYemekSub');
+  if (todayRec) {
+    elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
+    elBugunYemekSub.textContent = 'Geçiş: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
+    elBugunAtik.textContent = (todayRec.atik || 0).toFixed(1) + ' kg';
+    const avg = parseFloat(avgAtik);
+    if (avg > 0 && (todayRec.atik||0) > avg * 1.2) {
+      elBugunAtikDurum.innerHTML = '<span style="color:#ef4444;font-size:0.7rem;font-weight:600">▲ Ortalamanın üstünde</span>';
+    } else if (avg > 0 && (todayRec.atik||0) < avg * 0.8) {
+      elBugunAtikDurum.innerHTML = '<span style="color:#10b981;font-size:0.7rem;font-weight:600">▼ Ortalamanın altında</span>';
+    } else {
+      elBugunAtikDurum.innerHTML = '<span style="color:#f59e0b;font-size:0.7rem;font-weight:600">● Ortalamaya yakın</span>';
+    }
+  } else {
+    elBugunYemek.textContent = '—';
+    elBugunYemekSub.textContent = 'Bugün kayıt yok';
+    elBugunAtik.textContent = '—';
+    elBugunAtikDurum.innerHTML = '';
+  }
+
+  // HACCP Alarm: son 24 saatteki uygunsuz sıcaklıklar
+  const alarmRecs = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik') return false;
+    if (!r.tarih || !r.sicaklik) return false;
+    if (r.tarih !== todayStr) {
+      var d = new Date(r.tarih + 'T00:00:00');
+      var now = new Date();
+      if (isNaN(d) || (now - d) > 86400000 * 2) return false;
+    }
+    var v = parseFloat(r.sicaklik);
+    if (isNaN(v)) return false;
+    var da = String(r.depoAd || '').toLowerCase();
+    if (da.includes('dondurucu')) return v < -24 || v > -18;
+    return v < 0 || v > 4;
+  });
+  var alarmCount = alarmRecs.length;
+  document.getElementById('kpiHaccpAlarm').textContent = alarmCount;
+  var alarmSub = document.getElementById('kpiHaccpAlarmSub');
+  if (alarmCount > 0) {
+    alarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + alarmCount + ' uyarı var</span>';
+  } else {
+    alarmSub.textContent = 'Tüm değerler uygun';
+  }
 }
 
 function renderComparison() {
@@ -2919,13 +3045,14 @@ function drawAllCharts() {
           data: d.data,
           backgroundColor: isLine ? d.color + '20' : (d.dashed ? d.color + '60' : d.color),
           borderColor: d.color,
-          borderWidth: isLine ? 2 : (d.dashed ? 1 : 0),
+          borderWidth: isLine ? (d.dashed ? 2 : 2) : (d.dashed ? 1 : 0),
+          borderDash: d.dashed ? (isLine ? [6, 4] : [3, 3]) : undefined,
           borderRadius: isLine ? 0 : 6,
           barPercentage: isLine ? undefined : 0.85,
           categoryPercentage: isLine ? undefined : 0.8,
-          pointRadius: isLine ? 3 : undefined,
-          pointHoverRadius: isLine ? 5 : undefined,
-          fill: isLine ? true : undefined,
+          pointRadius: isLine ? (d.dashed ? 0 : 3) : undefined,
+          pointHoverRadius: isLine ? (d.dashed ? 0 : 5) : undefined,
+          fill: isLine ? (d.dashed ? false : true) : undefined,
           tension: isLine ? 0.3 : undefined,
           spanGaps: isLine ? true : undefined,
         }))
@@ -3161,7 +3288,18 @@ function drawAllCharts() {
         label: ad
       };
     });
-    makeChart('canvasHaccpSicaklik', sicaklikLabels, sicaklikDatasets, { type: 'line', showValues: false });
+    // Eşik çizgileri ekle
+    var thresholdSets = [
+      { data: sicaklikLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
+      { data: sicaklikLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
+    ];
+    // Check if any depo adı contains "dondurucu"
+    var hasDondurucu = tumDepolar.some(function(ad) { return ad.toLowerCase().includes('dondurucu'); });
+    if (hasDondurucu) {
+      thresholdSets.push({ data: sicaklikLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
+    }
+    var allDatasets = sicaklikDatasets.concat(thresholdSets);
+    makeChart('canvasHaccpSicaklik', sicaklikLabels, allDatasets, { type: 'line', showValues: false });
   } else {
     if (sicaklikEmpty) sicaklikEmpty.style.display = 'block';
     if (sicaklikCanvas) sicaklikCanvas.style.display = 'none';
@@ -3207,7 +3345,16 @@ function drawAllCharts() {
         label: ad
       };
     });
-    makeChart('canvasHaccpAylik', aylikAyLabels, aylikDatasets, { type: 'line', showValues: false });
+    var aylikHasDondurucu = aylikDepoIsimleri.some(function(ad) { return ad.toLowerCase().includes('dondurucu'); });
+    var aylikThresholdSets = [
+      { data: aylikAyLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
+      { data: aylikAyLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
+    ];
+    if (aylikHasDondurucu) {
+      aylikThresholdSets.push({ data: aylikAyLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
+    }
+    var aylikAll = aylikDatasets.concat(aylikThresholdSets);
+    makeChart('canvasHaccpAylik', aylikAyLabels, aylikAll, { type: 'line', showValues: false });
   } else {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';

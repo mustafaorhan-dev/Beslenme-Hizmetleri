@@ -6,7 +6,7 @@
   <title>Yemekhane Menü ve Atık Yönetim Sistemi</title>
   <meta name="description" content="Yemekhane atık kontrol ve takip sistemi - günlük yemek üretimi, fire ve atık miktarlarının izlenmesi" />
   <script>
-    (function(){var s=localStorage.getItem('atik_kontrol_theme');if(s==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches){document.documentElement.setAttribute('data-theme','dark')}})();
+    (function(){var s=localStorage.getItem('atik_kontrol_theme');if(s==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches){document.documentElement.setAttribute('data-theme','dark')};var a=localStorage.getItem('atik_kontrol_accent')||'blue';document.documentElement.setAttribute('data-accent',a)})();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -166,6 +166,14 @@
           <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
           <span>Tema</span>
         </button>
+        <div class="accent-picker" id="accentPicker">
+          <button class="accent-dot" data-accent="blue" style="background:#6366f1" onclick="setAccent('blue')" title="Mavi"></button>
+          <button class="accent-dot" data-accent="cyan" style="background:#22d3ee" onclick="setAccent('cyan')" title="Cyan"></button>
+          <button class="accent-dot" data-accent="green" style="background:#10b981" onclick="setAccent('green')" title="Yeşil"></button>
+          <button class="accent-dot" data-accent="purple" style="background:#a855f7" onclick="setAccent('purple')" title="Mor"></button>
+          <button class="accent-dot" data-accent="orange" style="background:#f59e0b" onclick="setAccent('orange')" title="Turuncu"></button>
+          <button class="accent-dot" data-accent="rose" style="background:#f43f5e" onclick="setAccent('rose')" title="Gül"></button>
+        </div>
       </div>
     </aside>
 
@@ -190,6 +198,36 @@
           <div class="kpi-body">
             <span class="kpi-label">Toplam Kayıt</span>
             <span class="kpi-value" id="kpiTotalRecords">0</span>
+          </div>
+        </div>
+        <div class="kpi-card" id="kpi-bugun-uretim">
+          <div class="kpi-icon kpi-cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Bugünkü Üretim</span>
+            <span class="kpi-value" id="kpiBugunYemek">—</span>
+            <span class="kpi-trend" id="kpiBugunYemekSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
+          </div>
+        </div>
+        <div class="kpi-card" id="kpi-bugun-atik">
+          <div class="kpi-icon kpi-orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Bugünkü Atık</span>
+            <span class="kpi-value" id="kpiBugunAtik">—</span>
+            <span class="kpi-trend" id="kpiBugunAtikDurum"></span>
+          </div>
+        </div>
+        <div class="kpi-card" id="kpi-haccp-alarm">
+          <div class="kpi-icon kpi-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Sıcaklık Alarmı</span>
+            <span class="kpi-value" id="kpiHaccpAlarm">0</span>
+            <span class="kpi-trend" id="kpiHaccpAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
           </div>
         </div>
         <div class="kpi-card" id="kpi-ort-atik">
@@ -226,10 +264,11 @@
       </div>
 
       <!-- Today's Summary -->
-      <div class="today-summary" id="todaySummary" style="display:none">
+      <div class="today-summary" id="todaySummary">
         <div class="today-summary-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Bugünün Özeti</span>
+          <span class="badge" id="todaySummaryBadge" style="margin-left:auto">Bugün</span>
         </div>
         <div class="today-summary-body" id="todaySummaryBody">
           <div class="today-summary-loading">Yükleniyor...</div>
@@ -720,6 +759,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Depo adlarını düzenleyip <strong>QR</strong> butonuyla her depo için QR kod oluşturabilir, kapıya asabilirsiniz.</span>
         </div>
+        <!-- Quick Depo Summary -->
+        <div id="haccpDepoSummary" style="margin-bottom:0.75rem"></div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
           <label style="font-size:0.85rem;color:var(--text-muted)">Depo Filtresi:</label>
           <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
