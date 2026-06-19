@@ -355,24 +355,30 @@ async function syncHaccpFromGSheets() {
     const res = await fetch(gsheetConfig.webappUrl + '?sheet=G%C4%B1da%20G%C3%BCvenli%C4%9Fi');
     const data = await res.json();
     if (data.data && data.data.length > 0) {
-      haccpRecords = data.data.map(r => ({
-        id: Number(r.id) || Date.now() + Math.random(),
-        type: r.type || 'sicaklik',
-        tarih: normalizeDate(r.tarih || ''),
-        saat: normalizeSaat(r.saat || ''),
-        depoAd: (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, ''),
-        sicaklik: r.sicaklik != null ? Number(r.sicaklik) : undefined,
-        not: r.not_ || r.not || '',
-        ogun: r.ogun || '',
-        yemekAdi: r.yemekAdi || '',
-        miktar: r.miktar || '',
-        saklamaSicakligi: r.saklamaSicakligi || '',
-        imhaTarihi: r.imhaTarihi || '',
-        alan: r.alan || '',
-        yapilacakIs: r.yapilacakIs || '',
-        yapanKisi: r.yapanKisi || '',
-        yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
-      }));
+      haccpRecords = data.data.map(r => {
+        var typ = (r.type || 'sicaklik').toLowerCase();
+        var base = {
+          id: Number(r.id) || Date.now() + Math.random(),
+          type: typ,
+          tarih: normalizeDate(r.tarih || ''),
+          saat: normalizeSaat(r.saat || ''),
+          not: r.not_ || r.not || '',
+          ogun: r.ogun || '',
+          yemekAdi: r.yemekAdi || '',
+          miktar: r.miktar || '',
+          saklamaSicakligi: r.saklamaSicakligi || '',
+          imhaTarihi: r.imhaTarihi || '',
+          alan: r.alan || '',
+          yapilacakIs: r.yapilacakIs || '',
+          yapanKisi: r.yapanKisi || '',
+          yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
+        };
+        if (typ === 'sicaklik') {
+          base.depoAd = (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, '');
+          base.sicaklik = r.sicaklik != null ? Number(r.sicaklik) : undefined;
+        }
+        return base;
+      });
     }
     var hasDepo = false;
     if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
@@ -1192,6 +1198,11 @@ function saveHaccpRecord(e) {
     rec.yapanKisi = document.getElementById('hfYapan').value.trim();
     rec.yapildiMi = document.getElementById('hfYapildiMi').value === '1';
     rec.not = document.getElementById('hfNot').value.trim();
+  }
+
+  if (type !== 'sicaklik') {
+    delete rec.depoAd;
+    delete rec.sicaklik;
   }
 
   if (editingHaccpId) {

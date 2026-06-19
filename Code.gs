@@ -237,10 +237,12 @@ function doPost(e) {
         var lastRow = sheet.getLastRow();
         if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
         const rows = records.map(function(r) {
+          var typ = String(r.type || '').toLowerCase();
+          var depoAd = (typ === 'sicaklik') ? depoNoToName(r.depoAd || r.depoNo || '') : '';
+          var sicaklik = (typ === 'sicaklik' && r.sicaklik != null) ? Number(r.sicaklik) : '';
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', depoNoToName(r.depoAd || r.depoNo || ''),
-            r.sicaklik != null ? Number(r.sicaklik) : '', r.not || '',
+            r.saat || '', depoAd, sicaklik, r.not || '',
             r.ogun || '', r.yemekAdi || '', r.miktar || '',
             r.saklamaSicakligi || '', r.imhaTarihi || '',
             r.alan || '', r.yapilacakIs || '', r.yapanKisi || '',
