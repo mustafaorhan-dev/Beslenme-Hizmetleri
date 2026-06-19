@@ -351,12 +351,29 @@ function syncHaccpSilent(forceDepoOnly) {
 async function syncHaccpFromGSheets() {
   if (!gsheetConfig.webappUrl) return false;
   try {
-    const res = await fetch(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'getHaccp' })
-    });
-    const data = await res.json();
+    // Önce POST action dene (yeni sunucu), olmazsa GET ile 3 sayfayı oku (eski sunucu)
+    let data;
+    try {
+      const res = await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'getHaccp' })
+      });
+      data = await res.json();
+    } catch (_) { data = null; }
+    if (!data || !data.data) {
+      // Eski sunucu: 3 sayfayı ayrı ayrı GET ile oku
+      var allRows = [];
+      var sheets = ['G%C4%B1da%20G%C3%BCvenli%C4%9Fi', 'Numune%20Takibi', 'Hijyen%20Kontrol'];
+      for (var si = 0; si < sheets.length; si++) {
+        try {
+          var r2 = await fetch(gsheetConfig.webappUrl + '?sheet=' + sheets[si]);
+          var d2 = await r2.json();
+          if (d2.data) allRows = allRows.concat(d2.data);
+        } catch (_) {}
+      }
+      data = { data: allRows, depoAdlari: data && data.depoAdlari ? data.depoAdlari : (allRows.length > 0 ? [] : undefined) };
+    }
     if (data.data && data.data.length > 0) {
       haccpRecords = data.data.map(r => {
         var typ = (r.type || 'sicaklik').toLowerCase();
