@@ -72,7 +72,7 @@ function depoNoToName(val) {
     // Sıra indeksi dene (1-indexed)
     if (num >= 1 && num <= list.length) return list[num - 1];
   }
-  return 'Depo ' + s;
+  return s;
 }
 
 // === DEPO HTML (QR'da telefon gösterimi) ===
