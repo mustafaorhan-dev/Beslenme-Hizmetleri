@@ -2508,12 +2508,17 @@ function refreshMenuProduction() {
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
     const yemekler = [];
+    const notlar = [];
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
       yemekler.push(el ? el.value : '');
     }
+    for (let n = 0; n < 10; n++) {
+      const el = document.getElementById('mn_' + n + '_' + i);
+      if (el) notlar.push(el.value);
+    }
     const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
-    return { gun, key, data: { yemekler, kisi } };
+    return { gun, key, data: { yemekler, kisi, notlar } };
   });
   const wd = {};
   days.forEach(d => { wd[d.key] = d.data; });
@@ -3297,7 +3302,9 @@ async function renderMenu() {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
-    const dayData = weekData[key] || { yemekler: ['','','','',''], kisi: 0 };
+    var dd = weekData[key] || { yemekler: ['','','','',''], kisi: 0, notlar: [] };
+    while (dd.notlar.length < 10) dd.notlar.push('');
+    const dayData = dd;
     return { gun, key, data: dayData };
   });
 
@@ -3330,7 +3337,13 @@ async function renderMenu() {
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" /></td>`;
     }).join('')}
-  </tr>`;
+  </tr>` + Array.from({length: 10}, (_, ni) => `<tr>
+    <td><strong>Not ${ni + 1}</strong></td>
+    ${days.map((d, di) => {
+      const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
+      return `<td><input type="text" class="kisi-input" id="mn_${ni}_${di}" value="${val}" placeholder="..." /></td>`;
+    }).join('')}
+  </tr>`).join('');
   renderProduction(weekKey, weekData, days);
 }
 
@@ -3377,8 +3390,13 @@ async function saveWeeklyMenu() {
       const el = document.getElementById('m' + c + '_' + i);
       yemekler.push(el ? el.value : '');
     }
+    const notlar = [];
+    for (let n = 0; n < 10; n++) {
+      const el = document.getElementById('mn_' + n + '_' + i);
+      notlar.push(el ? el.value : '');
+    }
     const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
-    weekData[key] = { yemekler, kisi };
+    weekData[key] = { yemekler, kisi, notlar };
   });
   allData[weekKey] = weekData;
   await saveMenuData(allData);
@@ -3396,6 +3414,10 @@ function clearWeeklyMenu() {
   GUNLER.forEach((_, i) => {
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
+      if (el) el.value = '';
+    }
+    for (let n = 0; n < 10; n++) {
+      const el = document.getElementById('mn_' + n + '_' + i);
       if (el) el.value = '';
     }
     const el = document.getElementById('mk_' + i);
