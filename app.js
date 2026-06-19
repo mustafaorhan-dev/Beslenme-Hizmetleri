@@ -6,11 +6,10 @@
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
-const DEFAULT_DISH_URL = 'https://script.google.com/macros/s/AKfycbxZifUt3a2HuknThnOpvBG4Cg_XokEFmk_b0R9D5Gj6p54WX1Dg_sXaVQIDwd81aPIe9Q/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
-let gsheetConfig = { webappUrl: '', lastSync: null, dishUrl: '' };
+let gsheetConfig = { webappUrl: '', lastSync: null };
 let yemeklerCache = [];
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
@@ -129,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setLoadingSub('Veriler güncelleniyor...');
   var [mainOk, dishOk, haccpOk] = await Promise.all([
     gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500) : true,
-    getMenuUrl() ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500) : true,
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500) : true,
     gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500) : true
   ]);
   if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
@@ -142,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   // Bağlantı durumunu göster
-  if ((!getMenuUrl() || (mainOk && dishOk))) {
+  if ((!gsheetConfig.webappUrl || (mainOk && dishOk))) {
     setConnectionStatus('ok');
   } else {
     setConnectionStatus('err');
@@ -435,28 +434,20 @@ function loadGSheetConfig() {
     const stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
       const parsed = JSON.parse(stored);
-      let dishUrl = parsed.dishUrl || '';
-      // Yedek anahtardan oku (eğer asıl config'de yoksa)
-      if (!dishUrl) {
-        try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
-      }
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
-        lastSync: parsed.lastSync || null,
-        dishUrl: dishUrl || ''
+        lastSync: parsed.lastSync || null
       };
     } else {
-      let dishUrl = '';
-      try { dishUrl = localStorage.getItem('atik_kontrol_dish_url') || ''; } catch (_) {}
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: dishUrl || '' };
+      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
     }
   } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null, dishUrl: '' };
+    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
   }
 }
 
 function getMenuUrl() {
-  return gsheetConfig.dishUrl || gsheetConfig.webappUrl;
+  return gsheetConfig.webappUrl;
 }
 
 function saveGSheetUrl() {
@@ -472,15 +463,12 @@ function saveGSheetUrl() {
 
 function saveAllUrls() {
   const url1 = document.getElementById('gsheetUrl').value.trim();
-  const url2 = document.getElementById('gsheetDishUrl').value.trim();
   gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
-  gsheetConfig.dishUrl = url2 || '';
   try {
     localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
-    if (url2) localStorage.setItem('atik_kontrol_dish_url', url2);
   } catch (e) {}
   updateSyncUI();
-  showToast('URL' + (url2 ? 'ler' : '') + ' kaydedildi.', 'success');
+  showToast('URL kaydedildi.', 'success');
   if (url1) testGSheetConnection();
 }
 
@@ -492,8 +480,7 @@ function updateSyncUI() {
   const urlInput = document.getElementById('gsheetUrl');
 
   if (urlInput) urlInput.value = gsheetConfig.webappUrl || '';
-  const dishUrlInput = document.getElementById('gsheetDishUrl');
-  if (dishUrlInput) dishUrlInput.value = gsheetConfig.dishUrl || '';
+
 
   if (gsheetConfig.lastSync) {
     const d = new Date(gsheetConfig.lastSync);
@@ -1810,9 +1797,6 @@ function handleFullBackupImport(e) {
       if (data.gsheetConfig) {
         if (data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
           gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
-        }
-        if (data.gsheetConfig.dishUrl && !gsheetConfig.dishUrl) {
-          gsheetConfig.dishUrl = data.gsheetConfig.dishUrl;
         }
       }
       saveData();
