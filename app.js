@@ -759,7 +759,7 @@ function exportPDF() {
         .trend-down { color: #10b981; font-weight: 700; }
         .trend-flat { color: #64748b; font-weight: 700; }
         .badge, .btn, .toolbar, .year-btn { display: none; }
-      .note-input { width: 100%; max-width: 120px; padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.7rem; }
+      .note-input { width: 100%; padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.7rem; resize: vertical; min-height: 24px; font-family: inherit; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       </style>
     </head><body>
@@ -3342,7 +3342,7 @@ async function renderMenu() {
     <td><strong>Not ${ni + 1}</strong></td>
     ${days.map((d, di) => {
       const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-      return `<td><input type="text" class="note-input" id="mn_${ni}_${di}" value="${val}" placeholder="..." /></td>`;
+      return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
     }).join('')}
   </tr>`).join('');
   renderProduction(weekKey, weekData, days);
