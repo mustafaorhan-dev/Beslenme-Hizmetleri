@@ -125,32 +125,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreActiveTab();
   updateSyncUI();
 
-  // Retry'li senkronizasyon
-  let mainOk = false, dishOk = false, menuOk = false;
-
-  if (gsheetConfig.webappUrl) {
-    setLoadingSub('Ana veriler indiriliyor...');
-    mainOk = await fetchWithRetry(() => syncFromGSheets(), 3, 1000);
-  } else {
-    mainOk = true;
-  }
-
-  if (getMenuUrl()) {
-    setLoadingSub('Yemek listesi senkronize ediliyor...');
-    dishOk = await fetchWithRetry(() => syncDishesFromGSheets(), 3, 1000);
-  } else {
-    dishOk = true;
-  }
-
-  // HACCP verilerini indir
-  if (gsheetConfig.webappUrl) {
-    setLoadingSub('Gıda Güvenliği verileri indiriliyor...');
-    await fetchWithRetry(() => syncHaccpFromGSheets(), 2, 1000);
-    saveHaccpData();
-    renderHaccp();
-  }
-
-  menuOk = true;
+  // Paralel senkronizasyon
+  setLoadingSub('Veriler güncelleniyor...');
+  var [mainOk, dishOk, haccpOk] = await Promise.all([
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500) : true,
+    getMenuUrl() ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500) : true,
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500) : true
+  ]);
+  if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
+  var menuOk = true;
 
   refreshMenuProduction();
   initDishAutocomplete();
