@@ -6,7 +6,7 @@ const HIJYEN_SHEET_NAME = 'Hijyen Kontrol';
 const DEPO_ADLARI_SHEET = 'Depo Adları';
 const HACCP_DEPO_KEY = 'HACCP_DEPO_ADLARI';
 
-var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
+var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'nem', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified'];
 var DISH_HEADERS = ['id', 'ad', 'kalori', 'alerjen'];
 for (var di = 1; di <= 18; di++) { DISH_HEADERS.push('ürün ' + di, 'miktar ' + di, 'birim ' + di); }
 
@@ -293,9 +293,10 @@ function doPost(e) {
         var rows = list.map(function(r) {
           var depoAd = (typ === 'sicaklik') ? depoNoToName(r.depoAd || r.depoNo || '') : '';
           var sicaklik = (typ === 'sicaklik' && r.sicaklik != null) ? Number(r.sicaklik) : '';
+          var nem = (typ === 'sicaklik' && r.nem != null) ? Number(r.nem) : '';
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', depoAd, sicaklik, r.not || '',
+            r.saat || '', depoAd, sicaklik, nem, r.not || '',
             r.ogun || '', r.yemekAdi || '', r.miktar || '',
             r.saklamaSicakligi || '', r.imhaTarihi || '',
             r.alan || '', r.yapilacakIs || '', r.yapanKisi || '',
