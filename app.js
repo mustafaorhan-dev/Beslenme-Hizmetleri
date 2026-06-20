@@ -951,7 +951,7 @@ function saveHaccpData() {
 function renderHaccpDepoSummary() {
   var el = document.getElementById('haccpDepoSummary');
   if (!el) return;
-  var recs = haccpRecords.filter(function(r) { return r.type === 'sicaklik' && r.tarih && r.sicaklik != null; });
+  var recs = haccpRecords.filter(function(r) { return r.type === 'sicaklik' && r.tarih && (r.sicaklik != null || r.nem != null); });
   if (recs.length === 0) { el.innerHTML = ''; return; }
 
   var today = new Date();
@@ -966,7 +966,7 @@ function renderHaccpDepoSummary() {
   son7.forEach(function(r) {
     var ad = r.depoAd || 'Bilinmeyen';
     if (!depoMap[ad]) depoMap[ad] = { sicaklik: [], nem: [] };
-    depoMap[ad].sicaklik.push(parseFloat(r.sicaklik));
+    if (r.sicaklik != null && r.sicaklik !== '') depoMap[ad].sicaklik.push(parseFloat(r.sicaklik));
     if (r.nem != null && r.nem !== '') depoMap[ad].nem.push(parseFloat(r.nem));
   });
 
@@ -976,29 +976,33 @@ function renderHaccpDepoSummary() {
   Object.keys(depoMap).sort().forEach(function(ad) {
     var sicVals = depoMap[ad].sicaklik;
     var nemVals = depoMap[ad].nem;
-    if (sicVals.length === 0) return;
-    var min = Math.min.apply(null, sicVals);
-    var max = Math.max.apply(null, sicVals);
-    var avg = sicVals.reduce(function(a, b) { return a + b; }, 0) / sicVals.length;
-    var da = ad.toLowerCase();
-    var minOk, maxOk;
-    if (da.includes('dondurucu')) { minOk = -24; maxOk = -18; }
-    else { minOk = 0; maxOk = 4; }
-    var durum = min >= minOk && max <= maxOk ? 'Uygun' : (max > maxOk ? 'Yüksek' : 'Düşük');
-    var durumRenk = durum === 'Uygun' ? '#10b981' : (durum === 'Yüksek' ? '#ef4444' : '#f59e0b');
+    if (sicVals.length === 0 && nemVals.length === 0) return;
     var renk = depoRenkler[ri % depoRenkler.length]; ri++;
     var nemAvg = nemVals.length > 0 ? (nemVals.reduce(function(a, b) { return a + b; }, 0) / nemVals.length) : null;
+    var topKayit = sicVals.length + nemVals.length;
     html += '<div style="flex:1;min-width:160px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.02)">' +
       '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem">' +
       '<span style="width:8px;height:8px;border-radius:50%;background:' + renk + ';flex-shrink:0"></span>' +
       '<span style="font-size:0.78rem;font-weight:600;color:var(--text-primary)">' + ad + '</span>' +
-      '<span style="margin-left:auto;font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:999px;background:' + durumRenk + '22;color:' + durumRenk + ';font-weight:600">' + durum + '</span></div>' +
-      '<div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--text-muted);flex-wrap:wrap">' +
-      '<span>Min: <strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + '°C</strong></span>' +
-      '<span>Ort: <strong style="color:var(--text-primary)">' + avg.toFixed(1) + '°C</strong></span>' +
-      '<span>Maks: <strong style="color:' + (max > maxOk || max < minOk ? '#ef4444' : 'var(--text-primary)') + '">' + max.toFixed(1) + '°C</strong></span>' +
-      (nemAvg !== null ? '<span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted)">Nem: <strong>' + nemAvg.toFixed(0) + '%</strong></span>' : '') +
-      '<span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted)">' + sicVals.length + ' kayıt</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.5rem;font-size:0.72rem;color:var(--text-muted);flex-wrap:wrap">';
+    if (sicVals.length > 0) {
+      var min = Math.min.apply(null, sicVals);
+      var max = Math.max.apply(null, sicVals);
+      var avg = sicVals.reduce(function(a, b) { return a + b; }, 0) / sicVals.length;
+      var da = ad.toLowerCase();
+      var minOk, maxOk;
+      if (da.includes('dondurucu')) { minOk = -24; maxOk = -18; }
+      else { minOk = 0; maxOk = 4; }
+      var durum = min >= minOk && max <= maxOk ? 'Uygun' : (max > maxOk ? 'Yüksek' : 'Düşük');
+      html += '<span>Min: <strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + '°C</strong></span>' +
+        '<span>Ort: <strong style="color:var(--text-primary)">' + avg.toFixed(1) + '°C</strong></span>' +
+        '<span>Maks: <strong style="color:' + (max > maxOk || max < minOk ? '#ef4444' : 'var(--text-primary)') + '">' + max.toFixed(1) + '°C</strong></span>';
+    }
+    if (nemAvg !== null) {
+      html += '<span>Nem: <strong>' + nemAvg.toFixed(0) + '%</strong></span>';
+    }
+    html += '<span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted)">' + topKayit + ' kayıt</span>' +
       '</div></div>';
   });
   html += '</div>';
@@ -1083,7 +1087,7 @@ function renderHaccpSicaklik() {
       <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
-      <td class="${durum.cls}"><strong>${r.sicaklik}</strong></td>
+      <td class="${durum.cls}"><strong>${r.sicaklik != null ? r.sicaklik : '—'}</strong></td>
       <td>${r.nem != null ? r.nem : '—'}</td>
       <td>${r.not || '—'}</td>
       <td>
@@ -1118,7 +1122,8 @@ function haccpSicaklikPrint() {
     var da = r.depoAd || ('Depo ' + r.depoNo);
     var durum = sicaklikDurum(r.sicaklik, da);
     var nem = r.nem != null ? r.nem : '\u2014';
-    return '<tr><td>' + formatTarihTR(r.tarih) + '</td><td>' + (r.saat || '\u2014') + '</td><td>' + da + '</td><td>' + r.sicaklik + '</td><td>' + nem + '</td><td class="' + durum.cls + '">' + durum.text + '</td></tr>';
+    var sicaklikGoster = r.sicaklik != null ? r.sicaklik : '\u2014';
+    return '<tr><td>' + formatTarihTR(r.tarih) + '</td><td>' + (r.saat || '\u2014') + '</td><td>' + da + '</td><td>' + sicaklikGoster + '</td><td>' + nem + '</td><td class="' + durum.cls + '">' + durum.text + '</td></tr>';
   }).join('');
   var win = window.open('', '_blank');
   win.document.write('<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><title>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131</title><style>');
@@ -1239,7 +1244,7 @@ function openHaccpModal(type, id) {
         <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
         <div class="form-group"><label>Saat</label><input type="time" id="hfSaat" value="${rec ? rec.saat : saat}" required /></div>
         <div class="form-group"><label>Depo Adı</label><select id="hfDepoAd" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">${depoOptions}</select></div>
-        <div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0" required /></div>
+        <div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0 (boş bırakılabilir)" /></div>
         <div class="form-group"><label>Nem (%)</label><input type="number" id="hfNem" step="0.1" value="${rec ? (rec.nem ?? '') : ''}" placeholder="50" /></div>
         <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
       </div>`;
