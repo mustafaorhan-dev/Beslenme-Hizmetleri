@@ -983,7 +983,7 @@ function renderHaccpDepoSummary() {
     else { minOk = 0; maxOk = 4; }
     var durum = min >= minOk && max <= maxOk ? 'Uygun' : (max > maxOk ? 'Yüksek' : 'Düşük');
     var durumRenk = durum === 'Uygun' ? '#10b981' : (durum === 'Yüksek' ? '#ef4444' : '#f59e0b');
-    renk = depoRenkler[ri % depoRenkler.length]; ri++;
+    var renk = depoRenkler[ri % depoRenkler.length]; ri++;
     html += '<div style="flex:1;min-width:140px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.02)">' +
       '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem">' +
       '<span style="width:8px;height:8px;border-radius:50%;background:' + renk + ';flex-shrink:0"></span>' +
