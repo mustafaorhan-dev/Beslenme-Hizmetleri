@@ -2993,7 +2993,7 @@ function drawAllCharts() {
     });
   }
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty','chartHaccpAylikEmpty'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty','chartHaccpAylikEmpty','chartHaccpNemEmpty','chartHaccpNemAylikEmpty'];
   const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpSicaklik','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
@@ -3386,6 +3386,109 @@ function drawAllCharts() {
   } else {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
+  }
+
+  // --- HACCP Nem Chart ---
+  var nemEmpty = document.getElementById('chartHaccpNemEmpty');
+  var nemCanvas = document.getElementById('canvasHaccpNem');
+  var nemKayitlari = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik') return false;
+    if (r.nem == null || r.nem === '') return false;
+    if (!r.tarih) return false;
+    var d = new Date(r.tarih + 'T00:00:00');
+    if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return false;
+    if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
+    return true;
+  });
+  if (nemKayitlari.length > 0) {
+    if (nemEmpty) nemEmpty.style.display = 'none';
+    if (nemCanvas) nemCanvas.style.display = 'block';
+    var nemGunluk = {};
+    nemKayitlari.forEach(function(r) {
+      if (!r.tarih) return;
+      var ad = r.depoAd || 'Bilinmeyen';
+      if (!nemGunluk[r.tarih]) nemGunluk[r.tarih] = {};
+      if (!nemGunluk[r.tarih][ad]) nemGunluk[r.tarih][ad] = [];
+      nemGunluk[r.tarih][ad].push(parseFloat(r.nem));
+    });
+    var nemTarihler = Object.keys(nemGunluk).sort();
+    var nemDepoRenkler = ['#06b6d4', '#eab308', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#22c55e', '#6366f1'];
+    var nemTumDepolar = [];
+    nemTarihler.forEach(function(t) { Object.keys(nemGunluk[t]).forEach(function(d) { if (nemTumDepolar.indexOf(d) === -1) nemTumDepolar.push(d); }); });
+    var nemLabels = nemTarihler.map(function(t) {
+      var p = t.split('-');
+      return p.length === 3 ? p[2] + '/' + p[1] : t;
+    });
+    var nemDatasets = nemTumDepolar.map(function(ad, idx) {
+      return {
+        data: nemTarihler.map(function(t) {
+          var vals = (nemGunluk[t] && nemGunluk[t][ad]) || [];
+          if (vals.length === 0) return null;
+          var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+          return Math.round(sum / vals.length);
+        }),
+        color: nemDepoRenkler[idx % nemDepoRenkler.length],
+        label: ad
+      };
+    });
+    makeChart('canvasHaccpNem', nemLabels, nemDatasets, { type: 'line', showValues: false });
+  } else {
+    if (nemEmpty) nemEmpty.style.display = 'block';
+    if (nemCanvas) nemCanvas.style.display = 'none';
+  }
+
+  // --- Aylik Ortalama Depo Nem Chart ---
+  var nemAylikEmpty = document.getElementById('chartHaccpNemAylikEmpty');
+  var nemAylikCanvas = document.getElementById('canvasHaccpNemAylik');
+  var nemAylikKayitlari = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik') return false;
+    if (r.nem == null || r.nem === '') return false;
+    if (!r.tarih) return false;
+    var d = new Date(r.tarih + 'T00:00:00');
+    if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return false;
+    if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
+    return true;
+  });
+  if (nemAylikKayitlari.length > 0) {
+    if (nemAylikEmpty) nemAylikEmpty.style.display = 'none';
+    if (nemAylikCanvas) nemAylikCanvas.style.display = 'block';
+    var nemAylikGruplar = {};
+    nemAylikKayitlari.forEach(function(r) {
+      if (!r.tarih) return;
+      var d = new Date(r.tarih + 'T00:00:00');
+      var ayKey = (d.getMonth() + 1) + '/' + d.getFullYear();
+      if (!nemAylikGruplar[ayKey]) nemAylikGruplar[ayKey] = {};
+      var ad = r.depoAd || 'Bilinmeyen';
+      if (!nemAylikGruplar[ayKey][ad]) nemAylikGruplar[ayKey][ad] = [];
+      nemAylikGruplar[ayKey][ad].push(parseFloat(r.nem));
+    });
+    var nemAylikAyLabels = Object.keys(nemAylikGruplar).sort(function(a, b) {
+      var pa = a.split('/'), pb = b.split('/');
+      return parseInt(pa[1]) - parseInt(pb[1]) || parseInt(pa[0]) - parseInt(pb[0]);
+    });
+    var nemAylikDepoIsimleri = [];
+    nemAylikAyLabels.forEach(function(ay) {
+      Object.keys(nemAylikGruplar[ay]).forEach(function(ad) {
+        if (nemAylikDepoIsimleri.indexOf(ad) === -1) nemAylikDepoIsimleri.push(ad);
+      });
+    });
+    var nemAylikRenkler = ['#06b6d4', '#eab308', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#22c55e', '#6366f1'];
+    var nemAylikDatasets = nemAylikDepoIsimleri.map(function(ad, idx) {
+      return {
+        data: nemAylikAyLabels.map(function(ay) {
+          var vals = (nemAylikGruplar[ay] && nemAylikGruplar[ay][ad]) || [];
+          if (vals.length === 0) return null;
+          var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+          return Math.round(sum / vals.length);
+        }),
+        color: nemAylikRenkler[idx % nemAylikRenkler.length],
+        label: ad
+      };
+    });
+    makeChart('canvasHaccpNemAylik', nemAylikAyLabels, nemAylikDatasets, { type: 'line', showValues: false });
+  } else {
+    if (nemAylikEmpty) nemAylikEmpty.style.display = 'block';
+    if (nemAylikCanvas) nemAylikCanvas.style.display = 'none';
   }
 }
 
