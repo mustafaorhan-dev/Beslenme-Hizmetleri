@@ -142,13 +142,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreActiveTab();
   updateSyncUI();
 
+  // Güvenlik: 12 sn sonra loading overlay'i zorla kapat
+  var forceHideTimer = setTimeout(function() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }, 12000);
+
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
   var [mainOk, dishOk, haccpOk] = await Promise.all([
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500) : true,
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500) : true,
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500) : true
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500, 8000) : true,
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500, 8000) : true,
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500, 8000) : true
   ]);
+  clearTimeout(forceHideTimer);
   if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
   var menuOk = true;
 
@@ -429,11 +435,11 @@ async function syncHaccpFromGSheets() {
   } catch (_) { return false; }
 }
 
-// -- Retry helper --
-async function fetchWithRetry(fn, maxRetries = 3, delayMs = 1000) {
+// -- Retry helper with timeout --
+async function fetchWithRetry(fn, maxRetries = 3, delayMs = 1000, timeoutMs = 10000) {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const result = await fn();
+      const result = await withTimeout(fn(), timeoutMs);
       if (result !== false) return result;
     } catch (_) {}
     if (i < maxRetries - 1) {
@@ -441,6 +447,13 @@ async function fetchWithRetry(fn, maxRetries = 3, delayMs = 1000) {
     }
   }
   return false;
+}
+
+async function withTimeout(promise, ms) {
+  var timeoutPromise = new Promise(function(_, reject) {
+    setTimeout(function() { reject(new Error('timeout')); }, ms);
+  });
+  return await Promise.race([promise, timeoutPromise]);
 }
 
 function setConnectionStatus(state) {
