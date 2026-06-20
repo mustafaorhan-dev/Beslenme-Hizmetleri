@@ -1045,6 +1045,7 @@ function renderHaccpSicaklik() {
     var curVal = filterSelect.value;
     var depoSet = {};
     records.forEach(function(r) { depoSet[r.depoAd || ('Depo ' + r.depoNo)] = true; });
+    getHaccpDepoAdlari().forEach(function(d) { depoSet[d] = true; });
     var depoList = Object.keys(depoSet).sort();
     filterSelect.innerHTML = '<option value="">T\u00fcm\u00fc</option>' +
       depoList.map(function(d) { return '<option value="' + d.replace(/"/g,'&quot;') + '"' + (d === curVal ? ' selected' : '') + '>' + d + '</option>'; }).join('');
