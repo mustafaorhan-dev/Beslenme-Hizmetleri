@@ -2253,46 +2253,27 @@ function renderProduction(_weekKey, _weekData, days) {
   let html = '';
   days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    // Collect dishes for this day first
-    const dayDishes = [];
+    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
+
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
       const name = parseDishName(raw);
       if (!name) continue;
       const dish = findDish(name);
-      dayDishes.push({ ci, name, dish });
-    }
-    if (!dayDishes.length) return;
 
-    // Find max ingredient count across dishes this day
-    let maxIng = 0;
-    dayDishes.forEach(dd => {
-      if (dd.dish && dd.dish.tarif) maxIng = Math.max(maxIng, dd.dish.tarif.length);
-    });
+      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
 
-    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body">`;
-    html += `<table class="prod-day-table"><thead><tr>`;
-    dayDishes.forEach(dd => {
-      html += `<th>${dd.ci + 1}. Çeşit: ${escapeHtml(dd.name)}</th>`;
-    });
-    html += `</tr></thead><tbody>`;
-    for (let ri = 0; ri < maxIng; ri++) {
-      html += `<tr>`;
-      dayDishes.forEach(dd => {
-        if (dd.dish && dd.dish.tarif && dd.dish.tarif[ri]) {
-          const ing = dd.dish.tarif[ri];
+      if (dish && dish.tarif && dish.tarif.length) {
+        dish.tarif.forEach((ing, idx) => {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          html += `<td><span class="pdt-num">${ri + 1}.</span><span class="pdt-name">${escapeHtml(ing.malzeme.trim())}</span><span class="pdt-sep">—</span><span class="pdt-qty">${fmt(total, birim)}</span></td>`;
-        } else {
-          html += `<td class="pdt-empty"></td>`;
-        }
-      });
-      html += `</tr>`;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+        });
+      }
+      html += '</div>';
     }
-    html += `</tbody></table>`;
-    html += `</div></div>`;
+    html += '</div></div></div>';
   });
 
   wrapper.innerHTML = html;
