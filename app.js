@@ -1409,6 +1409,19 @@ function exportDashboardPDF() {
       .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
       .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
       .toolbar, .kpi-trend, canvas, .btn, .badge { display: none; }
+      .prod-day { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; overflow: hidden; page-break-inside: avoid; }
+      .prod-day-header { font-size: 0.85rem; font-weight: 700; padding: 0.5rem 0.75rem; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 0.5rem; }
+      .prod-day-header .prod-day-kisi { margin-left: auto; font-size: 0.7rem; color: #666; }
+      .prod-day-body { padding: 0.5rem 0.75rem; }
+      .prod-cesit-row { display: flex; gap: 0.5rem; }
+      .prod-cesit-col { flex: 1; min-width: 120px; }
+      .prod-cesit { font-weight: 600; font-size: 0.78rem; margin-bottom: 0.2rem; color: #333; white-space: nowrap; border-bottom: 1px solid #ddd; padding-bottom: 0.15rem; }
+      .prod-ing { display: flex; gap: 0.25rem; font-size: 0.72rem; line-height: 1.6; color: #555; align-items: baseline; }
+      .prod-num { width: 1.3rem; text-align: right; flex-shrink: 0; }
+      .prod-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prod-sep { width: 1.2rem; text-align: center; flex-shrink: 0; color: #999; }
+      .prod-qty { width: 4.5rem; text-align: right; flex-shrink: 0; font-weight: 600; }
+      .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.5rem 0; color: #333; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
