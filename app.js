@@ -3783,6 +3783,12 @@ function exportMenuPDF() {
       .prod-qty { text-align: right; font-weight: 600; }
       .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.75rem 0 0.25rem; color: #333; }
       #weeklyTotalSection { margin-top: 1.5rem; }
+      .weekly-total-grid { display: grid; grid-template-columns: 1.5rem 1fr 1.5rem 5.5rem; max-width: 600px; }
+      .weekly-total-item { display: contents; font-size: 0.75rem; line-height: 1.8; white-space: nowrap; }
+      .weekly-total-num { text-align: right; color: #666; }
+      .weekly-total-name { overflow: hidden; text-overflow: ellipsis; color: #333; }
+      .weekly-total-sep { text-align: center; color: #999; }
+      .weekly-total-qty { text-align: right; font-weight: 600; color: #333; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
