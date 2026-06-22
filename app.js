@@ -2249,37 +2249,34 @@ function renderProduction(_weekKey, _weekData, days) {
   if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); return; }
   section.style.display = 'block';
 
-  const cesitAdlari = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
-
-  // Render table-based layout for perfect column alignment
-  const thead = document.getElementById('productionThead');
-  const tbody = document.getElementById('productionTbody');
-
-  thead.innerHTML = '<tr><th>Gün</th>' + cesitAdlari.map(c => '<th>' + c + '</th>').join('') + '<th>Kişi</th></tr>';
-
-  tbody.innerHTML = days.map(d => {
+  const wrapper = section.querySelector('.table-wrapper');
+  let html = '';
+  days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    let cells = '';
+    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
+
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
       const name = parseDishName(raw);
-      const dish = name ? findDish(name) : null;
+      if (!name) continue;
+      const dish = findDish(name);
+
+      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
+
       if (dish && dish.tarif && dish.tarif.length) {
-        let ings = dish.tarif.map((ing, idx) => {
+        dish.tarif.forEach((ing, idx) => {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          return '<span class="prod-ing-row"><span class="prod-ing-num">' + (idx + 1) + '.</span><span class="prod-ing-name">' + escapeHtml(ing.malzeme.trim()) + '</span><span class="prod-ing-sep">—</span><span class="prod-ing-qty">' + fmt(total, birim) + '</span></span>';
-        }).join('');
-        cells += '<td class="prod-cell"><div class="prod-cell-name">' + cesitAdlari[ci] + ': ' + escapeHtml(name) + '</div>' + ings + '</td>';
-      } else if (name) {
-        cells += '<td class="prod-cell prod-cell-empty"><div class="prod-cell-name">' + cesitAdlari[ci] + ': ' + escapeHtml(name) + '</div><span class="prod-no-recipe">(tarif tanımlanmamış)</span></td>';
-      } else {
-        cells += '<td class="prod-cell prod-cell-empty"><span class="prod-no-recipe">—</span></td>';
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+        });
       }
+      html += '</div>';
     }
-    return '<tr><td class="prod-day-label-cell"><strong>' + d.gun + '</strong><br><span class="prod-day-kisi-cell">' + kisi + ' kişi</span></td>' + cells + '<td class="prod-day-kisi-num">' + kisi + '</td></tr>';
-  }).join('');
+    html += '</div></div></div>';
+  });
+
+  wrapper.innerHTML = html;
 
   // Weekly total
   const allDishes = [];
