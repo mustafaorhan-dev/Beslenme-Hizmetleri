@@ -2350,12 +2350,16 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  section.innerHTML = `<h3 class="section-title">Haftalık Toplam İhtiyaç Listesi</h3>
-    <div class="weekly-total-grid">${entries.map((e, idx) => {
-      const total = e.total;
-      if (total <= 0) return '';
-      return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
-    }).filter(Boolean).join('')}</div>`;
+  section.innerHTML = `<div class="weekly-total-card">
+    <div class="weekly-total-header">Haftalık Toplam İhtiyaç Listesi</div>
+    <div class="weekly-total-body">
+      <div class="weekly-total-grid">${entries.map((e, idx) => {
+        const total = e.total;
+        if (total <= 0) return '';
+        return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      }).filter(Boolean).join('')}</div>
+    </div>
+  </div>`;
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
@@ -3769,25 +3773,27 @@ function exportMenuPDF() {
       .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
       .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
       .menu-date-nav, .btn, .toolbar-actions, .menu-hint { display: none; }
-      .prod-day { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden; page-break-inside: avoid; }
-      .prod-day-header { font-size: 0.85rem; font-weight: 700; padding: 0.4rem 0.75rem; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 0.5rem; }
+      .prod-day { border: 1px solid #ddd; border-radius: 10px; margin-bottom: 0.8rem; overflow: hidden; page-break-inside: avoid; background: #fff; }
+      .prod-day-header { font-size: 0.88rem; font-weight: 700; padding: 0.45rem 0.8rem; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 0.5rem; }
+      .prod-day-header .prod-day-label { color: #555; }
       .prod-day-header .prod-day-kisi { margin-left: auto; font-size: 0.7rem; color: #666; }
-      .prod-day-body { padding: 0.5rem 0.75rem; overflow-x: auto; }
+      .prod-day-body { padding: 0.5rem 0.8rem; overflow-x: auto; }
       .prod-cesit-row { display: flex; gap: 0.75rem; flex-wrap: nowrap; }
-      .prod-cesit-col { flex: 1; min-width: 0; display: grid; grid-template-columns: 1.3rem 1fr 1.2rem 4.5rem; gap: 0 0.1rem; padding-left: 0.3rem; }
-      .prod-cesit { grid-column: 1 / -1; font-weight: 600; font-size: 0.78rem; margin: 0 0 0.15rem; color: #333; white-space: nowrap; border-bottom: 1px solid #ddd; padding-bottom: 0.1rem; }
-      .prod-ing { display: contents; font-size: 0.72rem; line-height: 1.6; color: #555; }
-      .prod-num { text-align: right; }
+      .prod-cesit-col { flex: 1; min-width: 0; display: grid; grid-template-columns: 1.3rem 1fr 1.2rem 4.5rem; gap: 0 0.1rem; padding: 0.35rem 0.4rem; border-radius: 6px; }
+      .prod-cesit { grid-column: 1 / -1; font-weight: 700; font-size: 0.78rem; margin: 0 0 0.2rem; padding: 0 0 0.2rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 2px solid #aaa; }
+      .prod-ing { display: contents; font-size: 0.72rem; line-height: 1.65; color: #555; }
+      .prod-num { text-align: right; color: #888; font-weight: 500; }
       .prod-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .prod-sep { text-align: center; color: #999; }
-      .prod-qty { text-align: right; font-weight: 600; }
-      .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.75rem 0 0.25rem; color: #333; }
-      #weeklyTotalSection { margin-top: 1.5rem; }
-      .weekly-total-grid { display: grid; grid-template-columns: 1.5rem 1fr 1.5rem 5.5rem; max-width: 600px; }
+      .prod-sep { text-align: center; color: #bbb; }
+      .prod-qty { text-align: right; font-weight: 600; color: #333; }
+      .weekly-total-card { border: 1px solid #ddd; border-radius: 10px; margin-top: 0.8rem; overflow: hidden; background: #fff; page-break-inside: avoid; }
+      .weekly-total-header { font-size: 0.88rem; font-weight: 700; padding: 0.45rem 0.8rem; background: #f5f5f5; border-bottom: 1px solid #ddd; color: #333; }
+      .weekly-total-body { padding: 0.5rem 0.8rem; }
+      .weekly-total-grid { display: grid; grid-template-columns: 1.3rem 1fr 1.2rem 4.5rem; max-width: 500px; }
       .weekly-total-item { display: contents; font-size: 0.75rem; line-height: 1.8; white-space: nowrap; }
-      .weekly-total-num { text-align: right; color: #666; }
+      .weekly-total-num { text-align: right; color: #888; font-weight: 500; }
       .weekly-total-name { overflow: hidden; text-overflow: ellipsis; color: #333; }
-      .weekly-total-sep { text-align: center; color: #999; }
+      .weekly-total-sep { text-align: center; color: #bbb; }
       .weekly-total-qty { text-align: right; font-weight: 600; color: #333; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
