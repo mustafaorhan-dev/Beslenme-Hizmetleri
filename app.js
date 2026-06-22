@@ -3768,7 +3768,21 @@ function exportMenuPDF() {
       .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
       .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
       .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
-      .menu-date-nav, .btn, .toolbar-actions, .menu-hint, #productionSection { display: none; }
+      .menu-date-nav, .btn, .toolbar-actions, .menu-hint { display: none; }
+      .prod-day { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden; page-break-inside: avoid; }
+      .prod-day-header { font-size: 0.85rem; font-weight: 700; padding: 0.4rem 0.75rem; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 0.5rem; }
+      .prod-day-header .prod-day-kisi { margin-left: auto; font-size: 0.7rem; color: #666; }
+      .prod-day-body { padding: 0.5rem 0.75rem; overflow-x: auto; }
+      .prod-cesit-row { display: flex; gap: 0.75rem; flex-wrap: nowrap; }
+      .prod-cesit-col { flex: 1; min-width: 0; display: grid; grid-template-columns: 1.3rem 1fr 1.2rem 4.5rem; gap: 0 0.1rem; padding-left: 0.3rem; }
+      .prod-cesit { grid-column: 1 / -1; font-weight: 600; font-size: 0.78rem; margin: 0 0 0.15rem; color: #333; white-space: nowrap; border-bottom: 1px solid #ddd; padding-bottom: 0.1rem; }
+      .prod-ing { display: contents; font-size: 0.72rem; line-height: 1.6; color: #555; }
+      .prod-num { text-align: right; }
+      .prod-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prod-sep { text-align: center; color: #999; }
+      .prod-qty { text-align: right; font-weight: 600; }
+      .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.75rem 0 0.25rem; color: #333; }
+      #weeklyTotalSection { margin-top: 1.5rem; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
     </style>
   </head><body>
