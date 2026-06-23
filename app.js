@@ -88,21 +88,45 @@ function setChartMonth(month) {
   });
   drawAllCharts();
 }
-// ─── LOGIN / LOGOUT ─────────────────────────────────────────────────────────
+// ─── LOGIN / LOGOUT / ROLES ────────────────────────────────────────────────
+
+const ADMIN_PASSWORD = '2525';
+const VIEWER_PASSWORD = 'gör';
+
+const ROLE_ADMIN = 'admin';
+const ROLE_VIEWER = 'viewer';
+
+function getRole() {
+  return localStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
+}
+
+function requireAdmin() {
+  if (getRole() !== ROLE_ADMIN) {
+    showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+    return false;
+  }
+  return true;
+}
 
 function doLogout() {
   localStorage.removeItem('atik_kontrol_login_hash');
+  localStorage.removeItem('atik_kontrol_role');
   location.reload();
 }
-
-const LOGIN_PASSWORD = '2525';
 
 function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
-  if (input.value === LOGIN_PASSWORD) {
-    localStorage.setItem('atik_kontrol_login_hash', btoa(LOGIN_PASSWORD));
+  let role = null;
+  if (input.value === ADMIN_PASSWORD) role = ROLE_ADMIN;
+  else if (input.value === VIEWER_PASSWORD) role = ROLE_VIEWER;
+
+  if (role) {
+    localStorage.setItem('atik_kontrol_login_hash', btoa(input.value));
+    localStorage.setItem('atik_kontrol_role', role);
     document.getElementById('loginOverlay').classList.add('hidden');
+    document.body.setAttribute('data-role', role);
+    document.getElementById('roleBadge').textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
@@ -117,11 +141,22 @@ function doLogin() {
   }
 }
 
+function applyViewerRestrictions() {
+  if (getRole() !== ROLE_ADMIN) {
+    document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input, #haccpForm textarea, #haccpForm input, #haccpForm select').forEach(el => { el.readOnly = true; el.disabled = true; el.style.opacity = '0.7'; });
+    document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  }
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const savedHash = localStorage.getItem('atik_kontrol_login_hash');
   if (savedHash) {
     document.getElementById('loginOverlay').classList.add('hidden');
+    const role = getRole();
+    document.body.setAttribute('data-role', role);
+    const badge = document.getElementById('roleBadge');
+    if (badge) badge.textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
   } else {
     document.getElementById('loginPassword').focus();
     await new Promise(resolve => {
@@ -294,7 +329,7 @@ function loadData() {
   filteredRecords = [...records];
 }
 
-function saveData() {
+function saveData() { if (!requireAdmin()) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   } catch (e) {
@@ -499,7 +534,7 @@ function getMenuUrl() {
   return gsheetConfig.webappUrl;
 }
 
-function saveGSheetUrl() {
+function saveGSheetUrl() { if (!requireAdmin()) return;
   const url = document.getElementById('gsheetUrl').value.trim();
   gsheetConfig.webappUrl = url || DEFAULT_GSHEET_URL;
   try {
@@ -570,7 +605,7 @@ async function quickPullFromSheets() {
   try { await syncFromGSheets(); } catch (e) { showToast('Senkronizasyon hatası: ' + e.message, 'error'); }
 }
 
-async function syncToGSheets() {
+async function syncToGSheets() { if (!requireAdmin()) return;
   if (!gsheetConfig.webappUrl) {
     showToast('Önce Web App URL\'sini girin.', 'error');
     return;
@@ -607,7 +642,7 @@ async function syncToGSheets() {
   }
 }
 
-async function syncFromGSheets() {
+async function syncFromGSheets() { if (!requireAdmin()) return;
   if (!gsheetConfig.webappUrl) {
     showToast('Önce Web App URL\'sini girin.', 'error');
     return false;
@@ -943,7 +978,7 @@ function loadHaccpData() {
   renderHaccp();
 }
 
-function saveHaccpData() {
+function saveHaccpData() { if (!requireAdmin()) return;
   try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
   syncHaccpSilent();
 }
@@ -1332,7 +1367,7 @@ function editHaccpRecord(type, id) {
   openHaccpModal(type, id);
 }
 
-function deleteHaccpRecord(type, id) {
+function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   haccpRecords = haccpRecords.filter(r => !(r.id === id && r.type === type));
   saveHaccpData();
@@ -1653,7 +1688,7 @@ function saveRecord(e) {
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
-function deleteRecord(id) {
+function deleteRecord(id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   records = records.filter(r => r.id !== id);
   selectedIds.delete(id);
@@ -1754,7 +1789,7 @@ function updateBulkBar() {
   }
 }
 
-function deleteSelected() {
+function deleteSelected() { if (!requireAdmin()) return;
   if (selectedIds.size === 0) {
     showToast('Seçili kayıt yok.', 'error');
     return;
@@ -1852,7 +1887,7 @@ function handleImport(e) {
 }
 
 // ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
-function clearAllData() {
+function clearAllData() { if (!requireAdmin()) return;
   if (records.length === 0) {
     showToast('Silinecek kayıt yok.', 'error');
     return;
@@ -1905,7 +1940,7 @@ function exportDataSettings() {
   showToast('Tüm veriler (ayarlar dahil) dışa aktarıldı.', 'success');
 }
 
-function importFullBackup() {
+function importFullBackup() { if (!requireAdmin()) return;
   document.getElementById('importBackupInput').click();
 }
 
@@ -2367,7 +2402,7 @@ function loadYemekler() {
   return yemeklerCache;
 }
 
-function saveYemekler(list) {
+function saveYemekler(list) { if (!requireAdmin()) return;
   yemeklerCache = list;
   syncDishesToGSheets().catch(() => {});
 }
@@ -2506,7 +2541,7 @@ function yfTarifSil(idx) {
   renderYemekForm(ad, kalori, alerjen);
 }
 
-function saveYemekForm() {
+function saveYemekForm() { if (!requireAdmin()) return;
   const ad = document.getElementById('yf_ad').value.trim();
   if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
@@ -2548,7 +2583,7 @@ function editYemek(id) {
   showYemekForm(id);
 }
 
-function deleteYemek(id) {
+function deleteYemek(id) { if (!requireAdmin()) return;
   if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
   let list = loadYemekler();
   list = list.filter(y => y.id !== id);
@@ -3641,6 +3676,7 @@ async function renderMenu() {
     }).join('')}
   </tr>`).join('');
   renderProduction(weekKey, weekData, days);
+  applyViewerRestrictions();
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
@@ -3670,7 +3706,7 @@ function getWeekStartDate(offset) {
   return monday;
 }
 
-async function saveWeeklyMenu() {
+async function saveWeeklyMenu() { if (!requireAdmin()) return;
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
@@ -3704,7 +3740,7 @@ async function shiftMenuWeek(delta) {
   await renderMenu();
 }
 
-function clearWeeklyMenu() {
+function clearWeeklyMenu() { if (!requireAdmin()) return;
   if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
   const monday = getWeekStartDate(menuWeekOffset);
   GUNLER.forEach((_, i) => {
@@ -3735,7 +3771,7 @@ async function exportMenuJSON() {
   showToast('Menü JSON olarak indirildi.', 'success');
 }
 
-function importMenuJSON(event) {
+function importMenuJSON(event) { if (!requireAdmin()) return;
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
