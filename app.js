@@ -313,7 +313,7 @@ function setCurrentDate() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
   // Set default date for form
-  document.getElementById('fTarih').value = now.toISOString().split('T')[0];
+  document.getElementById('fTarih').value = formatLocalDate(now);
 }
 
 // ─── STORAGE ───────────────────────────────────────────────────────────────────
@@ -992,7 +992,7 @@ function renderHaccpDepoSummary() {
   var today = new Date();
   var yediGunOnce = new Date(today);
   yediGunOnce.setDate(yediGunOnce.getDate() - 7);
-  var yediGunOnceStr = yediGunOnce.toISOString().split('T')[0];
+  var yediGunOnceStr = formatLocalDate(yediGunOnce);
   var son7 = recs.filter(function(r) { return r.tarih >= yediGunOnceStr; });
 
   if (son7.length === 0) { el.innerHTML = ''; return; }
@@ -1264,7 +1264,7 @@ function openHaccpModal(type, id) {
   if (id) rec = haccpRecords.find(r => r.id === id && r.type === type);
 
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const today = formatLocalDate(now);
   const saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
   if (type === 'sicaklik') {
@@ -1558,8 +1558,7 @@ function openModal(id = null) {
   } else {
     title.textContent = 'Yeni Kayıt Ekle';
     submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
-    const now = new Date();
-    document.getElementById('fTarih').value = now.toISOString().split('T')[0];
+    document.getElementById('fTarih').value = formatLocalDate(new Date());
   }
 
   // Form değişiklik izleme
@@ -2081,7 +2080,7 @@ function renderKPIs() {
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
 
   // Bugünkü Üretim & Atık
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
   const todayRec = records.find(r => r.tarih === todayStr);
   const elBugunYemek = document.getElementById('kpiBugunYemek');
   const elBugunAtik = document.getElementById('kpiBugunAtik');
