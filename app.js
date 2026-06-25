@@ -1516,7 +1516,7 @@ async function switchTab(name) {
   closeSidebar();
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
-  const labels = { dashboard: 'Panel', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', menu: 'Menü', haccp: 'Gıda Güvenliği' };
+  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
