@@ -3045,8 +3045,8 @@ function drawAllCharts() {
     });
   }
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpSicaklikEmpty','chartHaccpAylikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpSicaklik','canvasHaccpAylik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -3323,9 +3323,7 @@ function drawAllCharts() {
     makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
   }
 
-  // --- HACCP Sicaklik Chart ---
-  var sicaklikEmpty = document.getElementById('chartHaccpSicaklikEmpty');
-  var sicaklikCanvas = document.getElementById('canvasHaccpSicaklik');
+  // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
     if (r.type !== 'sicaklik') return false;
     if (!r.tarih) return false;
@@ -3335,10 +3333,10 @@ function drawAllCharts() {
     return true;
   }
   var sicaklikKayitlari = haccpRecords.filter(haccpFilter);
+  var container = document.getElementById('haccpSicaklikChartContainer');
+  if (!container) return;
+  container.innerHTML = '';
   if (sicaklikKayitlari.length > 0) {
-    if (sicaklikEmpty) sicaklikEmpty.style.display = 'none';
-    if (sicaklikCanvas) sicaklikCanvas.style.display = 'block';
-    // Gunluk grupla (her depo icin gunluk ortalama)
     var gunlukVeri = {};
     sicaklikKayitlari.forEach(function(r) {
       if (!r.tarih) return;
@@ -3349,40 +3347,47 @@ function drawAllCharts() {
       if (!isNaN(v)) gunlukVeri[r.tarih][ad].push(v);
     });
     var gunlukTarihler = Object.keys(gunlukVeri).sort();
-    var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
     var tumDepolar = [];
     gunlukTarihler.forEach(function(t) { Object.keys(gunlukVeri[t]).forEach(function(d) { if (tumDepolar.indexOf(d) === -1) tumDepolar.push(d); }); });
     var sicaklikLabels = gunlukTarihler.map(function(t) {
       var p = t.split('-');
       return p.length === 3 ? p[2] + '/' + p[1] : t;
     });
-    var sicaklikDatasets = tumDepolar.map(function(ad, idx) {
-      return {
+    var depoRenkPaleti = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    tumDepolar.forEach(function(ad, idx) {
+      var card = document.createElement('div');
+      card.className = 'section-card chart-card chart-card-full';
+      var header = document.createElement('div');
+      header.className = 'section-header';
+      header.innerHTML = '<h2>' + ad + ' - Sıcaklık Geçmişi</h2>';
+      card.appendChild(header);
+      var area = document.createElement('div');
+      area.className = 'chart-area';
+      var canvas = document.createElement('canvas');
+      var cid = 'canvasSicaklik_' + idx;
+      canvas.id = cid;
+      area.appendChild(canvas);
+      card.appendChild(area);
+      container.appendChild(card);
+      var depoData = {
         data: gunlukTarihler.map(function(t) {
           var vals = (gunlukVeri[t] && gunlukVeri[t][ad]) || [];
           if (vals.length === 0) return null;
           var sum = vals.reduce(function(a, b) { return a + b; }, 0);
           return Math.round(sum / vals.length * 10) / 10;
         }),
-        color: depoRenkler[idx % depoRenkler.length],
+        color: depoRenkPaleti[idx % depoRenkPaleti.length],
         label: ad
       };
+      var thresholds = [
+        { data: sicaklikLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
+        { data: sicaklikLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
+      ];
+      if (ad.toLowerCase().includes('dondurucu')) {
+        thresholds.push({ data: sicaklikLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
+      }
+      makeChart(cid, sicaklikLabels, [depoData].concat(thresholds), { type: 'line', showValues: false });
     });
-    // Eşik çizgileri ekle
-    var thresholdSets = [
-      { data: sicaklikLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
-      { data: sicaklikLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
-    ];
-    // Check if any depo adı contains "dondurucu"
-    var hasDondurucu = tumDepolar.some(function(ad) { return ad.toLowerCase().includes('dondurucu'); });
-    if (hasDondurucu) {
-      thresholdSets.push({ data: sicaklikLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
-    }
-    var allDatasets = sicaklikDatasets.concat(thresholdSets);
-    makeChart('canvasHaccpSicaklik', sicaklikLabels, allDatasets, { type: 'line', showValues: false });
-  } else {
-    if (sicaklikEmpty) sicaklikEmpty.style.display = 'block';
-    if (sicaklikCanvas) sicaklikCanvas.style.display = 'none';
   }
 
   // --- Aylik Ortalama Depo Sicaklik Bar Chart (her depo ayri cubuk) ---
