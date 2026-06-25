@@ -3385,56 +3385,37 @@ function drawAllCharts() {
     if (sicaklikCanvas) sicaklikCanvas.style.display = 'none';
   }
 
-  // --- Aylik Ortalama Depo Sicaklik Chart ---
+  // --- Aylik Ortalama Depo Sicaklik Bar Chart (tek bar: tum depolarin ortalamasi) ---
   var aylikSicaklikEmpty = document.getElementById('chartHaccpAylikEmpty');
   var aylikSicaklikCanvas = document.getElementById('canvasHaccpAylik');
   var aylikSicaklikKayitlari = haccpRecords.filter(haccpFilter);
   if (aylikSicaklikKayitlari.length > 0) {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'none';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'block';
-    var aylikGruplar = {};
+    var aylikOrtalama = {};
     aylikSicaklikKayitlari.forEach(function(r) {
       if (!r.tarih) return;
       var d = new Date(r.tarih + 'T00:00:00');
       var ayKey = (d.getMonth() + 1) + '/' + d.getFullYear();
-      if (!aylikGruplar[ayKey]) aylikGruplar[ayKey] = {};
-      var ad = r.depoAd || 'Bilinmeyen';
-      if (!aylikGruplar[ayKey][ad]) aylikGruplar[ayKey][ad] = [];
-      aylikGruplar[ayKey][ad].push(parseFloat(r.sicaklik));
+      if (!aylikOrtalama[ayKey]) aylikOrtalama[ayKey] = [];
+      aylikOrtalama[ayKey].push(parseFloat(r.sicaklik));
     });
-    var aylikAyLabels = Object.keys(aylikGruplar).sort(function(a, b) {
+    var aylikAyLabels = Object.keys(aylikOrtalama).sort(function(a, b) {
       var pa = a.split('/'), pb = b.split('/');
       return parseInt(pa[1]) - parseInt(pb[1]) || parseInt(pa[0]) - parseInt(pb[0]);
     });
-    var aylikDepoIsimleri = [];
-    aylikAyLabels.forEach(function(ay) {
-      Object.keys(aylikGruplar[ay]).forEach(function(ad) {
-        if (aylikDepoIsimleri.indexOf(ad) === -1) aylikDepoIsimleri.push(ad);
-      });
+    var barData = aylikAyLabels.map(function(ay) {
+      var vals = aylikOrtalama[ay];
+      var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+      return Math.round(sum / vals.length * 10) / 10;
     });
-    var depoRenkler2 = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
-    var aylikDatasets = aylikDepoIsimleri.map(function(ad, idx) {
-      return {
-        data: aylikAyLabels.map(function(ay) {
-          var vals = (aylikGruplar[ay] && aylikGruplar[ay][ad]) || [];
-          if (vals.length === 0) return null;
-          var sum = vals.reduce(function(a, b) { return a + b; }, 0);
-          return Math.round(sum / vals.length * 10) / 10;
-        }),
-        color: depoRenkler2[idx % depoRenkler2.length],
-        label: ad
-      };
-    });
-    var aylikHasDondurucu = aylikDepoIsimleri.some(function(ad) { return ad.toLowerCase().includes('dondurucu'); });
-    var aylikThresholdSets = [
-      { data: aylikAyLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
-      { data: aylikAyLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
-    ];
-    if (aylikHasDondurucu) {
-      aylikThresholdSets.push({ data: aylikAyLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
-    }
-    var aylikAll = aylikDatasets.concat(aylikThresholdSets);
-    makeChart('canvasHaccpAylik', aylikAyLabels, aylikAll, { type: 'line', showValues: false });
+    var limit4 = aylikAyLabels.map(function() { return 4; });
+    var limit0 = aylikAyLabels.map(function() { return 0; });
+    makeChart('canvasHaccpAylik', aylikAyLabels, [
+      { data: barData, color: '#6366f1', label: 'Ortalama Sıcaklık' },
+      { data: limit4, color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
+      { data: limit0, color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
+    ], { type: 'bar', showValues: true });
   } else {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
