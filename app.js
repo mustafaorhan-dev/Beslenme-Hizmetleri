@@ -3349,6 +3349,11 @@ function drawAllCharts() {
     var gunlukTarihler = Object.keys(gunlukVeri).sort();
     var tumDepolar = [];
     gunlukTarihler.forEach(function(t) { Object.keys(gunlukVeri[t]).forEach(function(d) { if (tumDepolar.indexOf(d) === -1) tumDepolar.push(d); }); });
+    tumDepolar.sort(function(a, b) {
+      var na = parseInt(a.match(/\d+/) || 0);
+      var nb = parseInt(b.match(/\d+/) || 0);
+      return na - nb;
+    });
     var sicaklikLabels = gunlukTarihler.map(function(t) {
       var p = t.split('-');
       return p.length === 3 ? p[2] + '/' + p[1] : t;
@@ -3417,6 +3422,11 @@ function drawAllCharts() {
         if (aylikDepoIsimleri.indexOf(ad) === -1) aylikDepoIsimleri.push(ad);
       });
     });
+    aylikDepoIsimleri.sort(function(a, b) {
+      var na = parseInt(a.match(/\d+/) || 0);
+      var nb = parseInt(b.match(/\d+/) || 0);
+      return na - nb;
+    });
     var depoRenkler2 = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
     var aylikDatasets = aylikDepoIsimleri.map(function(ad, idx) {
       return {
@@ -3430,13 +3440,7 @@ function drawAllCharts() {
         label: ad
       };
     });
-    var limit4 = aylikAyLabels.map(function() { return 4; });
-    var limit0 = aylikAyLabels.map(function() { return 0; });
-    var aylikAll = aylikDatasets.concat([
-      { data: limit4, color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
-      { data: limit0, color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
-    ]);
-    makeChart('canvasHaccpAylik', aylikAyLabels, aylikAll, { type: 'bar', showValues: true });
+    makeChart('canvasHaccpAylik', aylikAyLabels, aylikDatasets, { type: 'bar', showValues: true });
   } else {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
