@@ -3114,27 +3114,31 @@ function drawAllCharts() {
       tooltipBorder: 'rgba(255,255,255,0.2)',
     };
     const chartType = extra?.type || 'bar';
-    const isLine = chartType === 'line';
     const chart = new Chart(ctx, {
       type: chartType,
       data: {
         labels,
-        datasets: datasets.map(d => ({
-          label: d.label,
-          data: d.data,
-          backgroundColor: isLine ? d.color + '20' : (d.dashed ? d.color + '60' : d.color),
-          borderColor: d.color,
-          borderWidth: isLine ? (d.dashed ? 2 : 2) : (d.dashed ? 1 : 0),
-          borderDash: d.dashed ? (isLine ? [6, 4] : [3, 3]) : undefined,
-          borderRadius: isLine ? 0 : 6,
-          barPercentage: isLine ? undefined : 0.85,
-          categoryPercentage: isLine ? undefined : 0.8,
-          pointRadius: isLine ? (d.dashed ? 0 : 3) : undefined,
-          pointHoverRadius: isLine ? (d.dashed ? 0 : 5) : undefined,
-          fill: isLine ? (d.dashed ? false : true) : undefined,
-          tension: isLine ? 0.3 : undefined,
-          spanGaps: isLine ? true : undefined,
-        }))
+        datasets: datasets.map(d => {
+          const dsType = d.type || chartType;
+          const isLineDS = dsType === 'line';
+          return {
+            type: dsType,
+            label: d.label,
+            data: d.data,
+            backgroundColor: isLineDS ? d.color + '20' : (d.dashed ? d.color + '60' : d.color),
+            borderColor: d.color,
+            borderWidth: isLineDS ? (d.dashed ? 2 : 2) : (d.dashed ? 1 : 0),
+            borderDash: d.dashed ? (isLineDS ? [6, 4] : [3, 3]) : undefined,
+            borderRadius: isLineDS ? 0 : 6,
+            barPercentage: isLineDS ? undefined : 0.85,
+            categoryPercentage: isLineDS ? undefined : 0.8,
+            pointRadius: isLineDS ? (d.dashed ? 0 : 3) : undefined,
+            pointHoverRadius: isLineDS ? (d.dashed ? 0 : 5) : undefined,
+            fill: isLineDS ? (d.dashed ? false : true) : undefined,
+            tension: isLineDS ? 0.3 : undefined,
+            spanGaps: isLineDS ? true : undefined,
+          };
+        })
       },
       options: {
         responsive: true,
@@ -3276,13 +3280,29 @@ function drawAllCharts() {
     return getMonthVal(ay + '/' + (parseInt(yil) - 1), 'atik');
   });
   const hasPrevYear = prevYearAtik.some(v => v > 0);
+  const atikTrendData = allMonthLabels.map(m => getMonthVal(m, 'atik'));
+  let trendLine = [];
+  if (atikTrendData.length > 1) {
+    const n = atikTrendData.length;
+    const meanX = (n - 1) / 2;
+    const meanY = atikTrendData.reduce((s, v) => s + v, 0) / n;
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++) {
+      num += (i - meanX) * (atikTrendData[i] - meanY);
+      den += (i - meanX) ** 2;
+    }
+    const slope = den !== 0 ? num / den : 0;
+    const intercept = meanY - slope * meanX;
+    trendLine = atikTrendData.map((_, i) => Math.max(0, slope * i + intercept));
+  }
   const aylikSets = [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylik Gecis' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
+    { data: atikTrendData, color: '#f59e0b', label: 'Aylik Atik (kg)' },
   ];
   if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
-  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'line' });
+  if (trendLine.length > 0) aylikSets.push({ data: trendLine, color: '#ef4444', label: 'Atik Trendi', type: 'line', dashed: true });
+  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' });
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
   makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim - Gecis Farki' }], { onClick: clickHandler });
