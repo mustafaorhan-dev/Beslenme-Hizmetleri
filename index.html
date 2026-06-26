@@ -153,6 +153,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
           <span>Gıda Güvenliği</span>
         </button>
+        <button class="tab-btn" id="tab-yag" onclick="switchTab('yag')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+          <span>Atık Yağ</span>
+        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="openModal()">
@@ -834,6 +838,46 @@
 
   </main>
 
+    <!-- ===== ATIK YAG TAB ===== -->
+    <div class="tab-content" id="content-yag">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openYagModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Atık Yağ Kayıtları</h2>
+          <span class="badge" id="yagBadge">0 kayıt</span>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateYag">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Henüz atık yağ kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="yagTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Yağ Türü</th>
+                <th>Miktar (lt)</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="yagTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     </div><!-- /.app-layout -->
 
   <!-- ===== YEMEK LISTESI MODAL ===== -->
@@ -1096,6 +1140,55 @@
         <button class="btn btn-primary" onclick="printQr()">Yazdır</button>
         <button class="btn btn-ghost" onclick="closeQrModal()">Kapat</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== ATIK YAG MODAL ===== -->
+  <div class="modal-overlay" id="yagModal" onclick="if(event.target===this)closeYagModal()">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h2 id="yagModalTitle">Atık Yağ Kaydı</h2>
+        <button class="modal-close" onclick="closeYagModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="yagForm" onsubmit="saveYagRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="form-group">
+              <label for="yfTarih">Tarih <span class="required">*</span></label>
+              <input type="date" id="yfTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="yfTur">Yağ Türü <span class="required">*</span></label>
+              <select id="yfTur" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="">Seçiniz</option>
+                <option value="Ayçiçek Yağı">Ayçiçek Yağı</option>
+                <option value="Mısırözü Yağı">Mısırözü Yağı</option>
+                <option value="Zeytinyağı">Zeytinyağı</option>
+                <option value="Kanola Yağı">Kanola Yağı</option>
+                <option value="Pamuk Yağı">Pamuk Yağı</option>
+                <option value="Soya Yağı">Soya Yağı</option>
+                <option value="Hindistan Cevizi Yağı">Hindistan Cevizi Yağı</option>
+                <option value="Kızartma Atık Yağı">Kızartma Atık Yağı</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="yfMiktar">Miktar (lt) <span class="required">*</span></label>
+              <input type="number" id="yfMiktar" min="0" step="0.1" placeholder="0.0" required />
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="yfNot">Not</label>
+              <input type="text" id="yfNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeYagModal()">İptal</button>
+          <button type="submit" class="btn btn-primary" id="yagFormSubmitBtn">Kaydet</button>
+        </div>
+      </form>
     </div>
   </div>
 

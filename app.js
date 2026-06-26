@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
   loadHaccpData();
+  loadYagData();
   setCurrentDate();
   renderAll();
   drawAllCharts();
@@ -1516,7 +1517,8 @@ async function switchTab(name) {
   closeSidebar();
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
-  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği' };
+  if (name === 'yag') renderYagTable();
+  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -3710,6 +3712,125 @@ function importMenuJSON(event) { if (!requireAdmin()) return;
   };
   reader.readAsText(file, 'UTF-8');
   event.target.value = '';
+}
+
+// ─── ATIK YAG (WASTE OIL) ────────────────────────────────────────────────────
+const YAG_STORAGE_KEY = 'atik_kontrol_yag';
+let yagRecords = [];
+let editingYagId = null;
+
+function loadYagData() {
+  try {
+    const stored = localStorage.getItem(YAG_STORAGE_KEY);
+    yagRecords = stored ? JSON.parse(stored) : [];
+  } catch (_) { yagRecords = []; }
+}
+
+function saveYagData() {
+  try { localStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
+}
+
+function renderYagTable() {
+  const tbody = document.getElementById('yagTbody');
+  const table = document.getElementById('yagTable');
+  const empty = document.getElementById('emptyStateYag');
+  const badge = document.getElementById('yagBadge');
+
+  badge.textContent = yagRecords.length + ' kayıt';
+
+  if (yagRecords.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  const sorted = [...yagRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  tbody.innerHTML = sorted.map(r => {
+    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    return `<tr>
+      <td>${dateStr}</td>
+      <td>${escapeHtml(r.tur || '—')}</td>
+      <td>${(r.miktar || 0).toFixed(1)}</td>
+      <td>${escapeHtml(r.not || '—')}</td>
+      <td>
+        <button class="btn-icon" onclick="editYagRecord(${r.id})" title="Düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon" onclick="deleteYagRecord(${r.id})" title="Sil" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openYagModal(id) {
+  editingYagId = id || null;
+  const overlay = document.getElementById('yagModal');
+  const title = document.getElementById('yagModalTitle');
+  const form = document.getElementById('yagForm');
+
+  form.reset();
+  document.getElementById('yfTarih').value = formatLocalDate(new Date());
+
+  if (id) {
+    const rec = yagRecords.find(r => r.id === id);
+    if (!rec) return;
+    title.textContent = 'Atık Yağ Kaydını Düzenle';
+    document.getElementById('yfTarih').value = rec.tarih;
+    document.getElementById('yfTur').value = rec.tur || '';
+    document.getElementById('yfMiktar').value = rec.miktar || '';
+    document.getElementById('yfNot').value = rec.not || '';
+  } else {
+    title.textContent = 'Yeni Atık Yağ Kaydı';
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeYagModal() {
+  document.getElementById('yagModal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingYagId = null;
+}
+
+function saveYagRecord(e) {
+  e.preventDefault();
+
+  const rec = {
+    id: editingYagId || Date.now(),
+    tarih: document.getElementById('yfTarih').value,
+    tur: document.getElementById('yfTur').value,
+    miktar: parseFloat(document.getElementById('yfMiktar').value) || 0,
+    not: document.getElementById('yfNot').value.trim()
+  };
+
+  if (editingYagId) {
+    const idx = yagRecords.findIndex(r => r.id === editingYagId);
+    if (idx !== -1) yagRecords[idx] = rec;
+    showToast('Atık yağ kaydı güncellendi.', 'success');
+  } else {
+    yagRecords.push(rec);
+    showToast('Atık yağ kaydı eklendi.', 'success');
+  }
+
+  saveYagData();
+  renderYagTable();
+  closeYagModal();
+}
+
+function editYagRecord(id) { openYagModal(id); }
+
+function deleteYagRecord(id) {
+  if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
+  yagRecords = yagRecords.filter(r => r.id !== id);
+  saveYagData();
+  renderYagTable();
+  showToast('Atık yağ kaydı silindi.', 'success');
 }
 
 function exportMenuPDF() {
