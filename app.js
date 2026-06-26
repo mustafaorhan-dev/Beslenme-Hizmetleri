@@ -3752,6 +3752,7 @@ function renderYagTable() {
     const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
     return `<tr>
       <td>${dateStr}</td>
+      <td>${escapeHtml(r.makbuzNo || '—')}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
       <td>${(r.miktar || 0).toFixed(1)}</td>
       <td>${escapeHtml(r.not || '—')}</td>
@@ -3781,6 +3782,7 @@ function openYagModal(id) {
     if (!rec) return;
     title.textContent = 'Atık Yağ Kaydını Düzenle';
     document.getElementById('yfTarih').value = rec.tarih;
+    document.getElementById('yfMakbuz').value = rec.makbuzNo || '';
     document.getElementById('yfTur').value = rec.tur || '';
     document.getElementById('yfMiktar').value = rec.miktar || '';
     document.getElementById('yfNot').value = rec.not || '';
@@ -3804,6 +3806,7 @@ function saveYagRecord(e) {
   const rec = {
     id: editingYagId || Date.now(),
     tarih: document.getElementById('yfTarih').value,
+    makbuzNo: document.getElementById('yfMakbuz').value.trim(),
     tur: document.getElementById('yfTur').value,
     miktar: parseFloat(document.getElementById('yfMiktar').value) || 0,
     not: document.getElementById('yfNot').value.trim()

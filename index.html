@@ -160,7 +160,7 @@
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="openModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
           <span>Yeni Kayıt</span>
         </button>
         <button class="tab-btn" onclick="exportData()">
@@ -864,6 +864,7 @@
             <thead>
               <tr>
                 <th>Tarih</th>
+                <th>Makbuz No</th>
                 <th>Yağ Türü</th>
                 <th>Miktar (lt)</th>
                 <th>Not</th>
@@ -1158,6 +1159,10 @@
             <div class="form-group">
               <label for="yfTarih">Tarih <span class="required">*</span></label>
               <input type="date" id="yfTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="yfMakbuz">Makbuz No</label>
+              <input type="text" id="yfMakbuz" placeholder="Örn: 001234" style="width:100%" />
             </div>
             <div class="form-group">
               <label for="yfTur">Yağ Türü <span class="required">*</span></label>
