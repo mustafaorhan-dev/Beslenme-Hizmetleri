@@ -141,10 +141,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span>Kayıtlar</span>
         </button>
-        <button class="tab-btn" id="tab-charts" onclick="switchTab('charts')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span>Grafikler</span>
-        </button>
         <button class="tab-btn" id="tab-report" onclick="switchTab('report')">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <span>Rapor</span>
@@ -164,6 +160,10 @@
         <button class="tab-btn" id="tab-ambalaj" onclick="switchTab('ambalaj')">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           <span>Ambalaj Atıkları</span>
+        </button>
+        <button class="tab-btn" id="tab-charts" onclick="switchTab('charts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Grafikler</span>
         </button>
       </nav>
       <div class="sidebar-actions">
@@ -399,134 +399,6 @@
           </table>
           <div class="pagination" id="pagination"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- ===== CHARTS TAB ===== -->
-    <div class="tab-content" id="content-charts">
-      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-        <div class="chart-year-filter" id="chartYearFilter" style="flex:1"></div>
-        <div class="toolbar-actions">
-          <button class="btn btn-outline" onclick="exportChartsPDF()" title="Grafikleri PDF olarak yazdır">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            PDF Yazdır
-          </button>
-        </div>
-      </div>
-      <div class="charts-grid">
-
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Aylık Üretim - Geçiş - Atık Karşılaştırması</h2>
-          </div>
-          <div class="chart-area" id="chartAylik">
-            <canvas id="canvasAylik"></canvas>
-            <div class="chart-empty" id="chartAylikEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Üretim, turnike geçişi ve atık miktarının aylık karşılaştırması</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Üretim - Geçiş Farkı</h2>
-          </div>
-          <div class="chart-area" id="chartFark">
-            <canvas id="canvasFark"></canvas>
-            <div class="chart-empty" id="chartFarkEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Üretilen yemek sayısı ile turnike geçişi arasındaki fark</div>
-        </div>
-        <div class="section-card chart-card">
-          <div class="section-header">
-            <h2>Aylık Atık Miktarı (kg)</h2>
-          </div>
-          <div class="chart-area" id="chartAtik">
-            <canvas id="canvasAtik"></canvas>
-            <div class="chart-empty" id="chartAtikEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Günlük atıkların aylık toplamı (kg)</div>
-        </div>
-        <div class="section-card chart-card">
-          <div class="section-header">
-            <h2>Aylık Üretim Sayısı</h2>
-          </div>
-          <div class="chart-area" id="chartYemek">
-            <canvas id="canvasYemek"></canvas>
-            <div class="chart-empty" id="chartYemekEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Günlük üretilen yemek sayılarının aylık toplamı</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Aylık Turnike Geçiş Sayıları</h2>
-          </div>
-          <div class="chart-area" id="chartTurnike">
-            <canvas id="canvasTurnike"></canvas>
-            <div class="chart-empty" id="chartTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Öğrenci + personel + dış geçiş toplamı</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Üretilen Yemeğe Oranla Atık Yemek Miktarı %</h2>
-          </div>
-          <div class="chart-area" id="chartAtikOran">
-            <canvas id="canvasAtikOran"></canvas>
-            <div class="chart-empty" id="chartAtikOranEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">(Atık / Üretim) × 100 — üretilen yemeğin yüzde kaçı atık oluyor</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı</h2>
-          </div>
-          <div class="chart-area" id="chartOgrenci">
-            <canvas id="canvasOgrenci"></canvas>
-            <div class="chart-empty" id="chartOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Günlük öğrenci geçişlerinin aylık toplamı</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Karbon Ayak İzi (kg CO₂)</h2>
-          </div>
-          <div class="chart-area" id="chartKarbon">
-            <canvas id="canvasKarbon"></canvas>
-            <div class="chart-empty" id="chartKarbonEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Atık (kg) × 2.5 (kg CO₂e/kg — gıda atığının karbon ayak izi katsayısı, metan emisyonu dahil)</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Kişi Başı Atık (kg/kişi)</h2>
-          </div>
-          <div class="chart-area" id="chartAtikPerKisi">
-            <canvas id="canvasAtikPerKisi"></canvas>
-            <div class="chart-empty" id="chartAtikPerKisiEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Aylık atık / aylık toplam geçiş — yemekhaneye giren kişi başına düşen ortalama atık</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Haftalık Geçiş Toplamı</h2>
-          </div>
-          <div class="chart-area" id="chartHaftalikGecis">
-            <canvas id="canvasHaftalikGecis"></canvas>
-            <div class="chart-empty" id="chartHaftalikGecisEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Pazartesi-Pazar haftalık toplam geçiş sayısı</div>
-        </div>
-        <div id="haccpSicaklikChartContainer"></div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Aylık Ortalama Depo Sıcaklıkları (°C)</h2>
-          </div>
-          <div class="chart-area" id="chartHaccpAylik">
-            <canvas id="canvasHaccpAylik"></canvas>
-            <div class="chart-empty" id="chartHaccpAylikEmpty">Sıcaklık kaydı girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Her deponun aylık ortalama sıcaklığı — aylara göre gruplandırılmış çubuk grafiği</div>
-        </div>
-
       </div>
     </div>
 
@@ -910,6 +782,134 @@
             <tbody id="ambalajTbody"></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS TAB ===== -->
+    <div class="tab-content" id="content-charts">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div class="chart-year-filter" id="chartYearFilter" style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-outline" onclick="exportChartsPDF()" title="Grafikleri PDF olarak yazdır">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF Yazdır
+          </button>
+        </div>
+      </div>
+      <div class="charts-grid">
+
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Aylık Üretim - Geçiş - Atık Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartAylik">
+            <canvas id="canvasAylik"></canvas>
+            <div class="chart-empty" id="chartAylikEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Üretim, turnike geçişi ve atık miktarının aylık karşılaştırması</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Üretim ile Turnike Geçişi Arasındaki Fark</h2>
+          </div>
+          <div class="chart-area" id="chartFark">
+            <canvas id="canvasFark"></canvas>
+            <div class="chart-empty" id="chartFarkEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Üretilen yemek sayısı ile turnike geçişi arasındaki fark</div>
+        </div>
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Aylık Atık Miktarı (kg)</h2>
+          </div>
+          <div class="chart-area" id="chartAtik">
+            <canvas id="canvasAtik"></canvas>
+            <div class="chart-empty" id="chartAtikEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Günlük atıkların aylık toplamı (kg)</div>
+        </div>
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Aylık Üretim Sayısı</h2>
+          </div>
+          <div class="chart-area" id="chartYemek">
+            <canvas id="canvasYemek"></canvas>
+            <div class="chart-empty" id="chartYemekEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Günlük üretilen yemek sayılarının aylık toplamı</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Aylık Turnike Geçiş Sayıları</h2>
+          </div>
+          <div class="chart-area" id="chartTurnike">
+            <canvas id="canvasTurnike"></canvas>
+            <div class="chart-empty" id="chartTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Öğrenci + personel + dış geçiş toplamı</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Üretilen Yemeğe Oranla Atık Yemek Miktarı %</h2>
+          </div>
+          <div class="chart-area" id="chartAtikOran">
+            <canvas id="canvasAtikOran"></canvas>
+            <div class="chart-empty" id="chartAtikOranEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">(Atık / Üretim) × 100 — üretilen yemeğin yüzde kaçı atık oluyor</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı</h2>
+          </div>
+          <div class="chart-area" id="chartOgrenci">
+            <canvas id="canvasOgrenci"></canvas>
+            <div class="chart-empty" id="chartOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Günlük öğrenci geçişlerinin aylık toplamı</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Karbon Ayak İzi (kg CO₂)</h2>
+          </div>
+          <div class="chart-area" id="chartKarbon">
+            <canvas id="canvasKarbon"></canvas>
+            <div class="chart-empty" id="chartKarbonEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Atık (kg) × 2.5 (kg CO₂e/kg — gıda atığının karbon ayak izi katsayısı, metan emisyonu dahil)</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Kişi Başı Atık (kg/kişi)</h2>
+          </div>
+          <div class="chart-area" id="chartAtikPerKisi">
+            <canvas id="canvasAtikPerKisi"></canvas>
+            <div class="chart-empty" id="chartAtikPerKisiEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Aylık atık / aylık toplam geçiş — yemekhaneye giren kişi başına düşen ortalama atık</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Haftalık Geçiş Toplamı</h2>
+          </div>
+          <div class="chart-area" id="chartHaftalikGecis">
+            <canvas id="canvasHaftalikGecis"></canvas>
+            <div class="chart-empty" id="chartHaftalikGecisEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Pazartesi-Pazar haftalık toplam geçiş sayısı</div>
+        </div>
+        <div id="haccpSicaklikChartContainer"></div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Aylık Ortalama Depo Sıcaklıkları (°C)</h2>
+          </div>
+          <div class="chart-area" id="chartHaccpAylik">
+            <canvas id="canvasHaccpAylik"></canvas>
+            <div class="chart-empty" id="chartHaccpAylikEmpty">Sıcaklık kaydı girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Her deponun aylık ortalama sıcaklığı — aylara göre gruplandırılmış çubuk grafiği</div>
+        </div>
+
       </div>
     </div>
 

@@ -3293,7 +3293,7 @@ function drawAllCharts() {
   makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' });
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
-  makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim - Gecis Farki' }], { onClick: clickHandler });
+  makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim ile Turnike Gecisi Arasindaki Fark' }], { onClick: clickHandler });
 
   const aylikOran = allMonthLabels.map(m => {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
