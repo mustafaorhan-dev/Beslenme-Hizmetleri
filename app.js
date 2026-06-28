@@ -3284,28 +3284,12 @@ function drawAllCharts() {
     return getMonthVal(ay + '/' + (parseInt(yil) - 1), 'atik');
   });
   const hasPrevYear = prevYearAtik.some(v => v > 0);
-  const gecisTrendData = allMonthLabels.map(m => getMonthVal(m, 'toplam'));
-  let trendLine = [];
-  if (gecisTrendData.length > 1) {
-    const n = gecisTrendData.length;
-    const meanX = (n - 1) / 2;
-    const meanY = gecisTrendData.reduce((s, v) => s + v, 0) / n;
-    let num = 0, den = 0;
-    for (let i = 0; i < n; i++) {
-      num += (i - meanX) * (gecisTrendData[i] - meanY);
-      den += (i - meanX) ** 2;
-    }
-    const slope = den !== 0 ? num / den : 0;
-    const intercept = meanY - slope * meanX;
-    trendLine = gecisTrendData.map((_, i) => Math.max(0, slope * i + intercept));
-  }
   const aylikSets = [
     { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylik Gecis' },
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
   ];
   if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
-  if (trendLine.length > 0) aylikSets.push({ data: trendLine, color: '#ef4444', label: 'Gecis Trendi', type: 'line', dashed: true });
   makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' });
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
