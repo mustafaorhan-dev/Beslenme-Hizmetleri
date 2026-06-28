@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadData();
   loadHaccpData();
   loadYagData();
+  loadAmbalajData();
   setCurrentDate();
   renderAll();
   drawAllCharts();
@@ -1518,7 +1519,8 @@ async function switchTab(name) {
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
   if (name === 'yag') renderYagTable();
-  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ' };
+  if (name === 'ambalaj') renderAmbalajTable();
+  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -3834,6 +3836,125 @@ function deleteYagRecord(id) {
   saveYagData();
   renderYagTable();
   showToast('Atık yağ kaydı silindi.', 'success');
+}
+
+// ─── AMBALAJ ATIKLARI ────────────────────────────────────────────────────
+const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
+let ambalajRecords = [];
+let editingAmbalajId = null;
+
+function loadAmbalajData() {
+  try {
+    const stored = localStorage.getItem(AMBALAJ_STORAGE_KEY);
+    ambalajRecords = stored ? JSON.parse(stored) : [];
+  } catch (_) { ambalajRecords = []; }
+}
+
+function saveAmbalajData() {
+  try { localStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
+}
+
+function renderAmbalajTable() {
+  const tbody = document.getElementById('ambalajTbody');
+  const table = document.getElementById('ambalajTable');
+  const empty = document.getElementById('emptyStateAmbalaj');
+  const badge = document.getElementById('ambalajBadge');
+
+  badge.textContent = ambalajRecords.length + ' kayıt';
+
+  if (ambalajRecords.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  const sorted = [...ambalajRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  tbody.innerHTML = sorted.map(r => {
+    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    return `<tr>
+      <td>${dateStr}</td>
+      <td>${escapeHtml(r.tur || '—')}</td>
+      <td>${(r.miktar || 0).toFixed(1)}</td>
+      <td>${escapeHtml(r.not || '—')}</td>
+      <td>
+        <button class="btn-icon" onclick="editAmbalajRecord(${r.id})" title="Düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon" onclick="deleteAmbalajRecord(${r.id})" title="Sil" style="color:var(--danger)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAmbalajModal(id) {
+  editingAmbalajId = id || null;
+  const overlay = document.getElementById('ambalajModal');
+  const title = document.getElementById('ambalajModalTitle');
+  const form = document.getElementById('ambalajForm');
+
+  form.reset();
+  document.getElementById('afTarih').value = formatLocalDate(new Date());
+
+  if (id) {
+    const rec = ambalajRecords.find(r => r.id === id);
+    if (!rec) return;
+    title.textContent = 'Ambalaj Atığı Kaydını Düzenle';
+    document.getElementById('afTarih').value = rec.tarih;
+    document.getElementById('afTur').value = rec.tur || '';
+    document.getElementById('afMiktar').value = rec.miktar || '';
+    document.getElementById('afNot').value = rec.not || '';
+  } else {
+    title.textContent = 'Yeni Ambalaj Atığı Kaydı';
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAmbalajModal() {
+  document.getElementById('ambalajModal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingAmbalajId = null;
+}
+
+function saveAmbalajRecord(e) {
+  e.preventDefault();
+
+  const rec = {
+    id: editingAmbalajId || Date.now(),
+    tarih: document.getElementById('afTarih').value,
+    tur: document.getElementById('afTur').value,
+    miktar: parseFloat(document.getElementById('afMiktar').value) || 0,
+    not: document.getElementById('afNot').value.trim()
+  };
+
+  if (editingAmbalajId) {
+    const idx = ambalajRecords.findIndex(r => r.id === editingAmbalajId);
+    if (idx !== -1) ambalajRecords[idx] = rec;
+    showToast('Ambalaj atığı kaydı güncellendi.', 'success');
+  } else {
+    ambalajRecords.push(rec);
+    showToast('Ambalaj atığı kaydı eklendi.', 'success');
+  }
+
+  saveAmbalajData();
+  renderAmbalajTable();
+  closeAmbalajModal();
+}
+
+function editAmbalajRecord(id) { openAmbalajModal(id); }
+
+function deleteAmbalajRecord(id) {
+  if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
+  ambalajRecords = ambalajRecords.filter(r => r.id !== id);
+  saveAmbalajData();
+  renderAmbalajTable();
+  showToast('Ambalaj atığı kaydı silindi.', 'success');
 }
 
 function exportMenuPDF() {

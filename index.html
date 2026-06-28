@@ -157,6 +157,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
           <span>Atık Yağ</span>
         </button>
+        <button class="tab-btn" id="tab-ambalaj" onclick="switchTab('ambalaj')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span>Ambalaj Atıkları</span>
+        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="openModal()">
@@ -877,6 +881,46 @@
       </div>
     </div>
 
+    <!-- ===== AMBALAJ ATIKLARI TAB ===== -->
+    <div class="tab-content" id="content-ambalaj">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Ambalaj Atıkları Kayıtları</h2>
+          <span class="badge" id="ambalajBadge">0 kayıt</span>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateAmbalaj">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Henüz ambalaj atığı kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="ambalajTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Atık Türü</th>
+                <th>Miktar (kg)</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="ambalajTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
     </div><!-- /.app-layout -->
@@ -1192,6 +1236,52 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeYagModal()">İptal</button>
           <button type="submit" class="btn btn-primary" id="yagFormSubmitBtn">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== AMBALAJ MODAL ===== -->
+  <div class="modal-overlay" id="ambalajModal" onclick="if(event.target===this)closeAmbalajModal()">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h2 id="ambalajModalTitle">Ambalaj Atığı Kaydı</h2>
+        <button class="modal-close" onclick="closeAmbalajModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="ambalajForm" onsubmit="saveAmbalajRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="form-group">
+              <label for="afTarih">Tarih <span class="required">*</span></label>
+              <input type="date" id="afTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="afTur">Atık Türü <span class="required">*</span></label>
+              <select id="afTur" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="">Seçiniz</option>
+                <option value="Metal">Metal</option>
+                <option value="Plastik">Plastik</option>
+                <option value="Kağıt/Karton">Kağıt/Karton</option>
+                <option value="Cam">Cam</option>
+                <option value="Karışık">Karışık</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="afMiktar">Miktar (kg) <span class="required">*</span></label>
+              <input type="number" id="afMiktar" min="0" step="0.1" placeholder="0.0" required />
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="afNot">Not</label>
+              <input type="text" id="afNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeAmbalajModal()">İptal</button>
+          <button type="submit" class="btn btn-primary" id="ambalajFormSubmitBtn">Kaydet</button>
         </div>
       </form>
     </div>
