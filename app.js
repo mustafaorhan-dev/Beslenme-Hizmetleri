@@ -669,18 +669,13 @@ async function syncHaccpFromGSheets() {
       if (data && data.data) showToast('HACCP POST OK: ' + (data.data.length || 0) + ' kayıt', 'info');
     } catch (_) { data = null; showToast('HACCP POST hatası, fallback GET denenecek', 'info'); }
     if (!data || !data.data || data.data.length === 0) {
-      var allRows = [];
-      var sheets = ['G%C4%B1da%20G%C3%BCvenli%C4%9Fi', 'Numune%20Takibi', 'Hijyen%20Kontrol'];
-      showToast('HACCP fallback: ' + sheets.length + ' sayfa taranıyor...', 'info');
-      for (var si = 0; si < sheets.length; si++) {
-        try {
-          var r2 = await fetchWithTimeout(gsheetConfig.webappUrl + '?sheet=' + sheets[si], {}, 30000);
-          var d2 = await r2.json();
-          if (d2.data && d2.data.length > 0) { allRows = allRows.concat(d2.data); showToast(sheets[si] + ': ' + d2.data.length + ' kayıt', 'info'); }
-        } catch (_) { showToast(sheets[si] + ' okunamadı', 'warn'); }
-      }
-      showToast('HACCP fallback toplam: ' + allRows.length + ' kayıt', 'info');
-      data = { data: allRows, depoAdlari: data && data.depoAdlari ? data.depoAdlari : (allRows.length > 0 ? [] : undefined) };
+      // Fallback: tek GET ile tüm HACCP sayfalarını al
+      try {
+        var r2 = await fetchWithTimeout(gsheetConfig.webappUrl + '?sheet=T%C3%BCm%20HACCP', {}, 30000);
+        var d2 = await r2.json();
+        if (d2.data && d2.data.length > 0) { data = d2; showToast('HACCP (fallback): ' + data.data.length + ' kayıt', 'info'); }
+        else { data = { data: [], depoAdlari: d2 && d2.depoAdlari ? d2.depoAdlari : (data ? data.depoAdlari : undefined) }; showToast('HACCP fallback: kayıt bulunamadı', 'info'); }
+      } catch (_) { showToast('HACCP fallback: sunucu yanıt vermedi. Code.gs yeniden deploy edilmeli!', 'warn'); data = { data: [], depoAdlari: data ? data.depoAdlari : undefined }; }
     }
     if (data.data && data.data.length > 0) {
       haccpRecords = data.data.map(r => {
