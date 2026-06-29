@@ -393,20 +393,34 @@ function doPost(e) {
 
     if (action === 'saveAll') {
       const records = body.records || [];
-      const lastRow = sheet.getLastRow();
-      if (lastRow > 1) {
-        sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
-      }
-      if (records.length > 0) {
-        const rows = records.map(r => [
-          String(r.id || ''), String(r.tarih || ''), Number(r.yemek) || 0,
+      // Mevcut sheet verilerini oku (elle girilen kayıtları korumak için)
+      var existing = readSheetData(sheet);
+      var idMap = {};
+      existing.forEach(function(e, idx) { if (e.id) idMap[String(e.id)] = idx; });
+      // Gelen kayıtları ekle/güncelle
+      records.forEach(function(r) {
+        var key = String(r.id || '');
+        if (key && idMap[key] !== undefined) {
+          existing[idMap[key]] = r; // güncelle
+        } else {
+          existing.push(r); // yeni ekle
+        }
+      });
+      // Tarihe göre sırala (yeniler üstte)
+      existing.sort(function(a, b) { return String(b.tarih || '').localeCompare(String(a.tarih || '')); });
+      // Sheet'e yaz
+      var lastRow = sheet.getLastRow();
+      if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
+      if (existing.length > 0) {
+        var rows = existing.map(function(r) { return [
+          String(r.id || r.id_ || ''), String(r.tarih || ''), Number(r.yemek) || 0,
           Number(r.fire) || 0, Number(r.turnike) || 0, Number(r.personel) || 0,
           Number(r.toplam) || 0, Number(r.porsiyon) || 0, Number(r.atik) || 0,
           Number(r.ogrenci) || 0, String(r.yemek_adi || ''), new Date().toISOString()
-        ]);
+        ]; });
         sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
       }
-      return jsonResponse({ success: true, count: records.length, action: 'saveAll' });
+      return jsonResponse({ success: true, count: existing.length, action: 'saveAll' });
     }
 
     if (action === 'append') {

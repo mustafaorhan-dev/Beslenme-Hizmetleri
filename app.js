@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadGSheetConfig();
   loadAccent();
   // Remote'da kayıtlı şifre varsa localStorage temizlense bile kullanılabilmesi için önceden çek
-  // Sync'ler butonlarla manuel tetiklenir (POST/404 sorunu olmaması için)
+  syncPasswordHashesFromRemote().catch(function(){});
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
@@ -425,9 +425,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
   var [mainOk] = await Promise.all([
-    gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true
+    gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncHaccpFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
   ]);
   clearTimeout(forceHideTimer);
+  if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
+  if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
+  if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
   var menuOk = true;
 
   refreshMenuProduction();
@@ -500,6 +506,7 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
+  syncHaccpFromGSheets().then(function() { if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
 }
 
 function showSyncTime(msg) {
@@ -1061,7 +1068,12 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      var syncedMsg = 'Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.';
+      var haccpPulled = await syncHaccpFromGSheets().catch(function(){});
+      if (haccpPulled) { saveHaccpData(); renderHaccp(); syncedMsg += ' HACCP: ' + haccpRecords.length + ' kayıt.'; }
+      await syncYagFromGSheets().catch(function(){});
+      await syncAmbalajFromGSheets().catch(function(){});
+      showToast(syncedMsg, 'success');
       return true;
     } else {
       showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
