@@ -417,19 +417,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreActiveTab();
   updateSyncUI();
 
-  // Güvenlik: 12 sn sonra loading overlay'i zorla kapat
+  // Güvenlik: 30 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
     document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 12000);
+  }, 30000);
 
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
   var [mainOk, dishOk, haccpOk] = await Promise.all([
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500, 8000) : true,
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500, 8000) : true,
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500, 8000) : true,
-    gsheetConfig.webappUrl ? syncYagFromGSheets() : true,
-    gsheetConfig.webappUrl ? syncAmbalajFromGSheets() : true
+    gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncHaccpFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
   ]);
   clearTimeout(forceHideTimer);
   if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
