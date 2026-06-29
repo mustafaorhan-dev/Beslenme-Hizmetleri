@@ -1069,7 +1069,7 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      await syncHaccpFromGSheets();
+      const haccpOk = await syncHaccpFromGSheets();
       saveHaccpData();
       renderHaccp();
       await syncYagFromGSheets();
@@ -1078,7 +1078,10 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       await syncAmbalajFromGSheets();
       saveAmbalajData();
       renderAmbalajTable();
-      if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      var msg = 'Google Sheet\'ten ' + cloudRecords.length + ' ana kayıt indirildi.';
+      if (haccpOk) msg += ' HACCP: ' + haccpRecords.length + ' kayıt.';
+      else msg += ' HACCP verisi alınamadı!';
+      showToast(msg, haccpOk ? 'success' : 'warn');
       return true;
     } else {
       if (btn) showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
