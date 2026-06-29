@@ -1309,10 +1309,30 @@
         </div>
         <!-- Panel İçeriği (doğrulama sonrası) -->
         <div id="apPanelBody" style="display:none">
+        <!-- Oturum Bilgileri -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;padding:0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Oturum Rolü</div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apSessionRole">Yönetici</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Son Giriş</div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apLastLogin">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Şifre Deposu</div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--success)" id="apStorageInfo">Bulut + Yerel</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Veri Kaynağı</div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apDataSource">Google Sheets</div>
+          </div>
+        </div>
+
         <!-- Şifre Yönetimi -->
         <div style="margin-bottom:1rem">
           <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Şifre Yönetimi</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Mevcut şifreleri aşağıdan değiştirebilirsiniz. Değişiklikten sonra çıkış yapıp yeni şifre ile giriş yapmalısınız.</p>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Şifreleri değiştirdiğinizde hem tarayıcıya hem sunucuya kaydedilir, böylece geçmiş temizlense bile şifreler korunur.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
               <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Admin Şifresi</div>
@@ -1326,7 +1346,10 @@
           <div style="border-top:1px solid var(--border);padding-top:1rem">
             <div style="margin-bottom:0.75rem">
               <label for="apAdminPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Admin Şifresi</label>
-              <input type="password" id="apAdminPw" placeholder="Yeni admin şifresi (en az 3 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
+              <input type="password" id="apAdminPw" placeholder="Yeni admin şifresi (en az 3 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" oninput="updatePasswordStrength(this, 'apAdminStrength')" />
+              <div style="margin-top:0.3rem;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+                <div id="apAdminStrength" style="height:100%;width:0%;border-radius:2px;transition:width 0.3s,background 0.3s"></div>
+              </div>
             </div>
             <div style="margin-bottom:0.75rem">
               <label for="apViewerPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Görüntüleme Şifresi</label>
@@ -1401,7 +1424,8 @@
       </div>
       </div>
       <div class="modal-footer">
-        <span style="font-size:0.75rem;color:var(--text-muted)">Ayarlar tarayıcıda saklanır.</span>
+        <span style="font-size:0.75rem;color:var(--text-muted)">Şifreler sunucuda kalıcı olarak saklanır.</span>
+        <button class="btn btn-ghost" onclick="doLogout()" style="margin-left:auto;color:var(--danger)">Çıkış Yap</button>
         <button class="btn btn-ghost" onclick="closeAdminPanel()">Kapat</button>
       </div>
     </div>

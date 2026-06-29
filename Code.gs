@@ -317,6 +317,21 @@ function doPost(e) {
       return jsonResponse({ success: true, count: records.length, action: 'saveHaccp' });
     }
 
+    if (action === 'savePasswords') {
+      const props = PropertiesService.getDocumentProperties();
+      if (body.adminHash) props.setProperty('adminHash', body.adminHash);
+      if (body.viewerHash) props.setProperty('viewerHash', body.viewerHash);
+      return jsonResponse({ success: true });
+    }
+
+    if (action === 'getPasswords') {
+      const props = PropertiesService.getDocumentProperties();
+      return jsonResponse({
+        adminHash: props.getProperty('adminHash') || '',
+        viewerHash: props.getProperty('viewerHash') || ''
+      });
+    }
+
     if (action === 'getHaccp') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       var allData = [];

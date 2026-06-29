@@ -12,6 +12,26 @@ let filteredRecords = [];
 let gsheetConfig = { webappUrl: '', lastSync: null };
 let yemeklerCache = [];
 
+// ─── REMOTE PASSWORD HASH CACHE ──────────────────────────────────────────────
+let remoteHashes = { adminHash: null, viewerHash: null };
+
+async function syncPasswordHashesFromRemote() {
+  if (!gsheetConfig || !gsheetConfig.webappUrl) return;
+  try {
+    const res = await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getPasswords' })
+    });
+    const data = await res.json();
+    if (data.adminHash) remoteHashes.adminHash = data.adminHash;
+    if (data.viewerHash) remoteHashes.viewerHash = data.viewerHash;
+    // sync successful hashes down to localStorage as well
+    if (data.adminHash) localStorage.setItem('atik_kontrol_admin_hash', data.adminHash);
+    if (data.viewerHash) localStorage.setItem('atik_kontrol_viewer_hash', data.viewerHash);
+  } catch (_) { /* remote sync is best-effort */ }
+}
+
 // ─── THEME ───────────────────────────────────────────────────────────────────
 // Initial theme is handled by inline script in HTML (reads localStorage)
 function toggleTheme() {
@@ -99,11 +119,11 @@ async function sha256(str) {
 }
 
 function getAdminHash() {
-  return localStorage.getItem('atik_kontrol_admin_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '');
+  return remoteHashes.adminHash || localStorage.getItem('atik_kontrol_admin_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '');
 }
 
 function getViewerHash() {
-  return localStorage.getItem('atik_kontrol_viewer_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '');
+  return remoteHashes.viewerHash || localStorage.getItem('atik_kontrol_viewer_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '');
 }
 
 function getRole() {
@@ -118,11 +138,6 @@ function requireAdmin() {
   return true;
 }
 
-function doLogout() {
-  sessionStorage.clear();
-  location.reload();
-}
-
 async function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
@@ -133,6 +148,7 @@ async function doLogin() {
 
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
+    localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
     document.getElementById('roleBadge').textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
@@ -192,6 +208,20 @@ function openAdminPanel() {
     if (cb) cb.checked = settings.tabs[key];
   });
 
+  // Oturum bilgilerini göster
+  var roleLabel = getRole() === ROLE_ADMIN ? 'Yönetici' : 'Görüntüleme';
+  document.getElementById('apSessionRole').textContent = roleLabel;
+  var lastLogin = localStorage.getItem('atik_kontrol_last_login');
+  if (lastLogin) {
+    try {
+      var d = new Date(lastLogin);
+      document.getElementById('apLastLogin').textContent = d.toLocaleString('tr-TR');
+    } catch (_) { document.getElementById('apLastLogin').textContent = lastLogin; }
+  } else {
+    document.getElementById('apLastLogin').textContent = 'Bu oturum';
+  }
+  document.getElementById('apStorageInfo').textContent = gsheetConfig.webappUrl ? 'Bulut + Yerel' : 'Yerel (tarayıcı)';
+
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -219,6 +249,35 @@ function closeAdminPanel() {
   document.body.style.overflow = '';
 }
 
+function doLogout() {
+  closeAdminPanel();
+  sessionStorage.clear();
+  renderAll();
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginPassword').focus();
+  showToast('Çıkış yapıldı.', 'info');
+}
+
+function updatePasswordStrength(input, barId) {
+  var val = input.value || '';
+  var bar = document.getElementById(barId);
+  if (!bar) return;
+  var strength = 0;
+  if (val.length >= 3) strength += 25;
+  if (val.length >= 6) strength += 25;
+  if (/[A-Z]/.test(val) && /[a-z]/.test(val)) strength += 20;
+  if (/\d/.test(val)) strength += 15;
+  if (/[^A-Za-z0-9]/.test(val)) strength += 15;
+  strength = Math.min(strength, 100);
+  bar.style.width = strength + '%';
+  if (strength < 30) { bar.style.background = '#ef4444'; }
+  else if (strength < 50) { bar.style.background = '#f97316'; }
+  else if (strength < 70) { bar.style.background = '#eab308'; }
+  else { bar.style.background = '#22c55e'; }
+}
+
 async function saveAdminSettings() {
   if (getRole() !== ROLE_ADMIN) return;
   const adminPw = document.getElementById('apAdminPw').value.trim();
@@ -229,6 +288,10 @@ async function saveAdminSettings() {
   successEl.style.display = 'none';
 
   var changed = false;
+
+  // Store hashes temporarily to send to remote
+  var newAdminHash = null;
+  var newViewerHash = null;
 
   if (adminPw && viewerPw && adminPw === viewerPw) {
     errorEl.textContent = 'Admin ve görüntüleme şifreleri aynı olamaz.';
@@ -244,6 +307,8 @@ async function saveAdminSettings() {
     }
     const hash = await sha256(adminPw);
     localStorage.setItem('atik_kontrol_admin_hash', hash);
+    remoteHashes.adminHash = hash;
+    newAdminHash = hash;
     document.getElementById('apCurrentAdminPw').textContent = '••••• (' + adminPw.length + ' karakter)';
     document.getElementById('apAdminPw').value = '';
     changed = true;
@@ -256,6 +321,8 @@ async function saveAdminSettings() {
     }
     const hash = await sha256(viewerPw);
     localStorage.setItem('atik_kontrol_viewer_hash', hash);
+    remoteHashes.viewerHash = hash;
+    newViewerHash = hash;
     document.getElementById('apCurrentViewerPw').textContent = '••••• (' + viewerPw.length + ' karakter)';
     document.getElementById('apViewerPw').value = '';
     changed = true;
@@ -283,6 +350,17 @@ async function saveAdminSettings() {
     showToast('Ayarlar güncellendi. Bir sonraki girişte yeni şifre geçerli olacak.', 'success');
   }
   applyViewerRestrictions();
+
+  if (changed && gsheetConfig && gsheetConfig.webappUrl) {
+    var payload = { action: 'savePasswords' };
+    if (newAdminHash) payload.adminHash = newAdminHash;
+    if (newViewerHash) payload.viewerHash = newViewerHash;
+    fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(function() {});
+  }
 }
 
 function getViewerSettings() {
@@ -334,6 +412,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadGSheetConfig();
   loadAccent();
+  // Remote'da kayıtlı şifre varsa localStorage temizlense bile kullanılabilmesi için önceden çek
+  syncPasswordHashesFromRemote().catch(function() {});
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
@@ -3755,6 +3835,18 @@ async function renderMenu() {
   </tr>`).join('');
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
+
+  // Şifre değiştiyse sunucuya da kaydet (localStorage temizlense bile kalsın)
+  if (changed && gsheetConfig && gsheetConfig.webappUrl) {
+    var payload = { action: 'savePasswords' };
+    if (newAdminHash) payload.adminHash = newAdminHash;
+    if (newViewerHash) payload.viewerHash = newViewerHash;
+    fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(function() {});
+  }
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
