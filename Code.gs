@@ -8,7 +8,7 @@ const HACCP_DEPO_KEY = 'HACCP_DEPO_ADLARI';
 const YAG_SHEET_NAME = 'Atık Yağ';
 const AMBALAJ_SHEET_NAME = 'Ambalaj Atıkları';
 
-var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified', 'nem'];
+var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'lastModified', 'nem'];
 var DISH_HEADERS = ['id', 'ad', 'kalori', 'alerjen'];
 var YAG_HEADERS = ['id', 'tarih', 'makbuzNo', 'tur', 'miktar', 'not', 'lastModified'];
 var AMBALAJ_HEADERS = ['id', 'tarih', 'tur', 'miktar', 'not', 'lastModified'];
@@ -311,11 +311,7 @@ function doPost(e) {
           return [
             String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
             r.saat || '', depoAd, sicaklik, r.not || '',
-            r.ogun || '', r.yemekAdi || '', r.miktar || '',
-            r.saklamaSicakligi || '', r.imhaTarihi || '',
-            r.alan || '', r.yapilacakIs || '', r.yapanKisi || '',
-            r.yapildiMi != null ? Number(r.yapildiMi) : '', new Date().toISOString(),
-            nem
+            new Date().toISOString(), nem
           ];
         });
         sheet.getRange(2, 1, rows.length, HACCP_HEADERS.length).setValues(rows);

@@ -674,28 +674,17 @@ async function syncHaccpFromGSheets() {
     if (data.data && data.data.length > 0) {
       haccpRecords = data.data.map(r => {
         var typ = (r.type || 'sicaklik').toLowerCase();
-        var base = {
+        var depoAd = (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, '');
+        return {
           id: Number(r.id) || Date.now() + Math.random(),
           type: typ,
           tarih: normalizeDate(r.tarih || ''),
           saat: normalizeSaat(r.saat || ''),
+          depoAd: typ === 'sicaklik' ? depoAd : '',
+          sicaklik: typ === 'sicaklik' && r.sicaklik != null ? Number(r.sicaklik) : null,
           not: r.not_ || r.not || '',
-          ogun: r.ogun || '',
-          yemekAdi: r.yemekAdi || '',
-          miktar: r.miktar || '',
-          saklamaSicakligi: r.saklamaSicakligi || '',
-          imhaTarihi: r.imhaTarihi || '',
-          alan: r.alan || '',
-          yapilacakIs: r.yapilacakIs || '',
-          yapanKisi: r.yapanKisi || '',
-          yapildiMi: r.yapildiMi != null ? Number(r.yapildiMi) : undefined
+          nem: typ === 'sicaklik' && r.nem != null ? Number(r.nem) : null
         };
-        if (typ === 'sicaklik') {
-          base.depoAd = (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, '');
-          base.sicaklik = r.sicaklik != null ? Number(r.sicaklik) : undefined;
-          base.nem = r.nem != null ? Number(r.nem) : undefined;
-        }
-        return base;
       });
     }
     var hasDepo = false;
@@ -731,17 +720,7 @@ function generateHaccpSample() {
       saat: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
       depoAd: depo,
       sicaklik: parseFloat(sicaklik),
-      not_: '',
-      ogun: '',
-      yemekAdi: '',
-      miktar: '',
-      saklamaSicakligi: '',
-      imhaTarihi: '',
-      alan: '',
-      yapilacakIs: '',
-      yapanKisi: 'Sistem',
-      yapildiMi: 1,
-      lastModified: '',
+      not: '',
       nem: nem
     });
   }
@@ -754,7 +733,7 @@ function generateHaccpSample() {
 // ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
 function exportHaccpExcel() {
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
-  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not_','ogun','yemekAdi','miktar','saklamaSicakligi','imhaTarihi','alan','yapilacakIs','yapanKisi','yapildiMi','lastModified','nem'];
+  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem'];
   var rows = [headers.join(',')];
   haccpRecords.forEach(function(r) {
     var vals = headers.map(function(h) {
@@ -1543,8 +1522,6 @@ function renderHaccpDepoSummary() {
 function renderHaccp() {
   renderHaccpDepoSummary();
   renderHaccpSicaklik();
-  renderHaccpNumune();
-  renderHaccpHijyen();
 }
 
 function getHaccpRecords(type) {
@@ -1681,71 +1658,9 @@ function haccpSicaklikPageNext() {
   if (haccpSicaklikPage < totalPages - 1) { haccpSicaklikPage++; renderHaccpSicaklik(); }
 }
 
-function renderHaccpNumune() {
-  const tbody = document.getElementById('haccpNumuneTbody');
-  const table = document.getElementById('haccpNumuneTable');
-  const empty = document.getElementById('haccpNumuneEmpty');
-  const records = getHaccpRecords('numune');
-
-  if (records.length === 0) {
-    table.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  table.style.display = 'table';
-  empty.style.display = 'none';
-
-  tbody.innerHTML = records.map(r => `<tr>
-    <td>${formatTarihTR(r.tarih)}</td>
-    <td>${r.ogun || '—'}</td>
-    <td>${r.yemekAdi || '—'}</td>
-    <td>${r.miktar || '—'}</td>
-    <td>${r.saklamaSicakligi || '—'}</td>
-    <td>${formatTarihTR(r.imhaTarihi)}</td>
-    <td>
-      <button class="btn-icon" onclick="editHaccpRecord('numune',${r.id})" title="Düzenle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-      <button class="btn-icon" onclick="deleteHaccpRecord('numune',${r.id})" title="Sil" style="color:var(--danger)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-      </button>
-    </td>
-  </tr>`).join('');
-}
-
-function renderHaccpHijyen() {
-  const tbody = document.getElementById('haccpHijyenTbody');
-  const table = document.getElementById('haccpHijyenTable');
-  const empty = document.getElementById('haccpHijyenEmpty');
-  const records = getHaccpRecords('hijyen');
-
-  if (records.length === 0) {
-    table.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  table.style.display = 'table';
-  empty.style.display = 'none';
-
-  tbody.innerHTML = records.map(r => `<tr>
-    <td>${formatTarihTR(r.tarih)}</td>
-    <td>${r.alan || '—'}</td>
-    <td>${r.yapilacakIs || '—'}</td>
-    <td>${r.yapanKisi || '—'}</td>
-    <td><span class="${r.yapildiMi ? 'badge badge-ok' : 'badge badge-warn'}">${r.yapildiMi ? 'Yapıldı' : 'Yapılmadı'}</span></td>
-    <td>${r.not || '—'}</td>
-    <td>
-      <button class="btn-icon" onclick="editHaccpRecord('hijyen',${r.id})" title="Düzenle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-      <button class="btn-icon" onclick="deleteHaccpRecord('hijyen',${r.id})" title="Sil" style="color:var(--danger)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-      </button>
-    </td>
-  </tr>`).join('');
-}
 
 function openHaccpModal(type, id) {
+  if (type !== 'sicaklik') return showToast('Sadece sıcaklık kaydı destekleniyor.', 'error');
   editingHaccpType = type;
   editingHaccpId = id || null;
 
@@ -1753,8 +1668,7 @@ function openHaccpModal(type, id) {
   const title = document.getElementById('haccpModalTitle');
   const body = document.getElementById('haccpFormBody');
 
-  const titles = { sicaklik: 'Depo Sıcaklık Kaydı', numune: 'Numune Kaydı', hijyen: 'Hijyen Kontrol Kaydı' };
-  title.textContent = titles[type] || 'Yeni Kayıt';
+  title.textContent = 'Depo Sıcaklık Kaydı';
 
   let rec = null;
   if (id) rec = haccpRecords.find(r => r.id === id && r.type === type);
@@ -1763,8 +1677,7 @@ function openHaccpModal(type, id) {
   const today = formatLocalDate(now);
   const saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
 
-  if (type === 'sicaklik') {
-    var depoAdlari = getHaccpDepoAdlari();
+  var depoAdlari = getHaccpDepoAdlari();
     var depoVal = rec ? (rec.depoAd || '') : '';
     var depoOptions = depoAdlari.map(function(d) {
       var sel = d === depoVal ? ' selected' : '';
@@ -1781,23 +1694,15 @@ function openHaccpModal(type, id) {
       </div>`;
   } else if (type === 'numune') {
     body.innerHTML = `
-      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-grid">
         <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
-        <div class="form-group"><label>Öğün</label><select id="hfOgun"><option value="Sabah" ${rec && rec.ogun === 'Sabah' ? 'selected' : ''}>Sabah</option><option value="Öğle" ${rec && rec.ogun === 'Öğle' ? 'selected' : ''}>Öğle</option><option value="Akşam" ${rec && rec.ogun === 'Akşam' ? 'selected' : ''}>Akşam</option></select></div>
-        <div class="form-group"><label>Yemek Adı</label><input type="text" id="hfYemekAdi" value="${rec ? rec.yemekAdi : ''}" placeholder="Örn: Mercimek Çorbası" required /></div>
-        <div class="form-group"><label>Miktar (gr)</label><input type="text" id="hfMiktar" value="${rec ? rec.miktar : ''}" placeholder="200" /></div>
-        <div class="form-group"><label>Saklama Sıcaklığı</label><input type="text" id="hfSaklama" value="${rec ? rec.saklamaSicakligi : '+4°C'}" placeholder="+4°C" /></div>
-        <div class="form-group"><label>İmha Tarihi</label><input type="date" id="hfImha" value="${rec ? rec.imhaTarihi : ''}" /></div>
+        <div class="form-group"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
       </div>`;
   } else if (type === 'hijyen') {
     body.innerHTML = `
-      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-grid">
         <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
-        <div class="form-group"><label>Alan</label><input type="text" id="hfAlan" value="${rec ? rec.alan : ''}" placeholder="Örn: Tezgah" required /></div>
-        <div class="form-group" style="grid-column:span 2"><label>Yapılacak İş</label><input type="text" id="hfIs" value="${rec ? rec.yapilacakIs : ''}" placeholder="Örn: Temizlik ve dezenfeksiyon" required /></div>
-        <div class="form-group"><label>Yapan Kişi</label><input type="text" id="hfYapan" value="${rec ? rec.yapanKisi : ''}" placeholder="Ad Soyad" required /></div>
-        <div class="form-group"><label>Durum</label><select id="hfYapildiMi"><option value="1" ${rec && rec.yapildiMi ? 'selected' : ''}>Yapıldı</option><option value="0" ${rec && !rec.yapildiMi ? 'selected' : ''}>Yapılmadı</option></select></div>
-        <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
+        <div class="form-group"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
       </div>`;
   }
 
@@ -1817,33 +1722,12 @@ function saveHaccpRecord(e) {
   const type = editingHaccpType;
   let rec = { id: editingHaccpId || Date.now(), type };
 
-  if (type === 'sicaklik') {
-    rec.tarih = document.getElementById('hfTarih').value;
-    rec.saat = document.getElementById('hfSaat').value;
-    rec.depoAd = document.getElementById('hfDepoAd').value.trim();
-    rec.sicaklik = document.getElementById('hfSicaklik').value;
-    rec.nem = document.getElementById('hfNem').value;
-    rec.not = document.getElementById('hfNot').value.trim();
-  } else if (type === 'numune') {
-    rec.tarih = document.getElementById('hfTarih').value;
-    rec.ogun = document.getElementById('hfOgun').value;
-    rec.yemekAdi = document.getElementById('hfYemekAdi').value.trim();
-    rec.miktar = document.getElementById('hfMiktar').value.trim();
-    rec.saklamaSicakligi = document.getElementById('hfSaklama').value.trim();
-    rec.imhaTarihi = document.getElementById('hfImha').value;
-  } else if (type === 'hijyen') {
-    rec.tarih = document.getElementById('hfTarih').value;
-    rec.alan = document.getElementById('hfAlan').value.trim();
-    rec.yapilacakIs = document.getElementById('hfIs').value.trim();
-    rec.yapanKisi = document.getElementById('hfYapan').value.trim();
-    rec.yapildiMi = document.getElementById('hfYapildiMi').value === '1';
-    rec.not = document.getElementById('hfNot').value.trim();
-  }
-
-  if (type !== 'sicaklik') {
-    delete rec.depoAd;
-    delete rec.sicaklik;
-  }
+  rec.tarih = document.getElementById('hfTarih').value;
+  rec.saat = document.getElementById('hfSaat').value;
+  rec.depoAd = document.getElementById('hfDepoAd').value.trim();
+  rec.sicaklik = document.getElementById('hfSicaklik').value;
+  rec.nem = document.getElementById('hfNem').value;
+  rec.not = document.getElementById('hfNot').value.trim();
 
   if (editingHaccpId) {
     const idx = haccpRecords.findIndex(r => r.id === editingHaccpId);
