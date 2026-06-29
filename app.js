@@ -1034,9 +1034,8 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
     const data = await res.json();
     if (data.data) {
       const cloudRecords = data.data
-        .filter(r => r.id)
         .map(r => ({
-          id: Number(r.id) || Date.now(),
+          id: Number(r.id) || Date.now() + Math.floor(Math.random() * 100000),
           tarih: normalizeDate(r.tarih),
           yemek: Number(r.yemek) || 0,
           fire: Number(r.fire) || 0,
