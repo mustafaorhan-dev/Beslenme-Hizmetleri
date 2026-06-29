@@ -252,9 +252,10 @@ function closeAdminPanel() {
 function doLogout() {
   closeAdminPanel();
   sessionStorage.clear();
-  renderAll();
-  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('appContent').style.display = 'none';
+  document.getElementById('loadingOverlay').classList.add('hidden');
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginPassword').focus();
   showToast('Çıkış yapıldı.', 'info');
