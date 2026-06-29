@@ -272,12 +272,12 @@ function doPost(e) {
     // HACCP işlemleri
     if (action === 'saveHaccp') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheet = getSheetOrCreate(HACCP_SHEET_NAME, HACCP_HEADERS);
+      const haccpSheet = getSheetOrCreate(HACCP_SHEET_NAME, HACCP_HEADERS);
 
       const records = body.records || [];
-      sheet.getRange(1, 1, 1, HACCP_HEADERS.length).setValues([HACCP_HEADERS]);
-      var lr = sheet.getLastRow();
-      if (lr > 1) sheet.getRange(2, 1, lr - 1, HACCP_HEADERS.length).clearContent();
+      haccpSheet.getRange(1, 1, 1, HACCP_HEADERS.length).setValues([HACCP_HEADERS]);
+      var lr = haccpSheet.getLastRow();
+      if (lr > 1) haccpSheet.getRange(2, 1, lr - 1, HACCP_HEADERS.length).clearContent();
 
       if (records.length > 0) {
         var rows = records.map(function(r) {
@@ -289,7 +289,7 @@ function doPost(e) {
             (r.nem != null) ? Number(r.nem) : ''
           ];
         });
-        sheet.getRange(2, 1, rows.length, HACCP_HEADERS.length).setValues(rows);
+        haccpSheet.getRange(2, 1, rows.length, HACCP_HEADERS.length).setValues(rows);
       }
 
       if (body.depoAdlari && Array.isArray(body.depoAdlari)) {
@@ -327,12 +327,12 @@ function doPost(e) {
     }
 
     if (action === 'getHaccp') {
-      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const ss2 = SpreadsheetApp.getActiveSpreadsheet();
       var allData = [];
       [HACCP_SHEET_NAME].forEach(function(name) {
-        var sheet = ss.getSheetByName(name);
-        if (!sheet) sheet = getSheetOrCreate(name, HACCP_HEADERS);
-        allData = allData.concat(readSheetData(sheet));
+        var s2 = ss2.getSheetByName(name);
+        if (!s2) s2 = getSheetOrCreate(name, HACCP_HEADERS);
+        allData = allData.concat(readSheetData(s2));
       });
       return jsonResponse({ data: allData, depoAdlari: getDepoAdlari() });
     }
