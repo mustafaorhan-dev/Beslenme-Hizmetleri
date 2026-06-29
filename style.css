@@ -402,20 +402,26 @@ body {
   flex-shrink: 0;
 }
 
-.header-title h1 {
-  font-size: 1.1rem;
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.header-logo svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-logo span {
+  font-size: 0.95rem;
   font-weight: 700;
   background: var(--gradient-main);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1.2;
-}
-
-.header-title p {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .header-right {
@@ -1751,8 +1757,8 @@ body {
   .sidebar-actions .tab-btn { justify-content: flex-start; padding: 0.8rem 0.75rem; }
   .app-layout { margin-left: 0; }
   .header-right .current-date { display: none; }
-  .header-title h1 { font-size: 0.9rem; }
-  .header-title p { font-size: 0.65rem; }
+  .header-logo span { font-size: 0.8rem; }
+  .header-logo svg { width: 28px; height: 28px; }
   .logo svg { width: 34px; height: 34px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   #content-dashboard.active,
@@ -1792,7 +1798,8 @@ body {
   .kpi-card { flex-direction: column; text-align: center; gap: 0.5rem; }
   .kpi-icon { width: 32px; height: 32px; }
   .kpi-value { font-size: 1.1rem; }
-  .header-title h1 { font-size: 0.8rem; }
+  .header-logo span { font-size: 0.75rem; }
+  .header-logo svg { width: 24px; height: 24px; }
 }
 
 /* ---- PRINT ---- */
