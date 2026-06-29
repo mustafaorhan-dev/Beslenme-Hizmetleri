@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbymjs7mP7vEEylho3ncdyS-cRwa8Ex2E11LqArkOTp3LUW6lzzBxm56wzx5mAyeOOMEhg/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbyFzJGZuTu7RX-aD6HN1yAjn-7doX5GUlILY_4rXgEWgCXzBppgExKrxDOG_3c6lkMZeA/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -422,18 +422,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('loadingOverlay').classList.add('hidden');
   }, 10000);
 
-  // Paralel senkronizasyon
-  setLoadingSub('Veriler güncelleniyor...');
-  var [mainOk] = await Promise.all([
-    gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncHaccpFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
-  ]);
+  // Paralel senkronizasyon (arka planda, hatayı yut)
+  setLoadingSub('Uygulama başlatılıyor...');
+  var mainOk = true;
+  if (gsheetConfig.webappUrl) {
+    syncFromGSheets().then(function(r){ mainOk = r !== false; saveData(); renderAll(); }).catch(function(){});
+    syncHaccpFromGSheets().then(function(){ if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
+    syncYagFromGSheets().catch(function(){});
+    syncAmbalajFromGSheets().catch(function(){});
+  }
   clearTimeout(forceHideTimer);
-  if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
-  if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
-  if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
+  if (gsheetConfig.webappUrl) {
+    setTimeout(function() { renderHaccp(); renderYagTable(); renderAmbalajTable(); }, 500);
+  }
   var menuOk = true;
 
   refreshMenuProduction();
