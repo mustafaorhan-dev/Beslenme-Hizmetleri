@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   // Bağlantı durumunu göster
-  if ((!gsheetConfig.webappUrl || (mainOk && dishOk))) {
+  if ((!gsheetConfig.webappUrl || (mainOk && menuOk))) {
     setConnectionStatus('ok');
   } else {
     setConnectionStatus('err');
@@ -705,8 +705,48 @@ async function syncHaccpFromGSheets() {
     }
     if (data.data && data.data.length > 0) return true;
     if (hasDepo) return true;
+    showToast('HACCP: GSheet yanıtında veri yok. URL: ' + (gsheetConfig.webappUrl || '').slice(0, 80) + '...', 'error');
     return false;
-  } catch (_) { return false; }
+  } catch (e) {
+    showToast('HACCP bağlantı hatası: ' + (e.message || e), 'error');
+    return false;
+  }
+}
+
+// ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
+function importHaccpFile(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var text = e.target.result;
+      var rows;
+      if (file.name.endsWith('.json')) {
+        rows = JSON.parse(text);
+        if (!Array.isArray(rows)) rows = [rows];
+      } else {
+        var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+        if (lines.length < 2) { showToast('CSV en az 2 satır olmalı (başlık + veri).', 'error'); return; }
+        var headers = lines[0].split(',').map(function(h) { return h.trim(); });
+        rows = [];
+        for (var i = 1; i < lines.length; i++) {
+          var vals = lines[i].split(',').map(function(v) { return v.trim(); });
+          var row = {};
+          for (var j = 0; j < headers.length; j++) row[headers[j]] = vals[j] || '';
+          rows.push(row);
+        }
+      }
+      if (rows.length === 0) { showToast('Dosyada kayıt bulunamadı.', 'error'); return; }
+      rows.forEach(function(r) { r.id = r.id || Date.now() + Math.random(); });
+      haccpRecords = rows;
+      saveHaccpData();
+      renderHaccp();
+      showToast(rows.length + ' HACCP kaydı dosyadan yüklendi.', 'success');
+    } catch (err) { showToast('Dosya okuma hatası: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 // ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
