@@ -1693,19 +1693,6 @@ function openHaccpModal(type, id) {
         <div class="form-group"><label>Nem (%)</label><input type="number" id="hfNem" step="0.1" value="${rec ? (rec.nem ?? '') : ''}" placeholder="50" /></div>
         <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
       </div>`;
-  } else if (type === 'numune') {
-    body.innerHTML = `
-      <div class="form-grid">
-        <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
-        <div class="form-group"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
-      </div>`;
-  } else if (type === 'hijyen') {
-    body.innerHTML = `
-      <div class="form-grid">
-        <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
-        <div class="form-group"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
-      </div>`;
-  }
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
