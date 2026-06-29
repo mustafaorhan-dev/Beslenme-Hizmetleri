@@ -272,50 +272,25 @@ function doPost(e) {
     // HACCP işlemleri
     if (action === 'saveHaccp') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheetMap = {
-        sicaklik: ss.getSheetByName(HACCP_SHEET_NAME),
-        numune: ss.getSheetByName(NUMUNE_SHEET_NAME),
-        hijyen: ss.getSheetByName(HIJYEN_SHEET_NAME)
-      };
-      // Eksik sayfaları oluştur
-      if (!sheetMap.sicaklik) { sheetMap.sicaklik = ss.insertSheet(HACCP_SHEET_NAME); sheetMap.sicaklik.appendRow(HACCP_HEADERS); }
-      if (!sheetMap.numune) { sheetMap.numune = ss.insertSheet(NUMUNE_SHEET_NAME); sheetMap.numune.appendRow(HACCP_HEADERS); }
-      if (!sheetMap.hijyen) { sheetMap.hijyen = ss.insertSheet(HIJYEN_SHEET_NAME); sheetMap.hijyen.appendRow(HACCP_HEADERS); }
+      var sheet = getSheetOrCreate(HACCP_SHEET_NAME, HACCP_HEADERS);
 
       const records = body.records || [];
-      // Tüm 3 sayfayı temizle ve başlıkları yaz
-      Object.keys(sheetMap).forEach(function(key) {
-        var s = sheetMap[key];
-        s.getRange(1, 1, 1, HACCP_HEADERS.length).setValues([HACCP_HEADERS]);
-        var lr = s.getLastRow();
-        if (lr > 1) s.getRange(2, 1, lr - 1, HACCP_HEADERS.length).clearContent();
-      });
+      sheet.getRange(1, 1, 1, HACCP_HEADERS.length).setValues([HACCP_HEADERS]);
+      var lr = sheet.getLastRow();
+      if (lr > 1) sheet.getRange(2, 1, lr - 1, HACCP_HEADERS.length).clearContent();
 
-      // Kayıtları type'a göre ayır
-      var grouped = { sicaklik: [], numune: [], hijyen: [] };
-      records.forEach(function(r) {
-        var typ = String(r.type || '').toLowerCase();
-        if (!grouped[typ]) typ = 'sicaklik';
-        grouped[typ].push(r);
-      });
-
-      // Her grubu kendi sayfasına yaz
-      Object.keys(grouped).forEach(function(typ) {
-        var list = grouped[typ];
-        if (list.length === 0) return;
-        var sheet = sheetMap[typ];
-        var rows = list.map(function(r) {
-          var depoAd = (typ === 'sicaklik') ? depoNoToName(r.depoAd || r.depoNo || '') : '';
-          var sicaklik = (typ === 'sicaklik' && r.sicaklik != null) ? Number(r.sicaklik) : '';
-          var nem = (typ === 'sicaklik' && r.nem != null) ? Number(r.nem) : '';
+      if (records.length > 0) {
+        var rows = records.map(function(r) {
           return [
-            String(r.id || ''), String(r.type || ''), String(r.tarih || ''),
-            r.saat || '', depoAd, sicaklik, r.not || '',
-            new Date().toISOString(), nem
+            String(r.id || ''), String('sicaklik'), String(r.tarih || ''),
+            r.saat || '', depoNoToName(r.depoAd || r.depoNo || ''),
+            (r.sicaklik != null) ? Number(r.sicaklik) : '',
+            r.not || '', new Date().toISOString(),
+            (r.nem != null) ? Number(r.nem) : ''
           ];
         });
         sheet.getRange(2, 1, rows.length, HACCP_HEADERS.length).setValues(rows);
-      });
+      }
 
       if (body.depoAdlari && Array.isArray(body.depoAdlari)) {
         saveDepoAdlari(body.depoAdlari);
@@ -354,9 +329,10 @@ function doPost(e) {
     if (action === 'getHaccp') {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       var allData = [];
-      [HACCP_SHEET_NAME, NUMUNE_SHEET_NAME, HIJYEN_SHEET_NAME].forEach(function(name) {
-        var s = ss.getSheetByName(name);
-        if (s) allData = allData.concat(readSheetData(s));
+      [HACCP_SHEET_NAME].forEach(function(name) {
+        var sheet = ss.getSheetByName(name);
+        if (!sheet) sheet = getSheetOrCreate(name, HACCP_HEADERS);
+        allData = allData.concat(readSheetData(sheet));
       });
       return jsonResponse({ data: allData, depoAdlari: getDepoAdlari() });
     }
