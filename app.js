@@ -422,19 +422,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('loadingOverlay').classList.add('hidden');
   }, 10000);
 
-  // Paralel senkronizasyon (arka planda, hatayı yut)
+  // Senkronizasyon devre dışı (manuel)
   setLoadingSub('Uygulama başlatılıyor...');
-  var mainOk = true;
-  if (gsheetConfig.webappUrl) {
-    syncFromGSheets().then(function(r){ mainOk = r !== false; saveData(); renderAll(); }).catch(function(){});
-    syncHaccpFromGSheets().then(function(){ if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
-    syncYagFromGSheets().catch(function(){});
-    syncAmbalajFromGSheets().catch(function(){});
-  }
   clearTimeout(forceHideTimer);
-  if (gsheetConfig.webappUrl) {
-    setTimeout(function() { renderHaccp(); renderYagTable(); renderAmbalajTable(); }, 500);
-  }
+  var mainOk = true;
   var menuOk = true;
 
   refreshMenuProduction();
@@ -450,9 +441,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setConnectionStatus('err');
   }
 
-  // Otomatik polling: 30 sn'de bir Google Sheets'ten güncel verileri çek
-  startAutoSync();
-  showSyncTime('başlatıldı');
+  // Otomatik polling devre dışı (manuel senkronizasyon)
+  // startAutoSync();
+  showSyncTime('manuel');
 });
 
 let autoSyncTimer = null;
@@ -507,7 +498,7 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
-  syncHaccpFromGSheets().then(function() { if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
+  // syncHaccpFromGSheets().then(function() { if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
 }
 
 function showSyncTime(msg) {
