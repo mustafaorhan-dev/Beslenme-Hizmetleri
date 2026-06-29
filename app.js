@@ -431,10 +431,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   var [mainOk, dishOk, haccpOk] = await Promise.all([
     gsheetConfig.webappUrl ? fetchWithRetry(() => syncFromGSheets(), 2, 500, 8000) : true,
     gsheetConfig.webappUrl ? fetchWithRetry(() => syncDishesFromGSheets(), 2, 500, 8000) : true,
-    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500, 8000) : true
+    gsheetConfig.webappUrl ? fetchWithRetry(() => syncHaccpFromGSheets(), 2, 500, 8000) : true,
+    gsheetConfig.webappUrl ? syncYagFromGSheets() : true,
+    gsheetConfig.webappUrl ? syncAmbalajFromGSheets() : true
   ]);
   clearTimeout(forceHideTimer);
   if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
+  if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
+  if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
   var menuOk = true;
 
   refreshMenuProduction();
@@ -507,6 +511,9 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
+  // Yag ve ambalaj verilerini de arka planda güncelle
+  syncYagFromGSheets().catch(function() {});
+  syncAmbalajFromGSheets().catch(function() {});
 }
 
 function showSyncTime(msg) {
@@ -711,6 +718,139 @@ async function syncHaccpFromGSheets() {
     }
     if (data.data && data.data.length > 0) return true;
     if (hasDepo) return true;
+    return false;
+  } catch (_) { return false; }
+}
+
+// ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
+
+async function syncYagToGSheets() {
+  if (!gsheetConfig.webappUrl) return;
+  try {
+    if (yagRecords.length === 0) {
+      var pulled = await syncYagFromGSheets();
+      if (pulled) {
+        saveYagData();
+        renderYagTable();
+      }
+      return;
+    }
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveYag', records: yagRecords })
+    });
+  } catch (_) {}
+}
+
+let yagSyncTimer = null;
+function syncYagSilent() {
+  if (yagSyncTimer) clearTimeout(yagSyncTimer);
+  yagSyncTimer = setTimeout(async () => {
+    if (!gsheetConfig.webappUrl) return;
+    try {
+      await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveYag', records: yagRecords })
+      });
+    } catch (_) {}
+  }, 400);
+}
+
+async function syncYagFromGSheets() {
+  if (!gsheetConfig.webappUrl) return false;
+  try {
+    let data;
+    try {
+      const res = await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'getYag' })
+      });
+      data = await res.json();
+    } catch (_) { return false; }
+    if (data.data && data.data.length > 0) {
+      yagRecords = data.data.map(function(r) {
+        return {
+          id: Number(r.id) || Date.now(),
+          tarih: normalizeDate(r.tarih || ''),
+          makbuzNo: r.makbuzNo || '',
+          tur: r.tur || '',
+          miktar: Number(r.miktar) || 0,
+          not: r.not || ''
+        };
+      });
+      saveYagData();
+      renderYagTable();
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+// ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
+
+async function syncAmbalajToGSheets() {
+  if (!gsheetConfig.webappUrl) return;
+  try {
+    if (ambalajRecords.length === 0) {
+      var pulled = await syncAmbalajFromGSheets();
+      if (pulled) {
+        saveAmbalajData();
+        renderAmbalajTable();
+      }
+      return;
+    }
+    await fetch(gsheetConfig.webappUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
+    });
+  } catch (_) {}
+}
+
+let ambalajSyncTimer = null;
+function syncAmbalajSilent() {
+  if (ambalajSyncTimer) clearTimeout(ambalajSyncTimer);
+  ambalajSyncTimer = setTimeout(async () => {
+    if (!gsheetConfig.webappUrl) return;
+    try {
+      await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
+      });
+    } catch (_) {}
+  }, 400);
+}
+
+async function syncAmbalajFromGSheets() {
+  if (!gsheetConfig.webappUrl) return false;
+  try {
+    let data;
+    try {
+      const res = await fetch(gsheetConfig.webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'getAmbalaj' })
+      });
+      data = await res.json();
+    } catch (_) { return false; }
+    if (data.data && data.data.length > 0) {
+      ambalajRecords = data.data.map(function(r) {
+        return {
+          id: Number(r.id) || Date.now(),
+          tarih: normalizeDate(r.tarih || ''),
+          tur: r.tur || '',
+          miktar: Number(r.miktar) || 0,
+          not: r.not || ''
+        };
+      });
+      saveAmbalajData();
+      renderAmbalajTable();
+      return true;
+    }
     return false;
   } catch (_) { return false; }
 }
@@ -934,6 +1074,12 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       await syncHaccpFromGSheets();
       saveHaccpData();
       renderHaccp();
+      await syncYagFromGSheets();
+      saveYagData();
+      renderYagTable();
+      await syncAmbalajFromGSheets();
+      saveAmbalajData();
+      renderAmbalajTable();
       if (!btn) showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
       return true;
     } else {
@@ -4056,6 +4202,7 @@ function saveYagRecord(e) {
 
   saveYagData();
   renderYagTable();
+  syncYagSilent();
   closeYagModal();
 }
 
@@ -4066,6 +4213,7 @@ function deleteYagRecord(id) {
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
   renderYagTable();
+  syncYagSilent();
   showToast('Atık yağ kaydı silindi.', 'success');
 }
 
@@ -4175,6 +4323,7 @@ function saveAmbalajRecord(e) {
 
   saveAmbalajData();
   renderAmbalajTable();
+  syncAmbalajSilent();
   closeAmbalajModal();
 }
 
@@ -4185,6 +4334,7 @@ function deleteAmbalajRecord(id) {
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();
   renderAmbalajTable();
+  syncAmbalajSilent();
   showToast('Ambalaj atığı kaydı silindi.', 'success');
 }
 

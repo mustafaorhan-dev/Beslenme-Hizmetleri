@@ -5,9 +5,13 @@ const NUMUNE_SHEET_NAME = 'Numune Takibi';
 const HIJYEN_SHEET_NAME = 'Hijyen Kontrol';
 const DEPO_ADLARI_SHEET = 'Depo Adları';
 const HACCP_DEPO_KEY = 'HACCP_DEPO_ADLARI';
+const YAG_SHEET_NAME = 'Atık Yağ';
+const AMBALAJ_SHEET_NAME = 'Ambalaj Atıkları';
 
 var HACCP_HEADERS = ['id', 'type', 'tarih', 'saat', 'depoAd', 'sicaklik', 'not_', 'ogun', 'yemekAdi', 'miktar', 'saklamaSicakligi', 'imhaTarihi', 'alan', 'yapilacakIs', 'yapanKisi', 'yapildiMi', 'lastModified', 'nem'];
 var DISH_HEADERS = ['id', 'ad', 'kalori', 'alerjen'];
+var YAG_HEADERS = ['id', 'tarih', 'makbuzNo', 'tur', 'miktar', 'not', 'lastModified'];
+var AMBALAJ_HEADERS = ['id', 'tarih', 'tur', 'miktar', 'not', 'lastModified'];
 for (var di = 1; di <= 18; di++) { DISH_HEADERS.push('ürün ' + di, 'miktar ' + di, 'birim ' + di); }
 
 function formatCellValue(val, header) {
@@ -212,6 +216,12 @@ function doGet(e) {
     return jsonResponse({ data: allData, depoAdlari: getDepoAdlari() });
   }
 
+  if (sheetName === YAG_SHEET_NAME || sheetName === AMBALAJ_SHEET_NAME) {
+    var s2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!s2) return jsonResponse({ data: [] });
+    return jsonResponse({ data: readSheetData(s2) });
+  }
+
   if (sheetName === NUMUNE_SHEET_NAME || sheetName === HIJYEN_SHEET_NAME) {
     var s = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!s) return jsonResponse({ data: [], depoAdlari: getDepoAdlari() });
@@ -330,6 +340,19 @@ function doPost(e) {
         adminHash: props.getProperty('adminHash') || '',
         viewerHash: props.getProperty('viewerHash') || ''
       });
+    }
+
+    if (action === 'saveYag') {
+      return saveGenericSheet(YAG_SHEET_NAME, YAG_HEADERS, body.records || []);
+    }
+    if (action === 'getYag') {
+      return getGenericSheet(YAG_SHEET_NAME, YAG_HEADERS);
+    }
+    if (action === 'saveAmbalaj') {
+      return saveGenericSheet(AMBALAJ_SHEET_NAME, AMBALAJ_HEADERS, body.records || []);
+    }
+    if (action === 'getAmbalaj') {
+      return getGenericSheet(AMBALAJ_SHEET_NAME, AMBALAJ_HEADERS);
     }
 
     if (action === 'getHaccp') {
@@ -490,6 +513,35 @@ function handleDishAction(action, body) {
   }
 
   return jsonResponse({ error: 'Bilinmeyen dish action: ' + action });
+}
+
+function saveGenericSheet(sheetName, headers, records) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) { sheet = ss.insertSheet(sheetName); sheet.appendRow(headers); }
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  var lr = sheet.getLastRow();
+  if (lr > 1) sheet.getRange(2, 1, lr - 1, headers.length).clearContent();
+  if (records.length > 0) {
+    var rows = records.map(function(r) {
+      return headers.map(function(h) {
+        if (h === 'lastModified') return new Date().toISOString();
+        var v = r[h] !== undefined ? r[h] : '';
+        if (h === 'miktar' && v !== '') return Number(v);
+        return String(v);
+      });
+    });
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  return jsonResponse({ success: true, count: records.length });
+}
+
+function getGenericSheet(sheetName, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return jsonResponse({ data: [] });
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return jsonResponse({ data: readSheetData(sheet) });
 }
 
 function ensureHeaders(sheet) {
