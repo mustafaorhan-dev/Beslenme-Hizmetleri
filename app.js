@@ -507,7 +507,8 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
-  // Yag ve ambalaj verilerini de arka planda güncelle
+  // HACCP, yag ve ambalaj verilerini arka planda güncelle
+  syncHaccpFromGSheets().then(function() { saveHaccpData(); renderHaccp(); }).catch(function() {});
   syncYagFromGSheets().catch(function() {});
   syncAmbalajFromGSheets().catch(function() {});
 }
@@ -657,7 +658,6 @@ function syncHaccpSilent(forceDepoOnly) {
 async function syncHaccpFromGSheets() {
   if (!gsheetConfig.webappUrl) return false;
   try {
-    // Önce POST action dene (yeni sunucu), olmazsa GET ile 3 sayfayı oku (eski sunucu)
     let data;
     try {
       const res = await fetch(gsheetConfig.webappUrl, {
@@ -666,18 +666,20 @@ async function syncHaccpFromGSheets() {
         body: JSON.stringify({ action: 'getHaccp' })
       });
       data = await res.json();
-    } catch (_) { data = null; }
-    if (!data || !data.data) {
-      // Eski sunucu: 3 sayfayı ayrı ayrı GET ile oku
+      if (data && data.data) showToast('HACCP POST OK: ' + (data.data.length || 0) + ' kayıt', 'info');
+    } catch (_) { data = null; showToast('HACCP POST hatası, fallback GET denenecek', 'info'); }
+    if (!data || !data.data || data.data.length === 0) {
       var allRows = [];
       var sheets = ['G%C4%B1da%20G%C3%BCvenli%C4%9Fi', 'Numune%20Takibi', 'Hijyen%20Kontrol'];
+      showToast('HACCP fallback: ' + sheets.length + ' sayfa taranıyor...', 'info');
       for (var si = 0; si < sheets.length; si++) {
         try {
           var r2 = await fetch(gsheetConfig.webappUrl + '?sheet=' + sheets[si]);
           var d2 = await r2.json();
-          if (d2.data) allRows = allRows.concat(d2.data);
-        } catch (_) {}
+          if (d2.data && d2.data.length > 0) { allRows = allRows.concat(d2.data); showToast(sheets[si] + ': ' + d2.data.length + ' kayıt', 'info'); }
+        } catch (_) { showToast(sheets[si] + ' okunamadı', 'warn'); }
       }
+      showToast('HACCP fallback toplam: ' + allRows.length + ' kayıt', 'info');
       data = { data: allRows, depoAdlari: data && data.depoAdlari ? data.depoAdlari : (allRows.length > 0 ? [] : undefined) };
     }
     if (data.data && data.data.length > 0) {
