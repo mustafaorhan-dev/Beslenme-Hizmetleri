@@ -250,15 +250,9 @@ function closeAdminPanel() {
 }
 
 function doLogout() {
-  closeAdminPanel();
   sessionStorage.clear();
-  document.getElementById('loginError').style.display = 'none';
-  document.getElementById('loginOverlay').classList.remove('hidden');
-  document.getElementById('appContent').style.display = 'none';
-  document.getElementById('loadingOverlay').classList.add('hidden');
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginPassword').focus();
-  showToast('Çıkış yapıldı.', 'info');
+  localStorage.removeItem('atik_kontrol_last_login');
+  location.reload();
 }
 
 function updatePasswordStrength(input, barId) {
