@@ -539,7 +539,7 @@ function saveGenericSheet(sheetName, headers, records) {
 function getGenericSheet(sheetName, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return jsonResponse({ data: [] });
+  if (!sheet) { sheet = ss.insertSheet(sheetName); sheet.appendRow(headers); }
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   return jsonResponse({ data: readSheetData(sheet) });
 }
