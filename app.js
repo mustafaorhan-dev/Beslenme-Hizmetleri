@@ -424,15 +424,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
-  var [mainOk, dishOk, haccpOk] = await Promise.all([
+  var [mainOk, dishOk] = await Promise.all([
     gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
     gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncHaccpFromGSheets().catch(function(){}) : true,
     gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
     gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
   ]);
   clearTimeout(forceHideTimer);
-  if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
   if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
   if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
   var menuOk = true;
@@ -666,16 +664,14 @@ async function syncHaccpFromGSheets() {
         body: JSON.stringify({ action: 'getHaccp' })
       }, 50000);
       data = await res.json();
-      if (data && data.data) showToast('HACCP POST OK: ' + (data.data.length || 0) + ' kayıt', 'info');
-    } catch (_) { data = null; showToast('HACCP POST hatası, fallback GET denenecek', 'info'); }
+    } catch (_) { data = null; }
     if (!data || !data.data || data.data.length === 0) {
-      // Fallback: tek GET ile tüm HACCP sayfalarını al
       try {
         var r2 = await fetchWithTimeout(gsheetConfig.webappUrl + '?sheet=T%C3%BCm%20HACCP', {}, 30000);
         var d2 = await r2.json();
-        if (d2.data && d2.data.length > 0) { data = d2; showToast('HACCP (fallback): ' + data.data.length + ' kayıt', 'info'); }
-        else { data = { data: [], depoAdlari: d2 && d2.depoAdlari ? d2.depoAdlari : (data ? data.depoAdlari : undefined) }; showToast('HACCP fallback: kayıt bulunamadı', 'info'); }
-      } catch (_) { showToast('HACCP fallback: sunucu yanıt vermedi. Code.gs yeniden deploy edilmeli!', 'warn'); data = { data: [], depoAdlari: data ? data.depoAdlari : undefined }; }
+        if (d2.data && d2.data.length > 0) data = d2;
+        else data = { data: [], depoAdlari: d2 && d2.depoAdlari ? d2.depoAdlari : (data ? data.depoAdlari : undefined) };
+      } catch (_) { data = { data: [], depoAdlari: data ? data.depoAdlari : undefined }; }
     }
     if (data.data && data.data.length > 0) {
       haccpRecords = data.data.map(r => {
@@ -1075,19 +1071,13 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      const haccpOk = await syncHaccpFromGSheets();
-      saveHaccpData();
-      renderHaccp();
       await syncYagFromGSheets();
       saveYagData();
       renderYagTable();
       await syncAmbalajFromGSheets();
       saveAmbalajData();
       renderAmbalajTable();
-      var msg = 'Google Sheet\'ten ' + cloudRecords.length + ' ana kayıt indirildi.';
-      if (haccpOk) msg += ' HACCP: ' + haccpRecords.length + ' kayıt.';
-      else msg += ' HACCP verisi alınamadı!';
-      showToast(msg, haccpOk ? 'success' : 'warn');
+      showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
       return true;
     } else {
       showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
