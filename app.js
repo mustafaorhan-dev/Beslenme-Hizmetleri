@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzOvm3g822BsKxMzYO4s6LQmja7Hb46ioVWwWrdax_1Nns8ZibjXUjX06FzTD-jU8IJRg/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -764,9 +764,12 @@ function setLoadingSub(text) {
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
 function loadGSheetConfig() {
   try {
-    const stored = localStorage.getItem('atik_kontrol_gsheet_config');
+    var oldUrl = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
+    var stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
-      const parsed = JSON.parse(stored);
+      var parsed = JSON.parse(stored);
+      // Eski URL'yi otomatik güncelle
+      if (parsed.webappUrl === oldUrl) parsed.webappUrl = DEFAULT_GSHEET_URL;
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
         lastSync: parsed.lastSync || null
@@ -774,6 +777,8 @@ function loadGSheetConfig() {
     } else {
       gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
     }
+    // Güncellenmiş URL'yi kaydet
+    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
   } catch (e) {
     gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
   }
@@ -3835,18 +3840,6 @@ async function renderMenu() {
   </tr>`).join('');
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
-
-  // Şifre değiştiyse sunucuya da kaydet (localStorage temizlense bile kalsın)
-  if (changed && gsheetConfig && gsheetConfig.webappUrl) {
-    var payload = { action: 'savePasswords' };
-    if (newAdminHash) payload.adminHash = newAdminHash;
-    if (newViewerHash) payload.viewerHash = newViewerHash;
-    fetch(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).catch(function() {});
-  }
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
