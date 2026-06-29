@@ -60,10 +60,11 @@
   </div>
 
   <!-- LOADING OVERLAY -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay" id="loadingOverlay" onclick="this.classList.add('hidden')" style="cursor:pointer">
     <div class="loading-spinner"></div>
     <div class="loading-text" id="loadingText">Veriler senkronize ediliyor...</div>
     <div class="loading-sub" id="loadingSub">Google Sheets bağlantısı kuruluyor</div>
+    <div style="margin-top:20px;font-size:12px;opacity:0.5">Tıklayarak geç</div>
   </div>
 
   <!-- HEADER -->

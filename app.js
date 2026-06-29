@@ -417,10 +417,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreActiveTab();
   updateSyncUI();
 
-  // Güvenlik: 30 sn sonra loading overlay'i zorla kapat
+  // Güvenlik: 10 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
     document.getElementById('loadingOverlay').classList.add('hidden');
-  }, 30000);
+  }, 10000);
 
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
