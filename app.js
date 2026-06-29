@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzOvm3g822BsKxMzYO4s6LQmja7Hb46ioVWwWrdax_1Nns8ZibjXUjX06FzTD-jU8IJRg/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbySx4egpFv5LIjeIRizNNtt7HpNG-ZkCODc6bs3m8CosEqlcFlTt2VYSd1RsiXkwY0BcA/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -404,8 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadGSheetConfig();
   loadAccent();
   // Remote'da kayıtlı şifre varsa localStorage temizlense bile kullanılabilmesi için önceden çek
-  // syncPasswordHashesFromRemote, syncYagFromGSheets, syncAmbalajFromGSheets
-  // Code.gs deploy edilmeden POST action'lar 404 verir — init'te çağrılmaz
+  syncPasswordHashesFromRemote().catch(function() {});
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
@@ -425,11 +424,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Paralel senkronizasyon
   setLoadingSub('Veriler güncelleniyor...');
-  var [mainOk, dishOk] = await Promise.all([
+  var [mainOk, dishOk, haccpOk] = await Promise.all([
     gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true
+    gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncHaccpFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
+    gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
   ]);
   clearTimeout(forceHideTimer);
+  if (gsheetConfig.webappUrl) { saveHaccpData(); renderHaccp(); }
+  if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
+  if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
   var menuOk = true;
 
   refreshMenuProduction();
@@ -502,7 +507,9 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
-
+  syncHaccpFromGSheets().then(function() { saveHaccpData(); renderHaccp(); }).catch(function() {});
+  syncYagFromGSheets().catch(function() {});
+  syncAmbalajFromGSheets().catch(function() {});
 }
 
 function showSyncTime(msg) {
@@ -1065,7 +1072,18 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
+      const haccpOk = await syncHaccpFromGSheets().catch(function(){});
+      saveHaccpData();
+      renderHaccp();
+      await syncYagFromGSheets().catch(function(){});
+      saveYagData();
+      renderYagTable();
+      await syncAmbalajFromGSheets().catch(function(){});
+      saveAmbalajData();
+      renderAmbalajTable();
+      var msg = 'Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.';
+      if (haccpOk) msg += ' HACCP: ' + haccpRecords.length + ' kayıt.';
+      showToast(msg, 'success');
       return true;
     } else {
       showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
