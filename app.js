@@ -404,7 +404,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadGSheetConfig();
   loadAccent();
   // Remote'da kayıtlı şifre varsa localStorage temizlense bile kullanılabilmesi için önceden çek
-  syncPasswordHashesFromRemote().catch(function() {});
+  // syncPasswordHashesFromRemote, syncYagFromGSheets, syncAmbalajFromGSheets
+  // Code.gs deploy edilmeden POST action'lar 404 verir — init'te çağrılmaz
   setConnectionStatus('sync');
   setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
   loadData();
@@ -426,13 +427,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setLoadingSub('Veriler güncelleniyor...');
   var [mainOk, dishOk] = await Promise.all([
     gsheetConfig.webappUrl ? syncFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncYagFromGSheets().catch(function(){}) : true,
-    gsheetConfig.webappUrl ? syncAmbalajFromGSheets().catch(function(){}) : true
+    gsheetConfig.webappUrl ? syncDishesFromGSheets().catch(function(){}) : true
   ]);
   clearTimeout(forceHideTimer);
-  if (gsheetConfig.webappUrl) { saveYagData(); renderYagTable(); }
-  if (gsheetConfig.webappUrl) { saveAmbalajData(); renderAmbalajTable(); }
   var menuOk = true;
 
   refreshMenuProduction();
@@ -505,10 +502,7 @@ async function autoPull() {
   } catch (_) {
     setConnectionStatus('err');
   }
-  // HACCP, yag ve ambalaj verilerini arka planda güncelle
-  syncHaccpFromGSheets().then(function() { saveHaccpData(); renderHaccp(); }).catch(function() {});
-  syncYagFromGSheets().catch(function() {});
-  syncAmbalajFromGSheets().catch(function() {});
+
 }
 
 function showSyncTime(msg) {
@@ -1071,12 +1065,6 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
       updateSyncUI();
       setConnectionStatus('ok');
-      await syncYagFromGSheets();
-      saveYagData();
-      renderYagTable();
-      await syncAmbalajFromGSheets();
-      saveAmbalajData();
-      renderAmbalajTable();
       showToast('Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.', 'success');
       return true;
     } else {
