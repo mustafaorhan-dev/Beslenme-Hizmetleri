@@ -168,13 +168,9 @@ async function doLogin() {
 }
 
 function renderAdminPanelBtn() {
-  const container = document.getElementById('adminPanelBtnContainer');
-  if (!container) return;
-  if (getRole() === ROLE_ADMIN) {
-    container.style.display = 'block';
-  } else {
-    container.style.display = 'none';
-  }
+  const btn = document.getElementById('adminPanelBtn');
+  if (!btn) return;
+  btn.style.display = getRole() === ROLE_ADMIN ? '' : 'none';
 }
 
 function openAdminPanel() {
