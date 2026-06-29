@@ -713,6 +713,34 @@ async function syncHaccpFromGSheets() {
   }
 }
 
+// ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
+function exportHaccpExcel() {
+  if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
+  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not_','ogun','yemekAdi','miktar','saklamaSicakligi','imhaTarihi','alan','yapilacakIs','yapanKisi','yapildiMi','lastModified','nem'];
+  var rows = [headers.join(',')];
+  haccpRecords.forEach(function(r) {
+    var vals = headers.map(function(h) {
+      var v = r[h] !== undefined ? r[h] : '';
+      if (h === 'sicaklik' && v === undefined) v = r.sicaklik != null ? r.sicaklik : '';
+      if (h === 'nem' && v === undefined) v = r.nem != null ? r.nem : '';
+      if (h === 'depoAd' && (!v || v === 'undefined')) v = r.depoAd || '';
+      v = String(v).replace(/"/g, '""');
+      return v.indexOf(',') > -1 ? '"' + v + '"' : v;
+    });
+    rows.push(vals.join(','));
+  });
+  var blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'HACCP_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(haccpRecords.length + ' kayıt CSV olarak indirildi. Google Sheets\'e yüklemek için Dosya > İçe Aktar seçin.', 'success');
+}
+
 // ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
 function importHaccpFile(event) {
   var file = event.target.files[0];
