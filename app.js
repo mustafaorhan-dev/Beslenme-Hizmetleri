@@ -1,4 +1,4 @@
-/* =============================================
+﻿/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
    ============================================= */
 
@@ -90,11 +90,19 @@ function setChartMonth(month) {
 }
 // ─── LOGIN / LOGOUT / ROLES ────────────────────────────────────────────────
 
-const ADMIN_PASSWORD = '2525';
-const VIEWER_PASSWORD = 'gör';
+const DEFAULT_ADMIN_PASSWORD = '2525';
+const DEFAULT_VIEWER_PASSWORD = 'gör';
 
 const ROLE_ADMIN = 'admin';
 const ROLE_VIEWER = 'viewer';
+
+function getAdminPassword() {
+  return localStorage.getItem('atik_kontrol_admin_pw') || DEFAULT_ADMIN_PASSWORD;
+}
+
+function getViewerPassword() {
+  return localStorage.getItem('atik_kontrol_viewer_pw') || DEFAULT_VIEWER_PASSWORD;
+}
 
 function getRole() {
   return localStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
@@ -118,8 +126,8 @@ function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
   let role = null;
-  if (input.value === ADMIN_PASSWORD) role = ROLE_ADMIN;
-  else if (input.value === VIEWER_PASSWORD) role = ROLE_VIEWER;
+  if (input.value === getAdminPassword()) role = ROLE_ADMIN;
+  else if (input.value === getViewerPassword()) role = ROLE_VIEWER;
 
   if (role) {
     localStorage.setItem('atik_kontrol_login_hash', btoa(input.value));
@@ -127,6 +135,7 @@ function doLogin() {
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
     document.getElementById('roleBadge').textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
+    renderAdminPanelBtn();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
@@ -141,10 +150,150 @@ function doLogin() {
   }
 }
 
+function renderAdminPanelBtn() {
+  const container = document.getElementById('adminPanelBtnContainer');
+  if (!container) return;
+  if (getRole() === ROLE_ADMIN) {
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function openAdminPanel() {
+  if (getRole() !== ROLE_ADMIN) {
+    showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+    return;
+  }
+  document.getElementById('apAdminPw').value = '';
+  document.getElementById('apViewerPw').value = '';
+  document.getElementById('apCurrentAdminPw').textContent = getAdminPassword();
+  document.getElementById('apCurrentViewerPw').textContent = getViewerPassword();
+  document.getElementById('apError').style.display = 'none';
+  document.getElementById('apError').textContent = '';
+  document.getElementById('apSuccess').style.display = 'none';
+  document.getElementById('apSuccess').textContent = '';
+
+  var settings = getViewerSettings();
+  document.getElementById('apEditAllowed').checked = settings.editAllowed;
+  document.getElementById('apShowExport').checked = settings.showExportBtn;
+  document.getElementById('apShowSync').checked = settings.showSyncBtn;
+  document.getElementById('apShowActions').checked = settings.showActions;
+  var tabKeys = Object.keys(settings.tabs);
+  tabKeys.forEach(function(key) {
+    var cb = document.getElementById('apTab_' + key);
+    if (cb) cb.checked = settings.tabs[key];
+  });
+
+  document.getElementById('adminPanelModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAdminPanel() {
+  document.getElementById('adminPanelModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveAdminSettings() {
+  if (getRole() !== ROLE_ADMIN) return;
+  const adminPw = document.getElementById('apAdminPw').value.trim();
+  const viewerPw = document.getElementById('apViewerPw').value.trim();
+  const errorEl = document.getElementById('apError');
+  const successEl = document.getElementById('apSuccess');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  var changed = false;
+
+  if (adminPw && viewerPw && adminPw === viewerPw) {
+    errorEl.textContent = 'Admin ve görüntüleme şifreleri aynı olamaz.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  if (adminPw) {
+    if (adminPw.length < 3) {
+      errorEl.textContent = 'Admin şifresi en az 3 karakter olmalı.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    localStorage.setItem('atik_kontrol_admin_pw', adminPw);
+    document.getElementById('apCurrentAdminPw').textContent = adminPw;
+    document.getElementById('apAdminPw').value = '';
+    changed = true;
+  }
+  if (viewerPw) {
+    if (viewerPw.length < 2) {
+      errorEl.textContent = 'Görüntüleme şifresi en az 2 karakter olmalı.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    localStorage.setItem('atik_kontrol_viewer_pw', viewerPw);
+    document.getElementById('apCurrentViewerPw').textContent = viewerPw;
+    document.getElementById('apViewerPw').value = '';
+    changed = true;
+  }
+
+  var settings = getViewerSettings();
+  settings.editAllowed = document.getElementById('apEditAllowed').checked;
+  settings.showExportBtn = document.getElementById('apShowExport').checked;
+  settings.showSyncBtn = document.getElementById('apShowSync').checked;
+  settings.showActions = document.getElementById('apShowActions').checked;
+  var tabKeys = Object.keys(settings.tabs);
+  tabKeys.forEach(function(key) {
+    var cb = document.getElementById('apTab_' + key);
+    if (cb) settings.tabs[key] = cb.checked;
+  });
+  localStorage.setItem('atik_kontrol_viewer_settings', JSON.stringify(settings));
+
+  if (!changed) {
+    successEl.textContent = 'Görüntüleme ayarları güncellendi.';
+    successEl.style.display = 'block';
+    showToast('Görüntüleme ayarları güncellendi.', 'success');
+  } else {
+    successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi.';
+    successEl.style.display = 'block';
+    showToast('Ayarlar güncellendi. Çıkış yapıp yeni şifre ile giriş yapabilirsiniz.', 'success');
+  }
+  applyViewerRestrictions();
+}
+
+function getViewerSettings() {
+  try {
+    const saved = localStorage.getItem('atik_kontrol_viewer_settings');
+    if (saved) return JSON.parse(saved);
+  } catch (_) {}
+  return {
+    editAllowed: false,
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    showExportBtn: false,
+    showSyncBtn: false,
+    showActions: false
+  };
+}
+
 function applyViewerRestrictions() {
   if (getRole() !== ROLE_ADMIN) {
-    document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input, #haccpForm textarea, #haccpForm input, #haccpForm select').forEach(el => { el.readOnly = true; el.disabled = true; el.style.opacity = '0.7'; });
-    document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+    const settings = getViewerSettings();
+    Object.keys(settings.tabs).forEach(function(key) {
+      var btn = document.getElementById('tab-' + key);
+      if (btn) btn.style.display = settings.tabs[key] ? '' : 'none';
+    });
+    var actionBtn = document.querySelector('.sidebar-nav .tab-btn[onclick*="openModal"]');
+    if (actionBtn) actionBtn.style.display = settings.showActions ? '' : 'none';
+    var exportBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="exportData"]');
+    if (exportBtn) exportBtn.style.display = settings.showExportBtn ? '' : 'none';
+    var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="openSyncPanel"]');
+    if (syncBtn) syncBtn.style.display = settings.showSyncBtn ? '' : 'none';
+    var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="quickPullFromSheets"]');
+    if (pullBtn) pullBtn.style.display = settings.showSyncBtn ? '' : 'none';
+    if (!settings.editAllowed) {
+      document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input, #haccpForm textarea, #haccpForm input, #haccpForm select, #entryForm input, #entryForm select, #entryForm textarea, #yagForm input, #yagForm select, #ambalajForm input, #ambalajForm select').forEach(function(el) {
+        el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
+      });
+      document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
+      document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
+    }
   }
 }
 
@@ -157,6 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.body.setAttribute('data-role', role);
     const badge = document.getElementById('roleBadge');
     if (badge) badge.textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
+    renderAdminPanelBtn();
   } else {
     document.getElementById('loginPassword').focus();
     await new Promise(resolve => {
@@ -3995,3 +4145,8 @@ function exportMenuPDF() {
   printWin.focus();
   setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
 }
+
+
+
+
+

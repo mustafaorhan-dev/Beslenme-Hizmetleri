@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -175,6 +175,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
           <span>Senkronize Et</span>
         </button>
+        <div id="adminPanelBtnContainer" style="display:none">
+          <button class="tab-btn" onclick="openAdminPanel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <span>Yönetim</span>
+          </button>
+        </div>
         <button class="tab-btn" onclick="quickPullFromSheets()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
           <span>Google'dan Çek</span>
@@ -1279,6 +1285,113 @@
     </div>
   </div>
 
+  <!-- ADMIN PANEL MODAL -->
+  <div class="modal-overlay" id="adminPanelModal" onclick="if(event.target===this)closeAdminPanel()">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h2>Yönetim Paneli</h2>
+        <button class="modal-close" onclick="closeAdminPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem;max-height:70vh;overflow-y:auto">
+        <!-- Şifre Yönetimi -->
+        <div style="margin-bottom:1rem">
+          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Şifre Yönetimi</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Mevcut şifreleri aşağıdan değiştirebilirsiniz. Değişiklikten sonra çıkış yapıp yeni şifre ile giriş yapmalısınız.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Admin Şifresi</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--accent);font-family:monospace;letter-spacing:2px" id="apCurrentAdminPw">-</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Görüntüleme Şifresi</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:monospace;letter-spacing:2px" id="apCurrentViewerPw">-</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:1rem">
+            <div style="margin-bottom:0.75rem">
+              <label for="apAdminPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Admin Şifresi</label>
+              <input type="password" id="apAdminPw" placeholder="Yeni admin şifresi (en az 3 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
+            </div>
+            <div style="margin-bottom:0.75rem">
+              <label for="apViewerPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Görüntüleme Şifresi</label>
+              <input type="password" id="apViewerPw" placeholder="Yeni görüntüleme şifresi (en az 2 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Görüntüleme Yetkisi Ayarları -->
+        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
+          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Görüntüleme Yetkisi Ayarları</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Görüntüleme şifresi ile giren kullanıcıların hangi özellikleri göreceğini ayarlayın.</p>
+
+          <!-- Genel İzinler -->
+          <div style="margin-bottom:1rem">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Genel İzinler</div>
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="apEditAllowed" /> Düzenlemeye izin ver (form alanları aktif olsun)
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="apShowActions" /> Yeni kayıt ekleme butonlarını göster
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="apShowExport" /> Veri dışa aktarma butonunu göster
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
+              <input type="checkbox" id="apShowSync" /> Senkronizasyon butonlarını göster
+            </label>
+          </div>
+
+          <!-- Sekme Görünürlüğü -->
+          <div style="margin-bottom:0.75rem">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Görünen Sekmeler</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem">
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_dashboard" checked /> Panel
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_menu" checked /> Menü
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_records" checked /> Kayıtlar
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_report" checked /> Rapor
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_haccp" checked /> Gıda Güvenliği
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_yag" checked /> Atık Yağ
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_ambalaj" checked /> Ambalaj Atıkları
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
+                <input type="checkbox" id="apTab_charts" checked /> Grafikler
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hata ve Başarı Mesajları -->
+        <div id="apError" style="color:#ef4444;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
+        <div id="apSuccess" style="color:#22c55e;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
+
+        <!-- Kaydet Butonu -->
+        <button class="btn btn-primary" onclick="saveAdminSettings()" style="width:100%;padding:12px;font-weight:700">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+          Ayarları Kaydet
+        </button>
+      </div>
+      <div class="modal-footer">
+        <span style="font-size:0.75rem;color:var(--text-muted)">Ayarlar tarayıcıda saklanır.</span>
+        <button class="btn btn-ghost" onclick="closeAdminPanel()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -1292,3 +1405,5 @@
   </script>
 </body>
 </html>
+
+
