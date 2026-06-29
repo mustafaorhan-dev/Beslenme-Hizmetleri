@@ -18,11 +18,11 @@ let remoteHashes = { adminHash: null, viewerHash: null };
 async function syncPasswordHashesFromRemote() {
   if (!gsheetConfig || !gsheetConfig.webappUrl) return;
   try {
-    const res = await fetch(gsheetConfig.webappUrl, {
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'getPasswords' })
-    });
+    }, 30000);
     const data = await res.json();
     if (data.adminHash) remoteHashes.adminHash = data.adminHash;
     if (data.viewerHash) remoteHashes.viewerHash = data.viewerHash;
@@ -469,7 +469,7 @@ let lastPollData = null;
 
 async function autoPull() {
   try {
-    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', {}, 30000);
     const data = await res.json();
     if (!data.data || data.data.length === 0) return;
 
@@ -592,11 +592,11 @@ function saveData() { if (!requireAdmin()) return;
 async function syncToSheetSilent() {
   if (!gsheetConfig.webappUrl || records.length === 0) return;
   try {
-    await fetch(gsheetConfig.webappUrl, {
+    await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveAll', records })
-    });
+    }, 15000);
   } catch (_) {}
 }
 
@@ -622,11 +622,11 @@ async function syncHaccpToGSheets() {
       return;
     }
     var depoAdlari = loadHaccpDepoAdlari();
-    const res = await fetch(gsheetConfig.webappUrl, {
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
-    });
+    }, 30000);
     const data = await res.json();
     if (data.success) {
       showToast('Gıda Güvenliği verileri senkronize edildi (' + data.count + ' kayıt).', 'success');
@@ -634,7 +634,7 @@ async function syncHaccpToGSheets() {
       showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
     }
   } catch (err) {
-    showToast('Bağlantı hatası: ' + err.message, 'error');
+    showToast('Bağlantı hatası: ' + (err.name === 'AbortError' ? 'Zaman aşımı (30sn)' : err.message), 'error');
   }
 }
 
@@ -646,11 +646,11 @@ function syncHaccpSilent(forceDepoOnly) {
     if (!gsheetConfig.webappUrl) return;
     try {
       var depoAdlari = loadHaccpDepoAdlari();
-      await fetch(gsheetConfig.webappUrl, {
+      await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
-      });
+      }, 15000);
     } catch (_) {}
   }, 400);
 }
@@ -660,11 +660,11 @@ async function syncHaccpFromGSheets() {
   try {
     let data;
     try {
-      const res = await fetch(gsheetConfig.webappUrl, {
+      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getHaccp' })
-      });
+      }, 50000);
       data = await res.json();
       if (data && data.data) showToast('HACCP POST OK: ' + (data.data.length || 0) + ' kayıt', 'info');
     } catch (_) { data = null; showToast('HACCP POST hatası, fallback GET denenecek', 'info'); }
@@ -674,7 +674,7 @@ async function syncHaccpFromGSheets() {
       showToast('HACCP fallback: ' + sheets.length + ' sayfa taranıyor...', 'info');
       for (var si = 0; si < sheets.length; si++) {
         try {
-          var r2 = await fetch(gsheetConfig.webappUrl + '?sheet=' + sheets[si]);
+          var r2 = await fetchWithTimeout(gsheetConfig.webappUrl + '?sheet=' + sheets[si], {}, 30000);
           var d2 = await r2.json();
           if (d2.data && d2.data.length > 0) { allRows = allRows.concat(d2.data); showToast(sheets[si] + ': ' + d2.data.length + ' kayıt', 'info'); }
         } catch (_) { showToast(sheets[si] + ' okunamadı', 'warn'); }
@@ -733,11 +733,11 @@ async function syncYagToGSheets() {
       }
       return;
     }
-    await fetch(gsheetConfig.webappUrl, {
+    await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveYag', records: yagRecords })
-    });
+    }, 15000);
   } catch (_) {}
 }
 
@@ -747,11 +747,11 @@ function syncYagSilent() {
   yagSyncTimer = setTimeout(async () => {
     if (!gsheetConfig.webappUrl) return;
     try {
-      await fetch(gsheetConfig.webappUrl, {
+      await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveYag', records: yagRecords })
-      });
+      }, 15000);
     } catch (_) {}
   }, 400);
 }
@@ -761,11 +761,11 @@ async function syncYagFromGSheets() {
   try {
     let data;
     try {
-      const res = await fetch(gsheetConfig.webappUrl, {
+      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getYag' })
-      });
+      }, 50000);
       data = await res.json();
     } catch (_) { return false; }
     if (data.data && data.data.length > 0) {
@@ -800,11 +800,11 @@ async function syncAmbalajToGSheets() {
       }
       return;
     }
-    await fetch(gsheetConfig.webappUrl, {
+    await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
-    });
+    }, 15000);
   } catch (_) {}
 }
 
@@ -814,11 +814,11 @@ function syncAmbalajSilent() {
   ambalajSyncTimer = setTimeout(async () => {
     if (!gsheetConfig.webappUrl) return;
     try {
-      await fetch(gsheetConfig.webappUrl, {
+      await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
-      });
+      }, 15000);
     } catch (_) {}
   }, 400);
 }
@@ -828,11 +828,11 @@ async function syncAmbalajFromGSheets() {
   try {
     let data;
     try {
-      const res = await fetch(gsheetConfig.webappUrl, {
+      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getAmbalaj' })
-      });
+      }, 50000);
       data = await res.json();
     } catch (_) { return false; }
     if (data.data && data.data.length > 0) {
@@ -872,6 +872,17 @@ async function withTimeout(promise, ms) {
     setTimeout(function() { reject(new Error('timeout')); }, ms);
   });
   return await Promise.race([promise, timeoutPromise]);
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, timeoutMs || 45000);
+  try {
+    var res = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function setConnectionStatus(state) {
@@ -1005,11 +1016,11 @@ async function syncToGSheets() { if (!requireAdmin()) return;
   btn.disabled = true;
   btn.textContent = 'Senkronize ediliyor...';
   try {
-    const res = await fetch(gsheetConfig.webappUrl, {
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveAll', records })
-    });
+    }, 30000);
     const data = await res.json();
     if (data.success) {
       gsheetConfig.lastSync = new Date().toISOString();
@@ -1022,7 +1033,7 @@ async function syncToGSheets() { if (!requireAdmin()) return;
     }
   } catch (err) {
     setConnectionStatus('err');
-    showToast('Bağlantı hatası: ' + err.message, 'error');
+    showToast('Bağlantı hatası: ' + (err.name === 'AbortError' ? 'Zaman aşımı (30sn)' : err.message), 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Yerel → Google Sheet (Yedekle)';
@@ -1037,7 +1048,7 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
   const btn = document.getElementById('syncDownloadBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'İndiriliyor...'; }
   try {
-    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll');
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', {}, 50000);
     const data = await res.json();
     if (data.data) {
       const cloudRecords = data.data
@@ -1084,11 +1095,13 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
       showToast(msg, haccpOk ? 'success' : 'warn');
       return true;
     } else {
-      if (btn) showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
+      showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
       return false;
     }
   } catch (err) {
     setConnectionStatus('err');
+    if (err.name === 'AbortError') showToast('Zaman aşımı: Google Sheet 50sn içinde yanıt vermedi.', 'error');
+    else showToast('Senkronizasyon hatası: ' + err.message, 'error');
     return false;
   } finally {
     if (btn) {
@@ -1100,7 +1113,7 @@ async function syncFromGSheets() { if (!requireAdmin()) return;
 
 async function testGSheetConnection() {
   try {
-    const res = await fetch(gsheetConfig.webappUrl + '?action=getAll', { method: 'GET', mode: 'cors' });
+    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', { method: 'GET', mode: 'cors' }, 30000);
     if (res.ok) {
       document.getElementById('syncStatusLabel').textContent = 'Bağlantı başarılı';
       document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e erişilebiliyor';
@@ -3007,7 +3020,7 @@ async function syncDishesFromGSheets() {
   const url = getMenuUrl();
   if (!url) return false;
   try {
-    const res = await fetch(url + '?sheet=Yemek%20Listesi');
+    const res = await fetchWithTimeout(url + '?sheet=Yemek%20Listesi', {}, 30000);
     const json = await res.json();
     if (json.data && Array.isArray(json.data)) {
       const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => {
@@ -3059,11 +3072,11 @@ async function syncDishesToGSheets() {
   if (!url) return;
   try {
     const list = loadYemekler();
-    await fetch(url, {
+    await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveDishes', dishes: list })
-    });
+    }, 15000);
   } catch (_) {}
 }
 
@@ -3072,11 +3085,11 @@ async function fetchMenuData() {
   const url = getMenuUrl();
   if (!url) return {};
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'loadMenu' })
-    });
+    }, 15000);
     const json = await res.json();
     if (json.menuData) {
       const parsed = JSON.parse(json.menuData);
@@ -3090,11 +3103,11 @@ async function saveMenuData(allData) {
   const url = getMenuUrl();
   if (!url) return;
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'saveMenu', menuData: JSON.stringify(allData) })
-    });
+    }, 15000);
     const json = await res.json();
     if (!json.success) showToast('Menü kaydedilemedi: ' + (json.error || ''), 'error');
   } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
