@@ -713,6 +713,44 @@ async function syncHaccpFromGSheets() {
   }
 }
 
+// ─── HACCP 100 KAYIT OLUŞTUR ────────────────────────────────────────────────
+function generateHaccpSample() {
+  var depo = 'Soğuk Hava Deposu 5';
+  var now = Date.now();
+  var records = [];
+  var mevcut = haccpRecords.filter(function(r) { return r.id && r.type === 'sicaklik'; });
+  for (var i = 0; i < 100; i++) {
+    var d = new Date(2026, 5, 30 - Math.floor(i / 4), 0, 0, 0);
+    d.setHours([6, 12, 18, 0][i % 4]);
+    var sicaklik = (2 + Math.random() * 3).toFixed(1);
+    var nem = Math.floor(75 + Math.random() * 20);
+    records.push({
+      id: now + i,
+      type: 'sicaklik',
+      tarih: d.toISOString().slice(0, 10),
+      saat: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
+      depoAd: depo,
+      sicaklik: parseFloat(sicaklik),
+      not_: '',
+      ogun: '',
+      yemekAdi: '',
+      miktar: '',
+      saklamaSicakligi: '',
+      imhaTarihi: '',
+      alan: '',
+      yapilacakIs: '',
+      yapanKisi: 'Sistem',
+      yapildiMi: 1,
+      lastModified: '',
+      nem: nem
+    });
+  }
+  haccpRecords = mevcut.concat(records);
+  saveHaccpData();
+  renderHaccp();
+  showToast('100 adet sıcaklık kaydı oluşturuldu (son 25 gün, günde 4 ölçüm).', 'success');
+}
+
 // ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
 function exportHaccpExcel() {
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
