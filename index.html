@@ -1295,6 +1295,20 @@
         </button>
       </div>
       <div class="modal-body" style="padding:1rem;max-height:70vh;overflow-y:auto">
+        <!-- Admin Şifre Doğrulama (ilk açılış) -->
+        <div id="apReAuthContainer">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 1rem">Admin paneline erişmek için lütfen admin şifrenizi girin.</p>
+          <div style="margin-bottom:0.75rem">
+            <label for="apReAuthPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Admin Şifresi</label>
+            <div style="display:flex;gap:0.5rem">
+              <input type="password" id="apReAuthPw" placeholder="Admin şifrenizi girin" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" onkeydown="if(event.key==='Enter')apReAuth()" />
+              <button class="btn btn-primary" onclick="apReAuth()" style="white-space:nowrap">Doğrula</button>
+            </div>
+          </div>
+          <div id="apReAuthError" style="color:#ef4444;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
+        </div>
+        <!-- Panel İçeriği (doğrulama sonrası) -->
+        <div id="apPanelBody" style="display:none">
         <!-- Şifre Yönetimi -->
         <div style="margin-bottom:1rem">
           <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Şifre Yönetimi</h3>
@@ -1385,6 +1399,7 @@
           Ayarları Kaydet
         </button>
       </div>
+      </div>
       <div class="modal-footer">
         <span style="font-size:0.75rem;color:var(--text-muted)">Ayarlar tarayıcıda saklanır.</span>
         <button class="btn btn-ghost" onclick="closeAdminPanel()">Kapat</button>
@@ -1395,6 +1410,7 @@
   <!-- TOAST -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

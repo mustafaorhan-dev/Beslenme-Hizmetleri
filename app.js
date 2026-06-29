@@ -90,22 +90,24 @@ function setChartMonth(month) {
 }
 // ─── LOGIN / LOGOUT / ROLES ────────────────────────────────────────────────
 
-const DEFAULT_ADMIN_PASSWORD = '2525';
-const DEFAULT_VIEWER_PASSWORD = 'gör';
-
 const ROLE_ADMIN = 'admin';
 const ROLE_VIEWER = 'viewer';
 
-function getAdminPassword() {
-  return localStorage.getItem('atik_kontrol_admin_pw') || DEFAULT_ADMIN_PASSWORD;
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
-function getViewerPassword() {
-  return localStorage.getItem('atik_kontrol_viewer_pw') || DEFAULT_VIEWER_PASSWORD;
+function getAdminHash() {
+  return localStorage.getItem('atik_kontrol_admin_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '');
+}
+
+function getViewerHash() {
+  return localStorage.getItem('atik_kontrol_viewer_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '');
 }
 
 function getRole() {
-  return localStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
+  return sessionStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
 }
 
 function requireAdmin() {
@@ -117,21 +119,20 @@ function requireAdmin() {
 }
 
 function doLogout() {
-  localStorage.removeItem('atik_kontrol_login_hash');
-  localStorage.removeItem('atik_kontrol_role');
+  sessionStorage.clear();
   location.reload();
 }
 
-function doLogin() {
+async function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
+  const inputHash = await sha256(input.value);
   let role = null;
-  if (input.value === getAdminPassword()) role = ROLE_ADMIN;
-  else if (input.value === getViewerPassword()) role = ROLE_VIEWER;
+  if (inputHash === getAdminHash()) role = ROLE_ADMIN;
+  else if (inputHash === getViewerHash()) role = ROLE_VIEWER;
 
   if (role) {
-    localStorage.setItem('atik_kontrol_login_hash', btoa(input.value));
-    localStorage.setItem('atik_kontrol_role', role);
+    sessionStorage.setItem('atik_kontrol_role', role);
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
     document.getElementById('roleBadge').textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
@@ -165,10 +166,16 @@ function openAdminPanel() {
     showToast('Bu işlem için admin yetkisi gerekli.', 'error');
     return;
   }
+  // Güvenlik: admin şifresini tekrar sor
+  document.getElementById('apReAuthContainer').style.display = 'block';
+  document.getElementById('apPanelBody').style.display = 'none';
+  document.getElementById('apReAuthPw').value = '';
+  document.getElementById('apReAuthError').style.display = 'none';
+  document.getElementById('apReAuthError').textContent = '';
   document.getElementById('apAdminPw').value = '';
   document.getElementById('apViewerPw').value = '';
-  document.getElementById('apCurrentAdminPw').textContent = getAdminPassword();
-  document.getElementById('apCurrentViewerPw').textContent = getViewerPassword();
+  document.getElementById('apCurrentAdminPw').textContent = '•••••';
+  document.getElementById('apCurrentViewerPw').textContent = '•••••';
   document.getElementById('apError').style.display = 'none';
   document.getElementById('apError').textContent = '';
   document.getElementById('apSuccess').style.display = 'none';
@@ -189,12 +196,30 @@ function openAdminPanel() {
   document.body.style.overflow = 'hidden';
 }
 
+async function apReAuth() {
+  const pw = document.getElementById('apReAuthPw').value;
+  const hash = await sha256(pw);
+  const errorEl = document.getElementById('apReAuthError');
+  if (hash === getAdminHash()) {
+    document.getElementById('apReAuthContainer').style.display = 'none';
+    document.getElementById('apPanelBody').style.display = 'block';
+    errorEl.style.display = 'none';
+    document.getElementById('apCurrentAdminPw').textContent = '••••• (' + pw.length + ' karakter)';
+    document.getElementById('apCurrentViewerPw').textContent = '•••••';
+  } else {
+    errorEl.textContent = 'Admin şifresi yanlış!';
+    errorEl.style.display = 'block';
+    document.getElementById('apReAuthPw').value = '';
+    document.getElementById('apReAuthPw').focus();
+  }
+}
+
 function closeAdminPanel() {
   document.getElementById('adminPanelModal').classList.remove('open');
   document.body.style.overflow = '';
 }
 
-function saveAdminSettings() {
+async function saveAdminSettings() {
   if (getRole() !== ROLE_ADMIN) return;
   const adminPw = document.getElementById('apAdminPw').value.trim();
   const viewerPw = document.getElementById('apViewerPw').value.trim();
@@ -217,8 +242,9 @@ function saveAdminSettings() {
       errorEl.style.display = 'block';
       return;
     }
-    localStorage.setItem('atik_kontrol_admin_pw', adminPw);
-    document.getElementById('apCurrentAdminPw').textContent = adminPw;
+    const hash = await sha256(adminPw);
+    localStorage.setItem('atik_kontrol_admin_hash', hash);
+    document.getElementById('apCurrentAdminPw').textContent = '••••• (' + adminPw.length + ' karakter)';
     document.getElementById('apAdminPw').value = '';
     changed = true;
   }
@@ -228,8 +254,9 @@ function saveAdminSettings() {
       errorEl.style.display = 'block';
       return;
     }
-    localStorage.setItem('atik_kontrol_viewer_pw', viewerPw);
-    document.getElementById('apCurrentViewerPw').textContent = viewerPw;
+    const hash = await sha256(viewerPw);
+    localStorage.setItem('atik_kontrol_viewer_hash', hash);
+    document.getElementById('apCurrentViewerPw').textContent = '••••• (' + viewerPw.length + ' karakter)';
     document.getElementById('apViewerPw').value = '';
     changed = true;
   }
@@ -253,7 +280,7 @@ function saveAdminSettings() {
   } else {
     successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi.';
     successEl.style.display = 'block';
-    showToast('Ayarlar güncellendi. Çıkış yapıp yeni şifre ile giriş yapabilirsiniz.', 'success');
+    showToast('Ayarlar güncellendi. Bir sonraki girişte yeni şifre geçerli olacak.', 'success');
   }
   applyViewerRestrictions();
 }
@@ -299,21 +326,11 @@ function applyViewerRestrictions() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  const savedHash = localStorage.getItem('atik_kontrol_login_hash');
-  if (savedHash) {
-    document.getElementById('loginOverlay').classList.add('hidden');
-    const role = getRole();
-    document.body.setAttribute('data-role', role);
-    const badge = document.getElementById('roleBadge');
-    if (badge) badge.textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
-    renderAdminPanelBtn();
-  } else {
-    document.getElementById('loginPassword').focus();
-    await new Promise(resolve => {
-      window._loginResolve = resolve;
-      window._loginAttempts = 0;
-    });
-  }
+  document.getElementById('loginPassword').focus();
+  await new Promise(resolve => {
+    window._loginResolve = resolve;
+    window._loginAttempts = 0;
+  });
 
   loadGSheetConfig();
   loadAccent();
