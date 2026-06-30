@@ -1381,7 +1381,7 @@ function renderHaccpSicaklik() {
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
       <td class="${durum.cls}"><strong>${r.sicaklik != null ? r.sicaklik : '—'}</strong></td>
-      <td>${r.nem != null ? r.nem : '—'}</td>
+      <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? r.nem : '—'}</td>
       <td>${r.not || '—'}</td>
       <td>
         <button class="btn-icon" onclick="editHaccpRecord('sicaklik',${r.id})" title="Düzenle">
