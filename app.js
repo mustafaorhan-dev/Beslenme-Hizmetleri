@@ -2963,7 +2963,7 @@ function deleteYemek(id) { if (!requireAdmin()) return;
 }
 
 function openYemekModal() {
-  document.getElementById('yemekModal').classList.add('show');
+  document.getElementById('yemekModal').classList.add('open');
   document.getElementById('yemekSearchInput').value = '';
   editingYemekId = null;
   document.getElementById('yemekFormContainer').style.display = 'none';
@@ -2972,7 +2972,7 @@ function openYemekModal() {
   syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
-  document.getElementById('yemekModal').classList.remove('show');
+  document.getElementById('yemekModal').classList.remove('open');
 }
 
 // -- Supabase dish sync --
