@@ -4160,6 +4160,7 @@ function drawYagChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        valueLabels: true,
         tooltip: {
           backgroundColor: '#000',
           titleColor: '#fff',
@@ -4201,7 +4202,8 @@ function drawYagChart() {
           }
         }
       }
-    }
+    },
+    plugins: [chartValueLabelPlugin]
   });
 }
 
