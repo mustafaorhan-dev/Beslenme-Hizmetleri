@@ -768,6 +768,17 @@
           <h2>Ambalaj Atıkları Kayıtları</h2>
           <span class="badge" id="ambalajBadge">0 kayıt</span>
         </div>
+        <!-- Ambalaj Chart -->
+        <div style="margin-bottom:0.75rem">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
+            <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Ambalaj Atığı Grafiği — yıl seçin, aya tıklayın</span>
+            <div id="ambalajChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
+          </div>
+          <div class="chart-area" id="chartAmbalaj" style="height:170px">
+            <canvas id="canvasAmbalaj"></canvas>
+            <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
+          </div>
+        </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateAmbalaj">
             <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">

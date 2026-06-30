@@ -4288,6 +4288,7 @@ function renderAmbalajTable() {
       </td>
     </tr>`;
   }).join('');
+  drawAmbalajChart();
 }
 
 function openAmbalajModal(id) {
@@ -4364,6 +4365,121 @@ function deleteAmbalajRecord(id) {
   renderAmbalajTable();
   syncAmbalajSilent();
   showToast('Ambalaj atığı kaydı silindi.', 'success');
+}
+
+let ambalajChartInstance = null;
+let ambalajChartYear = 'all';
+
+function drawAmbalajChart() {
+  var canvas = document.getElementById('canvasAmbalaj');
+  var empty = document.getElementById('chartAmbalajEmpty');
+  var yearContainer = document.getElementById('ambalajChartYears');
+  if (!canvas || !empty) return;
+
+  var years = {};
+  ambalajRecords.forEach(function(r) {
+    if (!r.tarih) return;
+    var y = r.tarih.slice(0, 4);
+    if (y) years[y] = true;
+  });
+  var yearList = Object.keys(years).sort();
+  if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  if (yearContainer) {
+    yearContainer.innerHTML = '<button class="year-btn' + (ambalajChartYear === 'all' ? ' active' : '') + '" data-y="all" style="font-size:0.75rem;padding:2px 8px">Tümü</button>' +
+      yearList.map(function(y) { return '<button class="year-btn' + (ambalajChartYear === y ? ' active' : '') + '" data-y="' + y + '" style="font-size:0.75rem;padding:2px 8px">' + y + '</button>'; }).join('');
+    yearContainer.querySelectorAll('.year-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        ambalajChartYear = this.getAttribute('data-y');
+        drawAmbalajChart();
+      };
+    });
+  }
+
+  var monthly = {};
+  ambalajRecords.forEach(function(r) {
+    if (!r.tarih) return;
+    if (ambalajChartYear !== 'all' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
+    var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
+    monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
+  });
+  var labels = Object.keys(monthly).sort(function(a, b) {
+    var pa = a.split('/'), pb = b.split('/');
+    return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
+  });
+  var values = labels.map(function(k) { return monthly[k]; });
+
+  if (labels.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  var parent = canvas.parentElement;
+  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  canvas.style.width = w + 'px';
+  canvas.style.height = '160px';
+  var ctx = canvas.getContext('2d');
+
+  if (ambalajChartInstance) { ambalajChartInstance.destroy(); ambalajChartInstance = null; }
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1e293b';
+  var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  ambalajChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Ambalaj Atığı (kg)',
+        data: values,
+        backgroundColor: '#10b981',
+        borderRadius: 4,
+        barPercentage: 0.7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        valueLabels: true,
+        valueLabelsPosition: 'inside',
+        tooltip: {
+          backgroundColor: '#000',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y.toFixed(3) + ' kg'; }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+        y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
+      },
+      onClick: function(e) {
+        var active = ambalajChartInstance.getElementsAtEventForMode(e, 'index', { intersect: true }, false);
+        if (active.length > 0) {
+          var idx = active[0].index;
+          var label = labels[idx];
+          var parts = label.split('/');
+          if (parts.length === 2) {
+            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
+            if (!isNaN(ay) && !isNaN(yil)) {
+              var filtered = ambalajRecords.filter(function(r) {
+                if (!r.tarih) return false;
+                var d = new Date(r.tarih + 'T00:00:00');
+                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
+              });
+              if (filtered.length > 0) showChartDetailModal(label + ' Ambalaj Atığı', filtered);
+            }
+          }
+        }
+      }
+    },
+    plugins: [chartValueLabelPlugin]
+  });
 }
 
 function exportMenuPDF() {
