@@ -727,6 +727,12 @@
             <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.8rem">
+          <span style="color:var(--text-muted)">Tarih:</span>
+          <input type="date" id="yagTarihBas" onchange="renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <span style="color:var(--text-muted)">—</span>
+          <input type="date" id="yagTarihBit" onchange="renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+        </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateYag">
             <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
@@ -778,6 +784,12 @@
             <canvas id="canvasAmbalaj"></canvas>
             <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
           </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.8rem">
+          <span style="color:var(--text-muted)">Tarih:</span>
+          <input type="date" id="ambalajTarihBas" onchange="renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <span style="color:var(--text-muted)">—</span>
+          <input type="date" id="ambalajTarihBit" onchange="renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateAmbalaj">

@@ -3993,13 +3993,29 @@ function renderYagTable() {
   if (yagRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    drawYagChart();
     return;
   }
+
+  let filtered = [...yagRecords];
+  var yagTarihBas = document.getElementById('yagTarihBas');
+  var yagTarihBit = document.getElementById('yagTarihBit');
+  if (yagTarihBas && yagTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= yagTarihBas.value; });
+  if (yagTarihBit && yagTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= yagTarihBit.value; });
+
+  if (filtered.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    empty.querySelector('p').textContent = 'Bu tarih aralığında kayıt bulunamadı.';
+    drawYagChart();
+    return;
+  }
+  empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
 
   empty.style.display = 'none';
   table.style.display = 'table';
 
-  const sorted = [...yagRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  const sorted = filtered.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   tbody.innerHTML = sorted.map(r => {
     const dateStr = displayDate(r.tarih);
     return `<tr>
@@ -4264,13 +4280,29 @@ function renderAmbalajTable() {
   if (ambalajRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    drawAmbalajChart();
     return;
   }
+
+  let filtered = [...ambalajRecords];
+  var ambalajTarihBas = document.getElementById('ambalajTarihBas');
+  var ambalajTarihBit = document.getElementById('ambalajTarihBit');
+  if (ambalajTarihBas && ambalajTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= ambalajTarihBas.value; });
+  if (ambalajTarihBit && ambalajTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= ambalajTarihBit.value; });
+
+  if (filtered.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    empty.querySelector('p').textContent = 'Bu tarih aralığında kayıt bulunamadı.';
+    drawAmbalajChart();
+    return;
+  }
+  empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
 
   empty.style.display = 'none';
   table.style.display = 'table';
 
-  const sorted = [...ambalajRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  const sorted = filtered.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   tbody.innerHTML = sorted.map(r => {
     const dateStr = displayDate(r.tarih);
     return `<tr>
