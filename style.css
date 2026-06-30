@@ -829,7 +829,7 @@ body {
 .kpi-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
 
-.kpi-body { display: flex; flex-direction: column; gap: 0.2rem; }
+.kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
 
 .kpi-label {
   font-size: 0.75rem;
