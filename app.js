@@ -542,11 +542,26 @@ async function syncRecordsToSupabase() {
   } catch (_) {}
 }
 
+function haccpRecordToDB(r) {
+  return {
+    id: Number(r.id) || Date.now(),
+    type: r.type || 'sicaklik',
+    tarih: r.tarih || '',
+    saat: r.saat || '',
+    depo_ad: r.depoAd || '',
+    sicaklik: r.sicaklik != null && r.sicaklik !== '' ? Number(r.sicaklik) : null,
+    nem: r.nem != null && r.nem !== '' ? Number(r.nem) : null,
+    not_: r.not || '',
+    last_modified: new Date().toISOString()
+  };
+}
+
 async function syncHaccpToSupabase() {
   if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   try {
     if (haccpRecords.length > 0) {
-      var { error } = await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      var dbRows = haccpRecords.map(haccpRecordToDB);
+      var { error } = await supabaseClient.from('haccp_records').upsert(dbRows, { onConflict: 'id' });
       if (error) { showToast('Supabase hatası: ' + error.message, 'error'); return; }
     }
     var depoAdlari = loadHaccpDepoAdlari();
@@ -573,7 +588,8 @@ function syncHaccpSilent(forceDepoOnly) {
   haccpSyncTimer = setTimeout(async () => {
     try {
       if (haccpRecords.length > 0) {
-        var { error } = await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+        var dbRows = haccpRecords.map(haccpRecordToDB);
+        var { error } = await supabaseClient.from('haccp_records').upsert(dbRows, { onConflict: 'id' });
         if (error) showToast('Supabase HACCP hatası: ' + error.message, 'error');
       }
       var depoAdlari = loadHaccpDepoAdlari();
@@ -676,6 +692,15 @@ function exportHaccpExcel() {
 }
 
 // ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
+var HACCP_FIELD_MAP = {
+  'Tarih': 'tarih', 'Saat': 'saat', 'Depo Adı': 'depoAd', 'Depo Ad': 'depoAd', 'Depo': 'depoAd',
+  'Sıcaklık (°C)': 'sicaklik', 'Sıcaklık': 'sicaklik', 'Sicaklik': 'sicaklik', 'Sıcaklık (C)': 'sicaklik',
+  'Nem (%)': 'nem', 'Nem': 'nem', 'Not': 'not', 'not': 'not',
+  'id': 'id', 'type': 'type', 'tarih': 'tarih', 'saat': 'saat',
+  'depoAd': 'depoAd', 'depo_ad': 'depoAd', 'sicaklik': 'sicaklik', 'nem': 'nem',
+  'not_': 'not', 'last_modified': 'last_modified'
+};
+
 function importHaccpFile(event) {
   var file = event.target.files[0];
   if (!file) return;
@@ -690,20 +715,30 @@ function importHaccpFile(event) {
       } else {
         var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
         if (lines.length < 2) { showToast('CSV en az 2 satır olmalı (başlık + veri).', 'error'); return; }
-        var headers = lines[0].split(',').map(function(h) { return h.trim(); });
+        var delim = lines[0].includes(';') ? ';' : ',';
+        var headers = lines[0].split(delim).map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
         rows = [];
         for (var i = 1; i < lines.length; i++) {
-          var vals = lines[i].split(',').map(function(v) { return v.trim(); });
+          var vals = lines[i].split(delim).map(function(v) { return v.replace(/^"|"$/g, '').trim(); });
           var row = {};
-          for (var j = 0; j < headers.length; j++) row[headers[j]] = vals[j] || '';
-          rows.push(row);
+          for (var j = 0; j < headers.length; j++) {
+            var field = HACCP_FIELD_MAP[headers[j]] || headers[j];
+            row[field] = vals[j] || '';
+          }
+          if (row.tarih) {
+            row.tarih = normalizeDate(row.tarih);
+            row.type = row.type || 'sicaklik';
+            row.id = row.id || Date.now() + Math.random();
+            row.sicaklik = row.sicaklik !== '' ? Number(String(row.sicaklik).replace(',', '.')) : null;
+            row.nem = row.nem !== '' ? Number(String(row.nem).replace(',', '.')) : null;
+            rows.push(row);
+          }
         }
       }
       if (rows.length === 0) { showToast('Dosyada kayıt bulunamadı.', 'error'); return; }
       var eklenen = 0;
       var guncellenen = 0;
       rows.forEach(function(r) {
-        r.id = r.id || Date.now() + Math.random();
         var idx = haccpRecords.findIndex(function(er) { return String(er.id) === String(r.id); });
         if (idx !== -1) {
           haccpRecords[idx] = r;
@@ -883,7 +918,7 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
       toastMsg.push('Kayıtlar: ' + (rCount || records.length));
     }
     if (haccpRecords.length > 0) {
-      await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      await supabaseClient.from('haccp_records').upsert(haccpRecords.map(haccpRecordToDB), { onConflict: 'id' });
       var depoAdlari = loadHaccpDepoAdlari();
       if (depoAdlari.length > 0) {
         await supabaseClient.from('haccp_depo_adlari').upsert(depoAdlari.map(function(a) { return { ad: a }; }), { onConflict: 'ad' });
