@@ -2704,9 +2704,19 @@ function importYemekCSV(event) { if (!requireAdmin()) return;
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (!lines.length) throw new Error('CSV boş');
       const headers = parseCSVLine(lines[0]);
-      const adIdx = headers.findIndex(h => /yemek.*ad|adı|ad/i.test(h));
+      const adIdx = headers.findIndex(h => /yemek.*ad|adı|^ad$/i.test(h));
       const kaloriIdx = headers.findIndex(h => /kalori|kcal/i.test(h));
       const alerjenIdx = headers.findIndex(h => /alerjen/i.test(h));
+      // ürün/miktar/birim sütunlarını bul
+      const urunCols = [];
+      const miktarCols = [];
+      const birimCols = [];
+      headers.forEach((h, i) => {
+        const m = h.match(/^\s*[üu]r[üu]n\s*(\d+)\s*$/i);
+        if (m) urunCols.push({ idx: i, num: parseInt(m[1]) });
+        if (/^\s*miktar\s*\d+\s*$/i.test(h)) miktarCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
+        if (/^\s*birim\s*\d+\s*$/i.test(h)) birimCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
+      });
       const list = loadYemekler();
       const basla = adIdx === -1 ? 0 : 1;
       for (let r = basla; r < lines.length; r++) {
@@ -2718,13 +2728,27 @@ function importYemekCSV(event) { if (!requireAdmin()) return;
           ad = (cols[0] || '').trim();
         }
         if (!ad) continue;
+        // tarifi oluştur
+        const tarif = [];
+        urunCols.forEach((uc) => {
+          const malzeme = (cols[uc.idx] || '').trim();
+          if (!malzeme) return;
+          const mc = miktarCols.find(m => m.num === uc.num);
+          const bc = birimCols.find(b => b.num === uc.num);
+          let miktarStr = (mc && mc.idx < cols.length) ? (cols[mc.idx] || '').trim() : '';
+          // Türkçe ondalık ayracını (,) noktaya çevir
+          miktarStr = miktarStr.replace(',', '.');
+          const miktar_kisi = parseFloat(miktarStr) || 0;
+          const birim = (bc && bc.idx < cols.length) ? (cols[bc.idx] || '').trim() : 'gr';
+          tarif.push({ malzeme, miktar_kisi, birim });
+        });
         const mevcut = list.findIndex(y => y.ad.toLowerCase() === ad.toLowerCase());
         const yemek = {
           id: mevcut !== -1 ? list[mevcut].id : 'y_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           ad: ad,
           kalori: (kaloriIdx !== -1 && kaloriIdx < cols.length) ? (cols[kaloriIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].kalori || '' : ''),
           alerjen: (alerjenIdx !== -1 && alerjenIdx < cols.length) ? (cols[alerjenIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].alerjen || '' : ''),
-          tarif: mevcut !== -1 ? list[mevcut].tarif || [] : []
+          tarif: tarif.length ? tarif : (mevcut !== -1 ? list[mevcut].tarif || [] : [])
         };
         if (mevcut !== -1) {
           list[mevcut] = yemek;
