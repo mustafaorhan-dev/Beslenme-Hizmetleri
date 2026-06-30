@@ -3970,7 +3970,7 @@ function showMenuMealPicker(e) {
   overlay.style.display = 'flex';
   setTimeout(function() {
     const inp = document.getElementById('mealPickerSearch');
-    if (inp) { inp.focus(); if (mevcut) inp.value = mevcut; renderMealPickerList(); }
+    if (inp) { inp.focus(); inp.value = ''; renderMealPickerList(); }
   }, 100);
 }
 
