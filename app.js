@@ -122,11 +122,11 @@ async function sha256(str) {
 }
 
 function getAdminHash() {
-  return remoteHashes.adminHash || localStorage.getItem('atik_kontrol_admin_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '');
+  return remoteHashes.adminHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || localStorage.getItem('atik_kontrol_admin_hash') || '';
 }
 
 function getViewerHash() {
-  return remoteHashes.viewerHash || localStorage.getItem('atik_kontrol_viewer_hash') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '');
+  return remoteHashes.viewerHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || localStorage.getItem('atik_kontrol_viewer_hash') || '';
 }
 
 function getRole() {
@@ -146,8 +146,11 @@ async function doLogin() {
   const error = document.getElementById('loginError');
   const inputHash = await sha256(input.value);
   let role = null;
-  if (inputHash === getAdminHash()) role = ROLE_ADMIN;
-  else if (inputHash === getViewerHash()) role = ROLE_VIEWER;
+  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  const adminHashes = [remoteHashes.adminHash, localStorage.getItem('atik_kontrol_admin_hash'), cfg.adminHash].filter(Boolean);
+  const viewerHashes = [remoteHashes.viewerHash, localStorage.getItem('atik_kontrol_viewer_hash'), cfg.viewerHash].filter(Boolean);
+  if (adminHashes.includes(inputHash)) role = ROLE_ADMIN;
+  else if (viewerHashes.includes(inputHash)) role = ROLE_VIEWER;
 
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
