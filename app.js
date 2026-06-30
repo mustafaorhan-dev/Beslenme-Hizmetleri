@@ -3273,6 +3273,7 @@ const chartValueLabelPlugin = {
   id: 'valueLabels',
   afterDraw(chart) {
     if (!chart.options.plugins.valueLabels) return;
+    const pos = chart.options.plugins.valueLabelsPosition || 'above';
     const ctx = chart.ctx;
     chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
@@ -3282,9 +3283,14 @@ const chartValueLabelPlugin = {
         ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
         ctx.font = 'bold 11px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
-        ctx.fillText(display, bar.x, bar.y - 7);
+        if (pos === 'inside') {
+          ctx.textBaseline = 'middle';
+          ctx.fillText((val >= 100 ? Math.round(val) : val.toFixed(1)).toString(), bar.x, bar.y + bar.height / 2);
+        } else {
+          ctx.textBaseline = 'bottom';
+          const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
+          ctx.fillText(display, bar.x, bar.y - 7);
+        }
       });
     });
   }
@@ -4161,6 +4167,7 @@ function drawYagChart() {
       plugins: {
         legend: { display: false },
         valueLabels: true,
+        valueLabelsPosition: 'inside',
         tooltip: {
           backgroundColor: '#000',
           titleColor: '#fff',
