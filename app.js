@@ -451,6 +451,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           try { localStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
         }
       }
+      await syncDishesFromSupabase();
     } catch (_) {}
   }
 
