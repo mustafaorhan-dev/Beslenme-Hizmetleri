@@ -3275,18 +3275,21 @@ const chartValueLabelPlugin = {
     if (!chart.options.plugins.valueLabels) return;
     const pos = chart.options.plugins.valueLabelsPosition || 'above';
     const ctx = chart.ctx;
-    chart.data.datasets.forEach((ds, di) => {
+      chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
         const val = ds.data[idx];
         if (val === undefined || val === null || isNaN(val)) return;
-        ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
-        ctx.font = 'bold 11px Inter, sans-serif';
-        ctx.textAlign = 'center';
         if (pos === 'inside') {
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText((val >= 100 ? Math.round(val) : val.toFixed(1)).toString(), bar.x, bar.y + bar.height / 2);
         } else {
+          ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
+          ctx.font = 'bold 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           const display = val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
           ctx.fillText(display, bar.x, bar.y - 7);
