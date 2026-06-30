@@ -473,6 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Loading overlay'i kapat
   document.getElementById('loadingOverlay').classList.add('hidden');
 
+  setConnectionStatus('ok');
   showSyncTime('hazır');
 });
 
