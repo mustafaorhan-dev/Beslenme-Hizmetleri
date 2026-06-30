@@ -1745,7 +1745,9 @@ body {
     width: 280px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
-  }
+}
+.meal-picker-item:hover { background: rgba(99,102,241,0.08) !important; }
+#mealPickerOverlay input:focus { outline: 2px solid var(--accent-cyan); outline-offset: -1px; }
   .sidebar.open { width: 280px; transform: translateX(0); }
   .sidebar-header { display: none; }
   .header .menu-toggle { display: flex; }

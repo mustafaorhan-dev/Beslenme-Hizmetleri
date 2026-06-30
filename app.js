@@ -3916,7 +3916,7 @@ async function renderMenu() {
   }).join('') + `<tr>
     <td><strong>Kişi Sayısı</strong></td>
     ${days.map((d, di) => {
-      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" /></td>`;
+      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" /></td>`;
     }).join('')}
   </tr>` + Array.from({length: 10}, (_, ni) => `<tr>
     <td><strong>Not ${ni + 1}</strong></td>
@@ -3925,8 +3925,77 @@ async function renderMenu() {
       return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
     }).join('')}
   </tr>`).join('');
+  // yemek seçici: çeşit textarea'larına tıklayınca liste aç
+  for (let ci = 0; ci < 5; ci++) {
+    for (let di = 0; di < 5; di++) {
+      const ta = document.getElementById('m' + ci + '_' + di);
+      if (ta) ta.addEventListener('click', showMenuMealPicker);
+    }
+  }
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
+}
+
+let _pickerCi = 0, _pickerDi = 0;
+
+function showMenuMealPicker(e) {
+  const ta = e.currentTarget;
+  if (!ta) return;
+  const id = ta.id;
+  const m = id.match(/^m(\d)_(\d)$/);
+  if (!m) return;
+  _pickerCi = parseInt(m[1]);
+  _pickerDi = parseInt(m[2]);
+  const list = loadYemekler();
+  if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
+  const mevcut = ta.value.trim().split('\n')[0];
+  // picker overlay
+  let overlay = document.getElementById('mealPickerOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'mealPickerOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center';
+    overlay.addEventListener('click', function(ev) { if (ev.target === this) this.style.display = 'none'; });
+    document.body.appendChild(overlay);
+  }
+  const html = `<div style="background:var(--bg-card);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h3 style="font-size:1rem;font-weight:600">Yemek Seç</h3>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mealPickerOverlay').style.display='none'">✕</button>
+    </div>
+    <input type="text" id="mealPickerSearch" placeholder="Yemek ara..." style="padding:0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);margin-bottom:0.75rem" oninput="renderMealPickerList()" />
+    <div id="mealPickerList" style="overflow-y:auto;flex:1">${list.map(y => `<div class="meal-picker-item" data-ad="${escapeHtml(y.ad)}" style="padding:0.5rem 0.75rem;cursor:pointer;border-radius:6px;transition:background 0.15s" onclick="selectMealFromPicker(this)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">${escapeHtml(formatYemek(y).replace(/\n/g, '<br>'))}</div>`).join('')}</div>
+  </div>`;
+  overlay.innerHTML = html;
+  overlay.style.display = 'flex';
+  setTimeout(function() {
+    const inp = document.getElementById('mealPickerSearch');
+    if (inp) { inp.focus(); if (mevcut) inp.value = mevcut; renderMealPickerList(); }
+  }, 100);
+}
+
+function renderMealPickerList() {
+  const list = loadYemekler();
+  const q = (document.getElementById('mealPickerSearch').value || '').toLowerCase();
+  const container = document.getElementById('mealPickerList');
+  if (!container) return;
+  const filtered = q ? list.filter(y => y.ad.toLowerCase().includes(q)) : list;
+  container.innerHTML = filtered.length ? filtered.map(y => `<div class="meal-picker-item" data-ad="${escapeHtml(y.ad)}" style="padding:0.5rem 0.75rem;cursor:pointer;border-radius:6px;transition:background 0.15s" onclick="selectMealFromPicker(this)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">${escapeHtml(formatYemek(y).replace(/\n/g, '<br>'))}</div>`).join('') : '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Eşleşen yemek bulunamadı.</div>';
+}
+
+function selectMealFromPicker(el) {
+  const ad = el.getAttribute('data-ad');
+  if (!ad) return;
+  const list = loadYemekler();
+  const y = list.find(i => i.ad === ad);
+  if (!y) return;
+  const ta = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
+  if (ta) {
+    ta.value = formatYemek(y);
+    // kişi sayısını girince üretim hesaplansın diye trigger
+    refreshMenuProduction();
+  }
+  document.getElementById('mealPickerOverlay').style.display = 'none';
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
