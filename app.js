@@ -914,8 +914,6 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
     showToast('Supabase hatası: ' + err.message, 'error');
   }
 }
-  }
-}
 
 // ─── CARBON FOOTPRINT ────────────────────────────────────────────────────────
 function calcCarbonFootprint(totalAtikKg) {
