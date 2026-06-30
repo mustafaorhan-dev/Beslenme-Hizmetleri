@@ -275,14 +275,34 @@ function doPost(e) {
       const haccpSheet = getSheetOrCreate(HACCP_SHEET_NAME, HACCP_HEADERS);
 
       const records = body.records || [];
+
+      // Mevcut verileri oku (saveAll gibi merge yap)
+      var existing = readSheetData(haccpSheet);
+      var idMap = {};
+      existing.forEach(function(e, idx) { if (e.id) idMap[String(e.id)] = idx; });
+
+      // Gelen kayıtları merge et: ID varsa güncelle, yoksa ekle
+      records.forEach(function(r) {
+        var key = String(r.id || '');
+        if (key && idMap[key] !== undefined) {
+          existing[idMap[key]] = r;
+        } else {
+          existing.push(r);
+        }
+      });
+
+      // Tarihe göre sırala (yeniler üstte)
+      existing.sort(function(a, b) { return String(b.tarih || '').localeCompare(String(a.tarih || '')); });
+
+      // Sheet'e yaz
       haccpSheet.getRange(1, 1, 1, HACCP_HEADERS.length).setValues([HACCP_HEADERS]);
       var lr = haccpSheet.getLastRow();
       if (lr > 1) haccpSheet.getRange(2, 1, lr - 1, HACCP_HEADERS.length).clearContent();
 
-      if (records.length > 0) {
-        var rows = records.map(function(r) {
+      if (existing.length > 0) {
+        var rows = existing.map(function(r) {
           return [
-            String(r.id || ''), String('sicaklik'), String(r.tarih || ''),
+            String(r.id || r.id_ || ''), String('sicaklik'), String(r.tarih || ''),
             r.saat || '', depoNoToName(r.depoAd || r.depoNo || ''),
             (r.sicaklik != null) ? Number(r.sicaklik) : '',
             r.not || '', new Date().toISOString(),

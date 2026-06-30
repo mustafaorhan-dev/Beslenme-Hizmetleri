@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbyx2gz8KLp7qkBWxZW0WjyjDn_3TJBB_r8pb4oqIVSoIpuzHkvOsq_ozG91U1OaSefR_w/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbwXVr2dA3kKh4E_ohp2YVo8HHzumb_1vMd92s1hiHTpJywwIkjVEnyEucy_lD_O344h/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -627,9 +627,14 @@ async function syncHaccpToGSheets() {
 }
 
 let haccpSyncTimer = null;
+let lastHaccpSyncHash = '';
 function syncHaccpSilent(forceDepoOnly) {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
   if (haccpRecords.length === 0 && !forceDepoOnly) return;
+  // Değişiklik kontrolü: veri aynıysa Google Sheet'i gereksiz yere temizleyip yazma (flicker önleme)
+  var currentHash = JSON.stringify(haccpRecords) + JSON.stringify(loadHaccpDepoAdlari());
+  if (currentHash === lastHaccpSyncHash && !forceDepoOnly) return;
+  lastHaccpSyncHash = currentHash;
   haccpSyncTimer = setTimeout(async () => {
     if (!gsheetConfig.webappUrl) return;
     try {
@@ -664,7 +669,7 @@ async function syncHaccpFromGSheets() {
       } catch (_) { data = { data: [], depoAdlari: data ? data.depoAdlari : undefined }; }
     }
     if (data.data && data.data.length > 0) {
-      haccpRecords = data.data.map(r => {
+      haccpRecords = data.data.map(function(r) {
         var typ = (r.type || 'sicaklik').toLowerCase();
         var depoAd = (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, '');
         return {
@@ -678,6 +683,7 @@ async function syncHaccpFromGSheets() {
           nem: typ === 'sicaklik' && r.nem != null ? Number(r.nem) : null
         };
       });
+      lastHaccpSyncHash = JSON.stringify(haccpRecords) + JSON.stringify(data.depoAdlari || []);
     }
     var hasDepo = false;
     if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
@@ -775,11 +781,24 @@ function importHaccpFile(event) {
         }
       }
       if (rows.length === 0) { showToast('Dosyada kayıt bulunamadı.', 'error'); return; }
-      rows.forEach(function(r) { r.id = r.id || Date.now() + Math.random(); });
-      haccpRecords = rows;
+      var eklenen = 0;
+      var guncellenen = 0;
+      rows.forEach(function(r) {
+        r.id = r.id || Date.now() + Math.random();
+        var idx = haccpRecords.findIndex(function(er) { return String(er.id) === String(r.id); });
+        if (idx !== -1) {
+          haccpRecords[idx] = r;
+          guncellenen++;
+        } else {
+          haccpRecords.push(r);
+          eklenen++;
+        }
+      });
       saveHaccpData();
       renderHaccp();
-      showToast(rows.length + ' HACCP kaydı dosyadan yüklendi.', 'success');
+      var mesaj = eklenen + ' yeni kayıt eklendi';
+      if (guncellenen > 0) mesaj += ', ' + guncellenen + ' kayıt güncellendi';
+      showToast(mesaj + ' (' + haccpRecords.length + ' toplam).', 'success');
     } catch (err) { showToast('Dosya okuma hatası: ' + err.message, 'error'); }
   };
   reader.readAsText(file);
@@ -974,12 +993,15 @@ function setLoadingSub(text) {
 // ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
 function loadGSheetConfig() {
   try {
-    var oldUrl = 'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec';
+    var oldUrls = [
+      'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec',
+      'https://script.google.com/macros/s/AKfycbyx2gz8KLp7qkBWxZW0WjyjDn_3TJBB_r8pb4oqIVSoIpuzHkvOsq_ozG91U1OaSefR_w/exec'
+    ];
     var stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
       var parsed = JSON.parse(stored);
-      // Eski URL'yi otomatik güncelle
-      if (parsed.webappUrl === oldUrl) parsed.webappUrl = DEFAULT_GSHEET_URL;
+      // Eski URL'leri yeni deploy ile otomatik güncelle
+      if (oldUrls.indexOf(parsed.webappUrl) !== -1) parsed.webappUrl = DEFAULT_GSHEET_URL;
       gsheetConfig = {
         webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
         lastSync: parsed.lastSync || null
