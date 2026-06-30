@@ -631,20 +631,26 @@ let lastHaccpSyncHash = '';
 function syncHaccpSilent(forceDepoOnly) {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
   if (haccpRecords.length === 0 && !forceDepoOnly) return;
+  if (!gsheetConfig.webappUrl) {
+    showToast('Google Sheets URL ayarlanmamış! Senkronizasyon panelinden URL girin.', 'error');
+    return;
+  }
   // Değişiklik kontrolü: veri aynıysa Google Sheet'i gereksiz yere temizleyip yazma (flicker önleme)
   var currentHash = JSON.stringify(haccpRecords) + JSON.stringify(loadHaccpDepoAdlari());
   if (currentHash === lastHaccpSyncHash && !forceDepoOnly) return;
   lastHaccpSyncHash = currentHash;
   haccpSyncTimer = setTimeout(async () => {
-    if (!gsheetConfig.webappUrl) return;
     try {
       var depoAdlari = loadHaccpDepoAdlari();
-      await fetchWithTimeout(gsheetConfig.webappUrl, {
+      var res = await fetchWithTimeout(gsheetConfig.webappUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
       }, 15000);
-    } catch (_) {}
+      if (!res.ok) showToast('Google Sheets senkronizasyon hatası: ' + res.status, 'error');
+    } catch (err) {
+      showToast('Google Sheets bağlantı hatası: ' + (err.message || err), 'error');
+    }
   }, 400);
 }
 
