@@ -450,6 +450,9 @@ function normalizeDate(v) {
   if (!v) return '';
   // Zaten YYYY-MM-DD formatında mı?
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  // DD.MM.YYYY veya DD/MM/YYYY (Türkiye formatı)
+  var m = v.match(/^(\d{1,2})[\.\/](\d{1,2})[\.\/](\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
   // Sayısal (Google Sheets serial date)?
   if (/^\d+(\.\d+)?$/.test(String(v))) {
     const d = new Date(1899, 11, 30 + Number(v));
@@ -459,6 +462,15 @@ function normalizeDate(v) {
   const d = new Date(v);
   if (!isNaN(d)) return formatLocalDate(d);
   return '';
+}
+
+function displayDate(dateStr) {
+  if (!dateStr) return '—';
+  var n = normalizeDate(dateStr);
+  if (!n) return '—';
+  var d = new Date(n + 'T00:00:00');
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function formatLocalDate(d) {
@@ -2314,9 +2326,7 @@ function renderRecordsTable() {
 }
 
 function buildRow(r, showActions) {
-  const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  }) : '—';
+  const dateStr = displayDate(r.tarih);
 
   const checkbox = showActions ? `
     <td>
@@ -3572,7 +3582,7 @@ function showChartDetailModal(title, records) {
       <table class="data-table" style="min-width:400px">
         <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Yemek Türü</th></tr></thead>
         <tbody>${records.slice(0, 100).map(r => `<tr>
-          <td>${new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR')}</td>
+          <td>${displayDate(r.tarih)}</td>
           <td>${r.yemek || '—'}</td>
           <td>${r.toplam || '—'}</td>
           <td>${(r.atik||0).toFixed(1)}</td>
@@ -3795,7 +3805,7 @@ function renderYagTable() {
 
   const sorted = [...yagRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   tbody.innerHTML = sorted.map(r => {
-    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    const dateStr = displayDate(r.tarih);
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.makbuzNo || '—')}</td>
@@ -3919,7 +3929,7 @@ function renderAmbalajTable() {
 
   const sorted = [...ambalajRecords].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   tbody.innerHTML = sorted.map(r => {
-    const dateStr = r.tarih ? new Date(r.tarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+    const dateStr = displayDate(r.tarih);
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
