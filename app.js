@@ -13,10 +13,10 @@ let yemeklerCache = [];
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
 const SUPABASE_ANON_KEY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseAnonKey : '';
-let supabase = null;
+var supabaseClient = null;
 try {
   if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 } catch (_) {}
 
@@ -25,8 +25,8 @@ let remoteHashes = { adminHash: null, viewerHash: null };
 
 async function syncPasswordHashesFromRemote() {
   try {
-    if (!supabase) return;
-    var { data, error } = await supabase.from('config').select('key,value').in('key', ['admin_hash','viewer_hash']);
+    if (!supabaseClient) return;
+    var { data, error } = await supabaseClient.from('config').select('key,value').in('key', ['admin_hash','viewer_hash']);
     if (error) return;
     data.forEach(function(r) {
       if (r.key === 'admin_hash') { remoteHashes.adminHash = r.value; localStorage.setItem('atik_kontrol_admin_hash', r.value); }
@@ -222,7 +222,7 @@ function openAdminPanel() {
   } else {
     document.getElementById('apLastLogin').textContent = 'Bu oturum';
   }
-  document.getElementById('apStorageInfo').textContent = supabase ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
+  document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
 
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -348,12 +348,12 @@ async function saveAdminSettings() {
   }
   applyViewerRestrictions();
 
-  if (changed && supabase) {
+  if (changed && supabaseClient) {
     var upserts = [];
     if (newAdminHash) upserts.push({ key: 'admin_hash', value: newAdminHash });
     if (newViewerHash) upserts.push({ key: 'viewer_hash', value: newViewerHash });
     if (upserts.length > 0) {
-      supabase.from('config').upsert(upserts, { onConflict: 'key' }).catch(function() {});
+      supabaseClient.from('config').upsert(upserts, { onConflict: 'key' }).catch(function() {});
     }
   }
 }
@@ -513,24 +513,24 @@ function saveData() { if (!requireAdmin()) return;
 }
 
 async function syncRecordsToSupabase() {
-  if (!supabase || records.length === 0) return;
+  if (!supabaseClient || records.length === 0) return;
   try {
-    var { error } = await supabase.from('records').upsert(records, { onConflict: 'id' });
+    var { error } = await supabaseClient.from('records').upsert(records, { onConflict: 'id' });
     if (error) console.warn('Supabase sync error:', error);
   } catch (_) {}
 }
 
 async function syncHaccpToSupabase() {
-  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   try {
     if (haccpRecords.length > 0) {
-      var { error } = await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      var { error } = await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
       if (error) { showToast('Supabase hatası: ' + error.message, 'error'); return; }
     }
     var depoAdlari = loadHaccpDepoAdlari();
     if (depoAdlari.length > 0) {
       var depoRows = depoAdlari.map(function(ad) { return { ad: ad }; });
-      var { error: depoErr } = await supabase.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
+      var { error: depoErr } = await supabaseClient.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
       if (depoErr) { showToast('Depo adı hatası: ' + depoErr.message, 'error'); return; }
     }
     showToast('HACCP verileri Supabase\'e senkronize edildi.', 'success');
@@ -544,20 +544,20 @@ let lastHaccpSyncHash = '';
 function syncHaccpSilent(forceDepoOnly) {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
   if (haccpRecords.length === 0 && !forceDepoOnly) return;
-  if (!supabase) return;
+  if (!supabaseClient) return;
   var currentHash = JSON.stringify(haccpRecords) + JSON.stringify(loadHaccpDepoAdlari());
   if (currentHash === lastHaccpSyncHash && !forceDepoOnly) return;
   lastHaccpSyncHash = currentHash;
   haccpSyncTimer = setTimeout(async () => {
     try {
       if (haccpRecords.length > 0) {
-        var { error } = await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+        var { error } = await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
         if (error) showToast('Supabase HACCP hatası: ' + error.message, 'error');
       }
       var depoAdlari = loadHaccpDepoAdlari();
       if (depoAdlari.length > 0) {
         var depoRows = depoAdlari.map(function(ad) { return { ad: ad }; });
-        await supabase.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
+        await supabaseClient.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
       }
     } catch (err) {
       showToast('Supabase bağlantı hatası: ' + (err.message || err), 'error');
@@ -566,9 +566,9 @@ function syncHaccpSilent(forceDepoOnly) {
 }
 
 async function syncHaccpFromSupabase() {
-  if (!supabase) return false;
+  if (!supabaseClient) return false;
   try {
-    var { data: hData, error: hErr } = await supabase.from('haccp_records').select('*').order('tarih', { ascending: false });
+    var { data: hData, error: hErr } = await supabaseClient.from('haccp_records').select('*').order('tarih', { ascending: false });
     if (hErr) return false;
     if (hData && hData.length > 0) {
       haccpRecords = hData.map(function(r) {
@@ -586,7 +586,7 @@ async function syncHaccpFromSupabase() {
       });
       lastHaccpSyncHash = JSON.stringify(haccpRecords);
     }
-    var { data: dData } = await supabase.from('haccp_depo_adlari').select('ad');
+    var { data: dData } = await supabaseClient.from('haccp_depo_adlari').select('ad');
     if (dData && dData.length > 0) {
       var adlar = dData.map(function(d) { return d.ad; });
       try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(adlar)); } catch (_) {}
@@ -705,10 +705,10 @@ function importHaccpFile(event) {
 // ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
 
 async function syncYagToSupabase() {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
     if (yagRecords.length > 0) {
-      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
     }
     showToast('Yağ verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
@@ -718,17 +718,17 @@ let yagSyncTimer = null;
 function syncYagSilent() {
   if (yagSyncTimer) clearTimeout(yagSyncTimer);
   yagSyncTimer = setTimeout(async () => {
-    if (!supabase || yagRecords.length === 0) return;
+    if (!supabaseClient || yagRecords.length === 0) return;
     try {
-      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
 
 async function syncYagFromSupabase() {
-  if (!supabase) return false;
+  if (!supabaseClient) return false;
   try {
-    var { data, error } = await supabase.from('yag_records').select('*').order('tarih', { ascending: false });
+    var { data, error } = await supabaseClient.from('yag_records').select('*').order('tarih', { ascending: false });
     if (error) return false;
     if (data && data.length > 0) {
       yagRecords = data.map(function(r) {
@@ -752,10 +752,10 @@ async function syncYagFromSupabase() {
 // ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
 
 async function syncAmbalajToSupabase() {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
     if (ambalajRecords.length > 0) {
-      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
     }
     showToast('Ambalaj verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
@@ -765,17 +765,17 @@ let ambalajSyncTimer = null;
 function syncAmbalajSilent() {
   if (ambalajSyncTimer) clearTimeout(ambalajSyncTimer);
   ambalajSyncTimer = setTimeout(async () => {
-    if (!supabase || ambalajRecords.length === 0) return;
+    if (!supabaseClient || ambalajRecords.length === 0) return;
     try {
-      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
 
 async function syncAmbalajFromSupabase() {
-  if (!supabase) return false;
+  if (!supabaseClient) return false;
   try {
-    var { data, error } = await supabase.from('ambalaj_records').select('*').order('tarih', { ascending: false });
+    var { data, error } = await supabaseClient.from('ambalaj_records').select('*').order('tarih', { ascending: false });
     if (error) return false;
     if (data && data.length > 0) {
       ambalajRecords = data.map(function(r) {
@@ -853,27 +853,27 @@ function getMenuUrl() {
 }
 
 async function syncAllToSupabase() { if (!requireAdmin()) return;
-  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   var toastMsg = [];
   try {
     if (records.length > 0) {
-      var { count: rCount } = await supabase.from('records').upsert(records, { onConflict: 'id' }).select('count');
+      var { count: rCount } = await supabaseClient.from('records').upsert(records, { onConflict: 'id' }).select('count');
       toastMsg.push('Kayıtlar: ' + (rCount || records.length));
     }
     if (haccpRecords.length > 0) {
-      await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      await supabaseClient.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
       var depoAdlari = loadHaccpDepoAdlari();
       if (depoAdlari.length > 0) {
-        await supabase.from('haccp_depo_adlari').upsert(depoAdlari.map(function(a) { return { ad: a }; }), { onConflict: 'ad' });
+        await supabaseClient.from('haccp_depo_adlari').upsert(depoAdlari.map(function(a) { return { ad: a }; }), { onConflict: 'ad' });
       }
       toastMsg.push('HACCP: ' + haccpRecords.length);
     }
     if (yagRecords.length > 0) {
-      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
       toastMsg.push('Yağ: ' + yagRecords.length);
     }
     if (ambalajRecords.length > 0) {
-      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
       toastMsg.push('Ambalaj: ' + ambalajRecords.length);
     }
     showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
@@ -883,10 +883,10 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
 }
 
 async function syncAllFromSupabase() { if (!requireAdmin()) return;
-  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   var toastMsg = [];
   try {
-    var { data: rData } = await supabase.from('records').select('*').order('tarih', { ascending: false });
+    var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
     if (rData && rData.length > 0) {
       records = rData.map(function(r) { return {
         id: Number(r.id) || Date.now() + Math.random(),
@@ -2695,9 +2695,9 @@ function closeYemekModal() {
 
 // -- Supabase dish sync --
 async function syncDishesFromSupabase() {
-  if (!supabase) return false;
+  if (!supabaseClient) return false;
   try {
-    var { data, error } = await supabase.from('dishes').select('*');
+    var { data, error } = await supabaseClient.from('dishes').select('*');
     if (error) return false;
     if (data && data.length > 0) {
       yemeklerCache = data.map(function(d) {
@@ -2719,18 +2719,18 @@ async function syncDishesFromSupabase() {
 }
 
 async function syncDishesToSupabase() {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
     var list = loadYemekler();
-    await supabase.from('dishes').upsert(list, { onConflict: 'id' });
+    await supabaseClient.from('dishes').upsert(list, { onConflict: 'id' });
   } catch (_) {}
 }
 
 // -- Menu Supabase sync --
 async function fetchMenuData() {
-  if (!supabase) return {};
+  if (!supabaseClient) return {};
   try {
-    var { data, error } = await supabase.from('weekly_menu').select('*');
+    var { data, error } = await supabaseClient.from('weekly_menu').select('*');
     if (error || !data) return {};
     var result = {};
     data.forEach(function(row) {
@@ -2741,14 +2741,14 @@ async function fetchMenuData() {
 }
 
 async function saveMenuData(allData) {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   try {
     var upserts = [];
     Object.keys(allData).forEach(function(weekKey) {
       upserts.push({ week_key: weekKey, data: allData[weekKey] });
     });
     if (upserts.length > 0) {
-      var { error } = await supabase.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
+      var { error } = await supabaseClient.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
       if (error) showToast('Menü kaydedilemedi: ' + error.message, 'error');
     }
   } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
