@@ -510,6 +510,7 @@ function loadData() {
   } catch (e) {
     records = [];
   }
+  records.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
   filteredRecords = [...records];
 }
 
@@ -1189,6 +1190,7 @@ function loadHaccpData() {
     const stored = localStorage.getItem(HACCP_STORAGE_KEY);
     haccpRecords = stored ? JSON.parse(stored) : [];
   } catch (_) { haccpRecords = []; }
+  haccpRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
   renderHaccp();
 }
 
@@ -1962,6 +1964,7 @@ function handleImport(e) {
             row[field] = vals[idx] || '';
           });
           if (row.tarih) {
+            row.tarih = normalizeDate(row.tarih);
             row.id = Date.now() + i;
             row.yemek = parseNum(row.yemek);
             row.fire = parseNum(row.fire);
@@ -2143,7 +2146,7 @@ function renderDataInfo() {
   const dates = records.map(r => r.tarih).filter(Boolean).sort();
   const first = dates[0];
   const last = dates[dates.length - 1];
-  const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('tr-TR') : '—';
+  const fmt = (d) => displayDate(d);
   const totalYemek = records.reduce((s, r) => s + (r.yemek || 0), 0);
   const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
   rangeEl.textContent = `${records.length} kayıt • ${fmt(first)} — ${fmt(last)} • ${totalYemek.toLocaleString('tr-TR')} üretim • ${totalAtik.toFixed(1)} kg atık`;
@@ -2941,8 +2944,8 @@ function renderReport() {
   const minAtik = Math.min(...atikValues);
   const maxAtikRec = records.find(r => (r.atik||0) === maxAtik);
   const minAtikRec = records.find(r => (r.atik||0) === minAtik);
-  const maxAtikDate = maxAtikRec ? new Date(maxAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
-  const minAtikDate = minAtikRec ? new Date(minAtikRec.tarih + 'T00:00:00').toLocaleDateString('tr-TR') : '';
+  const maxAtikDate = maxAtikRec ? displayDate(maxAtikRec.tarih) : '';
+  const minAtikDate = minAtikRec ? displayDate(minAtikRec.tarih) : '';
 
   // Trend: son 7 gün vs önceki 7 gün
   const sortedByDate = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
@@ -3780,6 +3783,7 @@ function loadYagData() {
     const stored = localStorage.getItem(YAG_STORAGE_KEY);
     yagRecords = stored ? JSON.parse(stored) : [];
   } catch (_) { yagRecords = []; }
+  yagRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
 }
 
 function saveYagData() {
@@ -3904,6 +3908,7 @@ function loadAmbalajData() {
     const stored = localStorage.getItem(AMBALAJ_STORAGE_KEY);
     ambalajRecords = stored ? JSON.parse(stored) : [];
   } catch (_) { ambalajRecords = []; }
+  ambalajRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
 }
 
 function saveAmbalajData() {
