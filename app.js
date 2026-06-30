@@ -2694,6 +2694,55 @@ function renderWeeklyTotal(dishEntries, days) {
   </div>`;
 }
 
+function importYemekCSV(event) { if (!requireAdmin()) return;
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const text = ev.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (!lines.length) throw new Error('CSV boş');
+      const headers = parseCSVLine(lines[0]);
+      const adIdx = headers.findIndex(h => /yemek.*ad|adı|ad/i.test(h));
+      const kaloriIdx = headers.findIndex(h => /kalori|kcal/i.test(h));
+      const alerjenIdx = headers.findIndex(h => /alerjen/i.test(h));
+      const list = loadYemekler();
+      const basla = adIdx === -1 ? 0 : 1;
+      for (let r = basla; r < lines.length; r++) {
+        const cols = parseCSVLine(lines[r]);
+        let ad = '';
+        if (adIdx !== -1 && adIdx < cols.length) {
+          ad = (cols[adIdx] || '').trim();
+        } else if (basla === 0) {
+          ad = (cols[0] || '').trim();
+        }
+        if (!ad) continue;
+        const mevcut = list.findIndex(y => y.ad.toLowerCase() === ad.toLowerCase());
+        const yemek = {
+          id: mevcut !== -1 ? list[mevcut].id : 'y_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          ad: ad,
+          kalori: (kaloriIdx !== -1 && kaloriIdx < cols.length) ? (cols[kaloriIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].kalori || '' : ''),
+          alerjen: (alerjenIdx !== -1 && alerjenIdx < cols.length) ? (cols[alerjenIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].alerjen || '' : ''),
+          tarif: mevcut !== -1 ? list[mevcut].tarif || [] : []
+        };
+        if (mevcut !== -1) {
+          list[mevcut] = yemek;
+        } else {
+          list.push(yemek);
+        }
+      }
+      saveYemekler(list);
+      renderYemekListesi();
+      showToast(list.length + ' yemek yüklendi.', 'success');
+    } catch (err) {
+      showToast('CSV yükleme hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
 function loadYemekler() {
   return yemeklerCache;
@@ -3976,53 +4025,50 @@ function importMenuCSV(event) { if (!requireAdmin()) return;
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) throw new Error('CSV en az 2 satır içermelidir (başlık + veri)');
       const headers = parseCSVLine(lines[0]);
-      const tarihIdx = headers.findIndex(h => /tarih/i.test(h));
-      const cesitIdxs = [];
-      for (let i = 1; i <= 5; i++) {
-        const idx = headers.findIndex(h => new RegExp('^\\s*' + i + '\\s*\\.?\\s*çeşit','i').test(h) || new RegExp('^\\s*' + i + '\\s*\\.?\\s*cesit','i').test(h));
-        cesitIdxs.push(idx);
-      }
-      const kisiIdx = headers.findIndex(h => /kişi|kisi/i.test(h));
-      if (tarihIdx === -1) throw new Error('"Tarih" sütunu bulunamadı.');
-      // csv verisini haftalık menü yapısına dönüştür
-      const allData = await fetchMenuData();
+      // gün sütunlarını bul (Pazartesi, Salı, ...)
+      const gunIdxMap = {};
+      GUNLER.forEach((gun, i) => {
+        const idx = headers.findIndex(h => h.toLowerCase().includes(gun.slice(0,3).toLowerCase()) || gun.toLowerCase().includes(h.toLowerCase()));
+        if (idx !== -1) gunIdxMap[i] = idx;
+      });
+      if (!Object.keys(gunIdxMap).length) throw new Error('Gün sütunları bulunamadı (Pazartesi, Salı, ...)');
+      const cesitSatirlari = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+      let kisiSatir = -1;
       for (let r = 1; r < lines.length; r++) {
         const cols = parseCSVLine(lines[r]);
-        const tarih = cols[tarihIdx]?.trim();
-        if (!tarih) continue;
-        // hafta anahtarını bul
-        let weekKey = null;
-        let dayKey = null;
-        for (const wk in allData) {
-          const parts = wk.split('-');
-          if (parts.length === 6) {
-            const bas = parts[0]+'-'+parts[1]+'-'+parts[2];
-            const bit = parts[3]+'-'+parts[4]+'-'+parts[5];
-            if (tarih >= bas && tarih <= bit) { weekKey = wk; break; }
+        const ilkHuc = (cols[0] || '').trim().toLowerCase();
+        for (let c = 1; c <= 5; c++) {
+          if (new RegExp('^\\s*' + c + '\\s*\\.?\\s*çeşit','i').test(ilkHuc) || new RegExp('^\\s*' + c + '\\s*\\.?\\s*cesit','i').test(ilkHuc)) {
+            cesitSatirlari[String(c)] = r;
           }
         }
-        if (!weekKey) {
-          // hafta anahtarı yoksa oluştur: tarihin bulunduğu haftanın pazartesi-cuması
-          const d = new Date(tarih);
-          const gun = d.getDay();
-          const diff = d.getDate() - gun + (gun === 0 ? -6 : 1);
-          const mon = new Date(d);
-          mon.setDate(diff);
-          const fri = new Date(mon);
-          fri.setDate(mon.getDate() + 4);
-          weekKey = formatDateStr(mon) + '-' + formatDateStr(fri);
-          if (!allData[weekKey]) allData[weekKey] = {};
-        }
-        if (!allData[weekKey][tarih]) allData[weekKey][tarih] = { yemekler: ['','','','',''], kisi: 0, notlar: [] };
-        const yemekler = allData[weekKey][tarih].yemekler;
-        for (let c = 0; c < 5; c++) {
-          const idx = cesitIdxs[c];
-          if (idx !== -1 && idx < cols.length) yemekler[c] = cols[idx]?.trim() || '';
-        }
-        if (kisiIdx !== -1 && kisiIdx < cols.length) {
-          allData[weekKey][tarih].kisi = parseInt(cols[kisiIdx]) || 0;
-        }
+        if (/kişi|kisi/.test(ilkHuc)) kisiSatir = r;
       }
+      // şu anki görünen haftanın tarihlerini al
+      const monday = getWeekStartDate(menuWeekOffset);
+      const allData = await fetchMenuData();
+      const weekKey = formatDateStr(monday) + '-' + formatDateStr(new Date(monday.getTime() + 4*86400000));
+      if (!allData[weekKey]) allData[weekKey] = {};
+      GUNLER.forEach((_, i) => {
+        const tarih = new Date(monday);
+        tarih.setDate(monday.getDate() + i);
+        const key = formatDateStr(tarih);
+        const gunIdx = gunIdxMap[i];
+        if (gunIdx === undefined) return;
+        if (!allData[weekKey][key]) allData[weekKey][key] = { yemekler: ['','','','',''], kisi: 0, notlar: [] };
+        const row = allData[weekKey][key];
+        for (let c = 1; c <= 5; c++) {
+          const satir = cesitSatirlari[String(c)];
+          if (satir > 0 && satir < lines.length) {
+            const cols = parseCSVLine(lines[satir]);
+            if (gunIdx < cols.length) row.yemekler[c-1] = (cols[gunIdx] || '').trim();
+          }
+        }
+        if (kisiSatir > 0 && kisiSatir < lines.length) {
+          const cols = parseCSVLine(lines[kisiSatir]);
+          if (gunIdx < cols.length) row.kisi = parseInt(cols[gunIdx]) || 0;
+        }
+      });
       await saveMenuData(allData);
       await renderMenu();
       showToast('CSV menü yüklendi.', 'success');

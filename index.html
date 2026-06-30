@@ -965,6 +965,8 @@
         <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
           <input type="text" id="yemekSearchInput" placeholder="Yemek adı ile ara..." style="flex:1;min-width:150px" oninput="renderYemekListesi()" />
           <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekCSVUpload').click()">CSV Yükle</button>
+          <input type="file" id="yemekCSVUpload" accept=".csv,.txt" style="display:none" onchange="importYemekCSV(event)" />
         </div>
         <div id="yemekFormContainer" style="display:none;margin-bottom:1rem"></div>
         <div id="yemekListesiContainer"></div>
