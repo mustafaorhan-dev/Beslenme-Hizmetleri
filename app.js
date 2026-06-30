@@ -4090,9 +4090,6 @@ function drawYagChart() {
   var empty = document.getElementById('chartYagEmpty');
   var yearContainer = document.getElementById('yagChartYears');
   if (!canvas || !empty) return;
-  // skip if parent details is closed (not visible)
-  var details = canvas.closest('details');
-  if (details && !details.open) return;
 
   // build year filter
   var years = {};

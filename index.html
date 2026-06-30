@@ -716,6 +716,17 @@
           <h2>Atık Yağ Kayıtları</h2>
           <span class="badge" id="yagBadge">0 kayıt</span>
         </div>
+        <!-- Yag Chart -->
+        <div style="margin-bottom:0.75rem">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
+            <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Atık Yağ Grafiği — yıl seçin, aya tıklayın</span>
+            <div id="yagChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
+          </div>
+          <div class="chart-area" id="chartYag" style="height:170px">
+            <canvas id="canvasYag"></canvas>
+            <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
+          </div>
+        </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateYag">
             <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
@@ -738,22 +749,6 @@
             <tbody id="yagTbody"></tbody>
           </table>
         </div>
-        <!-- Mini Yag Chart -->
-        <details id="yagChartSection" style="margin-top:0.75rem;cursor:pointer" ontoggle="if(this.open&&typeof drawYagChart==='function'){setTimeout(drawYagChart,100)}">
-          <summary style="font-size:0.8rem;color:var(--text-muted);padding:0.25rem 0;user-select:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle;margin-right:4px"><path d="M7 20l4-16 4 16M5 8h14"/></svg>
-            Aylık Atık Yağ Grafiği
-            <span style="font-size:0.7rem;color:var(--text-muted);margin-left:0.5rem">— yıl seçin ve detay için aya tıklayın</span>
-          </summary>
-          <div style="margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-            <label style="font-size:0.75rem;color:var(--text-muted)">Yıl:</label>
-            <div id="yagChartYears" style="display:flex;gap:4px"></div>
-          </div>
-          <div class="chart-area" id="chartYag" style="height:180px;margin-top:0.5rem">
-            <canvas id="canvasYag"></canvas>
-            <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Bu yıla ait atık yağ kaydı bulunamadı.</div>
-          </div>
-        </details>
       </div>
     </div>
 
