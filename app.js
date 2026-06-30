@@ -380,7 +380,7 @@ function applyViewerRestrictions() {
     if (actionBtn) actionBtn.style.display = settings.showActions ? '' : 'none';
     var exportBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="exportData"]');
     if (exportBtn) exportBtn.style.display = settings.showExportBtn ? '' : 'none';
-    var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="openSyncPanel"]');
+    var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllToSupabase"]');
     if (syncBtn) syncBtn.style.display = settings.showSyncBtn ? '' : 'none';
     var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
     if (pullBtn) pullBtn.style.display = settings.showSyncBtn ? '' : 'none';
@@ -647,7 +647,7 @@ function exportHaccpExcel() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast(haccpRecords.length + ' kayıt CSV olarak indirildi. Google Sheets\'e yüklemek için Dosya > İçe Aktar seçin.', 'success');
+  showToast(haccpRecords.length + ' kayıt CSV olarak indirildi.', 'success');
 }
 
 // ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
@@ -2685,14 +2685,14 @@ function openYemekModal() {
   editingYemekId = null;
   document.getElementById('yemekFormContainer').style.display = 'none';
   renderYemekListesi();
-  // Background'da Google Sheets'ten taze veri çek (cache güncelle)
+  // Background'da Supabase'ten taze veri çek (cache güncelle)
   syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
   document.getElementById('yemekModal').classList.remove('show');
 }
 
-// -- Google Sheets dish sync --
+// -- Supabase dish sync --
 async function syncDishesFromSupabase() {
   if (!supabase) return false;
   try {
