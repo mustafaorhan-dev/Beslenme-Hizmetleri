@@ -1919,19 +1919,31 @@ function handleImport(e) {
       } else if (file.name.endsWith('.csv')) {
         const lines = content.split(/\r?\n/).filter(l => l.trim());
         if (lines.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
-        const headers = lines[0].split(';').map(h => h.replace(/^"|"$/g, '').trim());
+        // Delimiter detection: comma or semicolon
+        const firstLine = lines[0];
+        const delim = firstLine.includes(';') ? ';' : ',';
+        const headers = firstLine.split(delim).map(h => h.replace(/^"|"$/g, '').trim());
         const fieldMap = {
-          'Tarih': 'tarih', 'Üretilen Yemek Sayısı': 'yemek', '%10 Fire': 'fire',
-          'Turnike Geçiş Sayısı': 'turnike', 'Yemekhanede Çalışan Personel Sayısı': 'personel',
-          'Toplam Geçiş': 'toplam', 'Porsiyon Miktarı (gr)': 'porsiyon',
-          'Atık Miktarı (kg)': 'atik', 'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci',
-          'Yemek Türü': 'yemek_adi',
+          'Tarih': 'tarih', 'Üretilen Yemek Sayısı': 'yemek', 'Üretilen Yemek': 'yemek',
+          '%10 Fire': 'fire', '%10 fire': 'fire', 'Fire': 'fire',
+          'Turnike Geçiş Sayısı': 'turnike', 'Turnike Geçiş': 'turnike', 'Turnike': 'turnike',
+          'Yemekhanede Çalışan Personel Sayısı': 'personel', 'Pers. Sayısı': 'personel',
+          'Toplam Geçiş': 'toplam', 'Toplam Geçiş Sayısı': 'toplam', 'Toplam': 'toplam',
+          'Porsiyon Miktarı (gr)': 'porsiyon', 'Porsiyon (gr)': 'porsiyon', 'Porsiyon': 'porsiyon',
+          'Atık Miktarı (kg)': 'atik', 'Atık (kg)': 'atik', 'Atık': 'atik',
+          'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci', 'Öğrenci Sayısı': 'ogrenci',
+          'Yemek Türü': 'yemek_adi', 'Yemek Adı': 'yemek_adi',
           'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
           'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
           'atik': 'atik', 'ogrenci': 'ogrenci', 'yemek_adi': 'yemek_adi'
         };
+        function parseNum(v) {
+          if (!v) return 0;
+          v = String(v).trim().replace(/"/g, '');
+          return Number(v.replace(',', '.')) || 0;
+        }
         for (let i = 1; i < lines.length; i++) {
-          const vals = lines[i].split(';').map(v => v.replace(/^"|"$/g, '').trim());
+          const vals = lines[i].split(delim).map(v => v.replace(/^"|"$/g, '').trim());
           const row = {};
           headers.forEach((h, idx) => {
             const field = fieldMap[h] || h;
@@ -1939,14 +1951,14 @@ function handleImport(e) {
           });
           if (row.tarih) {
             row.id = Date.now() + i;
-            row.yemek = Number(row.yemek) || 0;
-            row.fire = Number(row.fire) || 0;
-            row.turnike = Number(row.turnike) || 0;
-            row.personel = Number(row.personel) || 0;
-            row.toplam = Number(row.toplam) || 0;
-            row.porsiyon = Number(row.porsiyon) || 0;
-            row.atik = Number(row.atik) || 0;
-            row.ogrenci = Number(row.ogrenci) || 0;
+            row.yemek = parseNum(row.yemek);
+            row.fire = parseNum(row.fire);
+            row.turnike = parseNum(row.turnike);
+            row.personel = parseNum(row.personel);
+            row.toplam = parseNum(row.toplam);
+            row.porsiyon = parseNum(row.porsiyon);
+            row.atik = parseNum(row.atik);
+            row.ogrenci = parseNum(row.ogrenci);
             imported.push(row);
           }
         }
