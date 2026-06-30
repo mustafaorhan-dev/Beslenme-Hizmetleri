@@ -3586,46 +3586,6 @@ function drawAllCharts() {
     makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
   }
 
-  // --- YAG Aylik Atik Yag Chart ---
-  var yagCanvas = document.getElementById('canvasYag');
-  var yagEmpty = document.getElementById('chartYagEmpty');
-  if (yagCanvas && yagEmpty) {
-    if (yagRecords.length === 0) {
-      yagEmpty.style.display = 'block';
-      yagCanvas.style.display = 'none';
-    } else {
-      yagEmpty.style.display = 'none';
-      yagCanvas.style.display = 'block';
-      var yagMonthly = {};
-      yagRecords.forEach(function(r) {
-        if (!r.tarih) return;
-        var d = new Date(r.tarih + 'T00:00:00');
-        if (isNaN(d)) return;
-        if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return;
-        var mk = (d.getMonth() + 1) + '/' + d.getFullYear();
-        yagMonthly[mk] = (yagMonthly[mk] || 0) + (Number(r.miktar) || 0);
-      });
-      var yagLabels = [];
-      chartYears.forEach(function(y) { for (var m = 1; m <= 12; m++) { var k = m + '/' + y; if (yagMonthly[k]) yagLabels.push(k); } });
-      if (yagLabels.length > 0) {
-        makeChart('canvasYag', yagLabels, [{ data: yagLabels.map(function(k) { return yagMonthly[k]; }), color: '#f97316', label: 'Aylik Atik Yag (lt)' }], { type: 'bar', showValues: true, onClick: function(label) {
-          var parts = label.split('/');
-          if (parts.length === 2) {
-            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
-            if (!isNaN(ay) && !isNaN(yil)) {
-              var filtered = yagRecords.filter(function(r) {
-                if (!r.tarih) return false;
-                var d = new Date(r.tarih + 'T00:00:00');
-                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
-              });
-              if (filtered.length > 0) showChartDetailModal(label + ' Atık Yağ', filtered);
-            }
-          }
-        }});
-      }
-    }
-  }
-
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
     if (r.type !== 'sicaklik') return false;
@@ -4049,6 +4009,7 @@ function renderYagTable() {
       </td>
     </tr>`;
   }).join('');
+  drawYagChart();
 }
 
 function openYagModal(id) {
@@ -4119,6 +4080,132 @@ function deleteYagRecord(id) {
   renderYagTable();
   syncYagSilent();
   showToast('Atık yağ kaydı silindi.', 'success');
+}
+
+let yagChartInstance = null;
+let yagChartYear = 'all';
+
+function drawYagChart() {
+  var canvas = document.getElementById('canvasYag');
+  var empty = document.getElementById('chartYagEmpty');
+  var yearContainer = document.getElementById('yagChartYears');
+  if (!canvas || !empty) return;
+  // skip if parent details is closed (not visible)
+  var details = canvas.closest('details');
+  if (details && !details.open) return;
+
+  // build year filter
+  var years = {};
+  yagRecords.forEach(function(r) {
+    if (!r.tarih) return;
+    var y = r.tarih.slice(0, 4);
+    if (y) years[y] = true;
+  });
+  var yearList = Object.keys(years).sort();
+  if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  if (yearContainer) {
+    yearContainer.innerHTML = '<button class="year-btn' + (yagChartYear === 'all' ? ' active' : '') + '" data-y="all" style="font-size:0.75rem;padding:2px 8px">Tümü</button>' +
+      yearList.map(function(y) { return '<button class="year-btn' + (yagChartYear === y ? ' active' : '') + '" data-y="' + y + '" style="font-size:0.75rem;padding:2px 8px">' + y + '</button>'; }).join('');
+    yearContainer.querySelectorAll('.year-btn').forEach(function(btn) {
+      btn.onclick = function() {
+        yagChartYear = this.getAttribute('data-y');
+        drawYagChart();
+      };
+    });
+  }
+
+  // aggregate monthly
+  var monthly = {};
+  yagRecords.forEach(function(r) {
+    if (!r.tarih) return;
+    if (yagChartYear !== 'all' && r.tarih.slice(0, 4) !== yagChartYear) return;
+    var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
+    monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
+  });
+  var labels = Object.keys(monthly).sort(function(a, b) {
+    var pa = a.split('/'), pb = b.split('/');
+    return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
+  });
+  var values = labels.map(function(k) { return monthly[k]; });
+
+  if (labels.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  // size canvas
+  var parent = canvas.parentElement;
+  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  canvas.style.width = w + 'px';
+  canvas.style.height = '160px';
+  var ctx = canvas.getContext('2d');
+
+  // destroy old
+  if (yagChartInstance) { yagChartInstance.destroy(); yagChartInstance = null; }
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1e293b';
+  var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  yagChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Atık Yağ (lt)',
+        data: values,
+        backgroundColor: '#f97316',
+        borderRadius: 4,
+        barPercentage: 0.7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#000',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y.toFixed(1) + ' lt'; }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, font: { size: 10 } },
+          grid: { color: gridColor }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: textColor, font: { size: 10 } },
+          grid: { color: gridColor }
+        }
+      },
+      onClick: function(e) {
+        var active = yagChartInstance.getElementsAtEventForMode(e, 'index', { intersect: true }, false);
+        if (active.length > 0) {
+          var idx = active[0].index;
+          var label = labels[idx];
+          var parts = label.split('/');
+          if (parts.length === 2) {
+            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
+            if (!isNaN(ay) && !isNaN(yil)) {
+              var filtered = yagRecords.filter(function(r) {
+                if (!r.tarih) return false;
+                var d = new Date(r.tarih + 'T00:00:00');
+                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
+              });
+              if (filtered.length > 0) showChartDetailModal(label + ' Atık Yağ', filtered);
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 // ─── AMBALAJ ATIKLARI ────────────────────────────────────────────────────
