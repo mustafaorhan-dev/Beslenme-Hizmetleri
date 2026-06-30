@@ -413,8 +413,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadYagData();
   loadAmbalajData();
 
-  // localStorage boşsa Supabase'ten otomatik çek
-  if (records.length === 0 && haccpRecords.length === 0 && yagRecords.length === 0 && ambalajRecords.length === 0 && supabaseClient) {
+  // localStorage'ta veri yoksa Supabase'ten otomatik çek
+  if (supabaseClient && (records.length === 0 || haccpRecords.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
     setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
     try {
       await syncAllFromSupabase();
@@ -2148,6 +2148,9 @@ function renderAll() {
   renderReport();
   renderSparklines();
   renderComparison();
+  renderHaccp();
+  renderYagTable();
+  renderAmbalajTable();
 }
 
 function renderTodaySummary() {
