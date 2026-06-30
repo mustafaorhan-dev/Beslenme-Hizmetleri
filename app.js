@@ -412,6 +412,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHaccpData();
   loadYagData();
   loadAmbalajData();
+
+  // localStorage boşsa Supabase'ten otomatik çek
+  if (records.length === 0 && haccpRecords.length === 0 && yagRecords.length === 0 && ambalajRecords.length === 0 && supabaseClient) {
+    setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
+    try {
+      await syncAllFromSupabase();
+    } catch (_) {}
+  }
+
   setCurrentDate();
   renderAll();
   drawAllCharts();
