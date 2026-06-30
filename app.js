@@ -4221,6 +4221,25 @@ function drawYagChart() {
 const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
 let ambalajRecords = [];
 let editingAmbalajId = null;
+let ambalajBirim = 'kg';
+
+function toggleAmbalajBirim() {
+  var btn = document.getElementById('afBirimToggle');
+  var inp = document.getElementById('afMiktar');
+  if (ambalajBirim === 'kg') {
+    ambalajBirim = 'g';
+    btn.textContent = 'g';
+    if (inp.value) inp.value = (parseFloat(inp.value) * 1000).toFixed(0);
+    inp.step = '1';
+    inp.placeholder = '0';
+  } else {
+    ambalajBirim = 'kg';
+    btn.textContent = 'kg';
+    if (inp.value) inp.value = (parseFloat(inp.value) / 1000).toFixed(3);
+    inp.step = '0.001';
+    inp.placeholder = '0.000';
+  }
+}
 
 function loadAmbalajData() {
   try {
@@ -4257,7 +4276,7 @@ function renderAmbalajTable() {
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
-      <td>${(r.miktar || 0).toFixed(1)}</td>
+      <td>${(r.miktar || 0) < 1 ? (r.miktar || 0).toFixed(3) : (r.miktar || 0).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted)">kg</span></td>
       <td>${escapeHtml(r.not || '—')}</td>
       <td>
         <button class="btn-icon" onclick="editAmbalajRecord(${r.id})" title="Düzenle">
@@ -4280,6 +4299,10 @@ function openAmbalajModal(id) {
   form.reset();
   document.getElementById('afTarih').value = formatLocalDate(new Date());
 
+  ambalajBirim = 'kg';
+  var btn = document.getElementById('afBirimToggle');
+  if (btn) { btn.textContent = 'kg'; document.getElementById('afMiktar').step = '0.001'; document.getElementById('afMiktar').placeholder = '0.000'; }
+
   if (id) {
     const rec = ambalajRecords.find(r => r.id === id);
     if (!rec) return;
@@ -4290,6 +4313,7 @@ function openAmbalajModal(id) {
     document.getElementById('afNot').value = rec.not || '';
   } else {
     title.textContent = 'Yeni Ambalaj Atığı Kaydı';
+    document.getElementById('afTur').value = '';
   }
 
   overlay.classList.add('open');
@@ -4305,11 +4329,14 @@ function closeAmbalajModal() {
 function saveAmbalajRecord(e) {
   e.preventDefault();
 
+  var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
+  if (ambalajBirim === 'g') rawMiktar = rawMiktar / 1000;
+
   const rec = {
     id: editingAmbalajId || Date.now(),
     tarih: document.getElementById('afTarih').value,
     tur: document.getElementById('afTur').value,
-    miktar: parseFloat(document.getElementById('afMiktar').value) || 0,
+    miktar: rawMiktar,
     not: document.getElementById('afNot').value.trim()
   };
 
