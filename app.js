@@ -417,7 +417,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (supabaseClient && (records.length === 0 || haccpRecords.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
     setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
     try {
-      await syncAllFromSupabase();
+      if (records.length === 0 && getRole() === ROLE_ADMIN) {
+        var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
+        if (rData && rData.length > 0) {
+          records = rData.map(function(r) { return {
+            id: Number(r.id) || Date.now() + Math.random(),
+            tarih: normalizeDate(r.tarih),
+            yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
+            turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
+            toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
+            atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+          }; });
+          records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+          saveData();
+          filteredRecords = [...records];
+        }
+      }
+      if (haccpRecords.length === 0) {
+        var hPulled = await syncHaccpFromSupabase();
+        if (hPulled) saveHaccpData();
+      }
+      if (yagRecords.length === 0) {
+        var yPulled = await syncYagFromSupabase();
+        if (yPulled) saveYagData();
+      }
+      if (ambalajRecords.length === 0) {
+        var aPulled = await syncAmbalajFromSupabase();
+        if (aPulled) saveAmbalajData();
+      }
     } catch (_) {}
   }
 
