@@ -5,31 +5,34 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzup0Kap77U5GRJU6iyuZ7AsC9bUqzq7CkqMRJ5FKfemDWIrM0aMzJ1dBGJXV2L5j3IaA/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
-let gsheetConfig = { webappUrl: '', lastSync: null };
 let yemeklerCache = [];
+
+// ─── SUPABASE ────────────────────────────────────────────────────────────────
+const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
+const SUPABASE_ANON_KEY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseAnonKey : '';
+let supabase = null;
+try {
+  if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (_) {}
 
 // ─── REMOTE PASSWORD HASH CACHE ──────────────────────────────────────────────
 let remoteHashes = { adminHash: null, viewerHash: null };
 
 async function syncPasswordHashesFromRemote() {
-  if (!gsheetConfig || !gsheetConfig.webappUrl) return;
   try {
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'getPasswords' })
-    }, 30000);
-    const data = await res.json();
-    if (data.adminHash) remoteHashes.adminHash = data.adminHash;
-    if (data.viewerHash) remoteHashes.viewerHash = data.viewerHash;
-    // sync successful hashes down to localStorage as well
-    if (data.adminHash) localStorage.setItem('atik_kontrol_admin_hash', data.adminHash);
-    if (data.viewerHash) localStorage.setItem('atik_kontrol_viewer_hash', data.viewerHash);
-  } catch (_) { /* remote sync is best-effort */ }
+    if (!supabase) return;
+    var { data, error } = await supabase.from('config').select('key,value').in('key', ['admin_hash','viewer_hash']);
+    if (error) return;
+    data.forEach(function(r) {
+      if (r.key === 'admin_hash') { remoteHashes.adminHash = r.value; localStorage.setItem('atik_kontrol_admin_hash', r.value); }
+      if (r.key === 'viewer_hash') { remoteHashes.viewerHash = r.value; localStorage.setItem('atik_kontrol_viewer_hash', r.value); }
+    });
+  } catch (_) {}
 }
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
@@ -216,7 +219,7 @@ function openAdminPanel() {
   } else {
     document.getElementById('apLastLogin').textContent = 'Bu oturum';
   }
-  document.getElementById('apStorageInfo').textContent = gsheetConfig.webappUrl ? 'Bulut + Yerel' : 'Yerel (tarayıcı)';
+  document.getElementById('apStorageInfo').textContent = supabase ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
 
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -342,15 +345,13 @@ async function saveAdminSettings() {
   }
   applyViewerRestrictions();
 
-  if (changed && gsheetConfig && gsheetConfig.webappUrl) {
-    var payload = { action: 'savePasswords' };
-    if (newAdminHash) payload.adminHash = newAdminHash;
-    if (newViewerHash) payload.viewerHash = newViewerHash;
-    fetch(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).catch(function() {});
+  if (changed && supabase) {
+    var upserts = [];
+    if (newAdminHash) upserts.push({ key: 'admin_hash', value: newAdminHash });
+    if (newViewerHash) upserts.push({ key: 'viewer_hash', value: newViewerHash });
+    if (upserts.length > 0) {
+      supabase.from('config').upsert(upserts, { onConflict: 'key' }).catch(function() {});
+    }
   }
 }
 
@@ -381,7 +382,7 @@ function applyViewerRestrictions() {
     if (exportBtn) exportBtn.style.display = settings.showExportBtn ? '' : 'none';
     var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="openSyncPanel"]');
     if (syncBtn) syncBtn.style.display = settings.showSyncBtn ? '' : 'none';
-    var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="quickPullFromSheets"]');
+    var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
     if (pullBtn) pullBtn.style.display = settings.showSyncBtn ? '' : 'none';
     if (!settings.editAllowed) {
       document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input, #haccpForm textarea, #haccpForm input, #haccpForm select, #entryForm input, #entryForm select, #entryForm textarea, #yagForm input, #yagForm select, #ambalajForm input, #ambalajForm select').forEach(function(el) {
@@ -401,12 +402,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     window._loginAttempts = 0;
   });
 
-  loadGSheetConfig();
   loadAccent();
-  // Remote'da kayıtlı şifre varsa localStorage temizlense bile kullanılabilmesi için önceden çek
   syncPasswordHashesFromRemote().catch(function(){});
-  setConnectionStatus('sync');
-  setLoadingText('Veriler senkronize ediliyor...', 'Google Sheets bağlantısı kuruluyor');
+  setLoadingText('Veriler yükleniyor...', 'Supabase bağlantısı kontrol ediliyor');
   loadData();
   loadHaccpData();
   loadYagData();
@@ -415,18 +413,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAll();
   drawAllCharts();
   await restoreActiveTab();
-  updateSyncUI();
 
   // Güvenlik: 10 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
     document.getElementById('loadingOverlay').classList.add('hidden');
   }, 10000);
 
-  // Senkronizasyon devre dışı (manuel)
   setLoadingSub('Uygulama başlatılıyor...');
   clearTimeout(forceHideTimer);
-  var mainOk = true;
-  var menuOk = true;
 
   refreshMenuProduction();
   initDishAutocomplete();
@@ -434,72 +428,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Loading overlay'i kapat
   document.getElementById('loadingOverlay').classList.add('hidden');
 
-  // Bağlantı durumunu göster
-  if ((!gsheetConfig.webappUrl || (mainOk && menuOk))) {
-    setConnectionStatus('ok');
-  } else {
-    setConnectionStatus('err');
-  }
-
-  // Otomatik polling devre dışı (manuel senkronizasyon)
-  // startAutoSync();
-  showSyncTime('manuel');
+  showSyncTime('hazır');
 });
 
-let autoSyncTimer = null;
-
-function startAutoSync() {
-  if (autoSyncTimer) clearInterval(autoSyncTimer);
-  if (!gsheetConfig.webappUrl) return;
-  autoSyncTimer = setInterval(async () => {
-    await autoPull();
-  }, 30000);
-}
-
+// Auto-poll devre dışı (Supabase upsert ile gerçek zamanlı)
 let lastPollData = null;
-
-async function autoPull() {
-  try {
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', {}, 30000);
-    const data = await res.json();
-    if (!data.data || data.data.length === 0) return;
-
-    const cloudRecords = data.data
-      .filter(r => r.id)
-      .map(r => ({
-        id: Number(r.id) || Date.now(),
-        tarih: normalizeDate(r.tarih),
-        yemek: Number(r.yemek) || 0,
-        fire: Number(r.fire) || 0,
-        turnike: Number(r.turnike) || 0,
-        personel: Number(r.personel) || 0,
-        toplam: Number(r.toplam) || 0,
-        porsiyon: Number(r.porsiyon) || 0,
-        atik: Number(r.atik) || 0,
-        ogrenci: Number(r.ogrenci) || 0,
-        yemek_adi: r.yemek_adi || ''
-      }));
-
-    const serialized = JSON.stringify(cloudRecords);
-    if (serialized === lastPollData) {
-      showSyncTime();
-      return;
-    }
-
-    lastPollData = serialized;
-    records = cloudRecords;
-    records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-    saveData();
-    filteredRecords = [...records];
-    renderAll();
-    drawAllCharts();
-    setConnectionStatus('ok');
-    showSyncTime('Veri güncellendi');
-  } catch (_) {
-    setConnectionStatus('err');
-  }
-  // syncHaccpFromGSheets().then(function() { if (haccpRecords.length) { saveHaccpData(); renderHaccp(); } }).catch(function(){});
-}
 
 function showSyncTime(msg) {
   const el = document.getElementById('connSyncTime');
@@ -571,58 +504,35 @@ function saveData() { if (!requireAdmin()) return;
   } catch (e) {
     // Storage full or unavailable - ignore silently
   }
-  syncToSheetSilent();
-  // Polling karşılaştırması için cloud verisini güncelle
+  syncRecordsToSupabase();
   lastPollData = null;
   showSyncTime('kaydedildi');
 }
 
-async function syncToSheetSilent() {
-  if (!gsheetConfig.webappUrl || records.length === 0) return;
+async function syncRecordsToSupabase() {
+  if (!supabase || records.length === 0) return;
   try {
-    await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveAll', records })
-    }, 15000);
+    var { error } = await supabase.from('records').upsert(records, { onConflict: 'id' });
+    if (error) console.warn('Supabase sync error:', error);
   } catch (_) {}
 }
 
-async function syncHaccpToGSheets() {
-  if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini ayarlayın (Senkronizasyon paneli).', 'error');
-    return;
-  }
+async function syncHaccpToSupabase() {
+  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   try {
-    if (haccpRecords.length === 0) {
-      var pulled = await syncHaccpFromGSheets();
-      if (pulled) {
-        if (haccpRecords.length > 0) {
-          showToast('Google Sheets\'ten ' + haccpRecords.length + ' kayıt alındı.', 'success');
-          saveHaccpData();
-          renderHaccp();
-        } else {
-          showToast('Depo adları Google Sheets\'ten alındı.', 'success');
-        }
-      } else {
-        showToast('Google Sheets\'te kayıt bulunamadı.', 'info');
-      }
-      return;
+    if (haccpRecords.length > 0) {
+      var { error } = await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      if (error) { showToast('Supabase hatası: ' + error.message, 'error'); return; }
     }
     var depoAdlari = loadHaccpDepoAdlari();
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
-    }, 30000);
-    const data = await res.json();
-    if (data.success) {
-      showToast('Gıda Güvenliği verileri senkronize edildi (' + data.count + ' kayıt).', 'success');
-    } else {
-      showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
+    if (depoAdlari.length > 0) {
+      var depoRows = depoAdlari.map(function(ad) { return { ad: ad }; });
+      var { error: depoErr } = await supabase.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
+      if (depoErr) { showToast('Depo adı hatası: ' + depoErr.message, 'error'); return; }
     }
+    showToast('HACCP verileri Supabase\'e senkronize edildi.', 'success');
   } catch (err) {
-    showToast('Bağlantı hatası: ' + (err.name === 'AbortError' ? 'Zaman aşımı (30sn)' : err.message), 'error');
+    showToast('Supabase bağlantı hatası: ' + err.message, 'error');
   }
 }
 
@@ -631,79 +541,57 @@ let lastHaccpSyncHash = '';
 function syncHaccpSilent(forceDepoOnly) {
   if (haccpSyncTimer) clearTimeout(haccpSyncTimer);
   if (haccpRecords.length === 0 && !forceDepoOnly) return;
-  if (!gsheetConfig.webappUrl) {
-    showToast('Google Sheets URL ayarlanmamış! Senkronizasyon panelinden URL girin.', 'error');
-    return;
-  }
-  // Değişiklik kontrolü: veri aynıysa Google Sheet'i gereksiz yere temizleyip yazma (flicker önleme)
+  if (!supabase) return;
   var currentHash = JSON.stringify(haccpRecords) + JSON.stringify(loadHaccpDepoAdlari());
   if (currentHash === lastHaccpSyncHash && !forceDepoOnly) return;
   lastHaccpSyncHash = currentHash;
   haccpSyncTimer = setTimeout(async () => {
     try {
+      if (haccpRecords.length > 0) {
+        var { error } = await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+        if (error) showToast('Supabase HACCP hatası: ' + error.message, 'error');
+      }
       var depoAdlari = loadHaccpDepoAdlari();
-      var res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveHaccp', records: haccpRecords, depoAdlari: depoAdlari })
-      }, 15000);
-      if (!res.ok) showToast('Google Sheets senkronizasyon hatası: ' + res.status, 'error');
+      if (depoAdlari.length > 0) {
+        var depoRows = depoAdlari.map(function(ad) { return { ad: ad }; });
+        await supabase.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
+      }
     } catch (err) {
-      showToast('Google Sheets bağlantı hatası: ' + (err.message || err), 'error');
+      showToast('Supabase bağlantı hatası: ' + (err.message || err), 'error');
     }
   }, 400);
 }
 
-async function syncHaccpFromGSheets() {
-  if (!gsheetConfig.webappUrl) return false;
+async function syncHaccpFromSupabase() {
+  if (!supabase) return false;
   try {
-    let data;
-    try {
-      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'getHaccp' })
-      }, 50000);
-      data = await res.json();
-    } catch (_) { data = null; }
-    if (!data || !data.data || data.data.length === 0) {
-      try {
-        var r2 = await fetchWithTimeout(gsheetConfig.webappUrl + '?sheet=T%C3%BCm%20HACCP', {}, 30000);
-        var d2 = await r2.json();
-        if (d2.data && d2.data.length > 0) data = d2;
-        else data = { data: [], depoAdlari: d2 && d2.depoAdlari ? d2.depoAdlari : (data ? data.depoAdlari : undefined) };
-      } catch (_) { data = { data: [], depoAdlari: data ? data.depoAdlari : undefined }; }
-    }
-    if (data.data && data.data.length > 0) {
-      haccpRecords = data.data.map(function(r) {
+    var { data: hData, error: hErr } = await supabase.from('haccp_records').select('*').order('tarih', { ascending: false });
+    if (hErr) return false;
+    if (hData && hData.length > 0) {
+      haccpRecords = hData.map(function(r) {
         var typ = (r.type || 'sicaklik').toLowerCase();
-        var depoAd = (r.depoAd || (r.depoNo ? 'Depo ' + r.depoNo : '')).replace(/^Depo /, '');
         return {
           id: Number(r.id) || Date.now() + Math.random(),
           type: typ,
           tarih: normalizeDate(r.tarih || ''),
           saat: normalizeSaat(r.saat || ''),
-          depoAd: typ === 'sicaklik' ? depoAd : '',
+          depoAd: r.depo_ad || '',
           sicaklik: typ === 'sicaklik' && r.sicaklik != null ? Number(r.sicaklik) : null,
           not: r.not_ || r.not || '',
           nem: typ === 'sicaklik' && r.nem != null ? Number(r.nem) : null
         };
       });
-      lastHaccpSyncHash = JSON.stringify(haccpRecords) + JSON.stringify(data.depoAdlari || []);
+      lastHaccpSyncHash = JSON.stringify(haccpRecords);
     }
-    var hasDepo = false;
-    if (data.depoAdlari && Array.isArray(data.depoAdlari) && data.depoAdlari.length > 0) {
-      try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(data.depoAdlari)); } catch (_) {}
-      hasDepo = true;
+    var { data: dData } = await supabase.from('haccp_depo_adlari').select('ad');
+    if (dData && dData.length > 0) {
+      var adlar = dData.map(function(d) { return d.ad; });
+      try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(adlar)); } catch (_) {}
     }
-    if (data.data && data.data.length > 0) return true;
-    if (hasDepo) return true;
-    showToast('HACCP: GSheet yanıtında veri yok. URL: ' + (gsheetConfig.webappUrl || '').slice(0, 80) + '...', 'error');
+    if (hData && hData.length > 0) return true;
+    if (dData && dData.length > 0) return true;
     return false;
-  } catch (e) {
-    showToast('HACCP bağlantı hatası: ' + (e.message || e), 'error');
-    return false;
-  }
+  } catch (_) { return false; }
 }
 
 // ─── HACCP 100 KAYIT OLUŞTUR ────────────────────────────────────────────────
@@ -813,22 +701,13 @@ function importHaccpFile(event) {
 
 // ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
 
-async function syncYagToGSheets() {
-  if (!gsheetConfig.webappUrl) return;
+async function syncYagToSupabase() {
+  if (!supabase) return;
   try {
-    if (yagRecords.length === 0) {
-      var pulled = await syncYagFromGSheets();
-      if (pulled) {
-        saveYagData();
-        renderYagTable();
-      }
-      return;
+    if (yagRecords.length > 0) {
+      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
     }
-    await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveYag', records: yagRecords })
-    }, 15000);
+    showToast('Yağ verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
 }
 
@@ -836,38 +715,27 @@ let yagSyncTimer = null;
 function syncYagSilent() {
   if (yagSyncTimer) clearTimeout(yagSyncTimer);
   yagSyncTimer = setTimeout(async () => {
-    if (!gsheetConfig.webappUrl) return;
+    if (!supabase || yagRecords.length === 0) return;
     try {
-      await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveYag', records: yagRecords })
-      }, 15000);
+      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
 
-async function syncYagFromGSheets() {
-  if (!gsheetConfig.webappUrl) return false;
+async function syncYagFromSupabase() {
+  if (!supabase) return false;
   try {
-    let data;
-    try {
-      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'getYag' })
-      }, 50000);
-      data = await res.json();
-    } catch (_) { return false; }
-    if (data.data && data.data.length > 0) {
-      yagRecords = data.data.map(function(r) {
+    var { data, error } = await supabase.from('yag_records').select('*').order('tarih', { ascending: false });
+    if (error) return false;
+    if (data && data.length > 0) {
+      yagRecords = data.map(function(r) {
         return {
           id: Number(r.id) || Date.now(),
           tarih: normalizeDate(r.tarih || ''),
-          makbuzNo: r.makbuzNo || '',
+          makbuzNo: r.makbuz_no || '',
           tur: r.tur || '',
           miktar: Number(r.miktar) || 0,
-          not: r.not || ''
+          not: r.not_ || ''
         };
       });
       saveYagData();
@@ -880,22 +748,13 @@ async function syncYagFromGSheets() {
 
 // ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
 
-async function syncAmbalajToGSheets() {
-  if (!gsheetConfig.webappUrl) return;
+async function syncAmbalajToSupabase() {
+  if (!supabase) return;
   try {
-    if (ambalajRecords.length === 0) {
-      var pulled = await syncAmbalajFromGSheets();
-      if (pulled) {
-        saveAmbalajData();
-        renderAmbalajTable();
-      }
-      return;
+    if (ambalajRecords.length > 0) {
+      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
     }
-    await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
-    }, 15000);
+    showToast('Ambalaj verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
 }
 
@@ -903,37 +762,26 @@ let ambalajSyncTimer = null;
 function syncAmbalajSilent() {
   if (ambalajSyncTimer) clearTimeout(ambalajSyncTimer);
   ambalajSyncTimer = setTimeout(async () => {
-    if (!gsheetConfig.webappUrl) return;
+    if (!supabase || ambalajRecords.length === 0) return;
     try {
-      await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveAmbalaj', records: ambalajRecords })
-      }, 15000);
+      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
 
-async function syncAmbalajFromGSheets() {
-  if (!gsheetConfig.webappUrl) return false;
+async function syncAmbalajFromSupabase() {
+  if (!supabase) return false;
   try {
-    let data;
-    try {
-      const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'getAmbalaj' })
-      }, 50000);
-      data = await res.json();
-    } catch (_) { return false; }
-    if (data.data && data.data.length > 0) {
-      ambalajRecords = data.data.map(function(r) {
+    var { data, error } = await supabase.from('ambalaj_records').select('*').order('tarih', { ascending: false });
+    if (error) return false;
+    if (data && data.length > 0) {
+      ambalajRecords = data.map(function(r) {
         return {
           id: Number(r.id) || Date.now(),
           tarih: normalizeDate(r.tarih || ''),
           tur: r.tur || '',
           miktar: Number(r.miktar) || 0,
-          not: r.not || ''
+          not: r.not_ || ''
         };
       });
       saveAmbalajData();
@@ -996,219 +844,76 @@ function setLoadingSub(text) {
   if (el) el.textContent = text;
 }
 
-// ─── GSHEET CONFIG ─────────────────────────────────────────────────────────────
-function loadGSheetConfig() {
-  try {
-    var oldUrls = [
-      'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec',
-      'https://script.google.com/macros/s/AKfycbyx2gz8KLp7qkBWxZW0WjyjDn_3TJBB_r8pb4oqIVSoIpuzHkvOsq_ozG91U1OaSefR_w/exec',
-      'https://script.google.com/macros/s/AKfycbwXVr2dA3kKh4E_ohp2YVo8HHzumb_1vMd92s1hiHTpJywwIkjVEnyEucy_lD_O344h/exec'
-    ];
-    var stored = localStorage.getItem('atik_kontrol_gsheet_config');
-    if (stored) {
-      var parsed = JSON.parse(stored);
-      // Eski URL'leri yeni deploy ile otomatik güncelle
-      if (oldUrls.indexOf(parsed.webappUrl) !== -1) parsed.webappUrl = DEFAULT_GSHEET_URL;
-      gsheetConfig = {
-        webappUrl: parsed.webappUrl || DEFAULT_GSHEET_URL,
-        lastSync: parsed.lastSync || null
-      };
-    } else {
-      gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
-    }
-    // Güncellenmiş URL'yi kaydet
-    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
-  } catch (e) {
-    gsheetConfig = { webappUrl: DEFAULT_GSHEET_URL, lastSync: null };
-  }
-}
-
+// ─── SUPABASE SYNC ─────────────────────────────────────────────────────────────
 function getMenuUrl() {
-  return gsheetConfig.webappUrl;
+  return SUPABASE_URL;
 }
 
-function saveGSheetUrl() { if (!requireAdmin()) return;
-  const url = document.getElementById('gsheetUrl').value.trim();
-  gsheetConfig.webappUrl = url || DEFAULT_GSHEET_URL;
+async function syncAllToSupabase() { if (!requireAdmin()) return;
+  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  var toastMsg = [];
   try {
-    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
-  } catch (e) {}
-  updateSyncUI();
-  showToast('Web App URL kaydedildi.', 'success');
-  if (url) testGSheetConnection();
-}
-
-function saveAllUrls() {
-  const url1 = document.getElementById('gsheetUrl').value.trim();
-  gsheetConfig.webappUrl = url1 || DEFAULT_GSHEET_URL;
-  try {
-    localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig));
-  } catch (e) {}
-  updateSyncUI();
-  showToast('URL kaydedildi.', 'success');
-  if (url1) testGSheetConnection();
-}
-
-function updateSyncUI() {
-  const statusLabel = document.getElementById('syncStatusLabel');
-  const statusSub = document.getElementById('syncStatusSub');
-  const statusIcon = document.getElementById('syncStatusIcon');
-  const lastLabel = document.getElementById('syncLastLabel');
-  const urlInput = document.getElementById('gsheetUrl');
-
-  if (urlInput) urlInput.value = gsheetConfig.webappUrl || '';
-
-
-  if (gsheetConfig.lastSync) {
-    const d = new Date(gsheetConfig.lastSync);
-    lastLabel.textContent = 'Son senkronizasyon: ' + d.toLocaleString('tr-TR');
-  } else {
-    lastLabel.textContent = 'Son senkronizasyon: —';
-  }
-
-  if (gsheetConfig.webappUrl) {
-    statusLabel.textContent = 'URL yapılandırıldı';
-    statusSub.textContent = 'Senkronizasyon butonlarını kullanabilirsiniz';
-    statusIcon.className = 'sync-status-icon sync-ok';
-    statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-  } else {
-    statusLabel.textContent = 'Bağlantı kurulmadı';
-    statusSub.textContent = 'Ayarlardan Web App URL\'sini girin';
-    statusIcon.className = 'sync-status-icon';
-    statusIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>';
-  }
-}
-
-function openSyncPanel() {
-  document.getElementById('syncOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  updateSyncUI();
-}
-
-function closeSyncPanel() {
-  document.getElementById('syncOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-async function quickPullFromSheets() {
-  if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini ayarlayın (Senkronize Et → URL kaydet).', 'error');
-    return;
-  }
-  try { await syncFromGSheets(); } catch (e) { showToast('Senkronizasyon hatası: ' + e.message, 'error'); }
-}
-
-async function syncToGSheets() { if (!requireAdmin()) return;
-  if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini girin.', 'error');
-    return;
-  }
-  if (records.length === 0) {
-    showToast('Senkronize edilecek kayıt yok.', 'error');
-    return;
-  }
-  const btn = document.getElementById('syncUploadBtn');
-  btn.disabled = true;
-  btn.textContent = 'Senkronize ediliyor...';
-  try {
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveAll', records })
-    }, 30000);
-    const data = await res.json();
-    if (data.success) {
-      gsheetConfig.lastSync = new Date().toISOString();
-      try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
-      updateSyncUI();
-      setConnectionStatus('ok');
-      showToast('Veriler Google Sheet\'e yedeklendi (' + data.count + ' kayıt).', 'success');
-    } else {
-      showToast('Hata: ' + (data.error || 'Bilinmeyen hata'), 'error');
+    if (records.length > 0) {
+      var { count: rCount } = await supabase.from('records').upsert(records, { onConflict: 'id' }).select('count');
+      toastMsg.push('Kayıtlar: ' + (rCount || records.length));
     }
+    if (haccpRecords.length > 0) {
+      await supabase.from('haccp_records').upsert(haccpRecords, { onConflict: 'id' });
+      var depoAdlari = loadHaccpDepoAdlari();
+      if (depoAdlari.length > 0) {
+        await supabase.from('haccp_depo_adlari').upsert(depoAdlari.map(function(a) { return { ad: a }; }), { onConflict: 'ad' });
+      }
+      toastMsg.push('HACCP: ' + haccpRecords.length);
+    }
+    if (yagRecords.length > 0) {
+      await supabase.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      toastMsg.push('Yağ: ' + yagRecords.length);
+    }
+    if (ambalajRecords.length > 0) {
+      await supabase.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      toastMsg.push('Ambalaj: ' + ambalajRecords.length);
+    }
+    showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
   } catch (err) {
-    setConnectionStatus('err');
-    showToast('Bağlantı hatası: ' + (err.name === 'AbortError' ? 'Zaman aşımı (30sn)' : err.message), 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Yerel → Google Sheet (Yedekle)';
+    showToast('Supabase hatası: ' + err.message, 'error');
   }
 }
 
-async function syncFromGSheets() { if (!requireAdmin()) return;
-  if (!gsheetConfig.webappUrl) {
-    showToast('Önce Web App URL\'sini girin.', 'error');
-    return false;
-  }
-  const btn = document.getElementById('syncDownloadBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'İndiriliyor...'; }
+async function syncAllFromSupabase() { if (!requireAdmin()) return;
+  if (!supabase) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  var toastMsg = [];
   try {
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', {}, 50000);
-    const data = await res.json();
-    if (data.data) {
-      const cloudRecords = data.data
-        .map(r => ({
-          id: Number(r.id) || Date.now() + Math.floor(Math.random() * 100000),
-          tarih: normalizeDate(r.tarih),
-          yemek: Number(r.yemek) || 0,
-          fire: Number(r.fire) || 0,
-          turnike: Number(r.turnike) || 0,
-          personel: Number(r.personel) || 0,
-          toplam: Number(r.toplam) || 0,
-          porsiyon: Number(r.porsiyon) || 0,
-          atik: Number(r.atik) || 0,
-          ogrenci: Number(r.ogrenci) || 0,
-          yemek_adi: r.yemek_adi || ''
-        }));
-      if (cloudRecords.length === 0) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)'; }
-        return true;
-      }
-      records = cloudRecords;
-      records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+    var { data: rData } = await supabase.from('records').select('*').order('tarih', { ascending: false });
+    if (rData && rData.length > 0) {
+      records = rData.map(function(r) { return {
+        id: Number(r.id) || Date.now() + Math.random(),
+        tarih: normalizeDate(r.tarih),
+        yemek: Number(r.yemek) || 0,
+        fire: Number(r.fire) || 0,
+        turnike: Number(r.turnike) || 0,
+        personel: Number(r.personel) || 0,
+        toplam: Number(r.toplam) || 0,
+        porsiyon: Number(r.porsiyon) || 0,
+        atik: Number(r.atik) || 0,
+        ogrenci: Number(r.ogrenci) || 0,
+        yemek_adi: r.yemek_adi || ''
+      }; });
+      records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
       saveData();
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      gsheetConfig.lastSync = new Date().toISOString();
-      try { localStorage.setItem('atik_kontrol_gsheet_config', JSON.stringify(gsheetConfig)); } catch (e) {}
-      updateSyncUI();
-      setConnectionStatus('ok');
-      var syncedMsg = 'Google Sheet\'ten ' + cloudRecords.length + ' kayıt indirildi.';
-      var haccpPulled = await syncHaccpFromGSheets().catch(function(){});
-      if (haccpPulled) { saveHaccpData(); renderHaccp(); syncedMsg += ' HACCP: ' + haccpRecords.length + ' kayıt.'; }
-      await syncYagFromGSheets().catch(function(){});
-      await syncAmbalajFromGSheets().catch(function(){});
-      showToast(syncedMsg, 'success');
-      return true;
-    } else {
-      showToast('Hata: ' + (data.error || 'Veri alınamadı'), 'error');
-      return false;
+      toastMsg.push('Kayıtlar: ' + records.length);
     }
+    var hPulled = await syncHaccpFromSupabase();
+    if (hPulled) toastMsg.push('HACCP: ' + haccpRecords.length);
+    await syncYagFromSupabase();
+    await syncAmbalajFromSupabase();
+    showToast('Supabase\'ten alındı: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
   } catch (err) {
-    setConnectionStatus('err');
-    if (err.name === 'AbortError') showToast('Zaman aşımı: Google Sheet 50sn içinde yanıt vermedi.', 'error');
-    else showToast('Senkronizasyon hatası: ' + err.message, 'error');
-    return false;
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Google Sheet → Yerel (İndir)';
-    }
+    showToast('Supabase hatası: ' + err.message, 'error');
   }
 }
-
-async function testGSheetConnection() {
-  try {
-    const res = await fetchWithTimeout(gsheetConfig.webappUrl + '?action=getAll', { method: 'GET', mode: 'cors' }, 30000);
-    if (res.ok) {
-      document.getElementById('syncStatusLabel').textContent = 'Bağlantı başarılı';
-      document.getElementById('syncStatusSub').textContent = 'Google Sheet\'e erişilebiliyor';
-      document.getElementById('syncStatusIcon').className = 'sync-status-icon sync-ok';
-      setConnectionStatus('ok');
-    }
-  } catch (e) {
-    // Silent fail - user can test manually
   }
 }
 
@@ -2314,10 +2019,9 @@ function exportDataJSON() {
 
 function exportDataSettings() {
   const settings = {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
-    records: records.map(r => ({ ...r, yemek_adi: r.yemek_adi || '' })),
-    gsheetConfig: gsheetConfig
+    records: records.map(r => ({ ...r, yemek_adi: r.yemek_adi || '' }))
   };
   const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -2326,7 +2030,7 @@ function exportDataSettings() {
   link.download = `atik_kontrol_yedek_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Tüm veriler (ayarlar dahil) dışa aktarıldı.', 'success');
+  showToast('Tüm veriler dışa aktarıldı.', 'success');
 }
 
 function importFullBackup() { if (!requireAdmin()) return;
@@ -2349,16 +2053,10 @@ function handleFullBackupImport(e) {
       const newRecords = data.records.filter(r => r.id && !existingIds.has(r.id));
       records.push(...newRecords);
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-      if (data.gsheetConfig) {
-        if (data.gsheetConfig.webappUrl && !gsheetConfig.webappUrl) {
-          gsheetConfig.webappUrl = data.gsheetConfig.webappUrl;
-        }
-      }
       saveData();
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      updateSyncUI();
       showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
     } catch (err) {
       showToast('Yedek yükleme hatası: ' + err.message, 'error');
@@ -2793,7 +2491,7 @@ function loadYemekler() {
 
 function saveYemekler(list) { if (!requireAdmin()) return;
   yemeklerCache = list;
-  syncDishesToGSheets().catch(() => {});
+  syncDishesToSupabase().catch(() => {});
 }
 
 function formatYemek(y) {
@@ -2988,47 +2686,22 @@ function openYemekModal() {
   document.getElementById('yemekFormContainer').style.display = 'none';
   renderYemekListesi();
   // Background'da Google Sheets'ten taze veri çek (cache güncelle)
-  syncDishesFromGSheets().then(updated => { if (updated) renderYemekListesi(); });
+  syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
   document.getElementById('yemekModal').classList.remove('show');
 }
 
 // -- Google Sheets dish sync --
-async function syncDishesFromGSheets() {
-  const url = getMenuUrl();
-  if (!url) return false;
+async function syncDishesFromSupabase() {
+  if (!supabase) return false;
   try {
-    const res = await fetchWithTimeout(url + '?sheet=Yemek%20Listesi', {}, 30000);
-    const json = await res.json();
-    if (json.data && Array.isArray(json.data)) {
-      const list = json.data.filter(d => d.ad && d.ad.trim()).map(d => {
-        let tarif = [];
-
-        // 1. JSON tarif sütunu varsa onu dene
-        if (d.tarif) {
-          try { tarif = JSON.parse(d.tarif); } catch (e) {}
-        }
-
-        // 2. Yoksa düz sütun formatını dene: ürün N, miktar N, birim N
-        if (!tarif.length) {
-          const keys = Object.keys(d);
-          for (let n = 1; n <= 20; n++) {
-            const urunKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('ürün'+n).toLowerCase());
-            const miktarKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('miktar'+n).toLowerCase());
-            const birimKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === ('birim'+n).toLowerCase());
-            if (urunKey && d[urunKey] && String(d[urunKey]).trim()) {
-              const miktar = miktarKey ? parseFloat(d[miktarKey]) || 0 : 0;
-              let b = birimKey ? String(d[birimKey] || 'gr').trim().toLowerCase().replace(/\s/g,'') : 'gr';
-              if (b === 'g' || b === 'gr' || b === 'gram' || b === 'grams' || b === 'gramaj') b = 'gr';
-              else if (b === 'l' || b === 'lt' || b === 'litre' || b === 'litr') b = 'lt';
-              else if (b === 'ml' || b === 'mil' || b === 'mililitre' || b === 'mili') b = 'ml';
-              const birim = b;
-              tarif.push({ malzeme: String(d[urunKey]).trim(), miktar_kisi: miktar, birim: birim });
-            } else break;
-          }
-        }
-
+    var { data, error } = await supabase.from('dishes').select('*');
+    if (error) return false;
+    if (data && data.length > 0) {
+      yemeklerCache = data.map(function(d) {
+        var tarif = [];
+        if (d.tarif && Array.isArray(d.tarif)) tarif = d.tarif;
         return {
           id: String(d.id || Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
           ad: String(d.ad || '').trim(),
@@ -3037,8 +2710,6 @@ async function syncDishesFromGSheets() {
           tarif: tarif
         };
       });
-      yemeklerCache = list;
-      // Menü sekmesi açıksa ürün tablosunu güncelle
       if (document.getElementById('productionSection')) refreshMenuProduction();
       return true;
     }
@@ -3046,49 +2717,39 @@ async function syncDishesFromGSheets() {
   } catch (_) { return false; }
 }
 
-async function syncDishesToGSheets() {
-  const url = getMenuUrl();
-  if (!url) return;
+async function syncDishesToSupabase() {
+  if (!supabase) return;
   try {
-    const list = loadYemekler();
-    await fetchWithTimeout(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveDishes', dishes: list })
-    }, 15000);
+    var list = loadYemekler();
+    await supabase.from('dishes').upsert(list, { onConflict: 'id' });
   } catch (_) {}
 }
 
-// -- Menu Google Sheet sync --
+// -- Menu Supabase sync --
 async function fetchMenuData() {
-  const url = getMenuUrl();
-  if (!url) return {};
+  if (!supabase) return {};
   try {
-    const res = await fetchWithTimeout(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'loadMenu' })
-    }, 15000);
-    const json = await res.json();
-    if (json.menuData) {
-      const parsed = JSON.parse(json.menuData);
-      return (parsed && typeof parsed === 'object') ? parsed : {};
-    }
-    return {};
+    var { data, error } = await supabase.from('weekly_menu').select('*');
+    if (error || !data) return {};
+    var result = {};
+    data.forEach(function(row) {
+      if (row.data && typeof row.data === 'object') result[row.week_key] = row.data;
+    });
+    return result;
   } catch (_) { return {}; }
 }
 
 async function saveMenuData(allData) {
-  const url = getMenuUrl();
-  if (!url) return;
+  if (!supabase) return;
   try {
-    const res = await fetchWithTimeout(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'saveMenu', menuData: JSON.stringify(allData) })
-    }, 15000);
-    const json = await res.json();
-    if (!json.success) showToast('Menü kaydedilemedi: ' + (json.error || ''), 'error');
+    var upserts = [];
+    Object.keys(allData).forEach(function(weekKey) {
+      upserts.push({ week_key: weekKey, data: allData[weekKey] });
+    });
+    if (upserts.length > 0) {
+      var { error } = await supabase.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
+      if (error) showToast('Menü kaydedilemedi: ' + error.message, 'error');
+    }
   } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
 }
 

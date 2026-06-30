@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0f1e" />
@@ -180,17 +181,17 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Dışa Aktar</span>
         </button>
-        <button class="tab-btn" onclick="openSyncPanel()">
+        <button class="tab-btn" onclick="syncAllToSupabase()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
-          <span>Senkronize Et</span>
+          <span>Supabase'e Yedekle</span>
         </button>
         <button class="tab-btn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           <span>Yönetim</span>
         </button>
-        <button class="tab-btn" onclick="quickPullFromSheets()">
+        <button class="tab-btn" onclick="syncAllFromSupabase()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
-          <span>Google'dan Çek</span>
+          <span>Supabase'ten Çek</span>
         </button>
         <button class="tab-btn theme-toggle" id="themeToggle" onclick="toggleTheme()">
           <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -615,13 +616,13 @@
           <h2 style="font-size:1rem">Gıda Güvenliği Yönetimi</h2>
         </div>
         <div class="toolbar-actions">
-          <button class="btn btn-outline btn-sm" onclick="syncHaccpToGSheets()" title="Google Sheet'ten veri çek ve yükle">
+          <button class="btn btn-outline btn-sm" onclick="syncHaccpToSupabase()" title="HACCP verilerini Supabase'e yedekle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Senkronize Et
+            Supabase'e Kaydet
           </button>
-          <button class="btn btn-ghost btn-sm" onclick="syncHaccpFromGSheets().then(function(r){if(r){showToast('Google Sheet\'ten '+haccpRecords.length+' HACCP kaydı alındı.','success');saveHaccpData();renderHaccp();}else{showToast('Google Sheet\'ten veri alınamadı. URL yanlış olabilir.','error');}})" title="Google Sheet'ten veri çek">
+          <button class="btn btn-ghost btn-sm" onclick="syncHaccpFromSupabase().then(function(r){if(r){showToast('Supabase\'ten '+haccpRecords.length+' HACCP kaydı alındı.','success');saveHaccpData();renderHaccp();}else{showToast('Supabase\'ten veri alınamadı.','error');}})" title="Supabase'ten veri çek">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
-            Google'dan Çek
+            Supabase'ten Çek
           </button>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('haccpFileInput').click()" title="CSV/JSON dosyasından toplu yükle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -925,41 +926,23 @@
   </div>
 
   <!-- ===== SYNC PANEL ===== -->
-  <div class="modal-overlay" id="syncOverlay" onclick="if(event.target===this)closeSyncPanel()">
+  <div class="modal-overlay" id="syncOverlay" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="modal sync-panel" id="syncPanel">
       <div class="modal-header">
-        <h2>Google Sheets Senkronizasyon</h2>
-        <button class="modal-close" onclick="closeSyncPanel()">
+        <h2>Supabase Senkronizasyon</h2>
+        <button class="modal-close" onclick="document.getElementById('syncOverlay').classList.remove('open')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
       <div class="sync-body">
-        <div class="sync-status" id="syncStatus">
-          <div class="sync-status-icon" id="syncStatusIcon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          </div>
-          <div class="sync-status-text">
-            <span id="syncStatusLabel">Bağlantı kurulmadı</span>
-            <span class="sync-status-sub" id="syncStatusSub">Ayarlardan Web App URL'sini girin</span>
-          </div>
-        </div>
-
-        <div class="sync-config">
-          <label for="gsheetUrl">Ana Veri Web App URL</label>
-          <div class="sync-url-row">
-            <input type="url" id="gsheetUrl" placeholder="https://script.google.com/macros/s/.../exec" />
-            <button class="btn btn-primary btn-sm" onclick="saveAllUrls()">Kaydet</button>
-          </div>
-        </div>
-
         <div class="sync-actions">
-          <button class="btn btn-primary" onclick="syncToGSheets()" id="syncUploadBtn">
+          <button class="btn btn-primary" onclick="syncAllToSupabase()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Yerel → Google Sheet (Yedekle)
+            Tümünü Supabase'e Yedekle
           </button>
-          <button class="btn btn-secondary" onclick="syncFromGSheets()" id="syncDownloadBtn">
+          <button class="btn btn-secondary" onclick="syncAllFromSupabase()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Google Sheet → Yerel (İndir)
+            Supabase'ten Tümünü İndir
           </button>
         </div>
       </div>
@@ -973,7 +956,7 @@
             </button>
             <button class="btn btn-secondary btn-sm" onclick="exportDataSettings()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-              Tam Yedek (Ayarlar+Veri)
+              Tam Yedek (Veri)
             </button>
             <button class="btn btn-secondary btn-sm" onclick="importFullBackup()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -988,8 +971,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <span class="sync-last" id="syncLastLabel">Son senkronizasyon: —</span>
-        <button class="btn btn-ghost" onclick="closeSyncPanel()">Kapat</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('syncOverlay').classList.remove('open')">Kapat</button>
       </div>
     </div>
   </div>
