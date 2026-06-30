@@ -1392,9 +1392,19 @@ function renderHaccpSicaklik() {
       depoList.map(function(d) { return '<option value="' + d.replace(/"/g,'&quot;') + '"' + (d === curVal ? ' selected' : '') + '>' + d + '</option>'; }).join('');
   }
 
-  // apply filter
+  // apply depo filter
   if (filterSelect && filterSelect.value) {
     records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === filterSelect.value; });
+  }
+
+  // apply date filter
+  var tarihBas = document.getElementById('haccpSicaklikTarihBas');
+  var tarihBit = document.getElementById('haccpSicaklikTarihBit');
+  if (tarihBas && tarihBas.value) {
+    records = records.filter(function(r) { return r.tarih >= tarihBas.value; });
+  }
+  if (tarihBit && tarihBit.value) {
+    records = records.filter(function(r) { return r.tarih <= tarihBit.value; });
   }
 
   if (records.length === 0) {
@@ -1466,6 +1476,10 @@ function haccpSicaklikPrint() {
   var filter = document.getElementById('haccpSicaklikDepoFilter');
   var depo = filter ? filter.value : '';
   if (depo) records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === depo; });
+  var tarihBas = document.getElementById('haccpSicaklikTarihBas');
+  var tarihBit = document.getElementById('haccpSicaklikTarihBit');
+  if (tarihBas && tarihBas.value) records = records.filter(function(r) { return r.tarih >= tarihBas.value; });
+  if (tarihBit && tarihBit.value) records = records.filter(function(r) { return r.tarih <= tarihBit.value; });
   records.sort(function(a, b) {
     if (a.tarih !== b.tarih) return a.tarih > b.tarih ? -1 : 1;
     return (a.saat || '') > (b.saat || '') ? -1 : 1;
@@ -1485,7 +1499,11 @@ function haccpSicaklikPrint() {
   win.document.write('@media print{body{margin:10mm}button{display:none}}');
   win.document.write('</style></head><body>');
   win.document.write('<h1>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131</h1>');
-  win.document.write('<p>' + (depo || 'T\u00fcm depolar') + ' &mdash; ' + records.length + ' kay\u0131t</p>');
+  var tarihEtiketi = '';
+  if (tarihBas && tarihBas.value) tarihEtiketi += ' ' + tarihBas.value + ' —';
+  if (tarihBit && tarihBit.value) tarihEtiketi += ' ' + tarihBit.value;
+  if (tarihEtiketi) tarihEtiketi = ' | Tarih:' + tarihEtiketi;
+  win.document.write('<p>' + (depo || 'T\u00fcm depolar') + tarihEtiketi + ' &mdash; ' + records.length + ' kay\u0131t</p>');
   win.document.write('<table><thead><tr><th>Tarih</th><th>Saat</th><th>Depo</th><th>S\u0131cakl\u0131k</th><th>Nem</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('</body></html>');
   win.document.close();
@@ -1514,6 +1532,10 @@ function haccpToggleSelectAll(checked) {
   if (filterSelect && filterSelect.value) {
     records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === filterSelect.value; });
   }
+  var tarihBas = document.getElementById('haccpSicaklikTarihBas');
+  var tarihBit = document.getElementById('haccpSicaklikTarihBit');
+  if (tarihBas && tarihBas.value) records = records.filter(function(r) { return r.tarih >= tarihBas.value; });
+  if (tarihBit && tarihBit.value) records = records.filter(function(r) { return r.tarih <= tarihBit.value; });
   var totalPages = Math.ceil(records.length / haccpSicaklikPageSize);
   var start = haccpSicaklikPage * haccpSicaklikPageSize;
   var page = records.slice(start, start + haccpSicaklikPageSize);

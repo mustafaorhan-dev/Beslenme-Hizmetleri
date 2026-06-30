@@ -666,11 +666,15 @@
         </div>
         <!-- Quick Depo Summary -->
         <div id="haccpDepoSummary" style="margin-bottom:0.75rem"></div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
           <label style="font-size:0.85rem;color:var(--text-muted)">Depo Filtresi:</label>
           <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
             <option value="">Tümü</option>
           </select>
+          <label style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem">Tarih Aralığı:</label>
+          <input type="date" id="haccpSicaklikTarihBas" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+          <span style="font-size:0.85rem;color:var(--text-muted)">—</span>
+          <input type="date" id="haccpSicaklikTarihBit" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="haccpSicaklikEmpty">
