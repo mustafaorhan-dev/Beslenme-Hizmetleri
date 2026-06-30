@@ -2701,7 +2701,7 @@ function importYemekCSV(event) { if (!requireAdmin()) return;
   const reader = new FileReader();
   reader.onload = function(ev) {
     try {
-      const text = ev.target.result;
+      const text = ev.target.result.replace(/^\uFEFF/, '');
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (!lines.length) throw new Error('CSV boş');
       const headers = parseCSVLine(lines[0]);
@@ -3939,7 +3939,7 @@ async function renderMenu() {
 
 let _pickerCi = 0, _pickerDi = 0;
 
-function showMenuMealPicker(e) {
+async function showMenuMealPicker(e) {
   const ta = e.currentTarget;
   if (!ta) return;
   const id = ta.id;
@@ -3947,7 +3947,11 @@ function showMenuMealPicker(e) {
   if (!m) return;
   _pickerCi = parseInt(m[1]);
   _pickerDi = parseInt(m[2]);
-  const list = loadYemekler();
+  let list = loadYemekler();
+  if (!list.length) {
+    await syncDishesFromSupabase();
+    list = loadYemekler();
+  }
   if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
   const mevcut = ta.value.trim().split('\n')[0];
   // picker overlay
