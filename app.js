@@ -3966,6 +3966,106 @@ function importMenuJSON(event) { if (!requireAdmin()) return;
   event.target.value = '';
 }
 
+function importMenuCSV(event) { if (!requireAdmin()) return;
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    try {
+      const text = ev.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error('CSV en az 2 satır içermelidir (başlık + veri)');
+      const headers = parseCSVLine(lines[0]);
+      const tarihIdx = headers.findIndex(h => /tarih/i.test(h));
+      const cesitIdxs = [];
+      for (let i = 1; i <= 5; i++) {
+        const idx = headers.findIndex(h => new RegExp('^\\s*' + i + '\\s*\\.?\\s*çeşit','i').test(h) || new RegExp('^\\s*' + i + '\\s*\\.?\\s*cesit','i').test(h));
+        cesitIdxs.push(idx);
+      }
+      const kisiIdx = headers.findIndex(h => /kişi|kisi/i.test(h));
+      if (tarihIdx === -1) throw new Error('"Tarih" sütunu bulunamadı.');
+      // csv verisini haftalık menü yapısına dönüştür
+      const allData = await fetchMenuData();
+      for (let r = 1; r < lines.length; r++) {
+        const cols = parseCSVLine(lines[r]);
+        const tarih = cols[tarihIdx]?.trim();
+        if (!tarih) continue;
+        // hafta anahtarını bul
+        let weekKey = null;
+        let dayKey = null;
+        for (const wk in allData) {
+          const parts = wk.split('-');
+          if (parts.length === 6) {
+            const bas = parts[0]+'-'+parts[1]+'-'+parts[2];
+            const bit = parts[3]+'-'+parts[4]+'-'+parts[5];
+            if (tarih >= bas && tarih <= bit) { weekKey = wk; break; }
+          }
+        }
+        if (!weekKey) {
+          // hafta anahtarı yoksa oluştur: tarihin bulunduğu haftanın pazartesi-cuması
+          const d = new Date(tarih);
+          const gun = d.getDay();
+          const diff = d.getDate() - gun + (gun === 0 ? -6 : 1);
+          const mon = new Date(d);
+          mon.setDate(diff);
+          const fri = new Date(mon);
+          fri.setDate(mon.getDate() + 4);
+          weekKey = formatDateStr(mon) + '-' + formatDateStr(fri);
+          if (!allData[weekKey]) allData[weekKey] = {};
+        }
+        if (!allData[weekKey][tarih]) allData[weekKey][tarih] = { yemekler: ['','','','',''], kisi: 0, notlar: [] };
+        const yemekler = allData[weekKey][tarih].yemekler;
+        for (let c = 0; c < 5; c++) {
+          const idx = cesitIdxs[c];
+          if (idx !== -1 && idx < cols.length) yemekler[c] = cols[idx]?.trim() || '';
+        }
+        if (kisiIdx !== -1 && kisiIdx < cols.length) {
+          allData[weekKey][tarih].kisi = parseInt(cols[kisiIdx]) || 0;
+        }
+      }
+      await saveMenuData(allData);
+      await renderMenu();
+      showToast('CSV menü yüklendi.', 'success');
+    } catch (err) {
+      showToast('CSV yükleme hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  result.push(current);
+  return result;
+}
+
 // ─── ATIK YAG (WASTE OIL) ────────────────────────────────────────────────────
 const YAG_STORAGE_KEY = 'atik_kontrol_yag';
 let yagRecords = [];
