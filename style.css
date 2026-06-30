@@ -1779,6 +1779,8 @@ body {
   .kpi-icon svg { width: 18px; height: 18px; }
   .kpi-card { padding: 1rem; }
   .section-card { padding: 1rem; }
+  .section-header { flex-wrap: wrap; }
+  .section-header h2 { min-width: 0; flex-shrink: 1; }
   .toolbar-actions { flex-wrap: wrap; gap: 0.4rem; }
   .toolbar-actions .btn { flex: 1 1 auto; min-width: 0; font-size: 0.75rem; padding: 0.45rem 0.6rem; }
   .header-right { gap: 0.3rem; }
