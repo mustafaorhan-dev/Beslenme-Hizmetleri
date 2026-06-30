@@ -542,6 +542,11 @@ async function syncRecordsToSupabase() {
   } catch (_) {}
 }
 
+function parseNumComma(v) {
+  if (v == null || v === '') return null;
+  return Number(String(v).replace(',', '.'));
+}
+
 function haccpRecordToDB(r) {
   return {
     id: Number(r.id) || Date.now(),
@@ -549,8 +554,8 @@ function haccpRecordToDB(r) {
     tarih: r.tarih || '',
     saat: r.saat || '',
     depo_ad: r.depoAd || '',
-    sicaklik: r.sicaklik != null && r.sicaklik !== '' ? Number(r.sicaklik) : null,
-    nem: r.nem != null && r.nem !== '' ? Number(r.nem) : null,
+    sicaklik: parseNumComma(r.sicaklik),
+    nem: parseNumComma(r.nem),
     not_: r.not || '',
     last_modified: new Date().toISOString()
   };
@@ -617,9 +622,9 @@ async function syncHaccpFromSupabase() {
           tarih: normalizeDate(r.tarih || ''),
           saat: normalizeSaat(r.saat || ''),
           depoAd: r.depo_ad || '',
-          sicaklik: typ === 'sicaklik' && r.sicaklik != null ? Number(r.sicaklik) : null,
+          sicaklik: typ === 'sicaklik' ? parseNumComma(r.sicaklik) : null,
           not: r.not_ || r.not || '',
-          nem: typ === 'sicaklik' && r.nem != null ? Number(r.nem) : null
+          nem: typ === 'sicaklik' ? parseNumComma(r.nem) : null
         };
       });
       lastHaccpSyncHash = JSON.stringify(haccpRecords);
@@ -1380,8 +1385,8 @@ function renderHaccpSicaklik() {
       <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
-      <td class="${durum.cls}"><strong>${r.sicaklik != null ? r.sicaklik : '—'}</strong></td>
-      <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? r.nem : '—'}</td>
+      <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</strong></td>
+      <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : '—'}</td>
       <td>${r.not || '—'}</td>
       <td>
         <button class="btn-icon" onclick="editHaccpRecord('sicaklik',${r.id})" title="Düzenle">
@@ -1497,8 +1502,8 @@ function saveHaccpRecord(e) {
   rec.tarih = document.getElementById('hfTarih').value;
   rec.saat = document.getElementById('hfSaat').value;
   rec.depoAd = document.getElementById('hfDepoAd').value.trim();
-  rec.sicaklik = document.getElementById('hfSicaklik').value;
-  rec.nem = document.getElementById('hfNem').value;
+  rec.sicaklik = parseNumComma(document.getElementById('hfSicaklik').value);
+  rec.nem = parseNumComma(document.getElementById('hfNem').value);
   rec.not = document.getElementById('hfNot').value.trim();
 
   if (editingHaccpId) {
