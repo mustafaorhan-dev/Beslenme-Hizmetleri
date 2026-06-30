@@ -5,7 +5,7 @@
 'use strict';
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbwXVr2dA3kKh4E_ohp2YVo8HHzumb_1vMd92s1hiHTpJywwIkjVEnyEucy_lD_O344h/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbzup0Kap77U5GRJU6iyuZ7AsC9bUqzq7CkqMRJ5FKfemDWIrM0aMzJ1dBGJXV2L5j3IaA/exec';
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -1001,7 +1001,8 @@ function loadGSheetConfig() {
   try {
     var oldUrls = [
       'https://script.google.com/macros/s/AKfycbynBf7pBHQrZ0Vh3lSyTyceozIBXF_uZP2ZIkkd76C7SkSqKoRRJANC68LGCqTAXYHCCg/exec',
-      'https://script.google.com/macros/s/AKfycbyx2gz8KLp7qkBWxZW0WjyjDn_3TJBB_r8pb4oqIVSoIpuzHkvOsq_ozG91U1OaSefR_w/exec'
+      'https://script.google.com/macros/s/AKfycbyx2gz8KLp7qkBWxZW0WjyjDn_3TJBB_r8pb4oqIVSoIpuzHkvOsq_ozG91U1OaSefR_w/exec',
+      'https://script.google.com/macros/s/AKfycbwXVr2dA3kKh4E_ohp2YVo8HHzumb_1vMd92s1hiHTpJywwIkjVEnyEucy_lD_O344h/exec'
     ];
     var stored = localStorage.getItem('atik_kontrol_gsheet_config');
     if (stored) {
