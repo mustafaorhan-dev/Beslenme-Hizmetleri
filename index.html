@@ -668,7 +668,7 @@
         <div id="haccpDepoSummary" style="margin-bottom:0.75rem"></div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
           <label style="font-size:0.85rem;color:var(--text-muted)">Depo Filtresi:</label>
-          <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+          <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
             <option value="">Tümü</option>
           </select>
         </div>
@@ -676,9 +676,13 @@
           <div class="empty-state" id="haccpSicaklikEmpty">
             <p>Henüz sıcaklık kaydı girilmemiş.</p>
           </div>
+          <div class="bulk-bar" id="haccpBatchBar" style="display:none">
+            <span id="haccpBatchCount">0 seçili</span>
+            <button class="btn btn-danger btn-sm" id="haccpBatchDeleteBtn" onclick="haccpDeleteSelected()">Seçili Sil</button>
+          </div>
           <table class="data-table" id="haccpSicaklikTable" style="display:none">
             <thead>
-              <tr><th>Tarih</th><th>Saat</th><th>Depo Adı</th><th>Sıcaklık (°C)</th><th>Nem (%)</th><th>Not</th><th>İşlem</th></tr>
+              <tr><th style="width:32px"><input type="checkbox" id="haccpSelectAllChk" onchange="haccpToggleSelectAll(this.checked)" style="cursor:pointer"></th><th>Tarih</th><th>Saat</th><th>Depo Adı</th><th>Sıcaklık (°C)</th><th>Nem (%)</th><th>Not</th><th>İşlem</th></tr>
             </thead>
             <tbody id="haccpSicaklikTbody"></tbody>
           </table>

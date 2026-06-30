@@ -1331,7 +1331,8 @@ function sicaklikDurum(sicaklik, depoAd) {
 }
 
 var haccpSicaklikPage = 0;
-var haccpSicaklikPageSize = 5;
+var haccpSicaklikPageSize = 100;
+var haccpSelectedIds = new Set();
 
 function formatTarihTR(t) {
   if (!t) return '—';
@@ -1367,6 +1368,7 @@ function renderHaccpSicaklik() {
     table.style.display = 'none';
     empty.style.display = 'flex';
     if (nav) nav.style.display = 'none';
+    document.getElementById('haccpBatchBar').style.display = 'none';
     return;
   }
   table.style.display = 'table';
@@ -1378,10 +1380,25 @@ function renderHaccpSicaklik() {
   var start = haccpSicaklikPage * haccpSicaklikPageSize;
   var pageRecords = records.slice(start, start + haccpSicaklikPageSize);
 
+  // batch bar
+  var batchBar = document.getElementById('haccpBatchBar');
+  var batchCount = document.getElementById('haccpBatchCount');
+  if (haccpSelectedIds.size > 0) {
+    batchBar.style.display = 'flex';
+    batchCount.textContent = haccpSelectedIds.size + ' seçili';
+  } else {
+    batchBar.style.display = 'none';
+  }
+
+  // header checkbox state
+  var allSelected = pageRecords.every(function(r) { return haccpSelectedIds.has(r.id); });
+
   tbody.innerHTML = pageRecords.map(r => {
+    var checked = haccpSelectedIds.has(r.id) ? ' checked' : '';
     const depoAd = r.depoAd || ('Depo ' + r.depoNo);
     const durum = sicaklikDurum(r.sicaklik, depoAd);
     return `<tr>
+      <td><input type="checkbox" class="haccp-select-chk" data-id="${r.id}"${checked} onchange="haccpToggleSelect(${r.id})" style="cursor:pointer"></td>
       <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
@@ -1398,6 +1415,10 @@ function renderHaccpSicaklik() {
       </td>
     </tr>`;
   }).join('');
+
+  // update header checkbox
+  var headerChk = document.getElementById('haccpSelectAllChk');
+  if (headerChk) headerChk.checked = allSelected;
 
   if (nav) {
     nav.style.display = totalPages > 1 ? 'block' : 'none';
@@ -1448,6 +1469,37 @@ function haccpSicaklikPageNext() {
   if (haccpSicaklikPage < totalPages - 1) { haccpSicaklikPage++; renderHaccpSicaklik(); }
 }
 
+function haccpToggleSelect(id) {
+  if (haccpSelectedIds.has(id)) haccpSelectedIds.delete(id);
+  else haccpSelectedIds.add(id);
+  renderHaccpSicaklik();
+}
+
+function haccpToggleSelectAll(checked) {
+  var records = getHaccpRecords('sicaklik');
+  var filterSelect = document.getElementById('haccpSicaklikDepoFilter');
+  if (filterSelect && filterSelect.value) {
+    records = records.filter(function(r) { return (r.depoAd || ('Depo ' + r.depoNo)) === filterSelect.value; });
+  }
+  var totalPages = Math.ceil(records.length / haccpSicaklikPageSize);
+  var start = haccpSicaklikPage * haccpSicaklikPageSize;
+  var page = records.slice(start, start + haccpSicaklikPageSize);
+  page.forEach(function(r) {
+    if (checked) haccpSelectedIds.add(r.id);
+    else haccpSelectedIds.delete(r.id);
+  });
+  renderHaccpSicaklik();
+}
+
+function haccpDeleteSelected() { if (!requireAdmin()) return;
+  if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
+  if (!confirm('Seçili ' + haccpSelectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
+  haccpRecords = haccpRecords.filter(function(r) { return !haccpSelectedIds.has(r.id); });
+  haccpSelectedIds.clear();
+  saveHaccpData();
+  renderHaccp();
+  showToast('Seçili kayıtlar silindi.', 'success');
+}
 
 function openHaccpModal(type, id) {
   if (type !== 'sicaklik') return showToast('Sadece sıcaklık kaydı destekleniyor.', 'error');
@@ -1527,6 +1579,7 @@ function editHaccpRecord(type, id) {
 function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   haccpRecords = haccpRecords.filter(r => !(r.id === id && r.type === type));
+  haccpSelectedIds.delete(id);
   saveHaccpData();
   renderHaccp();
   showToast('Kayıt silindi.', 'success');
