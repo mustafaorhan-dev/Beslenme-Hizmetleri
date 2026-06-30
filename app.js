@@ -434,53 +434,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
       if (haccpRecords.length === 0) {
-        var { data: hData } = await supabaseClient.from('haccp_records').select('*').order('tarih', { ascending: false });
-        if (hData && hData.length > 0) {
-          haccpRecords = hData.map(function(r) {
-            var typ = (r.type || 'sicaklik').toLowerCase();
-            return {
-              id: Number(r.id) || Date.now() + Math.random(),
-              type: typ,
-              tarih: normalizeDate(r.tarih || ''),
-              saat: normalizeSaat(r.saat || ''),
-              depoAd: r.depo_ad || '',
-              sicaklik: typ === 'sicaklik' ? parseNumComma(r.sicaklik) : null,
-              not: r.not_ || r.not || '',
-              nem: typ === 'sicaklik' ? parseNumComma(r.nem) : null
-            };
-          });
-          saveHaccpData();
-        }
-        var { data: dData } = await supabaseClient.from('haccp_depo_adlari').select('ad');
-        if (dData && dData.length > 0) {
-          try { localStorage.setItem(HACCP_DEPO_KEY, JSON.stringify(dData.map(function(d) { return d.ad; }))); } catch (_) {}
+        await syncHaccpFromSupabase();
+        if (haccpRecords.length > 0) {
+          try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
         }
       }
       if (yagRecords.length === 0) {
-        var { data: yData } = await supabaseClient.from('yag_records').select('*').order('tarih', { ascending: false });
-        if (yData && yData.length > 0) {
-          yagRecords = yData.map(function(r) { return {
-            id: Number(r.id) || Date.now() + Math.random(),
-            tarih: normalizeDate(r.tarih || ''),
-            makbuzNo: r.makbuz_no || '',
-            tur: r.tur || '',
-            miktar: parseNumComma(r.miktar) || 0,
-            not: r.not_ || r.not || ''
-          }; });
-          saveYagData();
+        await syncYagFromSupabase();
+        if (yagRecords.length > 0) {
+          try { localStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
         }
       }
       if (ambalajRecords.length === 0) {
-        var { data: aData } = await supabaseClient.from('ambalaj_records').select('*').order('tarih', { ascending: false });
-        if (aData && aData.length > 0) {
-          ambalajRecords = aData.map(function(r) { return {
-            id: Number(r.id) || Date.now() + Math.random(),
-            tarih: normalizeDate(r.tarih || ''),
-            tur: r.tur || '',
-            miktar: parseNumComma(r.miktar) || 0,
-            not: r.not_ || r.not || ''
-          }; });
-          saveAmbalajData();
+        await syncAmbalajFromSupabase();
+        if (ambalajRecords.length > 0) {
+          try { localStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
         }
       }
     } catch (_) {}
