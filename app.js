@@ -799,11 +799,23 @@ function importHaccpFile(event) {
 
 // ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
 
+function yagRecordToDB(r) {
+  return {
+    id: Number(r.id) || Date.now(),
+    tarih: r.tarih || '',
+    makbuz_no: r.makbuzNo || '',
+    tur: r.tur || '',
+    miktar: Number(r.miktar) || 0,
+    not_: r.not || '',
+    last_modified: new Date().toISOString()
+  };
+}
+
 async function syncYagToSupabase() {
   if (!supabaseClient) return;
   try {
     if (yagRecords.length > 0) {
-      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
     }
     showToast('Yağ verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
@@ -815,7 +827,7 @@ function syncYagSilent() {
   yagSyncTimer = setTimeout(async () => {
     if (!supabaseClient || yagRecords.length === 0) return;
     try {
-      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
@@ -846,11 +858,22 @@ async function syncYagFromSupabase() {
 
 // ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
 
+function ambalajRecordToDB(r) {
+  return {
+    id: Number(r.id) || Date.now(),
+    tarih: r.tarih || '',
+    tur: r.tur || '',
+    miktar: Number(r.miktar) || 0,
+    not_: r.not || '',
+    last_modified: new Date().toISOString()
+  };
+}
+
 async function syncAmbalajToSupabase() {
   if (!supabaseClient) return;
   try {
     if (ambalajRecords.length > 0) {
-      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
     }
     showToast('Ambalaj verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
@@ -862,7 +885,7 @@ function syncAmbalajSilent() {
   ambalajSyncTimer = setTimeout(async () => {
     if (!supabaseClient || ambalajRecords.length === 0) return;
     try {
-      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
     } catch (_) {}
   }, 400);
 }
@@ -964,11 +987,11 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
       toastMsg.push('HACCP: ' + haccpRecords.length);
     }
     if (yagRecords.length > 0) {
-      await supabaseClient.from('yag_records').upsert(yagRecords, { onConflict: 'id' });
+      await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
       toastMsg.push('Yağ: ' + yagRecords.length);
     }
     if (ambalajRecords.length > 0) {
-      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords, { onConflict: 'id' });
+      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
       toastMsg.push('Ambalaj: ' + ambalajRecords.length);
     }
     showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
@@ -3561,6 +3584,46 @@ function drawAllCharts() {
   const weekValues = weekLabels.map(l => weeklyData[l]);
   if (weekLabels.length > 0) {
     makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
+  }
+
+  // --- YAG Aylik Atik Yag Chart ---
+  var yagCanvas = document.getElementById('canvasYag');
+  var yagEmpty = document.getElementById('chartYagEmpty');
+  if (yagCanvas && yagEmpty) {
+    if (yagRecords.length === 0) {
+      yagEmpty.style.display = 'block';
+      yagCanvas.style.display = 'none';
+    } else {
+      yagEmpty.style.display = 'none';
+      yagCanvas.style.display = 'block';
+      var yagMonthly = {};
+      yagRecords.forEach(function(r) {
+        if (!r.tarih) return;
+        var d = new Date(r.tarih + 'T00:00:00');
+        if (isNaN(d)) return;
+        if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return;
+        var mk = (d.getMonth() + 1) + '/' + d.getFullYear();
+        yagMonthly[mk] = (yagMonthly[mk] || 0) + (Number(r.miktar) || 0);
+      });
+      var yagLabels = [];
+      chartYears.forEach(function(y) { for (var m = 1; m <= 12; m++) { var k = m + '/' + y; if (yagMonthly[k]) yagLabels.push(k); } });
+      if (yagLabels.length > 0) {
+        makeChart('canvasYag', yagLabels, [{ data: yagLabels.map(function(k) { return yagMonthly[k]; }), color: '#f97316', label: 'Aylik Atik Yag (lt)' }], { type: 'bar', showValues: true, onClick: function(label) {
+          var parts = label.split('/');
+          if (parts.length === 2) {
+            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
+            if (!isNaN(ay) && !isNaN(yil)) {
+              var filtered = yagRecords.filter(function(r) {
+                if (!r.tarih) return false;
+                var d = new Date(r.tarih + 'T00:00:00');
+                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
+              });
+              if (filtered.length > 0) showChartDetailModal(label + ' Atık Yağ', filtered);
+            }
+          }
+        }});
+      }
+    }
   }
 
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
