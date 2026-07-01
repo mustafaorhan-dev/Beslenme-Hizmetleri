@@ -413,8 +413,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadYagData();
   loadAmbalajData();
 
-  // localStorage'ta veri yoksa Supabase'ten otomatik çek
-  if (supabaseClient && (records.length === 0 || haccpRecords.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
+  // Her seferinde Supabase'ten güncel verileri çek (çoklu cihaz desteği - localStorage dolu olsa bile)
+  if (supabaseClient && (records.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
     setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
     try {
       if (records.length === 0 && getRole() === ROLE_ADMIN) {
@@ -433,12 +433,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           filteredRecords = [...records];
         }
       }
-      if (haccpRecords.length === 0) {
-        await syncHaccpFromSupabase();
-        if (haccpRecords.length > 0) {
-          try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
-        }
-      }
       if (yagRecords.length === 0) {
         await syncYagFromSupabase();
         if (yagRecords.length > 0) {
@@ -453,6 +447,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       await syncDishesFromSupabase();
     } catch (_) {}
+  }
+
+  // HACCP (soğuk depo sıcaklık) verileri her sayfa yüklenişinde Supabase'ten çekilir
+  if (supabaseClient) {
+    await syncHaccpFromSupabase();
+    if (haccpRecords.length > 0) {
+      try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+    }
   }
 
   setCurrentDate();
