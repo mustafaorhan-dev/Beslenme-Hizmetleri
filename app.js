@@ -4908,6 +4908,47 @@ function exportMenuPDF() {
   setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
 }
 
+async function downloadMenuPDF() {
+  showToast('PDF hazırlanıyor...', 'info');
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  var clone = document.querySelector('#content-menu .section-card');
+  if (!clone) { printWin.document.write('<p>Menü yok</p>'); printWin.document.close(); return; }
+  clone = clone.cloneNode(true);
+  clone.querySelectorAll('input').forEach(function(inp) { if (inp.value) inp.setAttribute('value', inp.value); });
+  clone.querySelectorAll('textarea').forEach(function(ta) { ta.textContent = ta.value; });
+  const menuHtml = clone.outerHTML;
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Haftalık Menü</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; background: #fff; color: #333; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+      .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
+      .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
+      .menu-date-nav, .btn, .toolbar-actions, .menu-hint { display: none; }
+      * { box-sizing: border-box; }
+      img { max-width: 100%; }
+    </style>
+  </head><body>
+    <h1>Haftalık Menü Listesi</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${menuHtml}
+    <div class="footer" style="text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem;">Yemekhane Menü ve Atık Yönetim Sistemi</div>
+  </body></html>`);
+  printWin.document.close();
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const element = printWin.document.body;
+  try {
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 10, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
+    showToast('PDF indirildi.', 'success');
+  } catch (e) {
+    showToast('PDF oluşturulamadı: ' + e.message, 'error');
+  }
+  printWin.close();
+}
+
 
 
 
