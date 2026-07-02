@@ -3082,13 +3082,17 @@ function initDishAutocomplete() {
   document.body.appendChild(dishSuggestionsEl);
 
   document.addEventListener('focusin', function(e) {
-    if (e.target.tagName === 'TEXTAREA' && e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
       activeDishTextarea = e.target;
       showDishDropdown(e.target);
+      autoResizeTextarea(e.target);
     }
   });
 
   document.addEventListener('input', function(e) {
+    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+      autoResizeTextarea(e.target);
+    }
     if (e.target === activeDishTextarea) {
       showDishDropdown(e.target);
     }
@@ -3096,6 +3100,11 @@ function initDishAutocomplete() {
       refreshMenuProduction();
     }
   });
+
+  function autoResizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 2 + 'px';
+  }
 
   document.addEventListener('keydown', function(e) {
     if (e.target !== activeDishTextarea) return;
@@ -3142,7 +3151,10 @@ function showDishDropdown(textarea) {
 
   const rect = textarea.getBoundingClientRect();
   dishSuggestionsEl.innerHTML = filtered.map(y =>
-    `<div class="dish-suggestion-item" data-id="${escapeHtml(y.id)}">${escapeHtml(y.ad)} <span style="font-size:0.7rem;opacity:0.6">${escapeHtml(y.kalori || '')}</span></div>`
+    `<div class="dish-suggestion-item" data-id="${escapeHtml(y.id)}">
+       <div style="font-weight:600">${escapeHtml(y.ad)} ${y.kalori ? '<span style="font-size:0.7rem;opacity:0.6">(' + escapeHtml(y.kalori) + ')</span>' : ''}</div>
+       ${y.alerjen ? '<div style="font-size:0.7rem;opacity:0.7;margin-top:2px;line-height:1.3">' + escapeHtml(y.alerjen) + '</div>' : ''}
+     </div>`
   ).join('');
   dishSuggestionsEl.style.display = 'block';
   dishSuggestionsEl.style.top = (rect.bottom + window.scrollY + 2) + 'px';
@@ -3921,13 +3933,36 @@ async function renderMenu() {
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" /></td>`;
     }).join('')}
-  </tr>` + Array.from({length: 10}, (_, ni) => `<tr>
-    <td><strong>Not ${ni + 1}</strong></td>
-    ${days.map((d, di) => {
-      const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-      return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
-    }).join('')}
-  </tr>`).join('');
+  </tr>`;
+  // Not satırları: sadece visibleNoteCount kadar göster
+  let visibleNoteCount = window._menuNoteCount || 1;
+  // Kaydedilmiş notlar varsa, onları da göster
+  days.forEach(d => {
+    if (d.data.notlar) {
+      for (let i = 0; i < d.data.notlar.length; i++) {
+        if (d.data.notlar[i] && i + 1 > visibleNoteCount) {
+          visibleNoteCount = i + 1;
+        }
+      }
+    }
+  });
+  window._menuNoteCount = visibleNoteCount;
+  for (let ni = 0; ni < visibleNoteCount; ni++) {
+    let tr = document.createElement('tr');
+    tr.innerHTML = `<td><strong>Not ${ni + 1}</strong></td>
+      ${days.map((d, di) => {
+        const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
+        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
+      }).join('')}`;
+    tbody.appendChild(tr);
+  }
+  // + butonu satırı
+  let addRow = document.createElement('tr');
+  addRow.innerHTML = `<td style="vertical-align:middle">
+    <button class="btn btn-ghost btn-sm" onclick="addNoteRow()" title="Yeni not ekle" style="font-size:1.1rem;padding:0.2rem 0.6rem;line-height:1">+</button>
+  </td>
+  ${days.map(() => `<td></td>`).join('')}`;
+  tbody.appendChild(addRow);
   // yemek seçici: çeşit textarea'larına tıklayınca liste aç
   for (let ci = 0; ci < 5; ci++) {
     for (let di = 0; di < 5; di++) {
@@ -3999,10 +4034,16 @@ function selectMealFromPicker(el) {
   const ta = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   if (ta) {
     ta.value = formatYemek(y);
-    // kişi sayısını girince üretim hesaplansın diye trigger
+    autoResizeTextarea(ta);
     refreshMenuProduction();
   }
   document.getElementById('mealPickerOverlay').style.display = 'none';
+}
+
+function autoResizeTextarea(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 2 + 'px';
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
@@ -4064,6 +4105,12 @@ async function saveWeeklyMenu() { if (!requireAdmin()) return;
 async function shiftMenuWeek(delta) {
   menuWeekOffset += delta;
   await renderMenu();
+}
+
+function addNoteRow() {
+  window._menuNoteCount = (window._menuNoteCount || 1) + 1;
+  renderMenu();
+  showToast('Not ' + window._menuNoteCount + ' eklendi. + butonuna basarak çoğaltabilirsiniz.', 'success');
 }
 
 function clearWeeklyMenu() { if (!requireAdmin()) return;
