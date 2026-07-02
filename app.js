@@ -3949,7 +3949,10 @@ async function renderMenu() {
   window._menuNoteCount = visibleNoteCount;
   for (let ni = 0; ni < visibleNoteCount; ni++) {
     let tr = document.createElement('tr');
-    tr.innerHTML = `<td><strong>Not ${ni + 1}</strong></td>
+    tr.id = 'noteRow_' + ni;
+    tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
+      <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">−</button>
+    </td>
       ${days.map((d, di) => {
         const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
         return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
@@ -3958,6 +3961,7 @@ async function renderMenu() {
   }
   // + butonu satırı
   let addRow = document.createElement('tr');
+  addRow.id = 'noteAddRow';
   addRow.innerHTML = `<td style="vertical-align:middle">
     <button class="btn btn-ghost btn-sm" onclick="addNoteRow()" title="Yeni not ekle" style="font-size:1.1rem;padding:0.2rem 0.6rem;line-height:1">+</button>
   </td>
@@ -4108,9 +4112,50 @@ async function shiftMenuWeek(delta) {
 }
 
 function addNoteRow() {
-  window._menuNoteCount = (window._menuNoteCount || 1) + 1;
-  renderMenu();
-  showToast('Not ' + window._menuNoteCount + ' eklendi. + butonuna basarak çoğaltabilirsiniz.', 'success');
+  const ni = window._menuNoteCount || 1;
+  const tbody = document.getElementById('menuTbody');
+  const tr = document.createElement('tr');
+  tr.id = 'noteRow_' + ni;
+  tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
+    <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
+  </td>
+    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..."></textarea></td>`).join('')}`;
+  const addRow = document.getElementById('noteAddRow');
+  if (addRow) tbody.insertBefore(tr, addRow);
+  window._menuNoteCount = ni + 1;
+  // İlk not satırındaki eksi butonunu göster (gizliydi)
+  const firstRow = document.getElementById('noteRow_0');
+  if (firstRow) {
+    const btn = firstRow.querySelector('button');
+    if (btn) btn.style.display = '';
+  }
+  showToast('Not ' + (ni + 1) + ' eklendi.', 'success');
+}
+
+function removeNoteRow(ni) {
+  if ((window._menuNoteCount || 1) <= 1) return;
+  const tbody = document.getElementById('menuTbody');
+  // Değerleri kaydır: silinen nottan sonrakileri bir üst satıra taşı
+  for (let n = ni + 1; n < (window._menuNoteCount || 1); n++) {
+    GUNLER.forEach((_, di) => {
+      const fromEl = document.getElementById('mn_' + n + '_' + di);
+      const toEl = document.getElementById('mn_' + (n - 1) + '_' + di);
+      if (fromEl && toEl) toEl.value = fromEl.value;
+    });
+  }
+  // En son satırı sil
+  const lastRow = document.getElementById('noteRow_' + ((window._menuNoteCount || 1) - 1));
+  if (lastRow) lastRow.remove();
+  window._menuNoteCount--;
+  // Sadece 1 not kaldıysa eksi butonunu gizle
+  if (window._menuNoteCount <= 1) {
+    const firstRow = document.getElementById('noteRow_0');
+    if (firstRow) {
+      const btn = firstRow.querySelector('button');
+      if (btn) btn.style.display = 'none';
+    }
+  }
+  showToast('Not ' + (ni + 1) + ' silindi.', 'success');
 }
 
 function clearWeeklyMenu() { if (!requireAdmin()) return;
