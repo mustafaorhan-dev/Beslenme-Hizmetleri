@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 let pollInterval = null;
 let inactivityTimer = null;
 const POLL_INTERVAL = 180000;
-const INACTIVITY_TIMEOUT = 600000;
+const INACTIVITY_TIMEOUT = 300000;
 
 function startPolling() {
   stopPolling();
