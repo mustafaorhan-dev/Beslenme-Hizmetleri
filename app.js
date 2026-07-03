@@ -1635,12 +1635,16 @@ function haccpToggleSelectAll(checked) {
   renderHaccpSicaklik();
 }
 
-function haccpDeleteSelected() { if (!requireAdmin()) return;
+async function haccpDeleteSelected() { if (!requireAdmin()) return;
   if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
   if (!confirm('Seçili ' + haccpSelectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
+  var ids = [...haccpSelectedIds];
   haccpRecords = haccpRecords.filter(function(r) { return !haccpSelectedIds.has(r.id); });
   haccpSelectedIds.clear();
   saveHaccpData();
+  if (supabaseClient && ids.length > 0) {
+    try { await supabaseClient.from('haccp_records').delete().in('id', ids); } catch (_) {}
+  }
   renderHaccp();
   showToast('Seçili kayıtlar silindi.', 'success');
 }
@@ -1721,11 +1725,14 @@ function editHaccpRecord(type, id) {
   openHaccpModal(type, id);
 }
 
-function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
+async function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   haccpRecords = haccpRecords.filter(r => !(r.id === id && r.type === type));
   haccpSelectedIds.delete(id);
   saveHaccpData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('haccp_records').delete().eq('id', id); } catch (_) {}
+  }
   renderHaccp();
   showToast('Kayıt silindi.', 'success');
 }
@@ -2039,11 +2046,14 @@ function saveRecord(e) {
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
-function deleteRecord(id) { if (!requireAdmin()) return;
+async function deleteRecord(id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   records = records.filter(r => r.id !== id);
   selectedIds.delete(id);
   saveData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('records').delete().eq('id', id); } catch (_) {}
+  }
   filteredRecords = [...records];
   renderAll();
   drawAllCharts();
@@ -2140,15 +2150,19 @@ function updateBulkBar() {
   }
 }
 
-function deleteSelected() { if (!requireAdmin()) return;
+async function deleteSelected() { if (!requireAdmin()) return;
   if (selectedIds.size === 0) {
     showToast('Seçili kayıt yok.', 'error');
     return;
   }
   if (!confirm(`Seçili ${selectedIds.size} kaydı silmek istediğinize emin misiniz?`)) return;
+  var ids = [...selectedIds];
   records = records.filter(r => !selectedIds.has(r.id));
   selectedIds.clear();
   saveData();
+  if (supabaseClient && ids.length > 0) {
+    try { await supabaseClient.from('records').delete().in('id', ids); } catch (_) {}
+  }
   filteredRecords = [...records];
   currentPage = 1;
   renderAll();
@@ -2251,7 +2265,7 @@ function handleImport(e) {
 }
 
 // ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
-function clearAllData() { if (!requireAdmin()) return;
+async function clearAllData() { if (!requireAdmin()) return;
   if (records.length === 0) {
     showToast('Silinecek kayıt yok.', 'error');
     return;
@@ -2263,6 +2277,9 @@ function clearAllData() { if (!requireAdmin()) return;
   selectedIds.clear();
   currentPage = 1;
   saveData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('records').delete().neq('id', 0); } catch (_) {}
+  }
   renderAll();
   drawAllCharts();
   showToast('Tüm kayıtlar silindi.', 'success');
@@ -4504,11 +4521,14 @@ function saveYagRecord(e) {
 
 function editYagRecord(id) { openYagModal(id); }
 
-function deleteYagRecord(id) {
+async function deleteYagRecord(id) {
   if (!requireAdmin()) return;
   if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('yag_records').delete().eq('id', id); } catch (_) {}
+  }
   renderYagTable();
   syncYagSilent();
   showToast('Atık yağ kaydı silindi.', 'success');
@@ -4811,11 +4831,14 @@ function saveAmbalajRecord(e) {
 
 function editAmbalajRecord(id) { openAmbalajModal(id); }
 
-function deleteAmbalajRecord(id) {
+async function deleteAmbalajRecord(id) {
   if (!requireAdmin()) return;
   if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('ambalaj_records').delete().eq('id', id); } catch (_) {}
+  }
   renderAmbalajTable();
   syncAmbalajSilent();
   showToast('Ambalaj atığı kaydı silindi.', 'success');
