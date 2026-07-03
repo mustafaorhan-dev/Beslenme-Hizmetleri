@@ -464,22 +464,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
   }
 
-  // Diğer tablolar (sadece boşsa Supabase'ten al)
-  if (supabaseClient && (yagRecords.length === 0 || ambalajRecords.length === 0)) {
+  // Yag ve ambalaj her sayfada Supabase'ten çekilir
+  if (supabaseClient) {
     try {
-      if (yagRecords.length === 0) {
-        await syncYagFromSupabase();
-        if (yagRecords.length > 0) {
-          try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
-          try { localStorage.removeItem(YAG_STORAGE_KEY); } catch (_) {}
-        }
+      await syncYagFromSupabase();
+      if (yagRecords.length > 0) {
+        try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
+        try { localStorage.removeItem(YAG_STORAGE_KEY); } catch (_) {}
       }
-      if (ambalajRecords.length === 0) {
-        await syncAmbalajFromSupabase();
-        if (ambalajRecords.length > 0) {
-          try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
-          try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
-        }
+      await syncAmbalajFromSupabase();
+      if (ambalajRecords.length > 0) {
+        try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
+        try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
       }
       await syncDishesFromSupabase();
     } catch (_) {}
@@ -695,6 +691,35 @@ async function syncRecordsToSupabase() {
   try {
     var { error } = await supabaseClient.from('records').upsert(records, { onConflict: 'id' });
     if (error) console.warn('Supabase sync error:', error);
+  } catch (_) {}
+}
+
+async function refreshRecordsFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { data } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
+    if (data && data.length > 0) {
+      var serverIds = new Set(data.map(function(r) { return Number(r.id); }));
+      var localIds = new Set(records.map(function(r) { return r.id; }));
+      var hasNew = data.some(function(r) { return !localIds.has(Number(r.id)); });
+      var hasRemoved = records.some(function(r) { return !serverIds.has(r.id); });
+      if (hasNew || hasRemoved || records.length === 0) {
+        records = data.map(function(r) { return {
+          id: Number(r.id) || Date.now() + Math.random(),
+          tarih: normalizeDate(r.tarih),
+          yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
+          turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
+          toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
+          atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+        }; });
+        records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+        saveData();
+        filteredRecords = [...records];
+        renderRecordsTable();
+        renderAll();
+        drawAllCharts();
+      }
+    }
   } catch (_) {}
 }
 
@@ -979,6 +1004,25 @@ async function syncYagFromSupabase() {
   } catch (_) { return false; }
 }
 
+async function refreshYagFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { data } = await supabaseClient.from('yag_records').select('*').order('tarih', { ascending: false });
+    if (data && data.length > 0) {
+      yagRecords = data.map(function(r) { return {
+        id: Number(r.id) || Date.now(),
+        tarih: normalizeDate(r.tarih || ''),
+        makbuzNo: r.makbuz_no || '',
+        tur: r.tur || '',
+        miktar: Number(r.miktar) || 0,
+        not: r.not_ || ''
+      }; });
+      saveYagData();
+      renderYagTable();
+    }
+  } catch (_) {}
+}
+
 // ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
 
 function ambalajRecordToDB(r) {
@@ -1034,6 +1078,24 @@ async function syncAmbalajFromSupabase() {
     }
     return false;
   } catch (_) { return false; }
+}
+
+async function refreshAmbalajFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { data } = await supabaseClient.from('ambalaj_records').select('*').order('tarih', { ascending: false });
+    if (data && data.length > 0) {
+      ambalajRecords = data.map(function(r) { return {
+        id: Number(r.id) || Date.now(),
+        tarih: normalizeDate(r.tarih || ''),
+        tur: r.tur || '',
+        miktar: Number(r.miktar) || 0,
+        not: r.not_ || ''
+      }; });
+      saveAmbalajData();
+      renderAmbalajTable();
+    }
+  } catch (_) {}
 }
 
 // -- Retry helper with timeout --
@@ -1943,12 +2005,12 @@ async function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
-  if (name === 'records') renderRecordsTable();
+  if (name === 'records') { renderRecordsTable(); if (filteredRecords.length === 0 && supabaseClient) refreshRecordsFromSupabase(); }
   closeSidebar();
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
-  if (name === 'yag') renderYagTable();
-  if (name === 'ambalaj') renderAmbalajTable();
+  if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
+  if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
