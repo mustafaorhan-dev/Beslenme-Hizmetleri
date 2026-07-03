@@ -4919,31 +4919,18 @@ function drawAmbalajChart() {
 }
 
 async function exportMenuPDF() {
+  const element = document.querySelector('#content-menu .section-card');
+  if (!element) { showToast('Menü bulunamadı.', 'error'); return; }
   showToast('PDF hazırlanıyor...', 'info');
-  var clone = document.querySelector('#content-menu .section-card');
-  if (!clone) { showToast('Menü bulunamadı.', 'error'); return; }
-  clone = clone.cloneNode(true);
-  clone.querySelectorAll('input').forEach(function(inp) { if (inp.value) inp.setAttribute('value', inp.value); });
-  clone.querySelectorAll('textarea').forEach(function(ta) { ta.textContent = ta.value; });
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;top:0;left:0;width:1122px;background:#fff;color:#333;font-family:Arial,sans-serif;padding:15px;z-index:99999;opacity:0.01;pointer-events:none';
-  wrapper.innerHTML = `
-    <h1 style="font-size:1.3rem;margin-bottom:0.3rem;color:#333">Haftalık Menü Listesi</h1>
-    <div style="font-size:0.8rem;color:#666;margin-bottom:0.8rem">${new Date().toLocaleDateString('tr-TR')}</div>
-    ${clone.outerHTML}
-    <div style="text-align:center;font-size:0.75rem;color:#999;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem">Yemekhane Menü ve Atık Yönetim Sistemi</div>
-  `;
-  wrapper.querySelectorAll('.menu-date-nav, .btn, .toolbar-actions, .menu-hint').forEach(function(el) { el.style.display = 'none'; });
-  document.body.appendChild(wrapper);
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  await new Promise(resolve => setTimeout(resolve, 200));
+  const toHide = element.querySelectorAll('.btn, .menu-date-nav, .menu-hint');
+  toHide.forEach(function(el) { el.style.display = 'none'; });
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(wrapper).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(element).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
   }
-  document.body.removeChild(wrapper);
+  toHide.forEach(function(el) { el.style.display = ''; });
 }
 
 async function downloadMenuPDF() {
