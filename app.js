@@ -536,7 +536,7 @@ function startPolling() {
       var localIds = new Set(records.map(function(r) { return r.id; }));
       var hasNew = data.some(function(r) { return !localIds.has(Number(r.id)); });
       var hasRemoved = records.some(function(r) { return !serverIds.has(r.id); });
-      if (!hasNew && !hasRemoved) return;
+      if (!hasNew && !hasRemoved) { showSyncTime('otomatik • güncel'); return; }
       records = data.map(function(r) { return {
         id: Number(r.id) || Date.now() + Math.random(),
         tarih: normalizeDate(r.tarih),
@@ -550,6 +550,7 @@ function startPolling() {
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
+      showSyncTime('otomatik • güncellendi');
     }).catch(function() {});
   }, POLL_INTERVAL);
 }
