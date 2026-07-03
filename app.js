@@ -492,6 +492,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   refreshMenuProduction();
   initDishAutocomplete();
 
+  // Ana içeriğe tıklayınca sidebar'ı kapat
+  var mc = document.querySelector('.main-content');
+  if (mc) mc.addEventListener('click', function(e) {
+    if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
+  });
+
   // Loading overlay'i kapat
   document.getElementById('loadingOverlay').classList.add('hidden');
 
@@ -1672,6 +1678,7 @@ function closeHaccpModal() {
 }
 
 function saveHaccpRecord(e) {
+  if (!requireAdmin()) return;
   e.preventDefault();
   const type = editingHaccpType;
   let rec = { id: editingHaccpId || Date.now(), type };
@@ -1871,11 +1878,6 @@ function closeSidebar() {
   document.body.classList.remove('sidebar-open');
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
-// Ana içeriğe tıklayınca sidebar'ı kapat
-document.querySelector('.main-content').addEventListener('click', function(e) {
-  if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
-});
-
 // ─── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id = null) {
   editingId = id;
@@ -4463,6 +4465,7 @@ function closeYagModal() {
 }
 
 function saveYagRecord(e) {
+  if (!requireAdmin()) return;
   e.preventDefault();
 
   const rec = {
@@ -4492,6 +4495,7 @@ function saveYagRecord(e) {
 function editYagRecord(id) { openYagModal(id); }
 
 function deleteYagRecord(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
@@ -4764,6 +4768,7 @@ function closeAmbalajModal() {
 }
 
 function saveAmbalajRecord(e) {
+  if (!requireAdmin()) return;
   e.preventDefault();
 
   var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
@@ -4795,6 +4800,7 @@ function saveAmbalajRecord(e) {
 function editAmbalajRecord(id) { openAmbalajModal(id); }
 
 function deleteAmbalajRecord(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();

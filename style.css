@@ -35,6 +35,7 @@
   max-width: 92vw;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 }
 .login-logo {
@@ -200,7 +201,8 @@
     radial-gradient(ellipse at 90% 80%, rgba(34,211,238,0.05) 0%, transparent 50%);
 }
 [data-theme="dark"] .header {
-  background: rgba(10, 15, 30, 0.9);
+  background: rgba(15,23,42,0.85);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
@@ -290,7 +292,7 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 [data-theme="dark"] .prod-day {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border-color: rgba(255,255,255,0.10);
 }
 [data-theme="dark"] .prod-day:hover {
@@ -318,7 +320,7 @@
   color: var(--text-secondary);
 }
 [data-theme="dark"] .weekly-total-card {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border-color: rgba(255,255,255,0.10);
 }
 [data-theme="dark"] .weekly-total-header {
@@ -352,6 +354,7 @@ body {
 /* ---- HEADER ---- */
 .header {
   background: rgba(248,250,252,0.92);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   padding: 0 2rem;
@@ -983,7 +986,7 @@ body {
 }
 /* ===== ÜRÜN İHTİYAÇ LİSTESİ — GÜN KARTLARI ===== */
 .prod-day {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   margin-bottom: 1.25rem;
@@ -1098,7 +1101,7 @@ body {
 
 /* ===== HAFTALIK TOPLAM LİSTESİ ===== */
 .weekly-total-card {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   margin-top: 1rem;
@@ -1213,6 +1216,7 @@ body {
   padding: 0.75rem 1rem;
   margin: -1rem -1rem 1rem -1rem;
   border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 .chart-year-filter {
@@ -1258,7 +1262,7 @@ body {
 /* ---- SHORTCUTS ---- */
 .shortcuts-overlay {
   position: fixed; inset: 0; z-index: 1100;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center;
   padding: 1rem;
 }
@@ -1374,8 +1378,8 @@ body {
 .today-summary-body .ts-value.good { color: #10b981; }
 .today-summary-body .ts-value.warn { color: #f59e0b; }
 .today-summary-body .ts-value.bad { color: #ef4444; }
-.today-summary-body .ts-value.muted { color: var(--text-dim); }
-.today-summary-loading { font-size: 0.8rem; color: var(--text-dim); font-style: italic; }
+.today-summary-body .ts-value.muted { color: var(--text-muted); }
+.today-summary-loading { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
 
 .chart-area {
   position: relative;
@@ -1494,6 +1498,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.7);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
