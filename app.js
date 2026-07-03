@@ -5106,6 +5106,85 @@ function buildExportHTML() {
   return html;
 }
 
+function printYagList() {
+  var list = yagRecords.filter(function(r) { return r.tarih; });
+  var bas = document.getElementById('yagTarihBas');
+  var bit = document.getElementById('yagTarihBit');
+  if (bas && bas.value) list = list.filter(function(r) { return r.tarih >= bas.value; });
+  if (bit && bit.value) list = list.filter(function(r) { return r.tarih <= bit.value; });
+  list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+  if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
+  var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
+  html += '<h1 style="font-size:14px;margin:0 0 4px">Atık Yağ Kayıtları</h1>';
+  html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
+  html += '<thead><tr>';
+  ['Tarih','Makbuz No','Yağ Türü','Miktar (lt)','Not'].forEach(function(h) {
+    html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  list.forEach(function(r) {
+    html += '<tr>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.tarih) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.makbuzNo || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed(1) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || '—') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  var total = list.reduce(function(s, r) { return s + (r.miktar || 0); }, 0);
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + total.toFixed(1) + ' lt</div>';
+  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Atık Yağ Kayıt Listesi</div>';
+  html += '</div>';
+  var win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.open();
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Atık Yağ Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(function() { win.print(); }, 600);
+}
+
+function printAmbalajList() {
+  var list = ambalajRecords.filter(function(r) { return r.tarih; });
+  var bas = document.getElementById('ambalajTarihBas');
+  var bit = document.getElementById('ambalajTarihBit');
+  if (bas && bas.value) list = list.filter(function(r) { return r.tarih >= bas.value; });
+  if (bit && bit.value) list = list.filter(function(r) { return r.tarih <= bit.value; });
+  list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+  if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
+  var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
+  html += '<h1 style="font-size:14px;margin:0 0 4px">Ambalaj Atıkları Kayıtları</h1>';
+  html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
+  html += '<thead><tr>';
+  ['Tarih','Atık Türü','Miktar (kg)','Not'].forEach(function(h) {
+    html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  list.forEach(function(r) {
+    html += '<tr>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.tarih) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed(1) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || '—') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  var total = list.reduce(function(s, r) { return s + (r.miktar || 0); }, 0);
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + total.toFixed(1) + ' kg</div>';
+  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Ambalaj Atığı Kayıt Listesi</div>';
+  html += '</div>';
+  var win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.open();
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ambalaj Atıkları Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(function() { win.print(); }, 600);
+}
+
 function printMenu() {
   var html = buildExportHTML();
   var win = window.open('', '_blank', 'width=900,height=700');

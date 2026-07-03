@@ -677,16 +677,20 @@
     <div class="tab-content" id="content-yag">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
         <div style="flex:1"></div>
-        <div class="toolbar-actions">
-          <button class="btn btn-primary btn-sm" onclick="openYagModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Yeni Kayıt
-          </button>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="openYagModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Yeni Kayıt
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="printYagList()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              Liste
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Atık Yağ Kayıtları</h2>
+        <div class="section-card">
+          <div class="section-header">
+            <h2>Atık Yağ Kayıtları</h2>
           <span class="badge" id="yagBadge">0 kayıt</span>
         </div>
         <!-- Yag Chart -->
@@ -735,16 +739,20 @@
     <div class="tab-content" id="content-ambalaj">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
         <div style="flex:1"></div>
-        <div class="toolbar-actions">
-          <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            Yeni Kayıt
-          </button>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Yeni Kayıt
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="printAmbalajList()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              Liste
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Ambalaj Atıkları Kayıtları</h2>
+        <div class="section-card">
+          <div class="section-header">
+            <h2>Ambalaj Atıkları Kayıtları</h2>
           <span class="badge" id="ambalajBadge">0 kayıt</span>
         </div>
         <!-- Ambalaj Chart -->
