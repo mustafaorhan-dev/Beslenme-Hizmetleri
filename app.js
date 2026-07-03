@@ -5031,30 +5031,30 @@ function buildExportHTML() {
   // Assemble full HTML
   var html = '<div class="pdf-wrap">';
   html += '<style>' +
-    '.pdf-wrap{margin:0;padding:5px 10px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:10px;width:190mm}' +
-    'h1{margin:0 0 2px;font-size:12px;color:#111}' +
-    '.sub{font-size:9px;color:#888;margin-bottom:4px}' +
-    '.menu-table{width:100%;border-collapse:collapse;font-size:7.5px}' +
-    '.menu-table th,.menu-table td{border:1px solid #bbb;padding:1.5px 3px;text-align:left;vertical-align:top}' +
-    '.menu-table th{background:#eee;font-size:7.5px;font-weight:700;text-align:center}' +
-    '.menu-table th:first-child{text-align:left;width:40px}' +
-    '.menu-table td:first-child{font-weight:600;width:40px;white-space:nowrap;font-size:7px}' +
-    '.s-title{font-size:10px;font-weight:700;margin:8px 0 3px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
-    '.pday{margin-bottom:5px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
-    '.phd{padding:2px 5px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:9px;font-weight:700;display:flex;align-items:center}' +
-    '.plab{color:#333}.pkisi{margin-left:auto;font-size:7px;color:#666}' +
-    '.pbd{padding:2px 4px}' +
-    '.prow{display:flex;gap:4px;flex-wrap:wrap}' +
-    '.pcol{flex:1;min-width:80px;padding:2px 3px;border:1px solid #eee;border-radius:2px}' +
-    '.pces{font-weight:700;font-size:8px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
-    '.ping{font-size:7px;line-height:1.3;color:#555;display:flex;gap:2px}' +
+    '.pdf-wrap{margin:0;padding:6px 12px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:12px;width:190mm}' +
+    'h1{margin:0 0 3px;font-size:16px;color:#111}' +
+    '.sub{font-size:11px;color:#888;margin-bottom:5px}' +
+    '.menu-table{width:100%;border-collapse:collapse;font-size:10px}' +
+    '.menu-table th,.menu-table td{border:1px solid #bbb;padding:2px 4px;text-align:left;vertical-align:top}' +
+    '.menu-table th{background:#eee;font-size:10px;font-weight:700;text-align:center}' +
+    '.menu-table th:first-child{text-align:left;width:45px}' +
+    '.menu-table td:first-child{font-weight:600;width:45px;white-space:nowrap;font-size:9px}' +
+    '.s-title{font-size:13px;font-weight:700;margin:10px 0 4px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
+    '.pday{margin-bottom:6px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.phd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;display:flex;align-items:center}' +
+    '.plab{color:#333}.pkisi{margin-left:auto;font-size:9px;color:#666}' +
+    '.pbd{padding:3px 5px}' +
+    '.prow{display:flex;gap:5px;flex-wrap:wrap}' +
+    '.pcol{flex:1;min-width:90px;padding:3px 4px;border:1px solid #eee;border-radius:2px}' +
+    '.pces{font-weight:700;font-size:10px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
+    '.ping{font-size:9px;line-height:1.4;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
     '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
-    '.whd{padding:2px 5px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:9px;font-weight:700;color:#333}' +
-    '.wbd{padding:2px 5px}' +
-    '.wit{display:flex;gap:2px;font-size:7px;line-height:1.4;padding:1px 0}' +
-    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:35px}' +
-    '.fot{text-align:center;font-size:6px;color:#aaa;margin-top:6px;padding-top:2px;border-top:1px solid #ddd}' +
+    '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;color:#333}' +
+    '.wbd{padding:3px 6px}' +
+    '.wit{display:flex;gap:2px;font-size:9px;line-height:1.5;padding:1px 0}' +
+    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:40px}' +
+    '.fot{text-align:center;font-size:8px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
     '</style>';
 
   // Title + Menu table (must fit on 1 page)
