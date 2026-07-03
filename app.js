@@ -5011,8 +5011,7 @@ function buildExportHTML() {
       dayCesitler += '<div class="pcol"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
     }
     if (dayHasAny) {
-      var pb = di > 0 ? ' style="page-break-before:always"' : '';
-      prodDaysHtml += '<div class="pday"' + pb + '><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
+      prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
     }
   }
 
