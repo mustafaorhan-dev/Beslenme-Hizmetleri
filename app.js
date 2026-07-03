@@ -460,8 +460,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           saveData();
         }
       }
-      filteredRecords = [...records];
     } catch (_) {}
+    filteredRecords = [...records];
   }
 
   // Yag ve ambalaj her sayfada Supabase'ten çekilir
@@ -2005,7 +2005,16 @@ async function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
-  if (name === 'records') { renderRecordsTable(); if (filteredRecords.length === 0 && supabaseClient) refreshRecordsFromSupabase(); }
+  if (name === 'records') {
+    if (filteredRecords.length === 0) {
+      if (records.length > 0) {
+        filteredRecords = [...records];
+      } else if (supabaseClient) {
+        await refreshRecordsFromSupabase();
+      }
+    }
+    renderRecordsTable();
+  }
   closeSidebar();
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
