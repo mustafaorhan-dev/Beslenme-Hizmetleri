@@ -252,8 +252,24 @@ function closeAdminPanel() {
 }
 
 function doLogout() {
-  sessionStorage.clear();
-  localStorage.removeItem('atik_kontrol_last_login');
+  // Tüm veriyi temizle (sekme bazlı sessionStorage)
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_admin_hash', 'atik_kontrol_viewer_hash', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari'];
+  var preserved = {};
+  keysToKeep.forEach(function(k) {
+    try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
+  });
+  localStorage.clear();
+  Object.keys(preserved).forEach(function(k) {
+    try { localStorage.setItem(k, preserved[k]); } catch (_) {}
+  });
+  // sessionStorage'ı da temizle (veriler burada duruyor)
+  try { sessionStorage.clear(); } catch (_) {}
+  // Service Worker önbelleğini temizle
+  if ('caches' in window) {
+    caches.keys().then(function(names) {
+      names.forEach(function(name) { caches.delete(name); });
+    });
+  }
   location.reload();
 }
 
@@ -413,11 +429,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadYagData();
   loadAmbalajData();
 
-  // Her seferinde Supabase'ten güncel verileri çek (çoklu cihaz desteği - localStorage dolu olsa bile)
+  // Supabase'ten verileri çek (çoklu cihaz desteği - sessionStorage boşsa sunucudan al)
   if (supabaseClient && (records.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
     setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
     try {
-      if (records.length === 0 && getRole() === ROLE_ADMIN) {
+      if (records.length === 0) {
         var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
         if (rData && rData.length > 0) {
           records = rData.map(function(r) { return {
@@ -436,13 +452,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (yagRecords.length === 0) {
         await syncYagFromSupabase();
         if (yagRecords.length > 0) {
-          try { localStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
+          try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
+          try { localStorage.removeItem(YAG_STORAGE_KEY); } catch (_) {}
         }
       }
       if (ambalajRecords.length === 0) {
         await syncAmbalajFromSupabase();
         if (ambalajRecords.length > 0) {
-          try { localStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
+          try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
+          try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
         }
       }
       await syncDishesFromSupabase();
@@ -453,7 +471,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (supabaseClient) {
     await syncHaccpFromSupabase();
     if (haccpRecords.length > 0) {
-      try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+      try { sessionStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+      try { localStorage.removeItem(HACCP_STORAGE_KEY); } catch (_) {}
     }
   }
 
@@ -551,8 +570,21 @@ const STORAGE_KEY = 'atik_kontrol_records';
 
 function loadData() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    records = stored ? JSON.parse(stored) : [];
+    // sessionStorage'den oku (sekme bazlı, kapanınca silinir)
+    var stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      records = JSON.parse(stored);
+    } else {
+      // localStorage'dan migrate et (eski kullanıcılar için) ve temizle
+      stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        records = JSON.parse(stored);
+        try { sessionStorage.setItem(STORAGE_KEY, stored); } catch (_) {}
+        try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+      } else {
+        records = [];
+      }
+    }
   } catch (e) {
     records = [];
   }
@@ -562,7 +594,7 @@ function loadData() {
 
 function saveData() { if (!requireAdmin()) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   } catch (e) {
     // Storage full or unavailable - ignore silently
   }
@@ -1296,15 +1328,26 @@ function renderHaccpSicaklikDepoSelect() {
 
 function loadHaccpData() {
   try {
-    const stored = localStorage.getItem(HACCP_STORAGE_KEY);
-    haccpRecords = stored ? JSON.parse(stored) : [];
+    var stored = sessionStorage.getItem(HACCP_STORAGE_KEY);
+    if (stored) {
+      haccpRecords = JSON.parse(stored);
+    } else {
+      stored = localStorage.getItem(HACCP_STORAGE_KEY);
+      if (stored) {
+        haccpRecords = JSON.parse(stored);
+        try { sessionStorage.setItem(HACCP_STORAGE_KEY, stored); } catch (_) {}
+        try { localStorage.removeItem(HACCP_STORAGE_KEY); } catch (_) {}
+      } else {
+        haccpRecords = [];
+      }
+    }
   } catch (_) { haccpRecords = []; }
   haccpRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
   renderHaccp();
 }
 
 function saveHaccpData() { if (!requireAdmin()) return;
-  try { localStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+  try { sessionStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
   syncHaccpSilent();
 }
 
@@ -4311,14 +4354,25 @@ let editingYagId = null;
 
 function loadYagData() {
   try {
-    const stored = localStorage.getItem(YAG_STORAGE_KEY);
-    yagRecords = stored ? JSON.parse(stored) : [];
+    var stored = sessionStorage.getItem(YAG_STORAGE_KEY);
+    if (stored) {
+      yagRecords = JSON.parse(stored);
+    } else {
+      stored = localStorage.getItem(YAG_STORAGE_KEY);
+      if (stored) {
+        yagRecords = JSON.parse(stored);
+        try { sessionStorage.setItem(YAG_STORAGE_KEY, stored); } catch (_) {}
+        try { localStorage.removeItem(YAG_STORAGE_KEY); } catch (_) {}
+      } else {
+        yagRecords = [];
+      }
+    }
   } catch (_) { yagRecords = []; }
   yagRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
 }
 
 function saveYagData() {
-  try { localStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
+  try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
 }
 
 function renderYagTable() {
@@ -4598,14 +4652,25 @@ function toggleAmbalajBirim() {
 
 function loadAmbalajData() {
   try {
-    const stored = localStorage.getItem(AMBALAJ_STORAGE_KEY);
-    ambalajRecords = stored ? JSON.parse(stored) : [];
+    var stored = sessionStorage.getItem(AMBALAJ_STORAGE_KEY);
+    if (stored) {
+      ambalajRecords = JSON.parse(stored);
+    } else {
+      stored = localStorage.getItem(AMBALAJ_STORAGE_KEY);
+      if (stored) {
+        ambalajRecords = JSON.parse(stored);
+        try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, stored); } catch (_) {}
+        try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
+      } else {
+        ambalajRecords = [];
+      }
+    }
   } catch (_) { ambalajRecords = []; }
   ambalajRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
 }
 
 function saveAmbalajData() {
-  try { localStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
+  try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
 }
 
 function renderAmbalajTable() {
