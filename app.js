@@ -5106,18 +5106,20 @@ function printMenu() {
 async function downloadMenuPDF() {
   showToast('PDF hazırlanıyor...', 'info');
   var html = buildExportHTML();
-  var wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;';
-  document.body.appendChild(wrapper);
-  await new Promise(function(r) { setTimeout(r, 400); });
+  var win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.open();
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.close();
+  win.focus();
+  await new Promise(function(r) { setTimeout(r, 1000); });
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, width: wrapper.scrollWidth, height: wrapper.scrollHeight }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'css' } }).from(wrapper).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'css' } }).from(win.document.body).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
   }
-  wrapper.remove();
+  win.close();
 }
 
 
