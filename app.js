@@ -815,7 +815,7 @@ function generateHaccpSample() {
 }
 
 // ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
-function exportHaccpExcel() {
+function exportHaccpCSV() {
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
   var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem'];
   var rows = [headers.join(',')];
@@ -1933,6 +1933,7 @@ async function switchTab(name) {
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
   if (name === 'report') renderReport();
+  if (name === 'records') renderRecordsTable();
   closeSidebar();
   if (name === 'menu') await renderMenu();
   if (name === 'haccp') loadHaccpData();
