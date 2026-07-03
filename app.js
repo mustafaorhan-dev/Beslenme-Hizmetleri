@@ -4918,25 +4918,30 @@ function drawAmbalajChart() {
   });
 }
 
-function getMenuData() {
+function buildExportHTML() {
   var gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
   var cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
   var weekLabel = (document.getElementById('menuWeekLabel') || {}).textContent || '';
-  var tableRows = [];
+
+  // Read menu data from DOM
+  var tableData = [];
   for (var ci = 0; ci < 5; ci++) {
     var cells = [];
     for (var di = 0; di < 5; di++) {
       var el = document.getElementById('m' + ci + '_' + di);
       cells.push(el ? el.value : '');
     }
-    tableRows.push({ label: cesitler[ci], cells: cells });
+    tableData.push({ label: cesitler[ci], cells: cells });
   }
   var kisiCells = [];
+  var kisiVals = [];
   for (var di = 0; di < 5; di++) {
     var el = document.getElementById('mk_' + di);
-    kisiCells.push(el ? el.value : '0');
+    var v = el ? el.value : '0';
+    kisiCells.push(v);
+    kisiVals.push(parseInt(v) || 0);
   }
-  tableRows.push({ label: 'Kişi Sayısı', cells: kisiCells });
+  tableData.push({ label: 'Kişi Sayısı', cells: kisiCells });
   var dayNotes = [];
   for (var di = 0; di < 5; di++) {
     var notes = [];
@@ -4946,145 +4951,139 @@ function getMenuData() {
     }
     dayNotes.push(notes);
   }
-  return { weekLabel: weekLabel, gunler: gunler, rows: tableRows, dayNotes: dayNotes };
-}
 
-function getProdDayData() {
-  var days = [];
-  var cards = document.querySelectorAll('#productionSection .prod-day');
-  if (!cards.length) return days;
-  cards.forEach(function(card) {
-    var header = card.querySelector('.prod-day-header');
-    var labelEl = header ? header.querySelector('.prod-day-label') : null;
-    var kisiEl = header ? header.querySelector('.prod-day-kisi') : null;
-    var cols = card.querySelectorAll('.prod-cesit-col');
-    var cesitler = [];
-    cols.forEach(function(col) {
-      var cesitEl = col.querySelector('.prod-cesit');
-      var ings = col.querySelectorAll('.prod-ing');
-      var malzemeler = [];
-      ings.forEach(function(ing) {
-        var nameEl = ing.querySelector('.prod-name');
-        var qtyEl = ing.querySelector('.prod-qty');
-        malzemeler.push({
-          name: nameEl ? nameEl.textContent : '',
-          qty: qtyEl ? qtyEl.textContent : ''
-        });
+  // Compute production data
+  var yemekler = (typeof loadYemekler === 'function') ? loadYemekler() : [];
+  var parseName = function(val) { return (val || '').trim().split('\n')[0].replace(/ - \(.*/, '').trim(); };
+  var findDish = function(name) {
+    if (!name) return null;
+    var lower = name.toLowerCase();
+    for (var i = 0; i < yemekler.length; i++) {
+      if (yemekler[i].ad.toLowerCase() === lower) return yemekler[i];
+    }
+    for (var i = 0; i < yemekler.length; i++) {
+      var yl = yemekler[i].ad.toLowerCase();
+      if (yl.startsWith(lower) || lower.startsWith(yl)) return yemekler[i];
+    }
+    return null;
+  };
+  var normBirim = function(b) {
+    var s = (b || 'gr').toLowerCase().replace(/\s/g, '');
+    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
+    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    return s;
+  };
+  var fmt = function(total, birim) {
+    if (total <= 0) return '—';
+    if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
+    if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
+    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    return Math.round(total) + ' ' + birim;
+  };
+
+  // Per-day production rows
+  var prodDaysHtml = '';
+  var weekAgg = {}; // for weekly total
+  for (var di = 0; di < 5; di++) {
+    var kisi = kisiVals[di];
+    var dayCesitler = '';
+    var dayHasAny = false;
+    for (var ci = 0; ci < 5; ci++) {
+      var el = document.getElementById('m' + ci + '_' + di);
+      var raw = el ? el.value : '';
+      var name = parseName(raw);
+      if (!name) continue;
+      var dish = findDish(name);
+      if (!dish || !dish.tarif || !dish.tarif.length) continue;
+      dayHasAny = true;
+      var ingHtml = '';
+      dish.tarif.forEach(function(ing, idx) {
+        var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+        var total = miktarKisi * kisi;
+        var birim = normBirim(ing.birim);
+        ingHtml += '<div class="ping"><span class="pn">' + escapeHtml(ing.malzeme.trim()) + '</span><span class="pq">' + fmt(total, birim) + '</span></div>';
+        // accumulate for weekly total
+        var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
+        if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0 };
+        weekAgg[key].total += total;
       });
-      cesitler.push({
-        name: cesitEl ? cesitEl.textContent : '',
-        malzemeler: malzemeler
-      });
+      dayCesitler += '<div class="pcol"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
+    }
+    if (dayHasAny) {
+      prodDaysHtml += '<div class="pday" style="page-break-before:always"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
+    }
+  }
+
+  // Weekly total HTML
+  var weeklyHtml = '';
+  var weekEntries = Object.values(weekAgg).filter(function(e) { return e.total > 0; });
+  if (weekEntries.length) {
+    weekEntries.sort(function(a, b) { return a.ad.localeCompare(b.ad); });
+    weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div><div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
+    weekEntries.forEach(function(e) {
+      weeklyHtml += '<div class="wit"><span class="wn">' + escapeHtml(e.ad) + '</span><span class="wq">' + fmt(e.total, e.birim) + '</span></div>';
     });
-    days.push({
-      label: labelEl ? labelEl.textContent : '',
-      kisi: kisiEl ? kisiEl.textContent : '',
-      cesitler: cesitler
-    });
-  });
-  return days;
-}
+    weeklyHtml += '</div></div>';
+  }
 
-function getWeeklyTotalData() {
-  var section = document.getElementById('weeklyTotalSection');
-  if (!section || section.style.display === 'none') return null;
-  var items = section.querySelectorAll('.weekly-total-item');
-  var data = [];
-  items.forEach(function(item) {
-    var nameEl = item.querySelector('.weekly-total-name');
-    var qtyEl = item.querySelector('.weekly-total-qty');
-    data.push({ name: nameEl ? nameEl.textContent : '', qty: qtyEl ? qtyEl.textContent : '' });
-  });
-  return data;
-}
-
-function buildExportHTML() {
-  var menu = getMenuData();
-  var prodDays = getProdDayData();
-  var weeklyTotal = getWeeklyTotalData();
-
+  // Assemble full HTML
   var html = '<div class="pdf-wrap">';
   html += '<style>' +
-    '.pdf-wrap{margin:0;padding:10px 14px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:12px;width:190mm}' +
-    'h1{margin:0 0 4px;font-size:15px;color:#111}' +
-    '.sub{font-size:11px;color:#888;margin-bottom:8px}' +
-    '.menu-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}' +
-    '.menu-table th,.menu-table td{border:1px solid #ccc;padding:4px 5px;text-align:left;vertical-align:top}' +
-    '.menu-table th{background:#f0f0f0;font-size:10px;font-weight:700;text-align:center}' +
-    '.menu-table th:first-child{text-align:left;width:60px}' +
-    '.menu-table td:first-child{font-weight:600;width:60px;white-space:nowrap}' +
-    '.s-title{font-size:12px;font-weight:700;margin:12px 0 5px;padding-bottom:3px;border-bottom:2px solid #6366f1;color:#1e293b}' +
-    '.pday{margin-bottom:8px;border:1px solid #ddd;border-radius:4px;overflow:hidden}' +
-    '.phd{padding:4px 8px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:11px;font-weight:700;display:flex;align-items:center}' +
-    '.plab{color:#333}.pkisi{margin-left:auto;font-size:9px;color:#666}' +
-    '.pbd{padding:4px 6px}' +
-    '.prow{display:flex;gap:6px;flex-wrap:wrap}' +
-    '.pcol{flex:1;min-width:120px;padding:3px 5px;border:1px solid #eee;border-radius:3px}' +
-    '.pces{font-weight:700;font-size:10px;margin-bottom:2px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
-    '.ping{font-size:9px;line-height:1.5;color:#555;display:flex;gap:3px}' +
+    '.pdf-wrap{margin:0;padding:8px 12px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:11px;width:190mm}' +
+    'h1{margin:0 0 3px;font-size:14px;color:#111}' +
+    '.sub{font-size:10px;color:#888;margin-bottom:6px}' +
+    '.menu-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px}' +
+    '.menu-table th,.menu-table td{border:1px solid #bbb;padding:3px 4px;text-align:left;vertical-align:top}' +
+    '.menu-table th{background:#eee;font-size:9px;font-weight:700;text-align:center}' +
+    '.menu-table th:first-child{text-align:left;width:55px}' +
+    '.menu-table td:first-child{font-weight:600;width:55px;white-space:nowrap}' +
+    '.s-title{font-size:11px;font-weight:700;margin:10px 0 4px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
+    '.pday{margin-bottom:6px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.phd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;display:flex;align-items:center}' +
+    '.plab{color:#333}.pkisi{margin-left:auto;font-size:8px;color:#666}' +
+    '.pbd{padding:3px 5px}' +
+    '.prow{display:flex;gap:5px;flex-wrap:wrap}' +
+    '.pcol{flex:1;min-width:100px;padding:2px 4px;border:1px solid #eee;border-radius:2px}' +
+    '.pces{font-weight:700;font-size:9px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
+    '.ping{font-size:8px;line-height:1.4;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
-    '.wcard{border:1px solid #ddd;border-radius:4px;overflow:hidden}' +
-    '.whd{padding:4px 8px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:11px;font-weight:700;color:#333}' +
-    '.wbd{padding:4px 8px}' +
-    '.wit{display:flex;gap:3px;font-size:9px;line-height:1.6;padding:1px 0}' +
-    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:50px}' +
-    '.fot{text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd}' +
+    '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;color:#333}' +
+    '.wbd{padding:3px 6px}' +
+    '.wit{display:flex;gap:2px;font-size:8px;line-height:1.5;padding:1px 0}' +
+    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:45px}' +
+    '.fot{text-align:center;font-size:7px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
     '</style>';
 
   // Title
-  html += '<h1>Haftalık Menü Listesi</h1><div class="sub">' + escapeHtml(menu.weekLabel) + '</div>';
+  html += '<h1>Haftalık Menü Listesi</h1><div class="sub">' + escapeHtml(weekLabel) + '</div>';
 
   // Menu table
   html += '<table class="menu-table"><thead><tr><th></th>';
-  for (var di = 0; di < 5; di++) html += '<th>' + menu.gunler[di] + '</th>';
+  for (var di = 0; di < 5; di++) html += '<th>' + gunler[di] + '</th>';
   html += '</tr></thead><tbody>';
-  for (var ci = 0; ci < menu.rows.length; ci++) {
-    var row = menu.rows[ci];
+  for (var ci = 0; ci < tableData.length; ci++) {
+    var row = tableData[ci];
     html += '<tr><td>' + escapeHtml(row.label) + '</td>';
     for (var di = 0; di < 5; di++) {
       var cellVal = escapeHtml(row.cells[di]);
-      var notesHtml = '';
-      if (ci === 0) {
-        var dayNotes = menu.dayNotes[di];
-        if (dayNotes && dayNotes.length) {
-          notesHtml = '<div style="font-size:8px;color:#888;margin-top:1px">' + dayNotes.map(function(n) { return escapeHtml(n); }).join('<br>') + '</div>';
-        }
+      var nhtml = '';
+      if (ci === 0 && dayNotes[di] && dayNotes[di].length) {
+        nhtml = '<div style="font-size:7px;color:#888;margin-top:1px">' + dayNotes[di].map(function(n) { return escapeHtml(n); }).join('<br>') + '</div>';
       }
-      html += '<td>' + cellVal + notesHtml + '</td>';
+      html += '<td>' + cellVal + nhtml + '</td>';
     }
     html += '</tr>';
   }
   html += '</tbody></table>';
 
   // Weekly total
-  if (weeklyTotal && weeklyTotal.length) {
-    html += '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div>';
-    html += '<div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
-    weeklyTotal.forEach(function(item) {
-      html += '<div class="wit"><span class="wn">' + escapeHtml(item.name) + '</span><span class="wq">' + escapeHtml(item.qty) + '</span></div>';
-    });
-    html += '</div></div>';
-  }
+  html += weeklyHtml;
 
   // Per-day product lists
-  if (prodDays.length) {
-    html += '<div class="s-title" style="page-break-before:always">Ürün İhtiyaç Listesi</div>';
-    for (var di = 0; di < prodDays.length; di++) {
-      var day = prodDays[di];
-      var pb = di > 0 ? ' style="page-break-before:always"' : '';
-      html += '<div class="pday"' + pb + '><div class="phd"><span class="plab">' + escapeHtml(day.label) + '</span><span class="pkisi">' + escapeHtml(day.kisi) + '</span></div>';
-      html += '<div class="pbd"><div class="prow">';
-      for (var ci = 0; ci < day.cesitler.length; ci++) {
-        var c = day.cesitler[ci];
-        html += '<div class="pcol"><div class="pces">' + escapeHtml(c.name) + '</div>';
-        for (var mi = 0; mi < c.malzemeler.length; mi++) {
-          var m = c.malzemeler[mi];
-          html += '<div class="ping"><span class="pn">' + escapeHtml(m.name) + '</span><span class="pq">' + escapeHtml(m.qty) + '</span></div>';
-        }
-        html += '</div>';
-      }
-      html += '</div></div></div>';
-    }
+  if (prodDaysHtml) {
+    html += '<div class="s-title">Ürün İhtiyaç Listesi</div>' + prodDaysHtml;
   }
 
   html += '<div class="fot">Yemekhane Menü ve Atık Yönetim Sistemi</div>';
