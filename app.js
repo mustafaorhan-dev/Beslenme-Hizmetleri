@@ -4924,13 +4924,19 @@ async function exportMenuPDF() {
   showToast('PDF hazırlanıyor...', 'info');
   const toHide = element.querySelectorAll('.btn, .menu-date-nav, .menu-hint');
   toHide.forEach(function(el) { el.style.display = 'none'; });
+  const style = document.createElement('style');
+  style.id = '_pdfTempStyle';
+  style.textContent = '.menu-table textarea,.menu-table input{font-size:0.65rem!important;padding:0.15rem 0.3rem!important}.menu-table td{padding:0.15rem 0.25rem!important}.menu-table th{padding:0.35rem 0.3rem!important;font-size:0.75rem!important}.menu-table th:first-child{font-size:0.65rem!important}.menu-table td:first-child{font-size:0.65rem!important}.menu-table th:not(:first-child){min-width:80px!important}.section-header h2{font-size:1rem!important}';
+  document.head.appendChild(style);
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(element).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(element).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
   }
   toHide.forEach(function(el) { el.style.display = ''; });
+  var s = document.getElementById('_pdfTempStyle');
+  if (s) s.remove();
 }
 
 async function downloadMenuPDF() {
