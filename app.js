@@ -5103,22 +5103,6 @@ function printMenu() {
   setTimeout(function() { win.print(); }, 800);
 }
 
-async function downloadMenuPDF() {
-  showToast('PDF hazırlanıyor...', 'info');
-  var html = buildExportHTML();
-  var wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  wrapper.style.cssText = 'position:absolute;left:0;top:0;width:210mm;background:#fff;z-index:-1;opacity:0.01;';
-  document.body.appendChild(wrapper);
-  await new Promise(function(r) { setTimeout(r, 400); });
-  try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, windowWidth: document.documentElement.scrollWidth, windowHeight: document.documentElement.scrollHeight }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'css' } }).from(wrapper).save();
-    showToast('PDF indirildi.', 'success');
-  } catch (e) {
-    showToast('PDF oluşturulamadı: ' + e.message, 'error');
-  }
-  wrapper.remove();
-}
 
 
 
