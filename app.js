@@ -2362,6 +2362,24 @@ function exportDataJSON() {
   showToast('JSON dosyası indirildi.', 'success');
 }
 
+function exportDataCSV() {
+  if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
+  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
+  var rows = records.map(function(r) { return [
+    r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
+    r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, (r.yemek_adi || '').replace(/"/g,'""')
+  ]; });
+  var csv = '\uFEFF' + headers.join(';') + '\n' + rows.map(function(r) { return r.join(';'); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  link.download = 'atik_kontrol_' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV dosyası indirildi.', 'success');
+}
+
 function exportDataSettings() {
   const settings = {
     version: 3,
