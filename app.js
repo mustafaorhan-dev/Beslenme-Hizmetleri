@@ -1853,7 +1853,7 @@ async function switchTab(name) {
   if (name === 'haccp') loadHaccpData();
   if (name === 'yag') renderYagTable();
   if (name === 'ambalaj') renderAmbalajTable();
-  const labels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
+  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
