@@ -416,10 +416,18 @@ function applyViewerRestrictions() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loginPassword').focus();
-  await new Promise(resolve => {
-    window._loginResolve = resolve;
-    window._loginAttempts = 0;
-  });
+  var existingRole = sessionStorage.getItem('atik_kontrol_role');
+  if (existingRole) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.body.setAttribute('data-role', existingRole);
+    document.getElementById('roleBadge').textContent = existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
+    renderAdminPanelBtn();
+  } else {
+    await new Promise(resolve => {
+      window._loginResolve = resolve;
+      window._loginAttempts = 0;
+    });
+  }
 
   loadAccent();
   syncPasswordHashesFromRemote().catch(function(){});
