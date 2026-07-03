@@ -4918,61 +4918,89 @@ function drawAmbalajChart() {
   });
 }
 
-async function exportMenuPDF() {
-  showToast('PDF hazırlanıyor...', 'info');
-  const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
-  const weekLabel = (document.getElementById('menuWeekLabel') || {}).textContent || '';
-  let pages = '';
-  for (let di = 0; di < 5; di++) {
-    let items = '';
-    for (let ci = 0; ci < 5; ci++) {
+function getMenuData() {
+  var gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+  var cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  var weekLabel = (document.getElementById('menuWeekLabel') || {}).textContent || '';
+  var days = [];
+  for (var di = 0; di < 5; di++) {
+    var items = [];
+    for (var ci = 0; ci < 5; ci++) {
       var el = document.getElementById('m' + ci + '_' + di);
-      var val = el ? el.value : '';
-      items += '<div class="menu-item"><span class="item-label">' + cesitler[ci] + '</span><span class="item-value">' + escapeHtml(val) + '</span></div>';
+      items.push({ label: cesitler[ci], value: el ? el.value : '' });
     }
     var kisiEl = document.getElementById('mk_' + di);
-    var kisi = kisiEl ? kisiEl.value : '0';
-    items += '<div class="menu-item"><span class="item-label">Kişi Sayısı</span><span class="item-value">' + kisi + '</span></div>';
-    // Notlar
+    items.push({ label: 'Kişi Sayısı', value: kisiEl ? kisiEl.value : '0' });
     for (var ni = 0; ni < 10; ni++) {
       var noteEl = document.getElementById('mn_' + ni + '_' + di);
       if (noteEl && noteEl.value) {
-        items += '<div class="menu-item"><span class="item-label">Not ' + (ni + 1) + '</span><span class="item-value">' + escapeHtml(noteEl.value) + '</span></div>';
+        items.push({ label: 'Not ' + (ni + 1), value: noteEl.value });
       }
     }
-    var pageBreak = di < 4 ? 'page-break-after:always;' : '';
-    pages += '<div class="day-page" style="' + pageBreak + '"><div class="day-header">' + gunler[di] + '</div>' + items + '</div>';
+    days.push({ name: gunler[di], items: items });
   }
+  return { weekLabel: weekLabel, days: days };
+}
+
+function buildMenuHTML(data) {
+  var pages = '';
+  for (var di = 0; di < data.days.length; di++) {
+    var day = data.days[di];
+    var itemsHtml = '';
+    for (var ii = 0; ii < day.items.length; ii++) {
+      var item = day.items[ii];
+      itemsHtml += '<div class="menu-item"><span class="item-label">' + escapeHtml(item.label) + '</span><span class="item-value">' + escapeHtml(item.value) + '</span></div>';
+    }
+    var pb = di < data.days.length - 1 ? 'page-break-after:always;' : '';
+    pages += '<div class="day-page" style="' + pb + '"><div class="day-header">' + escapeHtml(day.name) + '</div>' + itemsHtml + '</div>';
+  }
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title>' +
+    '<style>' +
+    'body{margin:0;padding:15px 18px;font-family:Arial,sans-serif;color:#333;background:#fff}' +
+    '.day-page{padding:8px 0}' +
+    '.day-header{font-size:22px;font-weight:700;color:#1e293b;border-bottom:3px solid #6366f1;padding-bottom:6px;margin-bottom:12px}' +
+    '.menu-item{display:flex;align-items:flex-start;padding:6px 8px;border-bottom:1px solid #e2e8f0}' +
+    '.menu-item:last-child{border-bottom:none}' +
+    '.item-label{font-weight:600;color:#475569;min-width:110px;font-size:13px;flex-shrink:0}' +
+    '.item-value{font-size:14px;color:#1e293b;line-height:1.5;white-space:pre-wrap;word-break:break-word}' +
+    '</style></head><body>' +
+    '<h1 style="font-size:18px;margin:0 0 4px;color:#222">Haftalık Menü Listesi</h1>' +
+    '<div style="font-size:12px;color:#666;margin-bottom:12px">' + escapeHtml(data.weekLabel) + '</div>' +
+    pages +
+    '<div style="text-align:center;font-size:10px;color:#999;margin-top:20px;border-top:1px solid #ddd;padding-top:6px">Yemekhane Menü ve Atık Yönetim Sistemi</div>' +
+    '</body></html>';
+}
+
+function printMenu() {
+  var data = getMenuData();
+  if (!data.days.length) { showToast('Menü bulunamadı.', 'error'); return; }
+  var html = buildMenuHTML(data);
   var win = window.open('', '_blank', 'width=800,height=700');
   if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title><style>' +
-    'body{margin:0;padding:15px;font-family:Arial,sans-serif;color:#333;background:#fff}' +
-    '.day-page{padding:10px 0}' +
-    '.day-header{font-size:1.4rem;font-weight:700;color:#1e293b;border-bottom:3px solid #6366f1;padding-bottom:8px;margin-bottom:15px}' +
-    '.menu-item{display:flex;align-items:flex-start;padding:8px 10px;border-bottom:1px solid #e2e8f0}' +
-    '.menu-item:last-child{border-bottom:none}' +
-    '.item-label{font-weight:600;color:#475569;min-width:100px;font-size:0.9rem;flex-shrink:0}' +
-    '.item-value{font-size:0.95rem;color:#1e293b;line-height:1.5;white-space:pre-wrap;word-break:break-word}' +
-    '@media print{body{padding:10mm}}' +
-    '</style></head><body><h1 style="font-size:1.2rem;margin:0 0 5px;color:#333">Haftalık Menü Listesi</h1>' +
-    '<div style="font-size:0.8rem;color:#666;margin-bottom:15px">' + escapeHtml(weekLabel) + '</div>' +
-    pages +
-    '<div style="text-align:center;font-size:0.7rem;color:#999;margin-top:20px;border-top:1px solid #ddd;padding-top:8px">Yemekhane Menü ve Atık Yönetim Sistemi</div>' +
-    '</body></html>');
+  win.document.open();
+  win.document.write(html);
   win.document.close();
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  win.focus();
+  setTimeout(function() { win.print(); }, 600);
+}
+
+async function downloadMenuPDF() {
+  showToast('PDF hazırlanıyor...', 'info');
+  var data = getMenuData();
+  if (!data.days.length) { showToast('Menü bulunamadı.', 'error'); return; }
+  var html = buildMenuHTML(data);
+  var wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  Object.assign(wrapper.style, { position: 'absolute', left: '0', top: '0', width: '210mm', background: '#fff', zIndex: '-100', opacity: '0.001', pointerEvents: 'none' });
+  document.body.appendChild(wrapper);
+  await new Promise(function(r) { setTimeout(r, 200); });
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(win.document.body).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(wrapper).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
   }
-  win.close();
-}
-
-async function downloadMenuPDF() {
-  await exportMenuPDF();
+  wrapper.remove();
 }
 
 
