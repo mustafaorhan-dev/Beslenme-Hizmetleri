@@ -5110,9 +5110,9 @@ async function downloadMenuPDF() {
   wrapper.innerHTML = html;
   wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;';
   document.body.appendChild(wrapper);
-  await new Promise(function(r) { setTimeout(r, 300); });
+  await new Promise(function(r) { setTimeout(r, 400); });
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(wrapper).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, width: wrapper.scrollWidth, height: wrapper.scrollHeight }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'css' } }).from(wrapper).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
