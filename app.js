@@ -4926,7 +4926,7 @@ async function exportMenuPDF() {
   clone.querySelectorAll('input').forEach(function(inp) { if (inp.value) inp.setAttribute('value', inp.value); });
   clone.querySelectorAll('textarea').forEach(function(ta) { ta.textContent = ta.value; });
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:297mm;background:#fff;color:#333;font-family:Arial,sans-serif;padding:15px;z-index:99999';
+  wrapper.style.cssText = 'position:fixed;top:0;left:0;width:1122px;background:#fff;color:#333;font-family:Arial,sans-serif;padding:15px;z-index:99999;opacity:0.01;pointer-events:none';
   wrapper.innerHTML = `
     <h1 style="font-size:1.3rem;margin-bottom:0.3rem;color:#333">Haftalık Menü Listesi</h1>
     <div style="font-size:0.8rem;color:#666;margin-bottom:0.8rem">${new Date().toLocaleDateString('tr-TR')}</div>
@@ -4935,7 +4935,8 @@ async function exportMenuPDF() {
   `;
   wrapper.querySelectorAll('.menu-date-nav, .btn, .toolbar-actions, .menu-hint').forEach(function(el) { el.style.display = 'none'; });
   document.body.appendChild(wrapper);
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  await new Promise(resolve => setTimeout(resolve, 200));
   try {
     await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(wrapper).save();
     showToast('PDF indirildi.', 'success');
