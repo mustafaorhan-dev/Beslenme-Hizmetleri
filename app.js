@@ -5011,7 +5011,8 @@ function buildExportHTML() {
       dayCesitler += '<div class="pcol"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
     }
     if (dayHasAny) {
-      prodDaysHtml += '<div class="pday" style="page-break-before:always"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
+      var pb = di > 0 ? ' style="page-break-before:always"' : '';
+      prodDaysHtml += '<div class="pday"' + pb + '><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
     }
   }
 
@@ -5030,36 +5031,34 @@ function buildExportHTML() {
   // Assemble full HTML
   var html = '<div class="pdf-wrap">';
   html += '<style>' +
-    '.pdf-wrap{margin:0;padding:8px 12px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:11px;width:190mm}' +
-    'h1{margin:0 0 3px;font-size:14px;color:#111}' +
-    '.sub{font-size:10px;color:#888;margin-bottom:6px}' +
-    '.menu-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:9px}' +
-    '.menu-table th,.menu-table td{border:1px solid #bbb;padding:3px 4px;text-align:left;vertical-align:top}' +
-    '.menu-table th{background:#eee;font-size:9px;font-weight:700;text-align:center}' +
-    '.menu-table th:first-child{text-align:left;width:55px}' +
-    '.menu-table td:first-child{font-weight:600;width:55px;white-space:nowrap}' +
-    '.s-title{font-size:11px;font-weight:700;margin:10px 0 4px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
-    '.pday{margin-bottom:6px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
-    '.phd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;display:flex;align-items:center}' +
-    '.plab{color:#333}.pkisi{margin-left:auto;font-size:8px;color:#666}' +
-    '.pbd{padding:3px 5px}' +
-    '.prow{display:flex;gap:5px;flex-wrap:wrap}' +
-    '.pcol{flex:1;min-width:100px;padding:2px 4px;border:1px solid #eee;border-radius:2px}' +
-    '.pces{font-weight:700;font-size:9px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
-    '.ping{font-size:8px;line-height:1.4;color:#555;display:flex;gap:2px}' +
+    '.pdf-wrap{margin:0;padding:5px 10px;font-family:Arial,sans-serif;color:#222;background:#fff;font-size:10px;width:190mm}' +
+    'h1{margin:0 0 2px;font-size:12px;color:#111}' +
+    '.sub{font-size:9px;color:#888;margin-bottom:4px}' +
+    '.menu-table{width:100%;border-collapse:collapse;font-size:7.5px}' +
+    '.menu-table th,.menu-table td{border:1px solid #bbb;padding:1.5px 3px;text-align:left;vertical-align:top}' +
+    '.menu-table th{background:#eee;font-size:7.5px;font-weight:700;text-align:center}' +
+    '.menu-table th:first-child{text-align:left;width:40px}' +
+    '.menu-table td:first-child{font-weight:600;width:40px;white-space:nowrap;font-size:7px}' +
+    '.s-title{font-size:10px;font-weight:700;margin:8px 0 3px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
+    '.pday{margin-bottom:5px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.phd{padding:2px 5px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:9px;font-weight:700;display:flex;align-items:center}' +
+    '.plab{color:#333}.pkisi{margin-left:auto;font-size:7px;color:#666}' +
+    '.pbd{padding:2px 4px}' +
+    '.prow{display:flex;gap:4px;flex-wrap:wrap}' +
+    '.pcol{flex:1;min-width:80px;padding:2px 3px;border:1px solid #eee;border-radius:2px}' +
+    '.pces{font-weight:700;font-size:8px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
+    '.ping{font-size:7px;line-height:1.3;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
     '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
-    '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;color:#333}' +
-    '.wbd{padding:3px 6px}' +
-    '.wit{display:flex;gap:2px;font-size:8px;line-height:1.5;padding:1px 0}' +
-    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:45px}' +
-    '.fot{text-align:center;font-size:7px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
+    '.whd{padding:2px 5px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:9px;font-weight:700;color:#333}' +
+    '.wbd{padding:2px 5px}' +
+    '.wit{display:flex;gap:2px;font-size:7px;line-height:1.4;padding:1px 0}' +
+    '.wn{flex:1;color:#333}.wq{text-align:right;font-weight:600;color:#333;white-space:nowrap;min-width:35px}' +
+    '.fot{text-align:center;font-size:6px;color:#aaa;margin-top:6px;padding-top:2px;border-top:1px solid #ddd}' +
     '</style>';
 
-  // Title
+  // Title + Menu table (must fit on 1 page)
   html += '<h1>Haftalık Menü Listesi</h1><div class="sub">' + escapeHtml(weekLabel) + '</div>';
-
-  // Menu table
   html += '<table class="menu-table"><thead><tr><th></th>';
   for (var di = 0; di < 5; di++) html += '<th>' + gunler[di] + '</th>';
   html += '</tr></thead><tbody>';
@@ -5070,7 +5069,7 @@ function buildExportHTML() {
       var cellVal = escapeHtml(row.cells[di]);
       var nhtml = '';
       if (ci === 0 && dayNotes[di] && dayNotes[di].length) {
-        nhtml = '<div style="font-size:7px;color:#888;margin-top:1px">' + dayNotes[di].map(function(n) { return escapeHtml(n); }).join('<br>') + '</div>';
+        nhtml = '<div style="font-size:6px;color:#888;margin-top:1px">' + dayNotes[di].map(function(n) { return escapeHtml(n); }).join('<br>') + '</div>';
       }
       html += '<td>' + cellVal + nhtml + '</td>';
     }
@@ -5078,12 +5077,15 @@ function buildExportHTML() {
   }
   html += '</tbody></table>';
 
-  // Weekly total
-  html += weeklyHtml;
-
   // Per-day product lists
   if (prodDaysHtml) {
-    html += '<div class="s-title">Ürün İhtiyaç Listesi</div>' + prodDaysHtml;
+    html += '<div class="s-title" style="page-break-before:always">Ürün İhtiyaç Listesi</div>' + prodDaysHtml;
+  }
+
+  // Weekly total (last)
+  if (weeklyHtml) {
+    weeklyHtml = weeklyHtml.replace('<div class="s-title">', '<div class="s-title" style="page-break-before:always">');
+    html += weeklyHtml;
   }
 
   html += '<div class="fot">Yemekhane Menü ve Atık Yönetim Sistemi</div>';
