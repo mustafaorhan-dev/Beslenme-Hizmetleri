@@ -1642,6 +1642,28 @@ body {
   cursor: not-allowed;
 }
 
+/* Kişi sayısı giriş alanları (turnike, personel, öğrenci, menü kişi sayısı) - sıcak renk tonu */
+input.person-input,
+input.kisi-input {
+  background: rgba(245,158,11,0.07) !important;
+  border-color: rgba(245,158,11,0.25) !important;
+}
+input.person-input:focus,
+input.kisi-input:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important;
+}
+
+/* Üretim miktarı giriş alanları (yemek, porsiyon) - soğuk renk tonu */
+input.production-input {
+  background: rgba(99,102,241,0.05) !important;
+  border-color: rgba(99,102,241,0.2) !important;
+}
+input.production-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+}
+
 .modal-footer {
   display: flex;
   align-items: center;
