@@ -5036,7 +5036,7 @@ function buildExportHTML() {
     weekEntries.sort(function(a, b) { return a.ad.localeCompare(b.ad); });
     weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div><div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
     weekEntries.forEach(function(e) {
-      weeklyHtml += '<div class="wit"><span class="wn">' + escapeHtml(e.ad) + '</span><span class="wsep">····························································</span><span class="wq">' + fmt(e.total, e.birim) + '</span></div>';
+      weeklyHtml += '<div class="wit"><span class="wn">' + escapeHtml(e.ad) + '</span><span class="wq">' + fmt(e.total, e.birim) + '</span></div>';
     });
     weeklyHtml += '</div></div>';
   }
@@ -5065,9 +5065,8 @@ function buildExportHTML() {
     '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
     '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;color:#333}' +
     '.wbd{padding:3px 6px}' +
-    '.wit{display:flex;font-size:9px;line-height:1.5;padding:1px 0;border-bottom:1px solid #f0f0f0}' +
-    '.wn{white-space:nowrap;color:#333;flex-shrink:0}.wsep{flex:1;overflow:hidden;white-space:nowrap;align-self:center;color:#bbb;font-size:6px}' +
-    '.wq{font-weight:600;color:#333;white-space:nowrap;flex-shrink:0}' +
+    '.wit{display:flex;gap:6px;font-size:9px;line-height:1.5;padding:1px 0;border-bottom:1px solid #f0f0f0}' +
+    '.wn{color:#333}.wq{font-weight:600;color:#333;white-space:nowrap;margin-left:auto}' +
     '.fot{text-align:center;font-size:8px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
     '</style>';
 
