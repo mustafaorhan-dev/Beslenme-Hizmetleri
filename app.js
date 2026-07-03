@@ -4931,6 +4931,7 @@ function exportMenuPDF() {
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Haftalık Menü</title>
     <style>
+      @page { size: landscape; }
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
       .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
@@ -5006,7 +5007,7 @@ async function downloadMenuPDF() {
   await new Promise(resolve => setTimeout(resolve, 1000));
   const element = printWin.document.body;
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 10, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 10, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(element).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
