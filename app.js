@@ -516,10 +516,67 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setConnectionStatus('ok');
   showSyncTime('hazır');
+  startPolling();
+  resetInactivityTimer();
 });
 
-// Auto-poll devre dışı (Supabase upsert ile gerçek zamanlı)
-let lastPollData = null;
+// ─── AUTO POLL (3 dk) & INACTIVITY LOCK (10 dk) ──────────────────────────────
+let pollInterval = null;
+let inactivityTimer = null;
+const POLL_INTERVAL = 180000;
+const INACTIVITY_TIMEOUT = 600000;
+
+function startPolling() {
+  stopPolling();
+  pollInterval = setInterval(function() {
+    if (!supabaseClient) return;
+    supabaseClient.from('records').select('*').order('tarih', { ascending: false }).then(function({ data }) {
+      if (!data || data.length === 0) return;
+      var serverIds = new Set(data.map(function(r) { return Number(r.id); }));
+      var localIds = new Set(records.map(function(r) { return r.id; }));
+      var hasNew = data.some(function(r) { return !localIds.has(Number(r.id)); });
+      var hasRemoved = records.some(function(r) { return !serverIds.has(r.id); });
+      if (!hasNew && !hasRemoved) return;
+      records = data.map(function(r) { return {
+        id: Number(r.id) || Date.now() + Math.random(),
+        tarih: normalizeDate(r.tarih),
+        yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
+        turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
+        toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
+        atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+      }; });
+      records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+      saveData();
+      filteredRecords = [...records];
+      renderAll();
+      drawAllCharts();
+    }).catch(function() {});
+  }, POLL_INTERVAL);
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+function resetInactivityTimer() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  if (getRole()) {
+    inactivityTimer = setTimeout(lockScreen, INACTIVITY_TIMEOUT);
+  }
+}
+
+function lockScreen() {
+  stopPolling();
+  sessionStorage.removeItem('atik_kontrol_role');
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginPassword').focus();
+}
+
+['click', 'keydown', 'touchstart', 'mousemove'].forEach(function(evt) {
+  document.addEventListener(evt, resetInactivityTimer);
+});
 
 function showSyncTime(msg) {
   const el = document.getElementById('connSyncTime');
