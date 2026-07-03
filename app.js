@@ -4919,24 +4919,56 @@ function drawAmbalajChart() {
 }
 
 async function exportMenuPDF() {
-  const element = document.querySelector('#content-menu .section-card');
-  if (!element) { showToast('Menü bulunamadı.', 'error'); return; }
   showToast('PDF hazırlanıyor...', 'info');
-  const toHide = element.querySelectorAll('.btn, .menu-date-nav, .menu-hint');
-  toHide.forEach(function(el) { el.style.display = 'none'; });
-  const style = document.createElement('style');
-  style.id = '_pdfTempStyle';
-  style.textContent = '.menu-table textarea,.menu-table input{font-size:0.65rem!important;padding:0.15rem 0.3rem!important}.menu-table td{padding:0.15rem 0.25rem!important}.menu-table th{padding:0.35rem 0.3rem!important;font-size:0.75rem!important}.menu-table th:first-child{font-size:0.65rem!important}.menu-table td:first-child{font-size:0.65rem!important}.menu-table th:not(:first-child){min-width:80px!important}.section-header h2{font-size:1rem!important}';
-  document.head.appendChild(style);
+  const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  const weekLabel = (document.getElementById('menuWeekLabel') || {}).textContent || '';
+  let pages = '';
+  for (let di = 0; di < 5; di++) {
+    let items = '';
+    for (let ci = 0; ci < 5; ci++) {
+      var el = document.getElementById('m' + ci + '_' + di);
+      var val = el ? el.value : '';
+      items += '<div class="menu-item"><span class="item-label">' + cesitler[ci] + '</span><span class="item-value">' + escapeHtml(val) + '</span></div>';
+    }
+    var kisiEl = document.getElementById('mk_' + di);
+    var kisi = kisiEl ? kisiEl.value : '0';
+    items += '<div class="menu-item"><span class="item-label">Kişi Sayısı</span><span class="item-value">' + kisi + '</span></div>';
+    // Notlar
+    for (var ni = 0; ni < 10; ni++) {
+      var noteEl = document.getElementById('mn_' + ni + '_' + di);
+      if (noteEl && noteEl.value) {
+        items += '<div class="menu-item"><span class="item-label">Not ' + (ni + 1) + '</span><span class="item-value">' + escapeHtml(noteEl.value) + '</span></div>';
+      }
+    }
+    var pageBreak = di < 4 ? 'page-break-after:always;' : '';
+    pages += '<div class="day-page" style="' + pageBreak + '"><div class="day-header">' + gunler[di] + '</div>' + items + '</div>';
+  }
+  var win = window.open('', '_blank', 'width=800,height=700');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title><style>' +
+    'body{margin:0;padding:15px;font-family:Arial,sans-serif;color:#333;background:#fff}' +
+    '.day-page{padding:10px 0}' +
+    '.day-header{font-size:1.4rem;font-weight:700;color:#1e293b;border-bottom:3px solid #6366f1;padding-bottom:8px;margin-bottom:15px}' +
+    '.menu-item{display:flex;align-items:flex-start;padding:8px 10px;border-bottom:1px solid #e2e8f0}' +
+    '.menu-item:last-child{border-bottom:none}' +
+    '.item-label{font-weight:600;color:#475569;min-width:100px;font-size:0.9rem;flex-shrink:0}' +
+    '.item-value{font-size:0.95rem;color:#1e293b;line-height:1.5;white-space:pre-wrap;word-break:break-word}' +
+    '@media print{body{padding:10mm}}' +
+    '</style></head><body><h1 style="font-size:1.2rem;margin:0 0 5px;color:#333">Haftalık Menü Listesi</h1>' +
+    '<div style="font-size:0.8rem;color:#666;margin-bottom:15px">' + escapeHtml(weekLabel) + '</div>' +
+    pages +
+    '<div style="text-align:center;font-size:0.7rem;color:#999;margin-top:20px;border-top:1px solid #ddd;padding-top:8px">Yemekhane Menü ve Atık Yönetim Sistemi</div>' +
+    '</body></html>');
+  win.document.close();
+  await new Promise(resolve => setTimeout(resolve, 1000));
   try {
-    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 6, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).from(element).save();
+    await html2pdf().set({ filename: 'haftalik_menu.pdf', margin: 8, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(win.document.body).save();
     showToast('PDF indirildi.', 'success');
   } catch (e) {
     showToast('PDF oluşturulamadı: ' + e.message, 'error');
   }
-  toHide.forEach(function(el) { el.style.display = ''; });
-  var s = document.getElementById('_pdfTempStyle');
-  if (s) s.remove();
+  win.close();
 }
 
 async function downloadMenuPDF() {
