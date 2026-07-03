@@ -475,6 +475,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
   }
 
+  // Dishes her zaman yüklenmeli (yemeklerCache boşsa)
+  if (!yemeklerCache.length && supabaseClient) {
+    await syncDishesFromSupabase();
+  }
+
   // HACCP (soğuk depo sıcaklık) verileri her sayfa yüklenişinde Supabase'ten çekilir
   if (supabaseClient) {
     await syncHaccpFromSupabase();
