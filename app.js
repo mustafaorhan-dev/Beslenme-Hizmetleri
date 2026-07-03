@@ -88,7 +88,7 @@ let selectedIds = new Set();
 let formModified = false;
 
 // ─── CHART YEAR / MONTH FILTER ──────────────────────────────────────────────
-let chartYearFilter = 'all';
+let chartYearFilter = String(new Date().getFullYear());
 let chartMonthFilter = 0;
 function getAvailableYears() {
   const years = new Set();
@@ -3396,10 +3396,12 @@ function renderChartYearFilter() {
   const container = document.getElementById('chartYearFilter');
   if (!container) return;
   const years = getAvailableYears();
+  if (years.length > 0 && years.indexOf(Number(chartYearFilter)) === -1) {
+    chartYearFilter = String(years[years.length - 1]);
+  }
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
   html += '<label style="font-size:0.8rem;color:var(--text-muted)">Yıl:</label>';
   html += '<select onchange="setChartYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
-  html += '<option value="all" ' + (chartYearFilter === 'all' ? 'selected' : '') + '>Tümü</option>';
   years.forEach(function(y) {
     var sel = chartYearFilter === String(y) ? ' selected' : '';
     html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
@@ -3451,14 +3453,11 @@ function drawAllCharts() {
   _chartVer++;
   renderChartYearFilter();
 
-  let chartRecords = records;
-  if (chartYearFilter !== 'all') {
-    chartRecords = records.filter(r => {
-      if (!r.tarih) return false;
-      const y = new Date(r.tarih + 'T00:00:00').getFullYear();
-      return y === Number(chartYearFilter);
-    });
-  }
+  let chartRecords = records.filter(r => {
+    if (!r.tarih) return false;
+    const y = new Date(r.tarih + 'T00:00:00').getFullYear();
+    return y === Number(chartYearFilter);
+  });
 
   const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
   const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
@@ -3500,9 +3499,7 @@ function drawAllCharts() {
     monthlyData[monthKey].ogrenci += r.ogrenci;
   });
 
-  const chartYears = chartYearFilter !== 'all'
-    ? [Number(chartYearFilter)]
-    : [...new Set(sorted.map(r => new Date(r.tarih + 'T00:00:00').getFullYear()))].sort();
+  const chartYears = [Number(chartYearFilter)];
   let allMonthLabels = [];
   chartYears.forEach(y => {
     for (let m = 1; m <= 12; m++) allMonthLabels.push(m + '/' + y);
@@ -3747,7 +3744,7 @@ function drawAllCharts() {
     if (r.type !== 'sicaklik') return false;
     if (!r.tarih) return false;
     var d = new Date(r.tarih + 'T00:00:00');
-    if (chartYearFilter !== 'all' && d.getFullYear() !== Number(chartYearFilter)) return false;
+    if (d.getFullYear() !== Number(chartYearFilter)) return false;
     if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
     return true;
   }
@@ -4518,7 +4515,7 @@ function deleteYagRecord(id) {
 }
 
 let yagChartInstance = null;
-let yagChartYear = 'all';
+let yagChartYear = String(new Date().getFullYear());
 
 function drawYagChart() {
   var canvas = document.getElementById('canvasYag');
@@ -4535,22 +4532,24 @@ function drawYagChart() {
   });
   var yearList = Object.keys(years).sort();
   if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  if (yearList.indexOf(yagChartYear) === -1) {
+    yagChartYear = yearList[yearList.length - 1];
+  }
   if (yearContainer) {
-    yearContainer.innerHTML = '<button class="year-btn' + (yagChartYear === 'all' ? ' active' : '') + '" data-y="all" style="font-size:0.75rem;padding:2px 8px">Tümü</button>' +
-      yearList.map(function(y) { return '<button class="year-btn' + (yagChartYear === y ? ' active' : '') + '" data-y="' + y + '" style="font-size:0.75rem;padding:2px 8px">' + y + '</button>'; }).join('');
-    yearContainer.querySelectorAll('.year-btn').forEach(function(btn) {
-      btn.onclick = function() {
-        yagChartYear = this.getAttribute('data-y');
-        drawYagChart();
-      };
+    var html = '<select onchange="yagChartYear=this.value;drawYagChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+    yearList.forEach(function(y) {
+      var sel = yagChartYear === y ? ' selected' : '';
+      html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
     });
+    html += '</select>';
+    yearContainer.innerHTML = html;
   }
 
   // aggregate monthly
   var monthly = {};
   yagRecords.forEach(function(r) {
     if (!r.tarih) return;
-    if (yagChartYear !== 'all' && r.tarih.slice(0, 4) !== yagChartYear) return;
+    if (r.tarih.slice(0, 4) !== yagChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
     monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
   });
@@ -4823,7 +4822,7 @@ function deleteAmbalajRecord(id) {
 }
 
 let ambalajChartInstance = null;
-let ambalajChartYear = 'all';
+let ambalajChartYear = String(new Date().getFullYear());
 
 function drawAmbalajChart() {
   var canvas = document.getElementById('canvasAmbalaj');
@@ -4839,21 +4838,23 @@ function drawAmbalajChart() {
   });
   var yearList = Object.keys(years).sort();
   if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  if (yearList.indexOf(ambalajChartYear) === -1) {
+    ambalajChartYear = yearList[yearList.length - 1];
+  }
   if (yearContainer) {
-    yearContainer.innerHTML = '<button class="year-btn' + (ambalajChartYear === 'all' ? ' active' : '') + '" data-y="all" style="font-size:0.75rem;padding:2px 8px">Tümü</button>' +
-      yearList.map(function(y) { return '<button class="year-btn' + (ambalajChartYear === y ? ' active' : '') + '" data-y="' + y + '" style="font-size:0.75rem;padding:2px 8px">' + y + '</button>'; }).join('');
-    yearContainer.querySelectorAll('.year-btn').forEach(function(btn) {
-      btn.onclick = function() {
-        ambalajChartYear = this.getAttribute('data-y');
-        drawAmbalajChart();
-      };
+    var html = '<select onchange="ambalajChartYear=this.value;drawAmbalajChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+    yearList.forEach(function(y) {
+      var sel = ambalajChartYear === y ? ' selected' : '';
+      html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
     });
+    html += '</select>';
+    yearContainer.innerHTML = html;
   }
 
   var monthly = {};
   ambalajRecords.forEach(function(r) {
     if (!r.tarih) return;
-    if (ambalajChartYear !== 'all' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
+    if (r.tarih.slice(0, 4) !== ambalajChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
     monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
   });
