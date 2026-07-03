@@ -437,13 +437,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadYagData();
   loadAmbalajData();
 
-  // Supabase'ten verileri çek (çoklu cihaz desteği - sessionStorage boşsa sunucudan al)
-  if (supabaseClient && (records.length === 0 || yagRecords.length === 0 || ambalajRecords.length === 0)) {
+  // Records her sayfa yüklenişinde Supabase'ten çekilir (çoklu cihaz desteği)
+  if (supabaseClient) {
     setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
     try {
-      if (records.length === 0) {
-        var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
-        if (rData && rData.length > 0) {
+      var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
+      if (rData && rData.length > 0) {
+        var serverIds = new Set(rData.map(function(r) { return Number(r.id); }));
+        var localIds = new Set(records.map(function(r) { return r.id; }));
+        var hasNew = rData.some(function(r) { return !localIds.has(Number(r.id)); });
+        var hasRemoved = records.some(function(r) { return !serverIds.has(r.id); });
+        if (hasNew || hasRemoved || records.length === 0) {
           records = rData.map(function(r) { return {
             id: Number(r.id) || Date.now() + Math.random(),
             tarih: normalizeDate(r.tarih),
@@ -454,9 +458,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           }; });
           records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
           saveData();
-          filteredRecords = [...records];
         }
       }
+      filteredRecords = [...records];
+    } catch (_) {}
+  }
+
+  // Diğer tablolar (sadece boşsa Supabase'ten al)
+  if (supabaseClient && (yagRecords.length === 0 || ambalajRecords.length === 0)) {
+    try {
       if (yagRecords.length === 0) {
         await syncYagFromSupabase();
         if (yagRecords.length > 0) {
@@ -475,7 +485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
   }
 
-  // Dishes her zaman yüklenmeli (yemeklerCache boşsa)
+  // YemeklerCache boşsa yine de dene
   if (!yemeklerCache.length && supabaseClient) {
     await syncDishesFromSupabase();
   }
