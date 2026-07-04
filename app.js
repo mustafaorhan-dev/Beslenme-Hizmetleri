@@ -2768,13 +2768,14 @@ function renderWeeklyComparison() {
     var pct = it.prev ? (diff / it.prev) * 100 : 0;
     var good = it.lower ? diff < 0 : diff > 0;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    var pctLabel = Math.abs(pct) > 500 ? (diff > 0 ? '>5×' : '<%95') : (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
     return '<div class="comparison-item">'
       + '<span class="comparison-label">' + it.label + '</span>'
       + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
       + '<span class="comparison-arrow">→</span>'
       + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + pctLabel + '</span></span>'
+      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
       + '</div>';
   }).join('');
 }
