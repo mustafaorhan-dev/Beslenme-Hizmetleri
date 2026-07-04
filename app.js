@@ -1268,23 +1268,6 @@ function calcDailyCarbon(atikKg) {
 }
 
 // ─── PREDICTION ──────────────────────────────────────────────────────────────
-function predictNextWaste() {
-  if (records.length < 3) return null;
-  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-  const n = sorted.length;
-  const indices = sorted.map((_, i) => i);
-  const atikValues = sorted.map(r => r.atik);
-  const meanX = (n - 1) / 2;
-  const meanY = atikValues.reduce((s, v) => s + v, 0) / n;
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) {
-    num += (i - meanX) * (atikValues[i] - meanY);
-    den += (i - meanX) ** 2;
-  }
-  const slope = den !== 0 ? num / den : 0;
-  const intercept = meanY - slope * meanX;
-  return { next: slope * n + intercept, slope, intercept, n };
-}
 function getLast7AvgWaste() {
   const last7 = records.slice(0, Math.min(7, records.length));
   if (last7.length === 0) return 0;
