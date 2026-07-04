@@ -348,7 +348,6 @@ async function saveAdminSettings() {
       return;
     }
     const hash = await sha256(adminPw);
-    remoteHashes.adminHash = hash;
     newAdminHash = hash;
     document.getElementById('apCurrentAdminPw').textContent = '••••• (' + adminPw.length + ' karakter)';
     document.getElementById('apAdminPw').value = '';
@@ -361,7 +360,6 @@ async function saveAdminSettings() {
       return;
     }
     const hash = await sha256(viewerPw);
-    remoteHashes.viewerHash = hash;
     newViewerHash = hash;
     document.getElementById('apCurrentViewerPw').textContent = '••••• (' + viewerPw.length + ' karakter)';
     document.getElementById('apViewerPw').value = '';
@@ -394,6 +392,8 @@ async function saveAdminSettings() {
       try {
         var { error: upsertError } = await supabaseClient.from('config').upsert(upserts, { onConflict: 'key' });
         if (upsertError) throw upsertError;
+        if (newAdminHash) remoteHashes.adminHash = newAdminHash;
+        if (newViewerHash) remoteHashes.viewerHash = newViewerHash;
         successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi (Supabase).';
         successEl.style.display = 'block';
         showToast('Ayarlar güncellendi ve Supabase\'e kaydedildi.', 'success');
@@ -454,6 +454,7 @@ function applyViewerRestrictions() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loginPassword').focus();
+  await syncPasswordHashesFromRemote().catch(function(){});
   var existingRole = sessionStorage.getItem('atik_kontrol_role');
   if (existingRole) {
     document.getElementById('loginOverlay').classList.add('hidden');
@@ -468,7 +469,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadAccent();
-  syncPasswordHashesFromRemote().catch(function(){});
   setLoadingText('Veriler yükleniyor...', 'Supabase bağlantısı kontrol ediliyor');
   loadData();
   loadHaccpData();
