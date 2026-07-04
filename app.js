@@ -123,11 +123,13 @@ async function sha256(str) {
 }
 
 function getAdminHash() {
-  return remoteHashes.adminHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || '';
+  if (remoteHashes.adminHash) return remoteHashes.adminHash;
+  return (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || '';
 }
 
 function getViewerHash() {
-  return remoteHashes.viewerHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || '';
+  if (remoteHashes.viewerHash) return remoteHashes.viewerHash;
+  return (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || '';
 }
 
 function getRole() {
@@ -145,7 +147,7 @@ function isAdminSessionValid() {
     return false;
   }
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = [remoteHashes.adminHash, cfg.adminHash].filter(Boolean);
+  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : (cfg.adminHash ? [cfg.adminHash] : []);
   return adminHashes.includes(storedHash);
 }
 
@@ -170,8 +172,8 @@ async function doLogin() {
   const inputHash = await sha256(input.value);
   let role = null;
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = [remoteHashes.adminHash, cfg.adminHash].filter(Boolean);
-  const viewerHashes = [remoteHashes.viewerHash, cfg.viewerHash].filter(Boolean);
+  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : (cfg.adminHash ? [cfg.adminHash] : []);
+  const viewerHashes = remoteHashes.viewerHash ? [remoteHashes.viewerHash] : (cfg.viewerHash ? [cfg.viewerHash] : []);
   if (adminHashes.includes(inputHash)) role = ROLE_ADMIN;
   else if (viewerHashes.includes(inputHash)) role = ROLE_VIEWER;
 
