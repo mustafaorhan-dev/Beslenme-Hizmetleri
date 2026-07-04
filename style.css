@@ -729,7 +729,7 @@ body {
 #content-menu.active::-webkit-scrollbar,
 #content-haccp.active::-webkit-scrollbar,
 #content-yag.active::-webkit-scrollbar,
-#content-ambalaj.active::-webkit-scrollbar { width: 6px; }
+#content-ambalaj.active::-webkit-scrollbar { width: 10px; }
 #content-dashboard.active::-webkit-scrollbar-track,
 #content-records.active::-webkit-scrollbar-track,
 #content-charts.active::-webkit-scrollbar-track,
@@ -737,7 +737,7 @@ body {
 #content-menu.active::-webkit-scrollbar-track,
 #content-haccp.active::-webkit-scrollbar-track,
 #content-yag.active::-webkit-scrollbar-track,
-#content-ambalaj.active::-webkit-scrollbar-track { background: transparent; }
+#content-ambalaj.active::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
 #content-dashboard.active::-webkit-scrollbar-thumb,
 #content-records.active::-webkit-scrollbar-thumb,
 #content-charts.active::-webkit-scrollbar-thumb,
@@ -745,7 +745,7 @@ body {
 #content-menu.active::-webkit-scrollbar-thumb,
 #content-haccp.active::-webkit-scrollbar-thumb,
 #content-yag.active::-webkit-scrollbar-thumb,
-#content-ambalaj.active::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+#content-ambalaj.active::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
 #content-dashboard.active::-webkit-scrollbar-thumb:hover,
 #content-records.active::-webkit-scrollbar-thumb:hover,
 #content-charts.active::-webkit-scrollbar-thumb:hover,
@@ -753,7 +753,19 @@ body {
 #content-menu.active::-webkit-scrollbar-thumb:hover,
 #content-haccp.active::-webkit-scrollbar-thumb:hover,
 #content-yag.active::-webkit-scrollbar-thumb:hover,
-#content-ambalaj.active::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+#content-ambalaj.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
+/* Firefox scrollbar */
+#content-dashboard.active,
+#content-records.active,
+#content-charts.active,
+#content-report.active,
+#content-menu.active,
+#content-haccp.active,
+#content-yag.active,
+#content-ambalaj.active {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(0,0,0,0.05);
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
