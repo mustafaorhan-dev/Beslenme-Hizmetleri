@@ -2543,6 +2543,8 @@ function renderAll() {
   renderReport();
   renderSparklines();
   renderComparison();
+  renderWeeklyComparison();
+  renderAnomalies();
   renderHaccp();
   renderYagTable();
   renderAmbalajTable();
@@ -2716,6 +2718,94 @@ function renderComparison() {
       <span class="comparison-new">${it.f2.toFixed(1)}${it.unit}</span>
       <span class="comparison-diff" style="color:${good ? '#10b981' : '#ef4444'};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}${it.unit}</span>
     </div>`;
+  }).join('');
+}
+
+function renderWeeklyComparison() {
+  const card = document.getElementById('weeklyCompCard');
+  const grid = document.getElementById('weeklyCompGrid');
+  const badge = document.getElementById('weeklyCompBadge');
+  if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
+
+  var now = new Date();
+  var dayOfWeek = now.getDay();
+  var monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  var thisMon = new Date(now); thisMon.setDate(now.getDate() + monOffset);
+  var thisSun = new Date(thisMon); thisSun.setDate(thisMon.getDate() + 6);
+  var lastMon = new Date(thisMon); lastMon.setDate(thisMon.getDate() - 7);
+  var lastSun = new Date(thisMon); lastSun.setDate(thisMon.getDate() - 1);
+
+  function fmt(d) { var y = d.getFullYear(); var m = String(d.getMonth()+1).padStart(2,'0'); var day = String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
+  function inRange(r, start, end) { return r.tarih >= fmt(start) && r.tarih <= fmt(end); }
+
+  var thisWeek = records.filter(function(r) { return inRange(r, thisMon, thisSun); });
+  var lastWeek = records.filter(function(r) { return inRange(r, lastMon, lastSun); });
+
+  if (thisWeek.length === 0 && lastWeek.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  function sum(arr, field) { return arr.reduce(function(s, r) { return s + (r[field] || 0); }, 0); }
+
+  var thisAtik = sum(thisWeek, 'atik');
+  var lastAtik = sum(lastWeek, 'atik');
+  var thisYemek = sum(thisWeek, 'yemek');
+  var lastYemek = sum(lastWeek, 'yemek');
+  var thisKisi = sum(thisWeek, 'toplam');
+  var lastKisi = sum(lastWeek, 'toplam');
+  var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
+  var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+
+  badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
+
+  var items = [
+    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: '', lower: false, decimals: 0 },
+    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+  ];
+
+  grid.innerHTML = items.map(function(it) {
+    var diff = it.val - it.prev;
+    var pct = it.prev ? (diff / it.prev) * 100 : 0;
+    var good = it.lower ? diff < 0 : diff > 0;
+    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    return '<div class="comparison-item">'
+      + '<span class="comparison-label">' + it.label + '</span>'
+      + '<span class="comparison-old">Geçen: ' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-diff" style="color:' + (good ? '#10b981' : '#ef4444') + ';font-weight:600">' + arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)</span>'
+      + '</div>';
+  }).join('');
+}
+
+function renderAnomalies() {
+  const card = document.getElementById('anomalyCard');
+  const grid = document.getElementById('anomalyGrid');
+  const badge = document.getElementById('anomalyBadge');
+  if (!card || records.length < 5) { if (card) card.style.display = 'none'; return; }
+
+  var values = records.map(function(r) { return r.atik || 0; });
+  var mean = values.reduce(function(s, v) { return s + v; }, 0) / values.length;
+  var stddev = Math.sqrt(values.reduce(function(s, v) { return s + (v - mean) * (v - mean); }, 0) / values.length);
+  var threshold = mean + 1.5 * stddev;
+
+  var anomalies = records.filter(function(r) { return (r.atik || 0) > threshold; });
+  anomalies.sort(function(a, b) { return a.tarih < b.tarih ? 1 : -1; });
+
+  if (anomalies.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  badge.textContent = anomalies.length + ' anormal gün';
+
+  grid.innerHTML = anomalies.map(function(r) {
+    var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
+    return '<div class="comparison-item" style="border-left:3px solid #ef4444;padding-left:0.75rem;margin-bottom:0.5rem">'
+      + '<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;width:100%">'
+      + '<span class="comparison-label" style="min-width:100px">' + r.tarih + '</span>'
+      + '<span style="font-weight:700;color:#ef4444;font-size:1.1rem">' + (r.atik || 0).toFixed(1) + ' kg</span>'
+      + '<span style="color:var(--text-muted);font-size:0.8rem">(+' + pctAbove.toFixed(0) + '% ortalamanın üstünde)</span>'
+      + '<span style="color:var(--text-muted);margin-left:auto;font-size:0.85rem">' + (r.yemek_adi || '—') + '</span>'
+      + '</div>'
+      + '</div>';
   }).join('');
 }
 
