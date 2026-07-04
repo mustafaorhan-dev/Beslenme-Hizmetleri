@@ -2798,8 +2798,8 @@ function renderAnomalies() {
   card.style.display = 'block';
   badge.textContent = anomalies.length + ' anormal gün';
 
-  var header = '<div class="comparison-item" style="background:transparent;border-bottom:1px solid var(--border);border-radius:0;padding:0.35rem 0.75rem;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px">'
-    + '<span style="width:28px"></span>'
+  var header = '<div class="anomaly-header">'
+    + '<span style="width:28px;flex-shrink:0"></span>'
     + '<span style="min-width:90px;text-align:center">Tarih</span>'
     + '<span style="min-width:90px">Atık</span>'
     + '<span style="min-width:70px;text-align:center">Fark</span>'

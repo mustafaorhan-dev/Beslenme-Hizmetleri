@@ -1924,6 +1924,8 @@ input.production-input:focus {
 .comparison-badge.flat { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
 .anomaly-item { display: flex; align-items: center; gap: 1rem; padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); background: rgba(251,146,60,0.06); border-left: 3px solid #fb923c; font-size: 0.82rem; overflow-wrap: break-word; word-break: break-word; }
 .anomaly-date { display: inline-block; background: rgba(251,146,60,0.12); color: #fb923c; font-weight: 700; font-size: 0.82rem; padding: 0.15rem 0.6rem; border-radius: 6px; min-width: 90px; text-align: center; }
+.anomaly-header { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0.9rem; border-radius: var(--radius-sm); background: rgba(99,102,241,0.04); font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+[data-theme="dark"] .anomaly-header { background: rgba(99,102,241,0.06); }
 [data-theme="dark"] .anomaly-item { background: rgba(251,146,60,0.1); }
 .anomaly-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(251,146,60,0.15); border-radius: 50%; color: #fb923c; font-size: 1rem; }
 
