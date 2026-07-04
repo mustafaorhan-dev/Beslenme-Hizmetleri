@@ -2767,13 +2767,13 @@ function renderWeeklyComparison() {
     var diff = it.val - it.prev;
     var pct = it.prev ? (diff / it.prev) * 100 : 0;
     var good = it.lower ? diff < 0 : diff > 0;
-    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
     return '<div class="comparison-item">'
       + '<span class="comparison-label">' + it.label + '</span>'
-      + '<span class="comparison-old">Geçen: ' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
       + '<span class="comparison-arrow">→</span>'
       + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff" style="color:' + (good ? '#10b981' : '#ef4444') + ';font-weight:600">' + arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)</span>'
+      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%</span></span>'
       + '</div>';
   }).join('');
 }
@@ -2798,13 +2798,12 @@ function renderAnomalies() {
 
   grid.innerHTML = anomalies.map(function(r) {
     var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
-    return '<div class="comparison-item" style="border-left:3px solid #ef4444;padding-left:0.75rem;margin-bottom:0.5rem">'
-      + '<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;width:100%">'
-      + '<span class="comparison-label" style="min-width:100px">' + r.tarih + '</span>'
-      + '<span style="font-weight:700;color:#ef4444;font-size:1.1rem">' + (r.atik || 0).toFixed(1) + ' kg</span>'
-      + '<span style="color:var(--text-muted);font-size:0.8rem">(+' + pctAbove.toFixed(0) + '% ortalamanın üstünde)</span>'
+    return '<div class="anomaly-item">'
+      + '<span class="anomaly-icon">⚠</span>'
+      + '<span class="comparison-label" style="min-width:90px">' + r.tarih + '</span>'
+      + '<span style="font-weight:700;color:#ef4444;font-size:1.05rem">' + (r.atik || 0).toFixed(1) + ' kg</span>'
+      + '<span style="color:var(--text-muted);font-size:0.78rem">(+' + pctAbove.toFixed(0) + '%)</span>'
       + '<span style="color:var(--text-muted);margin-left:auto;font-size:0.85rem">' + (r.yemek_adi || '—') + '</span>'
-      + '</div>'
       + '</div>';
   }).join('');
 }
