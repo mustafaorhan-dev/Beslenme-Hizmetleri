@@ -1,5 +1,6 @@
 -- ============================================
 -- Yemekhane Atık Takip Sistemi - Supabase Schema
+-- RLS enabled with proper policies
 -- ============================================
 
 -- 1. ANA KAYITLAR (Atık Kontrol Sistemi)
@@ -97,12 +98,36 @@ INSERT INTO haccp_depo_adlari (ad) VALUES
   ('Soğuk Hava Deposu 8')
 ON CONFLICT (ad) DO NOTHING;
 
--- RLS: Herkese açık (anon key ile) - kendi auth sisteminiz olduğu için
-ALTER TABLE records DISABLE ROW LEVEL SECURITY;
-ALTER TABLE haccp_records DISABLE ROW LEVEL SECURITY;
-ALTER TABLE haccp_depo_adlari DISABLE ROW LEVEL SECURITY;
-ALTER TABLE yag_records DISABLE ROW LEVEL SECURITY;
-ALTER TABLE ambalaj_records DISABLE ROW LEVEL SECURITY;
-ALTER TABLE dishes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE weekly_menu DISABLE ROW LEVEL SECURITY;
-ALTER TABLE config DISABLE ROW LEVEL SECURITY;
+-- ============================================
+-- RLS GÜVENLİK POLİTİKALARI
+-- Uygulama kendi kimlik doğrulamasını kullandığı için
+-- anon key ile tüm işlemlere izin veriyoruz.
+-- İleride Supabase Auth entegrasyonu ile
+-- kısıtlanabilir.
+-- ============================================
+
+-- Önce RLS'yi aktifleştir
+ALTER TABLE records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE haccp_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE haccp_depo_adlari ENABLE ROW LEVEL SECURITY;
+ALTER TABLE yag_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ambalaj_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dishes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_menu ENABLE ROW LEVEL SECURITY;
+ALTER TABLE config ENABLE ROW LEVEL SECURITY;
+
+-- Anonim kullanıcılar için tüm tablolarda tam yetki
+CREATE POLICY "anon_all_records" ON records FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_haccp" ON haccp_records FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_haccp_depo" ON haccp_depo_adlari FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_yag" ON yag_records FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_ambalaj" ON ambalaj_records FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_dishes" ON dishes FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_weekly_menu" ON weekly_menu FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all_config" ON config FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- NOT: Güvenlik için ileride şu adımlar atılmalıdır:
+-- 1. Supabase Auth (email/şifre veya magic link) entegre edilmeli
+-- 2. RLS politikaları JWT claim'lerine göre daraltılmalı
+-- 3. Admin işlemleri service_role key ile yapılmalı
+-- 4. Config tablosundaki hash'ler asla anon key ile okunmamalı

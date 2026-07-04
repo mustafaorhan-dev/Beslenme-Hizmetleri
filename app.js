@@ -69,14 +69,15 @@ function showToast(message, type) {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'toast toast-' + (type || 'info');
-  toast.textContent = message;
+  const icons = { success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' };
+  toast.innerHTML = (icons[type] || icons.info) + '<span>' + escapeHtml(message) + '</span>';
   container.appendChild(toast);
   requestAnimationFrame(() => { toast.classList.add('toast-visible'); });
   setTimeout(() => {
     toast.classList.remove('toast-visible');
     toast.classList.add('toast-hiding');
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-  }, 3000);
+  }, 4000);
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ function getAvailableYears() {
   const years = new Set();
   records.forEach(r => {
     if (r.tarih) {
-      const y = new Date(r.tarih + 'T00:00:00').getFullYear();
+      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
       if (!isNaN(y)) years.add(y);
     }
   });
@@ -616,7 +617,7 @@ function displayDate(dateStr) {
   if (!dateStr) return '—';
   var n = normalizeDate(dateStr);
   if (!n) return '—';
-  var d = new Date(n + 'T00:00:00');
+  var d = new Date(n + 'T12:00:00');
   if (isNaN(d)) return '—';
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -2123,6 +2124,7 @@ function autoCalcAtik() {
 
 // ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
 function saveRecord(e) {
+  if (!requireAdmin()) return;
   e.preventDefault();
 
   // Form doğrulama
@@ -2646,7 +2648,7 @@ function renderKPIs() {
     if (r.type !== 'sicaklik') return false;
     if (!r.tarih || !r.sicaklik) return false;
     if (r.tarih !== todayStr) {
-      var d = new Date(r.tarih + 'T00:00:00');
+      var d = new Date(r.tarih + 'T12:00:00');
       var now = new Date();
       if (isNaN(d) || (now - d) > 86400000 * 2) return false;
     }
@@ -3466,7 +3468,7 @@ function renderReport() {
   // Haftalık Geçiş Hesaplama
   const weeklyGecis = {};
   records.forEach(r => {
-    const d = new Date(r.tarih + 'T00:00:00');
+    const d = new Date(r.tarih + 'T12:00:00');
     // Haftanın başını (Pazartesi) bul
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -3630,7 +3632,7 @@ function drawAllCharts() {
 
   let chartRecords = records.filter(r => {
     if (!r.tarih) return false;
-    const y = new Date(r.tarih + 'T00:00:00').getFullYear();
+    const y = new Date(r.tarih + 'T12:00:00').getFullYear();
     return y === Number(chartYearFilter);
   });
 
@@ -3662,7 +3664,7 @@ function drawAllCharts() {
 
   const monthlyData = {};
   sorted.forEach(r => {
-    const date = new Date(r.tarih + 'T00:00:00');
+    const date = new Date(r.tarih + 'T12:00:00');
     const monthKey = (date.getMonth() + 1) + '/' + date.getFullYear();
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0 };
@@ -3779,53 +3781,6 @@ function drawAllCharts() {
       plugins: [chartValueLabelPlugin]
     });
     chartInstances.set(id, chart);
-
-    // Force tooltip styles via MutationObserver (Chart.js overrides inline styles on hover)
-    const forceTooltip = () => {
-      const tooltipEl = document.getElementById('chartjs-tooltip-' + chart.id);
-      if (tooltipEl) {
-        tooltipEl.style.setProperty('background', '#000000', 'important');
-        tooltipEl.style.setProperty('color', '#ffffff', 'important');
-        tooltipEl.style.setProperty('opacity', '1', 'important');
-      }
-    };
-    const observer = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        if (m.type === 'childList' && m.addedNodes.length) {
-          for (const node of m.addedNodes) {
-            if (node.id && node.id.startsWith('chartjs-tooltip')) {
-              const el = node;
-              el.style.setProperty('background', '#000000', 'important');
-              el.style.setProperty('color', '#ffffff', 'important');
-              el.style.setProperty('opacity', '1', 'important');
-              el.style.setProperty('transition', 'none', 'important');
-              el.style.setProperty('backdrop-filter', 'blur(20px)', 'important');
-              el.style.setProperty('-webkit-backdrop-filter', 'blur(20px)', 'important');
-              el.style.setProperty('box-shadow', '0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)', 'important');
-              el.style.setProperty('border', '1px solid rgba(255,255,255,0.2)', 'important');
-              el.style.setProperty('z-index', '99999', 'important');
-              el.style.setProperty('transform', 'translateZ(0)', 'important');
-            }
-          }
-        }
-        if (m.type === 'attributes' && m.attributeName === 'style' && m.target.id && m.target.id.startsWith('chartjs-tooltip')) {
-          m.target.style.setProperty('background', '#000000', 'important');
-          m.target.style.setProperty('background-color', '#000000', 'important');
-          m.target.style.setProperty('color', '#ffffff', 'important');
-          m.target.style.setProperty('opacity', '1', 'important');
-          m.target.style.setProperty('z-index', '99999', 'important');
-          m.target.style.setProperty('position', 'absolute', 'important');
-          m.target.style.setProperty('transform', 'translateZ(0)', 'important');
-          m.target.style.setProperty('backdrop-filter', 'blur(20px)', 'important');
-        }
-      }
-    });
-    observer.observe(parent, { childList: true, subtree: false, attributes: true, attributeFilter: ['style'] });
-
-    // Initial attempt
-    setTimeout(forceTooltip, 100);
-    setTimeout(forceTooltip, 500);
-
     return chart;
   }
 
@@ -3835,7 +3790,7 @@ function drawAllCharts() {
       const ay = parseInt(parts[0]), yil = parseInt(parts[1]);
       if (!isNaN(ay) && !isNaN(yil)) {
         return records.filter(r => {
-          const d = new Date(r.tarih + 'T00:00:00');
+          const d = new Date(r.tarih + 'T12:00:00');
           return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
         });
       }
@@ -3846,7 +3801,7 @@ function drawAllCharts() {
       const s = parseDM(range[0]), e = parseDM(range[1]);
       if (s && e) {
         return records.filter(r => {
-          const d = new Date(r.tarih + 'T00:00:00');
+          const d = new Date(r.tarih + 'T12:00:00');
           if (isNaN(d)) return false;
           const md = d.getMonth() + 1, dd = d.getDate();
           if (s.m === e.m) return md === s.m && dd >= s.d && dd <= e.d;
@@ -3858,10 +3813,10 @@ function drawAllCharts() {
   }
   const clickHandler = (label) => { const r = getRecordsByLabel(label); if (r) showChartDetailModal(label, r); };
 
-  // --- Charts ---
-  makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylik Atik (kg)' }], { onClick: clickHandler });
-  makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim Sayisi' }], { onClick: clickHandler });
-  makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylik Turnike Gecisi' }], { onClick: clickHandler });
+  // --- Charts (her biri try-catch ile izole) ---
+  try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylik Atik (kg)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
+  try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim Sayisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
+  try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylik Turnike Gecisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
 
   const prevYearAtik = allMonthLabels.map(m => {
     const [ay, yil] = m.split('/');
@@ -3874,31 +3829,31 @@ function drawAllCharts() {
     { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
   ];
   if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
-  makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' });
+  try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
-  makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim ile Turnike Gecisi Arasindaki Fark' }], { onClick: clickHandler });
+  try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim ile Turnike Gecisi Arasindaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
 
   const aylikOran = allMonthLabels.map(m => {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
     return y > 0 ? (a / y * 100) : 0;
   });
-  makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylik Atik Orani %' }], { onClick: clickHandler });
-  makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylik Ogrenci Sayisi' }], { onClick: clickHandler });
+  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylik Atik Orani %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
+  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylik Ogrenci Sayisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
 
   const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak Izi (kg CO2)' }], { onClick: clickHandler });
+  try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak Izi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
     return t > 0 ? a / t : 0;
   });
-  makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kisi Basi Atik (kg/kisi)' }], { onClick: clickHandler });
+  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kisi Basi Atik (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
 
   // Weekly
   const weeklyData = {};
   sorted.forEach(r => {
-    const d = new Date(r.tarih + 'T00:00:00');
+    const d = new Date(r.tarih + 'T12:00:00');
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d); monday.setDate(diff);
@@ -3911,14 +3866,14 @@ function drawAllCharts() {
   const weekLabels = Object.keys(weeklyData);
   const weekValues = weekLabels.map(l => weeklyData[l]);
   if (weekLabels.length > 0) {
-    makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler });
+    try { makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHaftalikGecis error:', e); }
   }
 
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
     if (r.type !== 'sicaklik') return false;
     if (!r.tarih) return false;
-    var d = new Date(r.tarih + 'T00:00:00');
+    var d = new Date(r.tarih + 'T12:00:00');
     if (d.getFullYear() !== Number(chartYearFilter)) return false;
     if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
     return true;
@@ -3955,7 +3910,7 @@ function drawAllCharts() {
       card.className = 'section-card chart-card chart-card-full';
       var header = document.createElement('div');
       header.className = 'section-header';
-      header.innerHTML = '<h2>' + ad + ' - Sıcaklık Geçmişi</h2>';
+      header.innerHTML = '<h2>' + escapeHtml(ad) + ' - Sıcaklık Geçmişi</h2>';
       card.appendChild(header);
       var area = document.createElement('div');
       area.className = 'chart-area';
@@ -3982,7 +3937,7 @@ function drawAllCharts() {
       if (ad.toLowerCase().includes('dondurucu')) {
         thresholds.push({ data: sicaklikLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
       }
-      makeChart(cid, sicaklikLabels, [depoData].concat(thresholds), { type: 'line', showValues: false });
+      try { makeChart(cid, sicaklikLabels, [depoData].concat(thresholds), { type: 'line', showValues: false }); } catch(e) { console.warn('chartSicaklik_' + idx + ' error:', e); }
     });
   }
 
@@ -3996,7 +3951,7 @@ function drawAllCharts() {
     var aylikGruplar = {};
     aylikSicaklikKayitlari.forEach(function(r) {
       if (!r.tarih) return;
-      var d = new Date(r.tarih + 'T00:00:00');
+      var d = new Date(r.tarih + 'T12:00:00');
       var ayKey = (d.getMonth() + 1) + '/' + d.getFullYear();
       if (!aylikGruplar[ayKey]) aylikGruplar[ayKey] = {};
       var ad = r.depoAd || 'Bilinmeyen';
@@ -4031,7 +3986,7 @@ function drawAllCharts() {
         label: ad
       };
     });
-    makeChart('canvasHaccpAylik', aylikAyLabels, aylikDatasets, { type: 'bar', showValues: true });
+    try { makeChart('canvasHaccpAylik', aylikAyLabels, aylikDatasets, { type: 'bar', showValues: true }); } catch(e) { console.warn('chartHaccpAylik error:', e); }
   } else {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
@@ -4807,7 +4762,7 @@ function drawYagChart() {
             if (!isNaN(ay) && !isNaN(yil)) {
               var filtered = yagRecords.filter(function(r) {
                 if (!r.tarih) return false;
-                var d = new Date(r.tarih + 'T00:00:00');
+                var d = new Date(r.tarih + 'T12:00:00');
                 return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
               });
               if (filtered.length > 0) showChartDetailModal(label + ' Atık Yağ', filtered);
@@ -5106,7 +5061,7 @@ function drawAmbalajChart() {
             if (!isNaN(ay) && !isNaN(yil)) {
               var filtered = ambalajRecords.filter(function(r) {
                 if (!r.tarih) return false;
-                var d = new Date(r.tarih + 'T00:00:00');
+                var d = new Date(r.tarih + 'T12:00:00');
                 return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
               });
               if (filtered.length > 0) showChartDetailModal(label + ' Ambalaj Atığı', filtered);
