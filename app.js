@@ -29,8 +29,8 @@ async function syncPasswordHashesFromRemote() {
     var { data, error } = await supabaseClient.from('config').select('key,value').in('key', ['admin_hash','viewer_hash']);
     if (error) return;
     data.forEach(function(r) {
-      if (r.key === 'admin_hash') { remoteHashes.adminHash = r.value; localStorage.setItem('atik_kontrol_admin_hash', r.value); }
-      if (r.key === 'viewer_hash') { remoteHashes.viewerHash = r.value; localStorage.setItem('atik_kontrol_viewer_hash', r.value); }
+      if (r.key === 'admin_hash') remoteHashes.adminHash = r.value;
+      if (r.key === 'viewer_hash') remoteHashes.viewerHash = r.value;
     });
   } catch (_) {}
 }
@@ -123,11 +123,11 @@ async function sha256(str) {
 }
 
 function getAdminHash() {
-  return remoteHashes.adminHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || localStorage.getItem('atik_kontrol_admin_hash') || '';
+  return remoteHashes.adminHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || '';
 }
 
 function getViewerHash() {
-  return remoteHashes.viewerHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || localStorage.getItem('atik_kontrol_viewer_hash') || '';
+  return remoteHashes.viewerHash || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || '';
 }
 
 function getRole() {
@@ -145,9 +145,7 @@ function isAdminSessionValid() {
     return false;
   }
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const localAdminHash = localStorage.getItem('atik_kontrol_admin_hash');
-  const adminHashes = [remoteHashes.adminHash, localAdminHash].filter(Boolean);
-  if (!localAdminHash && cfg.adminHash) adminHashes.push(cfg.adminHash);
+  const adminHashes = [remoteHashes.adminHash, cfg.adminHash].filter(Boolean);
   return adminHashes.includes(storedHash);
 }
 
@@ -172,13 +170,8 @@ async function doLogin() {
   const inputHash = await sha256(input.value);
   let role = null;
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const localAdminHash = localStorage.getItem('atik_kontrol_admin_hash');
-  const localViewerHash = localStorage.getItem('atik_kontrol_viewer_hash');
-  const adminHashes = [remoteHashes.adminHash, localAdminHash].filter(Boolean);
-  const viewerHashes = [remoteHashes.viewerHash, localViewerHash].filter(Boolean);
-  // Değiştirilmemişse (local'de yoksa) varsayılan config hash'ini kullan
-  if (!localAdminHash && cfg.adminHash) adminHashes.push(cfg.adminHash);
-  if (!localViewerHash && cfg.viewerHash) viewerHashes.push(cfg.viewerHash);
+  const adminHashes = [remoteHashes.adminHash, cfg.adminHash].filter(Boolean);
+  const viewerHashes = [remoteHashes.viewerHash, cfg.viewerHash].filter(Boolean);
   if (adminHashes.includes(inputHash)) role = ROLE_ADMIN;
   else if (viewerHashes.includes(inputHash)) role = ROLE_VIEWER;
 
@@ -287,7 +280,7 @@ function closeAdminPanel() {
 
 function doLogout() {
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_admin_hash', 'atik_kontrol_viewer_hash', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -353,7 +346,6 @@ async function saveAdminSettings() {
       return;
     }
     const hash = await sha256(adminPw);
-    localStorage.setItem('atik_kontrol_admin_hash', hash);
     remoteHashes.adminHash = hash;
     newAdminHash = hash;
     document.getElementById('apCurrentAdminPw').textContent = '••••• (' + adminPw.length + ' karakter)';
@@ -367,7 +359,6 @@ async function saveAdminSettings() {
       return;
     }
     const hash = await sha256(viewerPw);
-    localStorage.setItem('atik_kontrol_viewer_hash', hash);
     remoteHashes.viewerHash = hash;
     newViewerHash = hash;
     document.getElementById('apCurrentViewerPw').textContent = '••••• (' + viewerPw.length + ' karakter)';
@@ -387,25 +378,36 @@ async function saveAdminSettings() {
   });
   localStorage.setItem('atik_kontrol_viewer_settings', JSON.stringify(settings));
 
-  if (!changed) {
-    successEl.textContent = 'Görüntüleme ayarları güncellendi.';
-    successEl.style.display = 'block';
-    showToast('Görüntüleme ayarları güncellendi.', 'success');
-  } else {
-    successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi.';
-    successEl.style.display = 'block';
-    showToast('Ayarlar güncellendi. Bir sonraki girişte yeni şifre geçerli olacak.', 'success');
-  }
-  applyViewerRestrictions();
-
-  if (changed && supabaseClient) {
+  if (changed) {
+    if (!supabaseClient) {
+      errorEl.textContent = 'Supabase bağlantısı yok, şifre değiştirilemez.';
+      errorEl.style.display = 'block';
+      applyViewerRestrictions();
+      return;
+    }
     var upserts = [];
     if (newAdminHash) upserts.push({ key: 'admin_hash', value: newAdminHash });
     if (newViewerHash) upserts.push({ key: 'viewer_hash', value: newViewerHash });
     if (upserts.length > 0) {
-      supabaseClient.from('config').upsert(upserts, { onConflict: 'key' }).catch(function() {});
+      try {
+        var { error: upsertError } = await supabaseClient.from('config').upsert(upserts, { onConflict: 'key' });
+        if (upsertError) throw upsertError;
+        successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi (Supabase).';
+        successEl.style.display = 'block';
+        showToast('Ayarlar güncellendi ve Supabase\'e kaydedildi.', 'success');
+      } catch (e) {
+        errorEl.textContent = 'Supabase kaydedilemedi: ' + e.message;
+        errorEl.style.display = 'block';
+        applyViewerRestrictions();
+        return;
+      }
     }
+  } else {
+    successEl.textContent = 'Görüntüleme ayarları güncellendi.';
+    successEl.style.display = 'block';
+    showToast('Görüntüleme ayarları güncellendi.', 'success');
   }
+  applyViewerRestrictions();
 }
 
 function getViewerSettings() {
