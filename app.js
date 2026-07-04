@@ -145,7 +145,9 @@ function isAdminSessionValid() {
     return false;
   }
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = [remoteHashes.adminHash, localStorage.getItem('atik_kontrol_admin_hash'), cfg.adminHash].filter(Boolean);
+  const localAdminHash = localStorage.getItem('atik_kontrol_admin_hash');
+  const adminHashes = [remoteHashes.adminHash, localAdminHash].filter(Boolean);
+  if (!localAdminHash && cfg.adminHash) adminHashes.push(cfg.adminHash);
   return adminHashes.includes(storedHash);
 }
 
@@ -170,8 +172,13 @@ async function doLogin() {
   const inputHash = await sha256(input.value);
   let role = null;
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = [remoteHashes.adminHash, localStorage.getItem('atik_kontrol_admin_hash'), cfg.adminHash].filter(Boolean);
-  const viewerHashes = [remoteHashes.viewerHash, localStorage.getItem('atik_kontrol_viewer_hash'), cfg.viewerHash].filter(Boolean);
+  const localAdminHash = localStorage.getItem('atik_kontrol_admin_hash');
+  const localViewerHash = localStorage.getItem('atik_kontrol_viewer_hash');
+  const adminHashes = [remoteHashes.adminHash, localAdminHash].filter(Boolean);
+  const viewerHashes = [remoteHashes.viewerHash, localViewerHash].filter(Boolean);
+  // Değiştirilmemişse (local'de yoksa) varsayılan config hash'ini kullan
+  if (!localAdminHash && cfg.adminHash) adminHashes.push(cfg.adminHash);
+  if (!localViewerHash && cfg.viewerHash) viewerHashes.push(cfg.viewerHash);
   if (adminHashes.includes(inputHash)) role = ROLE_ADMIN;
   else if (viewerHashes.includes(inputHash)) role = ROLE_VIEWER;
 
