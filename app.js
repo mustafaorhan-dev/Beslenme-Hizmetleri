@@ -134,9 +134,31 @@ function getRole() {
   return sessionStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
 }
 
+function isAdminSessionValid() {
+  if (getRole() !== ROLE_ADMIN) return false;
+  const storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
+  if (!storedHash) return false;
+  const loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
+  if (Date.now() - loginTime > 3600000) { // 1 saat oturum süresi
+    sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
+    sessionStorage.removeItem('atik_kontrol_login_time');
+    return false;
+  }
+  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  const adminHashes = [remoteHashes.adminHash, localStorage.getItem('atik_kontrol_admin_hash'), cfg.adminHash].filter(Boolean);
+  return adminHashes.includes(storedHash);
+}
+
 function requireAdmin() {
-  if (getRole() !== ROLE_ADMIN) {
-    showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+  if (!isAdminSessionValid()) {
+    if (sessionStorage.getItem('atik_kontrol_role') === ROLE_ADMIN) {
+      showToast('Oturum süresi doldu veya geçersiz. Lütfen tekrar giriş yapın.', 'error');
+      sessionStorage.removeItem('atik_kontrol_role');
+      sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
+      location.reload();
+    } else {
+      showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+    }
     return false;
   }
   return true;
@@ -155,6 +177,10 @@ async function doLogin() {
 
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
+    if (role === ROLE_ADMIN) {
+      sessionStorage.setItem('atik_kontrol_admin_hash_proof', inputHash);
+      sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+    }
     localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
