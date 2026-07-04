@@ -1922,9 +1922,9 @@ input.production-input:focus {
 .comparison-badge.up { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
 .comparison-badge.down { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
 .comparison-badge.flat { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
-.anomaly-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); background: rgba(239,68,68,0.06); border-left: 3px solid #ef4444; font-size: 0.82rem; overflow-wrap: break-word; word-break: break-word; }
-[data-theme="dark"] .anomaly-item { background: rgba(239,68,68,0.1); }
-.anomaly-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(239,68,68,0.15); border-radius: 50%; color: #ef4444; font-size: 1rem; }
+.anomaly-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); background: rgba(251,146,60,0.06); border-left: 3px solid #fb923c; font-size: 0.82rem; overflow-wrap: break-word; word-break: break-word; }
+[data-theme="dark"] .anomaly-item { background: rgba(251,146,60,0.1); }
+.anomaly-icon { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(251,146,60,0.15); border-radius: 50%; color: #fb923c; font-size: 1rem; }
 
 /* ---- MEAL BADGE ---- */
 .meal-badge { display: inline-block; font-size: 0.7rem; background: rgba(99,102,241,0.12); color: var(--accent-blue); border: 1px solid rgba(99,102,241,0.2); border-radius: 999px; padding: 0.1rem 0.5rem; font-weight: 600; white-space: nowrap; }

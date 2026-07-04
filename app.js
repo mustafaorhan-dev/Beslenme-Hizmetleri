@@ -2801,7 +2801,7 @@ function renderAnomalies() {
     return '<div class="anomaly-item">'
       + '<span class="anomaly-icon">⚠</span>'
       + '<span class="comparison-label" style="min-width:90px">' + r.tarih + '</span>'
-      + '<span style="font-weight:700;color:#ef4444;font-size:1.05rem">' + (r.atik || 0).toFixed(1) + ' kg</span>'
+      + '<span style="font-weight:700;color:#fb923c;font-size:1.05rem">' + (r.atik || 0).toFixed(1) + ' kg</span>'
       + '<span style="color:var(--text-muted);font-size:0.78rem">(+' + pctAbove.toFixed(0) + '%)</span>'
       + '<span style="color:var(--text-muted);margin-left:auto;font-size:0.85rem">' + (r.yemek_adi || '—') + '</span>'
       + '</div>';
