@@ -2800,7 +2800,7 @@ function renderAnomalies() {
 
   var header = '<div class="comparison-item" style="background:transparent;border-bottom:1px solid var(--border);border-radius:0;padding:0.35rem 0.75rem;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px">'
     + '<span style="width:28px"></span>'
-    + '<span class="comparison-label" style="min-width:90px">Tarih</span>'
+    + '<span style="min-width:90px;text-align:center">Tarih</span>'
     + '<span style="min-width:90px">Atık</span>'
     + '<span style="min-width:70px;text-align:center">Fark</span>'
     + '<span style="margin-left:auto">Yemek</span>'
@@ -2810,7 +2810,7 @@ function renderAnomalies() {
     var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
     return '<div class="anomaly-item">'
       + '<span class="anomaly-icon">⚠</span>'
-      + '<span class="comparison-label" style="min-width:90px">' + displayDate(r.tarih) + '</span>'
+      + '<span class="anomaly-date">' + displayDate(r.tarih) + '</span>'
       + '<span style="font-weight:700;color:#fb923c;font-size:1.05rem;min-width:90px">' + (r.atik || 0).toFixed(1) + ' kg</span>'
       + '<span style="color:var(--text-muted);font-size:0.78rem;min-width:70px;text-align:center">+' + pctAbove.toFixed(0) + '%</span>'
       + '<span style="color:var(--text-muted);margin-left:auto;font-size:0.85rem">' + (r.yemek_adi || '—') + '</span>'
