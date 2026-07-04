@@ -317,7 +317,13 @@
   color: var(--text-primary);
 }
 [data-theme="dark"] .prod-ing {
-  color: var(--text-secondary);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .prod-num,
+[data-theme="dark"] .prod-qty,
+[data-theme="dark"] .weekly-total-num,
+[data-theme="dark"] .weekly-total-qty {
+  color: #e2e8f0;
 }
 [data-theme="dark"] .weekly-total-card {
   background: var(--bg-card);
