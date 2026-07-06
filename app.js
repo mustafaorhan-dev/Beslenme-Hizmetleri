@@ -87,6 +87,7 @@ let selectedIds = new Set();
 
 // ─── UNSAVED CHANGES ──────────────────────────────────────────────────────────
 let formModified = false;
+let lastPollData = null;
 
 // ─── CHART YEAR / MONTH FILTER ──────────────────────────────────────────────
 let chartYearFilter = String(new Date().getFullYear());
