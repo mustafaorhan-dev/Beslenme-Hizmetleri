@@ -1564,10 +1564,8 @@ function renderHaccpDepoSummary() {
       var min = Math.min.apply(null, sicVals);
       var max = Math.max.apply(null, sicVals);
       var avg = sicVals.reduce(function(a, b) { return a + b; }, 0) / sicVals.length;
-      var da = ad.toLowerCase();
-      var minOk, maxOk;
-      if (da.includes('dondurucu')) { minOk = -24; maxOk = -18; }
-      else { minOk = 0; maxOk = 4; }
+      var limits = getDepoSicaklikLimitleri(ad);
+      var minOk = limits.min, maxOk = limits.max;
       var durum = min >= minOk && max <= maxOk ? 'Uygun' : (max > maxOk ? 'Yüksek' : 'Düşük');
       html += '<span>Min: <strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + '°C</strong></span>' +
         '<span>Ort: <strong style="color:var(--text-primary)">' + avg.toFixed(1) + '°C</strong></span>' +
@@ -1592,15 +1590,23 @@ function getHaccpRecords(type) {
   return haccpRecords.filter(r => r.type === type).sort((a, b) => b.tarih + b.saat > a.tarih + a.saat ? 1 : -1);
 }
 
+function getDepoSicaklikLimitleri(depoAd) {
+  var ad = String(depoAd || '').trim();
+  var adLower = ad.toLowerCase();
+  var ozelLimitler = {
+    'Eksi Soğuk Hava Deposu 9': { min: -18, max: -5 }
+  };
+  if (ozelLimitler[ad]) return ozelLimitler[ad];
+  if (adLower.includes('dondurucu') || adLower.includes('eksi')) return { min: -24, max: -18 };
+  return { min: 0, max: 4 };
+}
+
 function sicaklikDurum(sicaklik, depoAd) {
   const v = parseFloat(sicaklik);
   if (isNaN(v)) return { text: '—', cls: '' };
-  var min, max;
-  var da = String(depoAd || '').toLowerCase();
-  if (da.includes('dondurucu')) { min = -24; max = -18; }
-  else if (da.includes('so\u011fuk') || da.includes('soguk')) { min = 0; max = 4; }
-  if (v >= min && v <= max) return { text: 'Uygun', cls: 'badge badge-ok' };
-  if (v < min) return { text: 'Düşük', cls: 'badge badge-warn' };
+  var limits = getDepoSicaklikLimitleri(depoAd);
+  if (v >= limits.min && v <= limits.max) return { text: 'Uygun', cls: 'badge badge-ok' };
+  if (v < limits.min) return { text: 'Düşük', cls: 'badge badge-warn' };
   return { text: 'Yüksek', cls: 'badge badge-err' };
 }
 
@@ -2698,9 +2704,8 @@ function renderKPIs() {
     }
     var v = parseFloat(r.sicaklik);
     if (isNaN(v)) return false;
-    var da = String(r.depoAd || '').toLowerCase();
-    if (da.includes('dondurucu')) return v < -24 || v > -18;
-    return v < 0 || v > 4;
+    var limits = getDepoSicaklikLimitleri(r.depoAd);
+    return v < limits.min || v > limits.max;
   });
   var alarmCount = alarmRecs.length;
   document.getElementById('kpiHaccpAlarm').textContent = alarmCount;
@@ -4071,13 +4076,11 @@ function drawAllCharts() {
         color: depoRenkPaleti[idx % depoRenkPaleti.length],
         label: ad
       };
+      var limits = getDepoSicaklikLimitleri(ad);
       var thresholds = [
-        { data: sicaklikLabels.map(function() { return 4; }), color: '#ef4444', label: 'Üst Limit (+4°C)', dashed: true },
-        { data: sicaklikLabels.map(function() { return 0; }), color: '#22c55e', label: 'Alt Limit (0°C)', dashed: true },
+        { data: sicaklikLabels.map(function() { return limits.max; }), color: '#ef4444', label: 'Üst Limit (' + (limits.max > 0 ? '+' : '') + limits.max + '°C)', dashed: true },
+        { data: sicaklikLabels.map(function() { return limits.min; }), color: '#3b82f6', label: 'Alt Limit (' + limits.min + '°C)', dashed: true },
       ];
-      if (ad.toLowerCase().includes('dondurucu')) {
-        thresholds.push({ data: sicaklikLabels.map(function() { return -18; }), color: '#3b82f6', label: 'Dondurucu Üst (-18°C)', dashed: true });
-      }
       try { makeChart(cid, sicaklikLabels, [depoData].concat(thresholds), { type: 'line', showValues: false }); } catch(e) { console.warn('chartSicaklik_' + idx + ' error:', e); }
     });
   }
