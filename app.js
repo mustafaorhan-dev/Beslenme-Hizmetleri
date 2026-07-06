@@ -2146,10 +2146,10 @@ function autoCalcAtik() {
 function scheduleRender() {
   setTimeout(function() {
     try { renderAll(); } catch (e) { console.warn('renderAll:', e); }
-  }, 0);
+  }, 50);
   setTimeout(function() {
     try { drawAllCharts(); } catch (e) { console.warn('drawAllCharts:', e); }
-  }, 10);
+  }, 100);
 }
 
 // ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
@@ -2172,6 +2172,9 @@ function saveRecord(e) {
     showToast(errors.join(' '), 'error');
     return;
   }
+
+  formModified = false;
+  closeModal();
 
   const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
   const fire   = parseFloat(document.getElementById('fFire').value)    || 0;
@@ -2208,8 +2211,6 @@ function saveRecord(e) {
   records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   saveData();
   filteredRecords = [...records];
-  formModified = false;
-  closeModal();
   scheduleRender();
 }
 
