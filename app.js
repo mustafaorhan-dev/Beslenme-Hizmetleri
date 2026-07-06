@@ -395,7 +395,7 @@ async function saveAdminSettings() {
         if (upsertError) throw upsertError;
         if (newAdminHash) {
           remoteHashes.adminHash = newAdminHash;
-          // Session proof'u da g�ncelle ki admin oturumu ge�erlili�ini korusun
+          // Session proof'u da g�ncelle ki admin oturumu ge�erlili�ini korusun
           sessionStorage.setItem('atik_kontrol_admin_hash_proof', newAdminHash);
           sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
         }
@@ -1834,12 +1834,18 @@ async function haccpDeleteSelected() { if (!requireAdmin()) return;
   if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
   if (!confirm('Seçili ' + haccpSelectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
   var ids = [...haccpSelectedIds];
+  if (supabaseClient && ids.length > 0) {
+    try {
+      var { error } = await supabaseClient.from('haccp_records').delete().in('id', ids);
+      if (error) throw error;
+    } catch (e) {
+      showToast('Supabase\'den silinemedi: ' + (e.message || e), 'error');
+      return;
+    }
+  }
   haccpRecords = haccpRecords.filter(function(r) { return !haccpSelectedIds.has(r.id); });
   haccpSelectedIds.clear();
   saveHaccpData();
-  if (supabaseClient && ids.length > 0) {
-    try { await supabaseClient.from('haccp_records').delete().in('id', ids); } catch (_) {}
-  }
   renderHaccp();
   showToast('Seçili kayıtlar silindi.', 'success');
 }
@@ -1922,12 +1928,18 @@ function editHaccpRecord(type, id) {
 
 async function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  if (supabaseClient) {
+    try {
+      var { error } = await supabaseClient.from('haccp_records').delete().eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      showToast('Supabase\'den silinemedi: ' + (e.message || e), 'error');
+      return;
+    }
+  }
   haccpRecords = haccpRecords.filter(r => !(r.id === id && r.type === type));
   haccpSelectedIds.delete(id);
   saveHaccpData();
-  if (supabaseClient) {
-    try { await supabaseClient.from('haccp_records').delete().eq('id', id); } catch (_) {}
-  }
   renderHaccp();
   showToast('Kayıt silindi.', 'success');
 }
@@ -2263,15 +2275,21 @@ function saveRecord(e) {
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
-function deleteRecord(id) { if (!requireAdmin()) return;
+async function deleteRecord(id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  if (supabaseClient) {
+    try {
+      var { error } = await supabaseClient.from('records').delete().eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      showToast('Supabase\'den silinemedi: ' + (e.message || e), 'error');
+      return;
+    }
+  }
   try {
     records = records.filter(function(r) { return r.id !== id; });
     selectedIds.delete(id);
     saveData();
-    if (supabaseClient) {
-      (async function() { try { await supabaseClient.from('records').delete().eq('id', id); } catch (_) {} })();
-    }
     filteredRecords = [...records];
     renderRecordsTable();
     renderAll();
