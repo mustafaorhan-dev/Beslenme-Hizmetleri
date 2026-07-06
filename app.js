@@ -2176,56 +2176,66 @@ function saveRecord(e) {
   formModified = false;
   closeModal();
 
-  const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
-  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;
-  const turnike = parseInt(document.getElementById('fTurnike').value)   || 0;
-  const personel = parseInt(document.getElementById('fPersonel').value) || 0;
-  const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
-  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;
-  const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
+  try {
+    const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
+    const fire   = parseFloat(document.getElementById('fFire').value)    || 0;
+    const turnike = parseInt(document.getElementById('fTurnike').value)   || 0;
+    const personel = parseInt(document.getElementById('fPersonel').value) || 0;
+    const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
+    const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;
+    const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
+    const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
 
-  const rec = {
-    tarih: document.getElementById('fTarih').value,
-    yemek_adi: document.getElementById('fYemekAdi').value || '',
-    yemek,
-    fire,
-    turnike,
-    personel,
-    toplam,
-    porsiyon,
-    atik,
-    ogrenci,
-    id: editingId !== null ? editingId : Date.now()
-  };
+    const rec = {
+      tarih: document.getElementById('fTarih').value,
+      yemek_adi: document.getElementById('fYemekAdi').value || '',
+      yemek,
+      fire,
+      turnike,
+      personel,
+      toplam,
+      porsiyon,
+      atik,
+      ogrenci,
+      id: editingId !== null ? editingId : Date.now()
+    };
 
-  if (editingId !== null) {
-    const idx = records.findIndex(r => r.id === editingId);
-    if (idx !== -1) records[idx] = rec;
-    showToast('Kayıt başarıyla güncellendi.', 'success');
-  } else {
-    records.push(rec);
-    showToast('Yeni kayıt başarıyla eklendi.', 'success');
+    if (editingId !== null) {
+      const idx = records.findIndex(r => r.id === editingId);
+      if (idx !== -1) records[idx] = rec;
+      showToast('Kayıt başarıyla güncellendi.', 'success');
+    } else {
+      records.push(rec);
+      showToast('Yeni kayıt başarıyla eklendi.', 'success');
+    }
+
+    records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+    saveData();
+    filteredRecords = [...records];
+    scheduleRender();
+  } catch (e) {
+    showToast('Hata: ' + e.message, 'error');
   }
-
-  records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-  saveData();
-  filteredRecords = [...records];
-  scheduleRender();
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
-async function deleteRecord(id) { if (!requireAdmin()) return;
+function deleteRecord(id) { if (!requireAdmin()) return;
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
-  records = records.filter(r => r.id !== id);
-  selectedIds.delete(id);
-  saveData();
-  if (supabaseClient) {
-    supabaseClient.from('records').delete().eq('id', id).catch(function(){});
+  try {
+    records = records.filter(function(r) { return r.id !== id; });
+    selectedIds.delete(id);
+    saveData();
+    if (supabaseClient) {
+      supabaseClient.from('records').delete().eq('id', id).catch(function(){});
+    }
+    filteredRecords = [...records];
+    renderRecordsTable();
+    renderAll();
+    drawAllCharts();
+    showToast('Kayıt silindi.', 'success');
+  } catch (e) {
+    showToast('Hata: ' + e.message, 'error');
   }
-  filteredRecords = [...records];
-  showToast('Kayıt silindi.', 'success');
-  scheduleRender();
 }
 
 // ─── SORT ──────────────────────────────────────────────────────────────────────
@@ -2318,23 +2328,29 @@ function updateBulkBar() {
   }
 }
 
-async function deleteSelected() { if (!requireAdmin()) return;
+function deleteSelected() { if (!requireAdmin()) return;
   if (selectedIds.size === 0) {
     showToast('Seçili kayıt yok.', 'error');
     return;
   }
-  if (!confirm(`Seçili ${selectedIds.size} kaydı silmek istediğinize emin misiniz?`)) return;
-  var ids = [...selectedIds];
-  records = records.filter(r => !selectedIds.has(r.id));
-  selectedIds.clear();
-  saveData();
-  if (supabaseClient && ids.length > 0) {
-    supabaseClient.from('records').delete().in('id', ids).catch(function(){});
+  if (!confirm('Seçili ' + selectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
+  try {
+    var ids = [...selectedIds];
+    records = records.filter(function(r) { return !selectedIds.has(r.id); });
+    selectedIds.clear();
+    saveData();
+    if (supabaseClient && ids.length > 0) {
+      supabaseClient.from('records').delete().in('id', ids).catch(function(){});
+    }
+    filteredRecords = [...records];
+    currentPage = 1;
+    renderRecordsTable();
+    renderAll();
+    drawAllCharts();
+    showToast('Seçili kayıtlar silindi.', 'success');
+  } catch (e) {
+    showToast('Hata: ' + e.message, 'error');
   }
-  filteredRecords = [...records];
-  currentPage = 1;
-  showToast('Seçili kayıtlar silindi.', 'success');
-  scheduleRender();
 }
 
 // ─── IMPORT ────────────────────────────────────────────────────────────────────
