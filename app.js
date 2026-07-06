@@ -393,7 +393,12 @@ async function saveAdminSettings() {
       try {
         var { error: upsertError } = await supabaseClient.from('config').upsert(upserts, { onConflict: 'key' });
         if (upsertError) throw upsertError;
-        if (newAdminHash) remoteHashes.adminHash = newAdminHash;
+        if (newAdminHash) {
+          remoteHashes.adminHash = newAdminHash;
+          // Session proof'u da g�ncelle ki admin oturumu ge�erlili�ini korusun
+          sessionStorage.setItem('atik_kontrol_admin_hash_proof', newAdminHash);
+          sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+        }
         if (newViewerHash) remoteHashes.viewerHash = newViewerHash;
         successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi (Supabase).';
         successEl.style.display = 'block';
