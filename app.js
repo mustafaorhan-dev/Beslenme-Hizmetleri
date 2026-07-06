@@ -1409,6 +1409,7 @@ function printQr() {
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
 const HACCP_STORAGE_KEY = 'haccp_records';
 const HACCP_DEPO_KEY = 'haccp_depo_adlari';
+const HACCP_LIMIT_KEY = 'haccp_depo_limitleri';
 const DEFAULT_DEPO_ADLARI = ['Soğuk Hava Deposu 5', 'Soğuk Hava Deposu 6', 'Soğuk Hava Deposu 7', 'Soğuk Hava Deposu 8'];
 let haccpRecords = [];
 let editingHaccpId = null;
@@ -1434,6 +1435,54 @@ function getHaccpDepoAdlari() {
   return loadHaccpDepoAdlari();
 }
 
+function loadDepoLimitleri() {
+  try {
+    var stored = localStorage.getItem(HACCP_LIMIT_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch (_) {}
+  return {};
+}
+
+function saveDepoLimitleri(limits) {
+  try { localStorage.setItem(HACCP_LIMIT_KEY, JSON.stringify(limits)); } catch (_) {}
+  syncHaccpSilent(true);
+}
+
+function getDepoLimit(depoAd) {
+  var limits = loadDepoLimitleri();
+  return limits[depoAd] || null;
+}
+
+function setDepoLimit(depoAd, min, max) {
+  var limits = loadDepoLimitleri();
+  min = parseFloat(min);
+  max = parseFloat(max);
+  if (!isNaN(min) && !isNaN(max)) {
+    limits[depoAd] = { min: min, max: max };
+  } else {
+    delete limits[depoAd];
+  }
+  saveDepoLimitleri(limits);
+  renderHaccpDepoListesi();
+}
+
+function removeDepoLimit(depoAd) {
+  var limits = loadDepoLimitleri();
+  delete limits[depoAd];
+  saveDepoLimitleri(limits);
+}
+
+function saveDepoLimitsFromRow(input) {
+  var row = input.closest('[data-depo]');
+  if (!row) return;
+  var depoAd = row.dataset.depo;
+  var min = parseFloat(row.querySelector('.depo-limit-min').value);
+  var max = parseFloat(row.querySelector('.depo-limit-max').value);
+  if (!isNaN(min) && !isNaN(max)) {
+    setDepoLimit(depoAd, min, max);
+  }
+}
+
 function addHaccpDepoAdi(name) {
   const list = loadHaccpDepoAdlari();
   name = name.trim();
@@ -1447,6 +1496,7 @@ function addHaccpDepoAdi(name) {
 function removeHaccpDepoAdi(name) {
   const list = loadHaccpDepoAdlari().filter(n => n !== name);
   saveHaccpDepoAdlari(list);
+  removeDepoLimit(name);
   renderHaccpDepoListesi();
   renderHaccpSicaklikDepoSelect();
   return list;
@@ -1477,11 +1527,19 @@ function renderHaccpDepoListesi() {
   const container = document.getElementById('haccpDepoListesi');
   if (!container) return;
   container.innerHTML = list.map(function(n) {
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
-      '<span>' + n + '</span>' +
+    var limits = getDepoLimit(n);
+    var minVal = limits && !isNaN(limits.min) ? limits.min : '';
+    var maxVal = limits && !isNaN(limits.max) ? limits.max : '';
+    return '<div data-depo="' + n.replace(/"/g, '&quot;') + '" style="padding:8px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-weight:600;font-size:0.9rem">' + n + '</span>' +
       '<div style="display:flex;gap:4px">' +
-      '<button class="btn btn-ghost btn-sm" onclick="showQrModal(\'' + n.replace(/'/g, "\\'") + '\')" title="QR Kod">\uD83D\uDCF7 QR</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="showQrModal(\'' + n.replace(/'/g, "\\'") + '\')" title="QR Kod">QR</button>' +
       '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button>' +
+      '</div></div>' +
+      '<div style="display:flex;gap:8px;align-items:center;margin-top:4px;font-size:0.78rem;color:var(--text-muted)">' +
+      'Alt Limit: <input type="number" step="0.1" value="' + minVal + '" class="depo-limit-min" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" onchange="saveDepoLimitsFromRow(this)" placeholder="—"> °C' +
+      'Üst Limit: <input type="number" step="0.1" value="' + maxVal + '" class="depo-limit-max" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" onchange="saveDepoLimitsFromRow(this)" placeholder="—"> °C' +
       '</div></div>';
   }).join('');
 }
@@ -1593,10 +1651,8 @@ function getHaccpRecords(type) {
 function getDepoSicaklikLimitleri(depoAd) {
   var ad = String(depoAd || '').trim();
   var adLower = ad.toLowerCase();
-  var ozelLimitler = {
-    'Eksi Soğuk Hava Deposu 9': { min: -18, max: -5 }
-  };
-  if (ozelLimitler[ad]) return ozelLimitler[ad];
+  var stored = getDepoLimit(ad);
+  if (stored && !isNaN(stored.min) && !isNaN(stored.max)) return stored;
   if (adLower.includes('dondurucu') || adLower.includes('eksi')) return { min: -24, max: -18 };
   return { min: 0, max: 4 };
 }
