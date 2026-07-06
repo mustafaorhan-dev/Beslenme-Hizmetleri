@@ -35,7 +35,9 @@ CREATE TABLE IF NOT EXISTS haccp_records (
 -- 3. DEPO ADLARI
 CREATE TABLE IF NOT EXISTS haccp_depo_adlari (
   id SERIAL PRIMARY KEY,
-  ad TEXT NOT NULL UNIQUE
+  ad TEXT NOT NULL UNIQUE,
+  min_limit NUMERIC,
+  max_limit NUMERIC
 );
 
 -- 4. ATIK YAĞ KAYITLARI
@@ -89,6 +91,10 @@ INSERT INTO config (key, value) VALUES
   ('viewer_hash', '137d2ccfeadfd410b7f455133360a5ad6650d0768c3b773c13cd5e7e871e483f'),
   ('viewer_settings', '{"editAllowed":false,"tabs":{"dashboard":true,"menu":true,"records":true,"report":true,"haccp":true,"yag":true,"ambalaj":true,"charts":true},"showExportBtn":false,"showSyncBtn":false,"showActions":false}')
 ON CONFLICT (key) DO NOTHING;
+
+-- Mevcut tabloya limit kolonlarını ekle (geriye uyumlu)
+ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS min_limit NUMERIC;
+ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS max_limit NUMERIC;
 
 -- Varsayılan depo adları
 INSERT INTO haccp_depo_adlari (ad) VALUES
