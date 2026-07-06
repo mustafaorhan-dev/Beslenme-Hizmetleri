@@ -2227,7 +2227,7 @@ function deleteRecord(id) { if (!requireAdmin()) return;
     selectedIds.delete(id);
     saveData();
     if (supabaseClient) {
-      supabaseClient.from('records').delete().eq('id', id).then(function(){}).catch(function(){});
+      (async function() { try { await supabaseClient.from('records').delete().eq('id', id); } catch (_) {} })();
     }
     filteredRecords = [...records];
     renderRecordsTable();
@@ -2341,7 +2341,7 @@ function deleteSelected() { if (!requireAdmin()) return;
     selectedIds.clear();
     saveData();
     if (supabaseClient && ids.length > 0) {
-      supabaseClient.from('records').delete().in('id', ids).then(function(){}).catch(function(){});
+      (async function() { try { await supabaseClient.from('records').delete().in('id', ids); } catch (_) {} })();
     }
     filteredRecords = [...records];
     currentPage = 1;
