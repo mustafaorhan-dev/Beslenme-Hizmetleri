@@ -2165,13 +2165,12 @@ function saveRecord(e) {
   }
 
   const yemek  = parseFloat(document.getElementById('fYemek').value)   || 0;
-  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;  // autoCalc tarafından hesaplanan değer
+  const fire   = parseFloat(document.getElementById('fFire').value)    || 0;
   const turnike = parseInt(document.getElementById('fTurnike').value)   || 0;
   const personel = parseInt(document.getElementById('fPersonel').value) || 0;
   const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
-  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;  // autoCalcGecis tarafından hesaplanan değer
+  const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
   const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
 
   const rec = {
@@ -2197,12 +2196,11 @@ function saveRecord(e) {
     showToast('Yeni kayıt başarıyla eklendi.', 'success');
   }
 
-  // Sort by date desc
   records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   saveData();
   filteredRecords = [...records];
-  renderAll();
-  drawAllCharts();
+  try { renderAll(); } catch (e) { console.warn('renderAll error:', e); }
+  try { drawAllCharts(); } catch (e) { console.warn('drawAllCharts error:', e); }
   formModified = false;
   closeModal();
 }
