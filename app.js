@@ -719,7 +719,7 @@ function saveData() { if (!requireAdmin()) return;
   } catch (e) {
     // Storage full or unavailable - ignore silently
   }
-  syncRecordsToSupabase();
+  setTimeout(function() { syncRecordsToSupabase(); }, 0);
   lastPollData = null;
   showSyncTime('kaydedildi');
 }
@@ -2142,12 +2142,21 @@ function autoCalcAtik() {
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
 
+// ─── DEFERRED RENDER ───────────────────────────────────────────────────────────
+function scheduleRender() {
+  setTimeout(function() {
+    try { renderAll(); } catch (e) { console.warn('renderAll:', e); }
+  }, 0);
+  setTimeout(function() {
+    try { drawAllCharts(); } catch (e) { console.warn('drawAllCharts:', e); }
+  }, 10);
+}
+
 // ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
 function saveRecord(e) {
   if (!requireAdmin()) return;
   e.preventDefault();
 
-  // Form doğrulama
   const fYemek = document.getElementById('fYemek');
   const fTurnike = document.getElementById('fTurnike');
   const fPersonel = document.getElementById('fPersonel');
@@ -2199,10 +2208,9 @@ function saveRecord(e) {
   records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   saveData();
   filteredRecords = [...records];
-  try { renderAll(); } catch (e) { console.warn('renderAll error:', e); }
-  try { drawAllCharts(); } catch (e) { console.warn('drawAllCharts error:', e); }
   formModified = false;
   closeModal();
+  scheduleRender();
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
@@ -2212,12 +2220,11 @@ async function deleteRecord(id) { if (!requireAdmin()) return;
   selectedIds.delete(id);
   saveData();
   if (supabaseClient) {
-    try { await supabaseClient.from('records').delete().eq('id', id); } catch (_) {}
+    supabaseClient.from('records').delete().eq('id', id).catch(function(){});
   }
   filteredRecords = [...records];
-  renderAll();
-  drawAllCharts();
   showToast('Kayıt silindi.', 'success');
+  scheduleRender();
 }
 
 // ─── SORT ──────────────────────────────────────────────────────────────────────
@@ -2321,13 +2328,12 @@ async function deleteSelected() { if (!requireAdmin()) return;
   selectedIds.clear();
   saveData();
   if (supabaseClient && ids.length > 0) {
-    try { await supabaseClient.from('records').delete().in('id', ids); } catch (_) {}
+    supabaseClient.from('records').delete().in('id', ids).catch(function(){});
   }
   filteredRecords = [...records];
   currentPage = 1;
-  renderAll();
-  drawAllCharts();
   showToast('Seçili kayıtlar silindi.', 'success');
+  scheduleRender();
 }
 
 // ─── IMPORT ────────────────────────────────────────────────────────────────────
