@@ -4085,28 +4085,38 @@ function drawAllCharts() {
   if (!container) return;
   container.innerHTML = '';
   if (sicaklikKayitlari.length > 0) {
-    var gunlukVeri = {};
+    var depoRenkPaleti = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    var depoVeri = {};
     sicaklikKayitlari.forEach(function(r) {
       if (!r.tarih) return;
       var ad = r.depoAd || 'Bilinmeyen';
-      if (!gunlukVeri[r.tarih]) gunlukVeri[r.tarih] = {};
-      if (!gunlukVeri[r.tarih][ad]) gunlukVeri[r.tarih][ad] = [];
+      if (!depoVeri[ad]) depoVeri[ad] = {};
       var v = parseFloat(r.sicaklik);
-      if (!isNaN(v)) gunlukVeri[r.tarih][ad].push(v);
+      if (isNaN(v)) return;
+      var d = new Date(r.tarih + 'T12:00:00');
+      var gun = d.getDay();
+      var fark = d.getDate() - gun + (gun === 0 ? -6 : 1);
+      var pazartesi = new Date(d);
+      pazartesi.setDate(fark);
+      var haftaAnahtari = formatLocalDate(pazartesi);
+      if (!depoVeri[ad][haftaAnahtari]) depoVeri[ad][haftaAnahtari] = [];
+      depoVeri[ad][haftaAnahtari].push(v);
     });
-    var gunlukTarihler = Object.keys(gunlukVeri).sort();
-    var tumDepolar = [];
-    gunlukTarihler.forEach(function(t) { Object.keys(gunlukVeri[t]).forEach(function(d) { if (tumDepolar.indexOf(d) === -1) tumDepolar.push(d); }); });
-    tumDepolar.sort(function(a, b) {
+    var tumHaftalar = [];
+    Object.values(depoVeri).forEach(function(h) { Object.keys(h).forEach(function(w) { if (tumHaftalar.indexOf(w) === -1) tumHaftalar.push(w); }); });
+    tumHaftalar.sort();
+    var tumDepolar = Object.keys(depoVeri).sort(function(a, b) {
       var na = parseInt(a.match(/\d+/) || 0);
       var nb = parseInt(b.match(/\d+/) || 0);
       return na - nb;
     });
-    var sicaklikLabels = gunlukTarihler.map(function(t) {
-      var p = t.split('-');
-      return p.length === 3 ? p[2] + '/' + p[1] : t;
+    var haftaEtiketleri = tumHaftalar.map(function(h) {
+      var bas = new Date(h + 'T12:00:00');
+      var bit = new Date(bas);
+      bit.setDate(bas.getDate() + 6);
+      var fmt = function(dd) { return String(dd.getDate()).padStart(2,'0') + '.' + String(dd.getMonth()+1).padStart(2,'0'); };
+      return fmt(bas) + ' - ' + fmt(bit);
     });
-    var depoRenkPaleti = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
     tumDepolar.forEach(function(ad, idx) {
       var card = document.createElement('div');
       card.className = 'section-card chart-card chart-card-full';
@@ -4123,12 +4133,12 @@ function drawAllCharts() {
       card.appendChild(area);
       var note = document.createElement('div');
       note.className = 'chart-note';
-      note.textContent = 'Günlük ortalama sıcaklık değerleri — alt ve üst limit çizgileriyle birlikte';
+      note.textContent = 'Haftalık ortalama sıcaklık değerleri — alt ve üst limit çizgileriyle birlikte';
       card.appendChild(note);
       container.appendChild(card);
       var depoData = {
-        data: gunlukTarihler.map(function(t) {
-          var vals = (gunlukVeri[t] && gunlukVeri[t][ad]) || [];
+        data: tumHaftalar.map(function(w) {
+          var vals = (depoVeri[ad] && depoVeri[ad][w]) || [];
           if (vals.length === 0) return null;
           var sum = vals.reduce(function(a, b) { return a + b; }, 0);
           return Math.round(sum / vals.length * 10) / 10;
@@ -4138,10 +4148,10 @@ function drawAllCharts() {
       };
       var limits = getDepoSicaklikLimitleri(ad);
       var thresholds = [
-        { data: sicaklikLabels.map(function() { return limits.max; }), color: '#ef4444', label: 'Üst Limit (' + (limits.max > 0 ? '+' : '') + limits.max + '°C)', dashed: true },
-        { data: sicaklikLabels.map(function() { return limits.min; }), color: '#3b82f6', label: 'Alt Limit (' + limits.min + '°C)', dashed: true },
+        { data: haftaEtiketleri.map(function() { return limits.max; }), color: '#ef4444', label: 'Üst Limit (' + (limits.max > 0 ? '+' : '') + limits.max + '°C)', dashed: true },
+        { data: haftaEtiketleri.map(function() { return limits.min; }), color: '#3b82f6', label: 'Alt Limit (' + limits.min + '°C)', dashed: true },
       ];
-      try { makeChart(cid, sicaklikLabels, [depoData].concat(thresholds), { type: 'line', showValues: false }); } catch(e) { console.warn('chartSicaklik_' + idx + ' error:', e); }
+      try { makeChart(cid, haftaEtiketleri, [depoData].concat(thresholds), { type: 'line', showValues: false }); } catch(e) { console.warn('chartSicaklik_' + idx + ' error:', e); }
     });
   }
 
