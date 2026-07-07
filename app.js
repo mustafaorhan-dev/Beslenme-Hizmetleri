@@ -3962,8 +3962,9 @@ function drawAllCharts() {
             ticks: {
               color: colors.text, font: { size: 12, family: 'Inter' },
               maxRotation: labels.length > 20 ? 90 : 45,
-              autoSkip: false,
-              maxTicksLimit: labels.length,
+              autoSkip: true,
+              maxTicksLimit: Math.min(labels.length, 15),
+              autoSkipPadding: 10,
             },
             grid: { display: false }
           },
