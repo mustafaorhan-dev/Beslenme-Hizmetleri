@@ -4121,6 +4121,10 @@ function drawAllCharts() {
       canvas.id = cid;
       area.appendChild(canvas);
       card.appendChild(area);
+      var note = document.createElement('div');
+      note.className = 'chart-note';
+      note.textContent = 'Günlük ortalama sıcaklık değerleri — alt ve üst limit çizgileriyle birlikte';
+      card.appendChild(note);
       container.appendChild(card);
       var depoData = {
         data: gunlukTarihler.map(function(t) {
