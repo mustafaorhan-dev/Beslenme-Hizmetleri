@@ -351,7 +351,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
-                <th>Harcama Tutarı</th>
+                <th>Öğr. Başı Harcama</th>
                 <th>Yemek Türü</th>
               </tr>
             </thead>
@@ -425,7 +425,7 @@
                 <th data-field="porsiyon" onclick="toggleSort('porsiyon')" style="cursor:pointer">Porsiyon (gr)</th>
                 <th data-field="atik" onclick="toggleSort('atik')" style="cursor:pointer">Atık (kg)</th>
                 <th data-field="ogrenci" onclick="toggleSort('ogrenci')" style="cursor:pointer">Öğrenci Sayısı</th>
-                <th data-field="harcama_tutari" onclick="toggleSort('harcama_tutari')" style="cursor:pointer">Harcama Tutarı</th>
+                <th data-field="harcama_tutari" onclick="toggleSort('harcama_tutari')" style="cursor:pointer">Öğr. Başı Harcama</th>
                 <th data-field="yemek_adi" onclick="toggleSort('yemek_adi')" style="cursor:pointer">Yemek Türü</th>
                 <th>İşlem</th>
               </tr>
@@ -552,7 +552,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
-                <th>Harcama Tutarı</th>
+                <th>Öğr. Başı Harcama</th>
                 <th>Yemek Türü</th>
               </tr>
             </thead>
@@ -939,13 +939,13 @@
         </div>
         <div class="section-card chart-card chart-card-full">
           <div class="section-header">
-            <h2>Aylık Harcama Tutarı (₺)</h2>
+            <h2>Aylık Öğr. Başı Harcama (₺)</h2>
           </div>
           <div class="chart-area" id="chartHarcama">
             <canvas id="canvasHarcama"></canvas>
             <div class="chart-empty" id="chartHarcamaEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-          <div class="chart-note">Öğrenci sayısı × öğrenci başı harcama oranının aylık toplamı</div>
+          <div class="chart-note">Öğrenci sayısı × öğrenci başı harcama oranı (70,37 ₺) aylık toplamı</div>
         </div>
         <div class="section-card chart-card chart-card-full">
           <div class="section-header">
@@ -1162,7 +1162,7 @@
             </div>
             <div class="form-group">
               <label for="fHarcama">
-                Harcama Tutarı (₺)
+                Öğr. Başı Harcama (₺)
                 <span class="auto-badge">Otomatik</span>
               </label>
               <input type="number" id="fHarcama" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
@@ -1397,7 +1397,7 @@
         <!-- Öğrenci Başı Harcama Oranı -->
         <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
           <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Öğrenci Başı Harcama Oranı</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.75rem">Öğrenci sayısı ile çarpılarak toplam harcama tutarı hesaplanır. Yıllık değişen oranı buradan güncelleyebilirsiniz.</p>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.75rem">Öğrenci sayısı ile çarpılarak Öğr. Başı Harcama hesaplanır. Yıllık değişen oranı buradan güncelleyebilirsiniz.</p>
           <div style="display:flex;gap:0.5rem;align-items:center">
             <input type="number" id="apHarcamaOran" step="0.01" min="0" style="flex:1;max-width:200px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
             <button class="btn btn-primary btn-sm" onclick="apKaydetHarcamaOrani()">Kaydet</button>
