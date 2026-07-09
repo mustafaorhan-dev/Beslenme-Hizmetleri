@@ -2199,8 +2199,9 @@ function populateForm(rec) {
   document.getElementById('fToplam').value = rec.toplam;
   document.getElementById('fPorsiyon').value = rec.porsiyon;
   document.getElementById('fOgrenci').value = rec.ogrenci;
-  // Atik alanını formul ile yeniden hesapla - eski manuel değer yerine
+  document.getElementById('fHarcama').value = (rec.harcama_tutari || 0).toFixed(2);
   autoCalc();
+  autoCalcHarcama();
 }
 
 // ─── AUTO CALC ─────────────────────────────────────────────────────────────────
