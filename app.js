@@ -5056,11 +5056,13 @@ function renderAmbalajTable() {
   var ambalajTarihBit = document.getElementById('ambalajTarihBit');
   if (ambalajTarihBas && ambalajTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= ambalajTarihBas.value; });
   if (ambalajTarihBit && ambalajTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= ambalajTarihBit.value; });
+  var ambalajTurFilter = document.getElementById('ambalajTurFilter');
+  if (ambalajTurFilter && ambalajTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === ambalajTurFilter.value; });
 
   if (filtered.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
-    empty.querySelector('p').textContent = 'Bu tarih aralığında kayıt bulunamadı.';
+    empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     drawAmbalajChart();
     return;
   }

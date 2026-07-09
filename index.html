@@ -794,6 +794,16 @@
           <input type="date" id="ambalajTarihBas" onchange="renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
           <span style="color:var(--text-muted)">—</span>
           <input type="date" id="ambalajTarihBit" onchange="renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <span style="color:var(--text-muted);margin-left:0.5rem">Atık Türü:</span>
+          <select id="ambalajTurFilter" onchange="renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+            <option value="">Tümü</option>
+            <option value="Metal">Metal</option>
+            <option value="Plastik">Plastik</option>
+            <option value="Kağıt/Karton">Kağıt/Karton</option>
+            <option value="Cam">Cam</option>
+            <option value="Karışık">Karışık</option>
+            <option value="Diğer">Diğer</option>
+          </select>
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateAmbalaj">
