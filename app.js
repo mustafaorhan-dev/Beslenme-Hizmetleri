@@ -2269,6 +2269,7 @@ function saveRecord(e) {
   }
 
   formModified = false;
+  const savedEditingId = editingId;
   closeModal();
 
   try {
@@ -2294,11 +2295,11 @@ function saveRecord(e) {
       atik,
       ogrenci,
       harcama_tutari,
-      id: editingId !== null ? editingId : Date.now()
+      id: savedEditingId !== null ? savedEditingId : Date.now()
     };
 
-    if (editingId !== null) {
-      const idx = records.findIndex(r => r.id === editingId);
+    if (savedEditingId !== null) {
+      const idx = records.findIndex(r => r.id === savedEditingId);
       if (idx !== -1) records[idx] = rec;
       showToast('Kayıt başarıyla güncellendi.', 'success');
     } else {
