@@ -4994,6 +4994,8 @@ const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
 let ambalajRecords = [];
 let editingAmbalajId = null;
 let ambalajBirim = 'kg';
+let ambalajPage = 0;
+const AMBALAJ_PAGE_SIZE = 10;
 
 function toggleAmbalajBirim() {
   var btn = document.getElementById('afBirimToggle');
@@ -5058,6 +5060,7 @@ function renderAmbalajTable() {
   if (ambalajTarihBit && ambalajTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= ambalajTarihBit.value; });
   var ambalajTurFilter = document.getElementById('ambalajTurFilter');
   if (ambalajTurFilter && ambalajTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === ambalajTurFilter.value; });
+  ambalajPage = 0;
 
   if (filtered.length === 0) {
     table.style.display = 'none';
@@ -5072,7 +5075,12 @@ function renderAmbalajTable() {
   table.style.display = 'table';
 
   const sorted = filtered.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-  tbody.innerHTML = sorted.map(r => {
+  const totalPages = Math.ceil(sorted.length / AMBALAJ_PAGE_SIZE);
+  if (ambalajPage >= totalPages) ambalajPage = Math.max(0, totalPages - 1);
+  const start = ambalajPage * AMBALAJ_PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + AMBALAJ_PAGE_SIZE);
+
+  tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
     return `<tr>
       <td>${dateStr}</td>
@@ -5089,6 +5097,20 @@ function renderAmbalajTable() {
       </td>
     </tr>`;
   }).join('');
+
+  const pagination = document.getElementById('ambalajPagination');
+  if (pagination) {
+    let html = '';
+    if (totalPages > 1) {
+      html += '<button class="btn-icon" onclick="ambalajPage=Math.max(0,ambalajPage-1);renderAmbalajTable()"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>';
+      for (let i = 0; i < totalPages; i++) {
+        html += '<button class="btn-icon" onclick="ambalajPage=' + i + ';renderAmbalajTable()"' + (i === ambalajPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
+      }
+      html += '<button class="btn-icon" onclick="ambalajPage=Math.min(' + (totalPages - 1) + ',ambalajPage+1);renderAmbalajTable()"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+    }
+    pagination.innerHTML = html;
+  }
+
   drawAmbalajChart();
 }
 
