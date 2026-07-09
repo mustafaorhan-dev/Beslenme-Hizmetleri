@@ -3913,13 +3913,14 @@ function drawAllCharts() {
     const date = new Date(r.tarih + 'T12:00:00');
     const monthKey = (date.getMonth() + 1) + '/' + date.getFullYear();
     if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0 };
+      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0, harcama: 0 };
     }
     monthlyData[monthKey].yemek += r.yemek;
     monthlyData[monthKey].toplam += r.toplam;
     monthlyData[monthKey].atik += r.atik;
     monthlyData[monthKey].turnike += r.turnike;
     monthlyData[monthKey].ogrenci += r.ogrenci;
+    monthlyData[monthKey].harcama += (r.harcama_tutari || 0);
   });
 
   const chartYears = [Number(chartYearFilter)];
@@ -4087,6 +4088,7 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylik Atik Orani %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylik Ogrenci Sayisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
+  try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylik Harcama Tutari (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); }
 
   const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
   try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak Izi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
