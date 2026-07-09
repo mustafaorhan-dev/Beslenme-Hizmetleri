@@ -729,9 +729,22 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.8rem">
           <span style="color:var(--text-muted)">Tarih:</span>
-          <input type="date" id="yagTarihBas" onchange="renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <input type="date" id="yagTarihBas" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
           <span style="color:var(--text-muted)">—</span>
-          <input type="date" id="yagTarihBit" onchange="renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <input type="date" id="yagTarihBit" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+          <span style="color:var(--text-muted);margin-left:0.5rem">Yağ Türü:</span>
+          <select id="yagTurFilter" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+            <option value="">Tümü</option>
+            <option value="Ayçiçek Yağı">Ayçiçek Yağı</option>
+            <option value="Mısırözü Yağı">Mısırözü Yağı</option>
+            <option value="Zeytinyağı">Zeytinyağı</option>
+            <option value="Kanola Yağı">Kanola Yağı</option>
+            <option value="Pamuk Yağı">Pamuk Yağı</option>
+            <option value="Soya Yağı">Soya Yağı</option>
+            <option value="Hindistan Cevizi Yağı">Hindistan Cevizi Yağı</option>
+            <option value="Kızartma Atık Yağı">Kızartma Atık Yağı</option>
+            <option value="Diğer">Diğer</option>
+          </select>
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateYag">
@@ -754,6 +767,7 @@
             </thead>
             <tbody id="yagTbody"></tbody>
           </table>
+          <div id="yagPagination" class="pagination" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.85rem"></div>
         </div>
       </div>
     </div>

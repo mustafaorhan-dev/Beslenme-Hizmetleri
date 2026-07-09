@@ -4707,6 +4707,8 @@ function parseCSVLine(line) {
 const YAG_STORAGE_KEY = 'atik_kontrol_yag';
 let yagRecords = [];
 let editingYagId = null;
+let yagPage = 0;
+const YAG_PAGE_SIZE = 10;
 
 function loadYagData() {
   try {
@@ -4751,11 +4753,13 @@ function renderYagTable() {
   var yagTarihBit = document.getElementById('yagTarihBit');
   if (yagTarihBas && yagTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= yagTarihBas.value; });
   if (yagTarihBit && yagTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= yagTarihBit.value; });
+  var yagTurFilter = document.getElementById('yagTurFilter');
+  if (yagTurFilter && yagTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === yagTurFilter.value; });
 
   if (filtered.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
-    empty.querySelector('p').textContent = 'Bu tarih aralığında kayıt bulunamadı.';
+    empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     drawYagChart();
     return;
   }
@@ -4765,7 +4769,12 @@ function renderYagTable() {
   table.style.display = 'table';
 
   const sorted = filtered.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-  tbody.innerHTML = sorted.map(r => {
+  const totalPages = Math.ceil(sorted.length / YAG_PAGE_SIZE);
+  if (yagPage >= totalPages) yagPage = Math.max(0, totalPages - 1);
+  const start = yagPage * YAG_PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + YAG_PAGE_SIZE);
+
+  tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
     return `<tr>
       <td>${dateStr}</td>
@@ -4783,6 +4792,21 @@ function renderYagTable() {
       </td>
     </tr>`;
   }).join('');
+
+  const pagination = document.getElementById('yagPagination');
+  if (pagination) {
+    if (totalPages > 1) {
+      pagination.innerHTML =
+        '<button class="btn-icon" data-yag-page="' + (yagPage - 1) + '"' + (yagPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        Array.from({length: totalPages}, function(_, i) {
+          return '<button class="btn-icon" data-yag-page="' + i + '"' + (i === yagPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
+        }).join('') +
+        '<button class="btn-icon" data-yag-page="' + (yagPage + 1) + '"' + (yagPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+    } else {
+      pagination.innerHTML = '';
+    }
+  }
+
   drawYagChart();
 }
 
@@ -4879,11 +4903,12 @@ function drawYagChart() {
   });
   var yearList = Object.keys(years).sort();
   if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
-  if (yearList.indexOf(yagChartYear) === -1) {
+  if (yearList.indexOf(yagChartYear) === -1 && yagChartYear !== '') {
     yagChartYear = yearList[yearList.length - 1];
   }
   if (yearContainer) {
     var html = '<select onchange="yagChartYear=this.value;drawYagChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+    html += '<option value=""' + (yagChartYear === '' ? ' selected' : '') + '>Tümü</option>';
     yearList.forEach(function(y) {
       var sel = yagChartYear === y ? ' selected' : '';
       html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
@@ -4892,11 +4917,10 @@ function drawYagChart() {
     yearContainer.innerHTML = html;
   }
 
-  // aggregate monthly
   var monthly = {};
   yagRecords.forEach(function(r) {
     if (!r.tarih) return;
-    if (r.tarih.slice(0, 4) !== yagChartYear) return;
+    if (yagChartYear !== '' && r.tarih.slice(0, 4) !== yagChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
     monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
   });
@@ -5041,6 +5065,14 @@ document.addEventListener('click', function(e) {
     if (!isNaN(page) && page >= 0) {
       ambalajPage = page;
       renderAmbalajTable();
+    }
+  }
+  btn = e.target.closest('#yagPagination .btn-icon');
+  if (btn && btn.hasAttribute('data-yag-page') && !btn.disabled) {
+    var page = parseInt(btn.getAttribute('data-yag-page'));
+    if (!isNaN(page) && page >= 0) {
+      yagPage = page;
+      renderYagTable();
     }
   }
 });
