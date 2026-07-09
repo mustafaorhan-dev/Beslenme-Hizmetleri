@@ -4994,7 +4994,7 @@ const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
 let ambalajRecords = [];
 let editingAmbalajId = null;
 let ambalajBirim = 'kg';
-var ambalajPage = 0;
+let ambalajPage = 0;
 const AMBALAJ_PAGE_SIZE = 10;
 
 function toggleAmbalajBirim() {
@@ -5034,6 +5034,17 @@ function loadAmbalajData() {
   ambalajRecords.forEach(function(r) { if (r.tarih) r.tarih = normalizeDate(r.tarih); });
 }
 
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('#ambalajPagination .btn-icon');
+  if (btn && btn.hasAttribute('data-ambalaj-page') && !btn.disabled) {
+    var page = parseInt(btn.getAttribute('data-ambalaj-page'));
+    if (!isNaN(page) && page >= 0) {
+      ambalajPage = page;
+      renderAmbalajTable();
+    }
+  }
+});
+
 function saveAmbalajData() {
   try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
 }
@@ -5060,7 +5071,6 @@ function renderAmbalajTable() {
   if (ambalajTarihBit && ambalajTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= ambalajTarihBit.value; });
   var ambalajTurFilter = document.getElementById('ambalajTurFilter');
   if (ambalajTurFilter && ambalajTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === ambalajTurFilter.value; });
-  ambalajPage = 0;
 
   if (filtered.length === 0) {
     table.style.display = 'none';
@@ -5100,15 +5110,16 @@ function renderAmbalajTable() {
 
   const pagination = document.getElementById('ambalajPagination');
   if (pagination) {
-    let html = '';
     if (totalPages > 1) {
-      html += '<button class="btn-icon" onclick="ambalajPage=Math.max(0,ambalajPage-1);renderAmbalajTable()"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>';
-      for (let i = 0; i < totalPages; i++) {
-        html += '<button class="btn-icon" onclick="ambalajPage=' + i + ';renderAmbalajTable()"' + (i === ambalajPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
-      }
-      html += '<button class="btn-icon" onclick="ambalajPage=Math.min(' + (totalPages - 1) + ',ambalajPage+1);renderAmbalajTable()"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+      pagination.innerHTML =
+        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage - 1) + '"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        Array.from({length: totalPages}, function(_, i) {
+          return '<button class="btn-icon" data-ambalaj-page="' + i + '"' + (i === ambalajPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
+        }).join('') +
+        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage + 1) + '"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+    } else {
+      pagination.innerHTML = '';
     }
-    pagination.innerHTML = html;
   }
 
   drawAmbalajChart();
@@ -5212,11 +5223,12 @@ function drawAmbalajChart() {
   });
   var yearList = Object.keys(years).sort();
   if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
-  if (yearList.indexOf(ambalajChartYear) === -1) {
+  if (yearList.indexOf(ambalajChartYear) === -1 && ambalajChartYear !== '') {
     ambalajChartYear = yearList[yearList.length - 1];
   }
   if (yearContainer) {
     var html = '<select onchange="ambalajChartYear=this.value;drawAmbalajChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+    html += '<option value=""' + (ambalajChartYear === '' ? ' selected' : '') + '>Tümü</option>';
     yearList.forEach(function(y) {
       var sel = ambalajChartYear === y ? ' selected' : '';
       html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
@@ -5228,7 +5240,7 @@ function drawAmbalajChart() {
   var monthly = {};
   ambalajRecords.forEach(function(r) {
     if (!r.tarih) return;
-    if (r.tarih.slice(0, 4) !== ambalajChartYear) return;
+    if (ambalajChartYear !== '' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
     monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
   });
