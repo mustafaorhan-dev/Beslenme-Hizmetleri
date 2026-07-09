@@ -4994,7 +4994,7 @@ const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
 let ambalajRecords = [];
 let editingAmbalajId = null;
 let ambalajBirim = 'kg';
-let ambalajPage = 0;
+var ambalajPage = 0;
 const AMBALAJ_PAGE_SIZE = 10;
 
 function toggleAmbalajBirim() {
