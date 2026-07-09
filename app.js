@@ -268,12 +268,30 @@ async function apReAuth() {
     errorEl.style.display = 'none';
     document.getElementById('apCurrentAdminPw').textContent = '••••• (' + pw.length + ' karakter)';
     document.getElementById('apCurrentViewerPw').textContent = '•••••';
+    document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
   } else {
     errorEl.textContent = 'Admin şifresi yanlış!';
     errorEl.style.display = 'block';
     document.getElementById('apReAuthPw').value = '';
     document.getElementById('apReAuthPw').focus();
   }
+}
+
+function apKaydetHarcamaOrani() {
+  const val = parseFloat(document.getElementById('apHarcamaOran').value);
+  if (isNaN(val) || val <= 0) {
+    document.getElementById('apHarcamaOranSuccess').textContent = 'Geçerli bir oran girin!';
+    document.getElementById('apHarcamaOranSuccess').style.color = '#ef4444';
+    document.getElementById('apHarcamaOranSuccess').style.display = 'block';
+    return;
+  }
+  setOgrenciBasiHarcamaOrani(val);
+  document.getElementById('apHarcamaOranSuccess').textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  document.getElementById('apHarcamaOranSuccess').style.color = '#22c55e';
+  document.getElementById('apHarcamaOranSuccess').style.display = 'block';
+  setTimeout(function() {
+    document.getElementById('apHarcamaOranSuccess').style.display = 'none';
+  }, 3000);
 }
 
 function closeAdminPanel() {
@@ -498,7 +516,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
             turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
             toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
-            atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+            atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0,
+            harcama_tutari: Number(r.harcama_tutari) || 0, yemek_adi: r.yemek_adi || ''
           }; });
           records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
           saveData();
@@ -593,7 +612,8 @@ function startPolling() {
         yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
         turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
         toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
-        atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+        atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0,
+        harcama_tutari: Number(r.harcama_tutari) || 0, yemek_adi: r.yemek_adi || ''
       }; });
       records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
       saveData();
@@ -754,7 +774,8 @@ async function refreshRecordsFromSupabase() {
           yemek: Number(r.yemek) || 0, fire: Number(r.fire) || 0,
           turnike: Number(r.turnike) || 0, personel: Number(r.personel) || 0,
           toplam: Number(r.toplam) || 0, porsiyon: Number(r.porsiyon) || 0,
-          atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0, yemek_adi: r.yemek_adi || ''
+          atik: Number(r.atik) || 0, ogrenci: Number(r.ogrenci) || 0,
+          harcama_tutari: Number(r.harcama_tutari) || 0, yemek_adi: r.yemek_adi || ''
         }; });
         records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
         saveData();
@@ -770,6 +791,15 @@ async function refreshRecordsFromSupabase() {
 function parseNumComma(v) {
   if (v == null || v === '') return null;
   return Number(String(v).replace(',', '.'));
+}
+
+// ─── ÖĞRENCİ BAŞINA HARCAMA ORANI ────────────────────────────────────────────
+function getOgrenciBasiHarcamaOrani() {
+  var val = localStorage.getItem('ogrenci_basi_harcama_orani');
+  return val !== null ? parseFloat(val) : 70.37;
+}
+function setOgrenciBasiHarcamaOrani(val) {
+  localStorage.setItem('ogrenci_basi_harcama_orani', String(val));
 }
 
 function haccpRecordToDB(r) {
@@ -1256,6 +1286,7 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
         porsiyon: Number(r.porsiyon) || 0,
         atik: Number(r.atik) || 0,
         ogrenci: Number(r.ogrenci) || 0,
+        harcama_tutari: Number(r.harcama_tutari) || 0,
         yemek_adi: r.yemek_adi || ''
       }; });
       records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
@@ -2198,6 +2229,13 @@ function autoCalcAtik() {
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
 
+function autoCalcHarcama() {
+  const ogrenci = parseInt(document.getElementById('fOgrenci').value) || 0;
+  const oran = getOgrenciBasiHarcamaOrani();
+  const harcama = ogrenci * oran;
+  document.getElementById('fHarcama').value = harcama.toFixed(2);
+}
+
 // ─── DEFERRED RENDER ───────────────────────────────────────────────────────────
 function scheduleRender() {
   setTimeout(function() {
@@ -2241,6 +2279,7 @@ function saveRecord(e) {
     const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;
     const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
     const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
+    const harcama_tutari = ogrenci * getOgrenciBasiHarcamaOrani();
 
     const rec = {
       tarih: document.getElementById('fTarih').value,
@@ -2253,6 +2292,7 @@ function saveRecord(e) {
       porsiyon,
       atik,
       ogrenci,
+      harcama_tutari,
       id: editingId !== null ? editingId : Date.now()
     };
 
@@ -2448,9 +2488,10 @@ function handleImport(e) {
           'Atık Miktarı (kg)': 'atik', 'Atık (kg)': 'atik', 'Atık': 'atik',
           'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci', 'Öğrenci Sayısı': 'ogrenci',
           'Yemek Türü': 'yemek_adi', 'Yemek Adı': 'yemek_adi',
+          'Harcama Tutarı (₺)': 'harcama_tutari', 'Harcama Tutarı': 'harcama_tutari',
           'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
           'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
-          'atik': 'atik', 'ogrenci': 'ogrenci', 'yemek_adi': 'yemek_adi'
+          'atik': 'atik', 'ogrenci': 'ogrenci', 'harcama_tutari': 'harcama_tutari', 'yemek_adi': 'yemek_adi'
         };
         function parseNum(v) {
           if (!v) return 0;
@@ -2475,6 +2516,7 @@ function handleImport(e) {
             row.porsiyon = parseNum(row.porsiyon);
             row.atik = parseNum(row.atik);
             row.ogrenci = parseNum(row.ogrenci);
+            row.harcama_tutari = parseNum(row.harcama_tutari);
             imported.push(row);
           }
         }
@@ -2551,10 +2593,10 @@ function exportDataJSON() {
 
 function exportDataCSV() {
   if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
-  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
+  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Harcama Tutarı (₺)','Yemek Adı'];
   var rows = records.map(function(r) { return [
     r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
-    r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, (r.yemek_adi || '').replace(/"/g,'""')
+    r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, r.harcama_tutari || 0, (r.yemek_adi || '').replace(/"/g,'""')
   ]; });
   var csv = '\uFEFF' + headers.join(';') + '\n' + rows.map(function(r) { return r.join(';'); }).join('\n');
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2986,6 +3028,7 @@ function buildRow(r, showActions) {
     <td>${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td>${safe(r.ogrenci).toLocaleString('tr-TR')}</td>
+    <td class="td-harcama">${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>
     <td>${mealBadge}</td>
     ${actions}
   </tr>`;
@@ -3647,6 +3690,7 @@ function renderReport() {
   const avgPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0) / n;
   const totalAtik = records.reduce((s,r) => s+(r.atik||0), 0);
   const totalOgrenci = records.reduce((s,r) => s+(r.ogrenci||0), 0);
+  const totalHarcama = records.reduce((s,r) => s+(r.harcama_tutari||0), 0);
   const atikValues = records.map(r => r.atik || 0);
   const maxAtik = Math.max(...atikValues);
   const minAtik = Math.min(...atikValues);
@@ -3704,6 +3748,7 @@ function renderReport() {
   document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
+  document.getElementById('rTotalHarcama').textContent = totalHarcama.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ₺';
   document.getElementById('rMaxAtik').innerHTML = `${maxAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${maxAtikDate}</span>`;
   document.getElementById('rMinAtik').innerHTML = `${minAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${minAtikDate}</span>`;
 
@@ -4263,13 +4308,14 @@ function showChartDetailModal(title, records) {
   } else {
     body.innerHTML = `<div style="overflow-x:auto;max-height:400px;overflow-y:auto">
       <table class="data-table" style="min-width:400px">
-        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Yemek Türü</th></tr></thead>
+        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Harcama</th><th>Yemek Türü</th></tr></thead>
         <tbody>${records.slice(0, 100).map(r => `<tr>
           <td>${displayDate(r.tarih)}</td>
           <td>${r.yemek || '—'}</td>
           <td>${r.toplam || '—'}</td>
           <td>${(r.atik||0).toFixed(1)}</td>
           <td>${r.ogrenci || '—'}</td>
+          <td>${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>
           <td>${r.yemek_adi || '—'}</td>
         </tr>`).join('')}</tbody>
       </table>

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS records (
   porsiyon NUMERIC DEFAULT 0,
   atik NUMERIC DEFAULT 0,
   ogrenci NUMERIC DEFAULT 0,
+  harcama_tutari NUMERIC DEFAULT 0,
   yemek_adi TEXT DEFAULT '',
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
@@ -95,6 +96,9 @@ ON CONFLICT (key) DO NOTHING;
 -- Mevcut tabloya limit kolonlarını ekle (geriye uyumlu)
 ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS min_limit NUMERIC;
 ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS max_limit NUMERIC;
+
+-- Mevcut kayıt tablosuna harcama_tutari kolonunu ekle (geriye uyumlu)
+ALTER TABLE records ADD COLUMN IF NOT EXISTS harcama_tutari NUMERIC DEFAULT 0;
 
 -- Varsayılan depo adları
 INSERT INTO haccp_depo_adlari (ad) VALUES

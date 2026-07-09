@@ -348,6 +348,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
+                <th>Harcama Tutarı</th>
                 <th>Yemek Türü</th>
               </tr>
             </thead>
@@ -421,6 +422,7 @@
                 <th data-field="porsiyon" onclick="toggleSort('porsiyon')" style="cursor:pointer">Porsiyon (gr)</th>
                 <th data-field="atik" onclick="toggleSort('atik')" style="cursor:pointer">Atık (kg)</th>
                 <th data-field="ogrenci" onclick="toggleSort('ogrenci')" style="cursor:pointer">Öğrenci Sayısı</th>
+                <th data-field="harcama_tutari" onclick="toggleSort('harcama_tutari')" style="cursor:pointer">Harcama Tutarı</th>
                 <th data-field="yemek_adi" onclick="toggleSort('yemek_adi')" style="cursor:pointer">Yemek Türü</th>
                 <th>İşlem</th>
               </tr>
@@ -495,6 +497,10 @@
             <span class="report-value" id="rTotalOgrenci">—</span>
           </div>
           <div class="report-item">
+            <span class="report-label">Toplam Harcama Tutarı (₺)</span>
+            <span class="report-value" id="rTotalHarcama">—</span>
+          </div>
+          <div class="report-item">
             <span class="report-label">En Yüksek Atık (kg)</span>
             <span class="report-value" id="rMaxAtik">—</span>
           </div>
@@ -543,6 +549,7 @@
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Öğrenci Sayısı</th>
+                <th>Harcama Tutarı</th>
                 <th>Yemek Türü</th>
               </tr>
             </thead>
@@ -1100,7 +1107,7 @@
             </div>
             <div class="form-group">
               <label for="fOgrenci">Yemek Hiz. Yar. Öğr. Sayısı <span class="required">*</span></label>
-              <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required class="person-input" />
+              <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required class="person-input" oninput="autoCalcHarcama()" />
             </div>
             <div class="form-group form-group-full">
               <label for="fYemekAdi">Yemek Türü</label>
@@ -1139,6 +1146,13 @@
                 <span class="auto-badge">Otomatik</span>
               </label>
               <input type="number" id="fAtik" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fHarcama">
+                Harcama Tutarı (₺)
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fHarcama" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
             </div>
           </div>
         </div>
@@ -1365,6 +1379,17 @@
             <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Veri Kaynağı</div>
             <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apDataSource">Supabase + Yerel</div>
           </div>
+        </div>
+
+        <!-- Öğrenci Başı Harcama Oranı -->
+        <div style="margin-bottom:1rem;padding:0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Öğrenci Başı Harcama Oranı</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.75rem">Öğrenci sayısı ile çarpılarak toplam harcama tutarı hesaplanır. Yıllık değişen oranı buradan güncelleyebilirsiniz.</p>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input type="number" id="apHarcamaOran" step="0.01" min="0" style="flex:1;max-width:200px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
+            <button class="btn btn-primary btn-sm" onclick="apKaydetHarcamaOrani()">Kaydet</button>
+          </div>
+          <div id="apHarcamaOranSuccess" style="color:#22c55e;font-size:0.85rem;margin-top:0.5rem;display:none"></div>
         </div>
 
         <!-- Şifre Yönetimi -->
