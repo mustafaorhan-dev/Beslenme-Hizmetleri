@@ -677,10 +677,10 @@ function applyRolePermissions() {
     // Tüm sekmeler açık (admin gibi)
     // Admin panelini gizle
     document.getElementById('adminPanelBtn').style.display = 'none';
-    // Sidebar'dan Dışa Aktar butonunu gizle
+    // Sidebar'dan Dışa Aktar, Supabase'e Yedekle ve Supabase'ten Çek butonlarını gizle
     document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
-      if (onclick.includes('exportData')) btn.style.display = 'none';
+      if (onclick.includes('exportData') || onclick.includes('syncAllToSupabase') || onclick.includes('syncAllFromSupabase')) btn.style.display = 'none';
     });
     // CSV/JSON/yükleme butonlarını gizle, PDF butonlarını koru
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
