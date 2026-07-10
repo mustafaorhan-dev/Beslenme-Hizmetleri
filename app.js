@@ -668,6 +668,8 @@ function applyRolePermissions() {
       }
     }
     document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
+    // Kişi sayısını aktif et
+    document.querySelectorAll('.kisi-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
   
   // Depo: sıcaklık (hacccp), atık yağ, ambalaj sekmeleri
