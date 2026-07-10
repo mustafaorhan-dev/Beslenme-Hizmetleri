@@ -4618,7 +4618,7 @@ async function renderMenu() {
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
         const val = escapeHtml(d.data.yemekler[ci] || '');
-        return `<td><textarea id="m${ci}_${di}" placeholder="${escapeHtml(label)}" rows="3" readonly>${val}</textarea></td>`;
+        return `<td><div class="menu-cell-pick" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" style="min-height:60px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem;cursor:pointer;white-space:pre-wrap;word-break:break-word;overflow:hidden">${val || '<span style="color:var(--text-muted);opacity:0.5">' + escapeHtml(label) + '</span>'}</div></td>`;
       }).join('')}
     </tr>`;
   }).join('') + `<tr>
@@ -4660,11 +4660,11 @@ async function renderMenu() {
   </td>
   ${days.map(() => `<td></td>`).join('')}`;
   tbody.appendChild(addRow);
-  // yemek seçici: çeşit textarea'larına tıklayınca liste aç
+  // yemek seçici: çeşit hücrelerine tıklayınca liste aç
   for (let ci = 0; ci < 5; ci++) {
     for (let di = 0; di < 5; di++) {
-      const ta = document.getElementById('m' + ci + '_' + di);
-      if (ta) ta.addEventListener('click', showMenuMealPicker);
+      const cell = document.getElementById('m' + ci + '_' + di);
+      if (cell) cell.addEventListener('click', showMenuMealPicker);
     }
   }
   renderProduction(weekKey, weekData, days);
@@ -4675,9 +4675,9 @@ async function renderMenu() {
 let _pickerCi = 0, _pickerDi = 0;
 
 async function showMenuMealPicker(e) {
-  const ta = e.currentTarget;
-  if (!ta) return;
-  const id = ta.id;
+  const cell = e.currentTarget;
+  if (!cell) return;
+  const id = cell.id;
   const m = id.match(/^m(\d)_(\d)$/);
   if (!m) return;
   _pickerCi = parseInt(m[1]);
@@ -4688,7 +4688,7 @@ async function showMenuMealPicker(e) {
     list = loadYemekler();
   }
   if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
-  const mevcut = ta.value.trim().split('\n')[0];
+  const mevcut = cell.textContent.trim().split('\n')[0];
   // picker overlay
   let overlay = document.getElementById('mealPickerOverlay');
   if (!overlay) {
@@ -4729,10 +4729,9 @@ function selectMealFromPicker(el) {
   const list = loadYemekler();
   const y = list.find(i => i.ad === ad);
   if (!y) return;
-  const ta = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
-  if (ta) {
-    ta.value = formatYemek(y);
-    autoResizeTextarea(ta);
+  const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
+  if (cell) {
+    cell.textContent = formatYemek(y);
     refreshMenuProduction();
   }
   document.getElementById('mealPickerOverlay').style.display = 'none';
