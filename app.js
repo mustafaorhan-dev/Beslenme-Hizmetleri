@@ -4661,7 +4661,7 @@ async function renderMenu() {
         return `<td><div class="menu-cell-pick" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" style="min-height:60px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem;cursor:pointer;white-space:pre-wrap;word-break:break-word;overflow:hidden">${val || '<span style="color:var(--text-muted);opacity:0.5">' + escapeHtml(label) + '</span>'}</div></td>`;
       }).join('')}
     </tr>`;
-  }).join('') + `<tr>
+  }).join('') + `<tr onclick="event.stopPropagation()">
     <td><strong>Kişi Sayısı</strong></td>
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" onclick="event.stopPropagation()" /></td>`;
@@ -4683,6 +4683,7 @@ async function renderMenu() {
   for (let ni = 0; ni < visibleNoteCount; ni++) {
     let tr = document.createElement('tr');
     tr.id = 'noteRow_' + ni;
+    tr.onclick = function(e) { e.stopPropagation(); };
     tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
       <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">−</button>
     </td>
@@ -4695,17 +4696,26 @@ async function renderMenu() {
   // + butonu satırı
   let addRow = document.createElement('tr');
   addRow.id = 'noteAddRow';
+  addRow.onclick = function(e) { e.stopPropagation(); };
   addRow.innerHTML = `<td style="vertical-align:middle">
     <button class="btn btn-ghost btn-sm" onclick="addNoteRow()" title="Yeni not ekle" style="font-size:1.1rem;padding:0.2rem 0.6rem;line-height:1">+</button>
   </td>
   ${days.map(() => `<td></td>`).join('')}`;
   tbody.appendChild(addRow);
-  // yemek seçici: çeşit hücrelerine tıklayınca liste aç
-  for (let ci = 0; ci < 5; ci++) {
-    for (let di = 0; di < 5; di++) {
-      const cell = document.getElementById('m' + ci + '_' + di);
-      if (cell) cell.addEventListener('click', showMenuMealPicker);
-    }
+  // yemek seçici: event delegation iletbody üzerinden
+  if (!tbody._pickerBound) {
+    tbody.addEventListener('click', function(e) {
+      const cell = e.target.closest('.menu-cell-pick');
+      if (!cell) return;
+      if (getRole() === ROLE_ASCI) return;
+      e.stopPropagation();
+      const m = cell.id.match(/^m(\d)_(\d)$/);
+      if (!m) return;
+      _pickerCi = parseInt(m[1]);
+      _pickerDi = parseInt(m[2]);
+      openMealPicker();
+    });
+    tbody._pickerBound = true;
   }
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
@@ -4714,24 +4724,15 @@ async function renderMenu() {
 
 let _pickerCi = 0, _pickerDi = 0;
 
-async function showMenuMealPicker(e) {
-  if (getRole() === ROLE_ASCI) return;
-  const cell = e.currentTarget;
-  if (!cell) return;
-  if (!cell.classList || !cell.classList.contains('menu-cell-pick')) return;
-  const id = cell.id;
-  const m = id.match(/^m(\d)_(\d)$/);
-  if (!m) return;
-  e.stopPropagation();
-  _pickerCi = parseInt(m[1]);
-  _pickerDi = parseInt(m[2]);
+async function openMealPicker() {
   let list = loadYemekler();
   if (!list.length) {
     await syncDishesFromSupabase();
     list = loadYemekler();
   }
   if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
-  const mevcut = cell.textContent.trim().split('\n')[0];
+  const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
+  const mevcut = cell ? cell.textContent.trim().split('\n')[0] : '';
   // picker overlay
   let overlay = document.getElementById('mealPickerOverlay');
   if (!overlay) {
@@ -4866,6 +4867,7 @@ function addNoteRow() {
   const tbody = document.getElementById('menuTbody');
   const tr = document.createElement('tr');
   tr.id = 'noteRow_' + ni;
+  tr.onclick = function(e) { e.stopPropagation(); };
   tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
     <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
   </td>
