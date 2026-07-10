@@ -5777,10 +5777,11 @@ function buildExportHTML() {
         var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
         var total = miktarKisi * kisi;
         var birim = normBirim(ing.birim);
-        ingHtml += '<div class="ping"><span class="pn">' + escapeHtml(ing.malzeme.trim()) + '</span><span class="pq">' + fmt(total, birim) + '</span></div>';
+        var birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
+        ingHtml += '<div class="ping"><span class="pn">' + escapeHtml(ing.malzeme.trim()) + ' <small style="color:#999">(' + miktarKisi + birimLabel + ')</small></span><span class="pq">' + fmt(total, birim) + '</span></div>';
         // accumulate for weekly total
         var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-        if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0 };
+        if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel };
         weekAgg[key].total += total;
       });
       dayCesitler += '<div class="pcol"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
