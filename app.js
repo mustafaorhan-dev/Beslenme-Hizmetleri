@@ -3633,7 +3633,7 @@ function renderYemekForm(ad, kalori, alerjen) {
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;margin-bottom:0.75rem">
       <div style="flex:2;min-width:140px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek Adı</label>
-        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: �?EHRIYE ÇORBASI" style="width:100%" />
+        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: ŞEHRIYE ÇORBASI" style="width:100%" />
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Kalori</label>
