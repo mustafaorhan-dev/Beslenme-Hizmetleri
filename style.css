@@ -1105,6 +1105,12 @@ body {
   white-space: nowrap;
   padding-left: 0.1rem;
 }
+.prod-kisi-birim {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.7;
+}
 .prod-sep {
   text-align: center;
   color: var(--text-muted);

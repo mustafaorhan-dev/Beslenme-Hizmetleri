@@ -3365,7 +3365,8 @@ function renderProduction(_weekKey, _weekData, days) {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+          const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
         });
       }
       html += '</div>';
@@ -3418,7 +3419,7 @@ function renderWeeklyTotal(dishEntries, days) {
       const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
       const birim = normBirim(ing.birim);
       const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-      if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, total: 0 };
+      if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, total: 0, miktarKisi: miktarKisi, birimLabel: birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim };
       days.forEach((d, i) => {
         const kisi = d.data.kisi || 0;
         const adMatch = d.data.yemekler.find(y => {
@@ -3440,7 +3441,7 @@ function renderWeeklyTotal(dishEntries, days) {
       <div class="weekly-total-grid">${entries.map((e, idx) => {
         const total = e.total;
         if (total <= 0) return '';
-        return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+        return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
       }).filter(Boolean).join('')}</div>
     </div>
   </div>`;
