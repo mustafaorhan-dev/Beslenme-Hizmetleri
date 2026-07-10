@@ -3847,7 +3847,7 @@ function initDishAutocomplete() {
   document.body.appendChild(dishSuggestionsEl);
 
   document.addEventListener('focusin', function(e) {
-    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+    if (e.target.id && /^m\d_\d$/.test(e.target.id)) {
       activeDishTextarea = e.target;
       showDishDropdown(e.target);
       autoResizeTextarea(e.target);
@@ -3855,13 +3855,13 @@ function initDishAutocomplete() {
   });
 
   document.addEventListener('input', function(e) {
-    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+    if (e.target.id && /^m\d_\d$/.test(e.target.id)) {
       autoResizeTextarea(e.target);
     }
     if (e.target === activeDishTextarea) {
       showDishDropdown(e.target);
     }
-    if (e.target.id && e.target.id.startsWith('m') && e.target.id.includes('_')) {
+    if (e.target.id && /^m\d_\d$/.test(e.target.id)) {
       refreshMenuProduction();
     }
   });
@@ -4684,12 +4684,12 @@ async function renderMenu() {
     let tr = document.createElement('tr');
     tr.id = 'noteRow_' + ni;
     tr.onclick = function(e) { e.stopPropagation(); };
-    tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
-      <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">−</button>
+    tr.innerHTML = `<td onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"><strong>Not ${ni + 1}</strong>
+      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">−</button>
     </td>
       ${days.map((d, di) => {
         const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation">${val}</textarea></td>`;
+        return `<td onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation">${val}</textarea></td>`;
       }).join('')}`;
     tbody.appendChild(tr);
   }

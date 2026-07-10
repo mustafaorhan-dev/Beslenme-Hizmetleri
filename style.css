@@ -1966,6 +1966,9 @@ input.production-input:focus {
 .menu-table th:not(:first-child) {
   min-width: 120px;
 }
+.menu-table {
+  touch-action: manipulation;
+}
 .menu-table td {
   padding: 0.25rem 0.35rem;
   vertical-align: middle;
