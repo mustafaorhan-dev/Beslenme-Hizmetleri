@@ -3553,13 +3553,13 @@ function renderYemekListesi() {
   }
 
   container.innerHTML = `<table class="data-table" style="width:100%">
-    <thead><tr><th style="width:35%">Yemek Adı</th><th style="width:15%">Kalori</th><th style="width:25%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:60px">İşlem</th></tr></thead>
+    <thead><tr><th style="width:30%">Yemek Adı</th><th style="width:12%">Kalori</th><th style="width:20%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:70px">İşlem</th></tr></thead>
     <tbody>${filtered.map(y => `<tr>
-      <td><strong>${escapeHtml(y.ad)}</strong></td>
-      <td style="font-size:0.8rem">${escapeHtml(y.kalori || '')}</td>
-      <td style="font-size:0.8rem;color:var(--text-muted)">${escapeHtml(y.alerjen || '')}</td>
-      <td style="text-align:center">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
-      <td style="white-space:nowrap">
+      <td style="max-width:0;overflow:hidden;text-overflow:ellipsis"><strong>${escapeHtml(y.ad)}</strong></td>
+      <td style="font-size:0.8rem;white-space:nowrap">${escapeHtml(y.kalori || '')}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted);max-width:0;overflow:hidden;text-overflow:ellipsis">${escapeHtml(y.alerjen || '')}</td>
+      <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
+      <td style="white-space:nowrap;text-align:center">
         <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
