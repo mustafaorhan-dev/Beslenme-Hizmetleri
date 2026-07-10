@@ -1728,6 +1728,10 @@ input.production-input:focus {
 .toast-success .toast-icon { color: var(--accent-green); }
 .toast-error { border-color: rgba(239,68,68,0.3); }
 .toast-error .toast-icon { color: var(--accent-red); }
+.toast-info { border-color: rgba(99,102,241,0.3); }
+.toast-info .toast-icon { color: var(--accent-indigo, #6366f1); }
+.toast-warning { border-color: rgba(245,158,11,0.3); }
+.toast-warning .toast-icon { color: var(--accent-yellow, #f59e0b); }
 
 .toast-icon svg { width: 18px; height: 18px; }
 
@@ -1785,14 +1789,15 @@ input.production-input:focus {
   display: block;
 }
 
+.meal-picker-item:hover { background: rgba(99,102,241,0.08) !important; }
+#mealPickerOverlay input:focus { outline: 2px solid var(--accent-cyan); outline-offset: -1px; }
+
 @media (max-width: 600px) {
   .sidebar {
     width: 280px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
 }
-.meal-picker-item:hover { background: rgba(99,102,241,0.08) !important; }
-#mealPickerOverlay input:focus { outline: 2px solid var(--accent-cyan); outline-offset: -1px; }
   .sidebar.open { width: 280px; transform: translateX(0); }
   .sidebar-header { display: none; }
   .header .menu-toggle { display: flex; }

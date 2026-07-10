@@ -3866,11 +3866,6 @@ function initDishAutocomplete() {
     }
   });
 
-  function autoResizeTextarea(el) {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 2 + 'px';
-  }
-
   document.addEventListener('keydown', function(e) {
     if (e.target !== activeDishTextarea) return;
     const items = dishSuggestionsEl.querySelectorAll('.dish-suggestion-item');
