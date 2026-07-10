@@ -4618,7 +4618,7 @@ async function renderMenu() {
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
         const val = escapeHtml(d.data.yemekler[ci] || '');
-        return `<td><textarea id="m${ci}_${di}" placeholder="${escapeHtml(label)}" rows="3">${val}</textarea></td>`;
+        return `<td><textarea id="m${ci}_${di}" placeholder="${escapeHtml(label)}" rows="3" readonly>${val}</textarea></td>`;
       }).join('')}
     </tr>`;
   }).join('') + `<tr>
