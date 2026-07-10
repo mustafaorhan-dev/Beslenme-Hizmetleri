@@ -2017,6 +2017,8 @@ input.production-input:focus {
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(34,211,238,0.04) 0%, transparent 100%);
   border-color: rgba(34,211,238,0.15);
+  position: relative;
+  z-index: 2;
 }
 .menu-table input.kisi-input:focus {
   background: linear-gradient(135deg, rgba(34,211,238,0.06) 0%, transparent 100%);
@@ -2030,6 +2032,8 @@ input.production-input:focus {
   border-color: var(--border);
   font-size: 0.75rem;
   line-height: 1.35;
+  position: relative;
+  z-index: 2;
 }
 .menu-table textarea.note-input:focus {
   background: rgba(34,211,238,0.04);

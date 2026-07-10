@@ -4664,7 +4664,7 @@ async function renderMenu() {
   }).join('') + `<tr>
     <td><strong>Kişi Sayısı</strong></td>
     ${days.map((d, di) => {
-      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" /></td>`;
+      return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" onclick="event.stopPropagation()" /></td>`;
     }).join('')}
   </tr>`;
   // Not satırları: sadece visibleNoteCount kadar göster
@@ -4688,7 +4688,7 @@ async function renderMenu() {
     </td>
       ${days.map((d, di) => {
         const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="...">${val}</textarea></td>`;
+        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()">${val}</textarea></td>`;
       }).join('')}`;
     tbody.appendChild(tr);
   }
@@ -4718,9 +4718,11 @@ async function showMenuMealPicker(e) {
   if (getRole() === ROLE_ASCI) return;
   const cell = e.currentTarget;
   if (!cell) return;
+  if (!cell.classList || !cell.classList.contains('menu-cell-pick')) return;
   const id = cell.id;
   const m = id.match(/^m(\d)_(\d)$/);
   if (!m) return;
+  e.stopPropagation();
   _pickerCi = parseInt(m[1]);
   _pickerDi = parseInt(m[2]);
   let list = loadYemekler();
@@ -4867,7 +4869,7 @@ function addNoteRow() {
   tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
     <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
   </td>
-    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..."></textarea></td>`).join('')}`;
+    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()"></textarea></td>`).join('')}`;
   const addRow = document.getElementById('noteAddRow');
   if (addRow) tbody.insertBefore(tr, addRow);
   window._menuNoteCount = ni + 1;
