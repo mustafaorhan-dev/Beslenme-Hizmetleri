@@ -693,6 +693,10 @@ function applyRolePermissions() {
         btn.style.display = 'none';
       }
     });
+    // HACCP, yağ, ambalaj ekleme butonlarını geri aç
+    document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = ''; });
+    // HACCP form alanlarını aktif et
+    document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
   
   // Aşçı: menü (düzenleyebilir, kişi sayısını girebilir, not yazabilir)
