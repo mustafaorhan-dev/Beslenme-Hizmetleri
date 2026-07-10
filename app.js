@@ -4742,7 +4742,10 @@ async function showMenuMealPicker(e) {
   const html = `<div style="background:var(--bg-card);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;display:flex;flex-direction:column">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <h3 style="font-size:1rem;font-weight:600">Yemek Seç</h3>
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mealPickerOverlay').style.display='none'">✕</button>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <button class="btn btn-sm" style="background:var(--color-danger, #e53e3e);color:#fff;border:none;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem" onclick="clearMenuCell()">🗑 Temizle</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mealPickerOverlay').style.display='none'">✕</button>
+      </div>
     </div>
     <input type="text" id="mealPickerSearch" placeholder="Yemek ara..." style="padding:0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);margin-bottom:0.75rem" oninput="renderMealPickerList()" />
     <div id="mealPickerList" style="overflow-y:auto;flex:1">${list.map(y => `<div class="meal-picker-item" data-ad="${escapeHtml(y.ad)}" style="padding:0.5rem 0.75rem;cursor:pointer;border-radius:6px;transition:background 0.15s" onclick="selectMealFromPicker(this)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">${escapeHtml(formatYemek(y).replace(/\n/g, '<br>'))}</div>`).join('')}</div>
@@ -4773,6 +4776,15 @@ function selectMealFromPicker(el) {
   const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   if (cell) {
     cell.textContent = formatYemek(y);
+    refreshMenuProduction();
+  }
+  document.getElementById('mealPickerOverlay').style.display = 'none';
+}
+
+function clearMenuCell() {
+  const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
+  if (cell) {
+    cell.textContent = '';
     refreshMenuProduction();
   }
   document.getElementById('mealPickerOverlay').style.display = 'none';
