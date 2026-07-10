@@ -703,7 +703,7 @@ function applyRolePermissions() {
   
   // Aşçı: menü (düzenleyebilir, kişi sayısını girebilir, not yazabilir)
   if (role === ROLE_ASCI) {
-    var allowedTabs = ['menu', 'dashboard'];
+    var allowedTabs = ['menu'];
     document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
       var tabId = btn.id.replace('tab-', '');
       if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
