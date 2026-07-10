@@ -645,7 +645,7 @@ function applyRolePermissions() {
   // Diyetisyen: menü ve rapor sekmeleri, diğerleri gizli
   if (role === ROLE_DIYETISYEN) {
     var allowedTabs = ['menu', 'report', 'charts'];
-    var allowedSidebar = ['exportData'];
+    var allowedSidebar = [];
     document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
       var tabId = btn.id.replace('tab-', '');
       var onclick = btn.getAttribute('onclick') || '';
