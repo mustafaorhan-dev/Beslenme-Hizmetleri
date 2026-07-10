@@ -4872,7 +4872,7 @@ function clearWeeklyMenu() { if (!requireAdmin()) return;
   GUNLER.forEach((_, i) => {
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      if (el) el.value = '';
+      if (el) el.textContent = '';
     }
     for (let n = 0; n < 10; n++) {
       const el = document.getElementById('mn_' + n + '_' + i);
