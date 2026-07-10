@@ -1,6 +1,6 @@
 {
-  "name": "Yemekhane Menü ve Atık Yönetim Sistemi",
-  "short_name": "Yemekhane",
+  "name": "Beslenme Hizmetleri - Menü ve Atık Yönetim Sistemi",
+  "short_name": "Beslenme Hizmetleri",
   "description": "Haftalık menü planlaması ve atık kontrol sistemi",
   "start_url": "index.html",
   "display": "standalone",
