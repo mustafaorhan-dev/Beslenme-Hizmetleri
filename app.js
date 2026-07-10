@@ -4629,14 +4629,14 @@ async function renderMenu() {
     var dd = weekData[key] || { yemekler: ['','','','',''], kisi: 0, notlar: [] };
     while (dd.notlar.length < 10) dd.notlar.push('');
     const dayData = dd;
-    return { gun, key, data: dayData };
+    return { gun, key, tarih, data: dayData };
   });
 
   // Başlık satırı
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
     <th style="width:100px">Çeşit</th>
-    ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${escapeHtml(d.key)}</span></th>`).join('')}
+    ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${formatDateStrTR(d.tarih)}</span></th>`).join('')}
   </tr>`;
 
   // Cache henüz dolmamışsa 500ms sonra tekrar dene
