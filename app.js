@@ -656,6 +656,18 @@ function applyRolePermissions() {
       if (!allowed) btn.style.display = 'none';
     });
     document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: üretim bölümünü devre dışı bırak
+    document.querySelectorAll('#productionSection, #weeklyTotalSection').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: "Yemek Listesi" butonunu gizle
+    document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: yemek seçme ve not yazma alanlarını aktif et (applyViewerRestrictions devre dışı bırakmış olabilir)
+    for (var ci = 0; ci < 5; ci++) {
+      for (var di = 0; di < 5; di++) {
+        var ta = document.getElementById('m' + ci + '_' + di);
+        if (ta) { ta.readOnly = false; ta.disabled = false; ta.style.opacity = ''; }
+      }
+    }
+    document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
   
   // Depo: sıcaklık (hacccp), atık yağ, ambalaj sekmeleri
@@ -4657,6 +4669,7 @@ async function renderMenu() {
   }
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
+  applyRolePermissions();
 }
 
 let _pickerCi = 0, _pickerDi = 0;
@@ -4758,7 +4771,9 @@ function getWeekStartDate(offset) {
   return monday;
 }
 
-async function saveWeeklyMenu() { if (!requireAdmin()) return;
+async function saveWeeklyMenu() {
+  var role = getRole();
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
