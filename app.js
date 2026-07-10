@@ -116,6 +116,9 @@ function setChartMonth(month) {
 // ─── LOGIN / LOGOUT / ROLES ────────────────────────────────────────────────
 
 const ROLE_ADMIN = 'admin';
+const ROLE_DIYETISYEN = 'diyetisyen';
+const ROLE_DEPO = 'depo';
+const ROLE_ASCI = 'asci';
 const ROLE_VIEWER = 'viewer';
 
 async function sha256(str) {
@@ -125,12 +128,17 @@ async function sha256(str) {
 
 function getAdminHash() {
   if (remoteHashes.adminHash) return remoteHashes.adminHash;
-  return (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.adminHash : '') || '';
+  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  if (cfg.users && Array.isArray(cfg.users)) {
+    const adminUser = cfg.users.find(u => u.role === ROLE_ADMIN);
+    if (adminUser) return adminUser.passwordHash;
+  }
+  return '';
 }
 
 function getViewerHash() {
   if (remoteHashes.viewerHash) return remoteHashes.viewerHash;
-  return (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.viewerHash : '') || '';
+  return '';
 }
 
 function getRole() {
@@ -147,8 +155,14 @@ function isAdminSessionValid() {
     sessionStorage.removeItem('atik_kontrol_login_time');
     return false;
   }
+  // Yeni sistem: users listesinden admin hash'lerini kontrol et
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : (cfg.adminHash ? [cfg.adminHash] : []);
+  if (cfg.users && Array.isArray(cfg.users)) {
+    const adminHashes = cfg.users.filter(u => u.role === ROLE_ADMIN).map(u => u.passwordHash);
+    if (adminHashes.includes(storedHash)) return true;
+  }
+  // Eski sistem: adminHash ile kontrol
+  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : [];
   return adminHashes.includes(storedHash);
 }
 
@@ -168,18 +182,42 @@ function requireAdmin() {
 }
 
 async function doLogin() {
+  const usernameSelect = document.getElementById('loginUsername');
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
+  const username = usernameSelect.value;
   const inputHash = await sha256(input.value);
+  
+  if (!username) {
+    error.textContent = 'Lütfen kullanıcı seçin!';
+    error.style.display = 'block';
+    return;
+  }
+  
   let role = null;
+  let displayName = '';
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : (cfg.adminHash ? [cfg.adminHash] : []);
-  const viewerHashes = remoteHashes.viewerHash ? [remoteHashes.viewerHash] : (cfg.viewerHash ? [cfg.viewerHash] : []);
-  if (adminHashes.includes(inputHash)) role = ROLE_ADMIN;
-  else if (viewerHashes.includes(inputHash)) role = ROLE_VIEWER;
+  
+  // Yeni sistem: users listesinden kontrol
+  if (cfg.users && Array.isArray(cfg.users)) {
+    const user = cfg.users.find(u => u.username === username && u.passwordHash === inputHash);
+    if (user) {
+      role = user.role;
+      displayName = user.displayName;
+    }
+  }
+  
+  // Eski sistem: admin/viewer hash'lerinden kontrol (geriye uyumluluk)
+  if (!role) {
+    const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : [];
+    const viewerHashes = remoteHashes.viewerHash ? [remoteHashes.viewerHash] : [];
+    if (adminHashes.includes(inputHash)) { role = ROLE_ADMIN; displayName = 'Admin'; }
+    else if (viewerHashes.includes(inputHash)) { role = ROLE_VIEWER; displayName = 'Görüntüleme'; }
+  }
 
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
+    sessionStorage.setItem('atik_kontrol_display_name', displayName);
     if (role === ROLE_ADMIN) {
       sessionStorage.setItem('atik_kontrol_admin_hash_proof', inputHash);
       sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
@@ -187,12 +225,13 @@ async function doLogin() {
     localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
-    document.getElementById('roleBadge').textContent = role === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
+    document.getElementById('roleBadge').textContent = displayName;
     renderAdminPanelBtn();
+    applyRolePermissions();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
-    error.textContent = 'Hatalı şifre!';
+    error.textContent = 'Hatalı kullanıcı adı veya şifre!';
     error.style.display = 'block';
     input.value = '';
     input.focus();
@@ -475,16 +514,91 @@ function applyViewerRestrictions() {
   }
 }
 
+function applyRolePermissions() {
+  var role = getRole();
+  // Tüm sekmeleri başlangıçta göster
+  document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.style.display = ''; });
+  
+  if (role === ROLE_ADMIN) {
+    // Admin: her şeye erişebilir
+    return;
+  }
+  
+  // Diyetisyen: menü ve rapor sekmeleri, diğerleri gizli
+  if (role === ROLE_DIYETISYEN) {
+    var allowedTabs = ['menu', 'report', 'charts'];
+    var allowedSidebar = ['exportData'];
+    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
+      var tabId = btn.id.replace('tab-', '');
+      var onclick = btn.getAttribute('onclick') || '';
+      if (allowedTabs.indexOf(tabId) === -1 && !onclick.includes('openModal')) btn.style.display = 'none';
+    });
+    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      var allowed = false;
+      allowedSidebar.forEach(function(s) { if (onclick.includes(s)) allowed = true; });
+      if (!allowed) btn.style.display = 'none';
+    });
+    document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
+  
+  // Depo: sıcaklık (hacccp), atık yağ, ambalaj sekmeleri
+  if (role === ROLE_DEPO) {
+    var allowedTabs = ['haccp', 'yag', 'ambalaj', 'dashboard'];
+    var allowedSidebar = ['syncAllToSupabase', 'syncAllFromSupabase'];
+    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
+      var tabId = btn.id.replace('tab-', '');
+      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
+    });
+    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      var allowed = false;
+      allowedSidebar.forEach(function(s) { if (onclick.includes(s)) allowed = true; });
+      if (!allowed) btn.style.display = 'none';
+    });
+  }
+  
+  // Aşçı: menü sekmesi (sadece görüntüleme)
+  if (role === ROLE_ASCI) {
+    var allowedTabs = ['menu', 'dashboard'];
+    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
+      var tabId = btn.id.replace('tab-', '');
+      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
+    });
+    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = 'none'; });
+    // Menü düzenleme butonlarını gizle
+    document.querySelectorAll('.btn-primary[onclick*="saveWeeklyMenu"], .btn-primary[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
+}
+
+function populateLoginUsers() {
+  var select = document.getElementById('loginUsername');
+  if (!select) return;
+  var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  if (!cfg.users || !Array.isArray(cfg.users)) return;
+  // Mevcut seçenekleri temizle (ilk option hariç)
+  while (select.options.length > 1) select.remove(1);
+  cfg.users.forEach(function(user) {
+    var opt = document.createElement('option');
+    opt.value = user.username;
+    opt.textContent = user.displayName;
+    select.appendChild(opt);
+  });
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  populateLoginUsers();
   document.getElementById('loginPassword').focus();
   await syncPasswordHashesFromRemote().catch(function(){});
   var existingRole = sessionStorage.getItem('atik_kontrol_role');
   if (existingRole) {
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', existingRole);
-    document.getElementById('roleBadge').textContent = existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme';
+    var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
+    document.getElementById('roleBadge').textContent = displayName;
     renderAdminPanelBtn();
+    applyRolePermissions();
   } else {
     await new Promise(resolve => {
       window._loginResolve = resolve;

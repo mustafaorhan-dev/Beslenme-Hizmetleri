@@ -57,6 +57,9 @@
       <h2 style="margin:0.25rem 0 0.25rem;font-size:1.3rem;font-weight:700;color:var(--text-primary)">BESLENME HİZMETLERİ</h2>
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.75rem">Menü ve Atık Yönetim Sistemi</p>
       <div style="display:flex;flex-direction:column;gap:12px">
+        <select id="loginUsername" style="width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''">
+          <option value="">Kullanıcı Seçin</option>
+        </select>
         <input type="password" id="loginPassword" placeholder="Şifre" style="width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''" onkeydown="if(event.key==='Enter')doLogin()" />
         <button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:14px;font-size:0.95rem;font-weight:700;justify-content:center;text-transform:uppercase;letter-spacing:0.5px">Giriş Yap</button>
         <div id="loginError" style="color:#ef4444;font-size:0.85rem;margin:0;text-align:center;display:none"></div>
