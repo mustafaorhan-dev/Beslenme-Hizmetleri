@@ -35,6 +35,34 @@ async function syncPasswordHashesFromRemote() {
   } catch (_) {}
 }
 
+async function syncUsersFromSupabase() {
+  try {
+    if (!supabaseClient) return false;
+    var { data, error } = await supabaseClient.from('config').select('value').eq('key', 'users_list').single();
+    if (error || !data || !data.value) return false;
+    var users = JSON.parse(data.value);
+    if (Array.isArray(users) && users.length > 0) {
+      APP_CONFIG.users = users;
+      try { localStorage.setItem('atik_kontrol_users', JSON.stringify(users)); } catch (_) {}
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+async function saveUsersToSupabase(users) {
+  try {
+    if (!supabaseClient) return false;
+    var json = JSON.stringify(users);
+    var { error } = await supabaseClient.from('config').upsert(
+      { key: 'users_list', value: json, last_modified: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw error;
+    return true;
+  } catch (_) { return false; }
+}
+
 // ─── THEME ───────────────────────────────────────────────────────────────────
 // Initial theme is handled by inline script in HTML (reads localStorage)
 function toggleTheme() {
@@ -405,9 +433,11 @@ function getUsers() {
   return [];
 }
 
-function saveUsers(users) {
+async function saveUsers(users) {
   APP_CONFIG.users = users;
   try { localStorage.setItem('atik_kontrol_users', JSON.stringify(users)); } catch (_) {}
+  var remoteOk = await saveUsersToSupabase(users);
+  return remoteOk;
 }
 
 function loadUsersFromStorage() {
@@ -471,48 +501,84 @@ async function apAddUser() {
 
   var hash = await sha256(password);
   users.push({ username: username, passwordHash: hash, role: role, displayName: displayName });
-  saveUsers(users);
+  var remoteOk = await saveUsers(users);
 
   document.getElementById('apNewUsername').value = '';
   document.getElementById('apNewDisplayName').value = '';
   document.getElementById('apNewPassword').value = '';
   apRenderUserList();
-  successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.';
+  successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
   successEl.style.display = 'block';
-  showToast('Kullanıcı eklendi.', 'success');
+  showToast('Kullanıcı eklendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
 }
 
-async function apEditUser(index) {
+function apEditUser(index) {
   if (getRole() !== ROLE_ADMIN) return;
   var users = getUsers();
   var user = users[index];
   if (!user) return;
 
   var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
-  var newDisplayName = prompt('Görünen Ad:', user.displayName);
-  if (newDisplayName === null) return;
-  if (!newDisplayName.trim()) { showToast('Görünen ad boş olamaz.', 'error'); return; }
 
-  var newRole = prompt('Rol (admin/diyetisyen/depo/asci):', user.role);
-  if (newRole === null) return;
-  newRole = newRole.trim().toLowerCase();
-  if (['admin', 'diyetisyen', 'depo', 'asci'].indexOf(newRole) === -1) { showToast('Geçersiz rol.', 'error'); return; }
+  var container = document.getElementById('apUserList');
+  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';
+  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">Kullanıcıyı Düzenle</div>';
+  html += '<input type="hidden" id="apEditIndex" value="' + index + '" />';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Kullanıcı Adı</label>';
+  html += '<input type="text" id="apEditUsername" value="' + escapeHtml(user.username) + '" readonly style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:0.85rem" /></div>';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Görünen Ad</label>';
+  html += '<input type="text" id="apEditDisplayName" value="' + escapeHtml(user.displayName) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Yeni Şifre (boş = değişmez)</label>';
+  html += '<input type="password" id="apEditPassword" placeholder="Yeni şifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>';
+  html += '<select id="apEditRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">';
+  ['admin','diyetisyen','depo','asci'].forEach(function(r) {
+    html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + (roleLabels[r] || r) + '</option>';
+  });
+  html += '</select></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:0.5rem">';
+  html += '<button class="btn btn-primary btn-sm" onclick="apSaveEditUser()">Kaydet</button>';
+  html += '<button class="btn btn-ghost btn-sm" onclick="apRenderUserList()">İptal</button>';
+  html += '</div></div>';
+  container.innerHTML = html;
+}
 
-  var newPw = prompt('Yeni şifre (boş bırakırsan değişmez):');
-  if (newPw === null) return;
+async function apSaveEditUser() {
+  if (getRole() !== ROLE_ADMIN) return;
+  var index = parseInt(document.getElementById('apEditIndex').value);
+  var users = getUsers();
+  var user = users[index];
+  if (!user) return;
 
-  user.displayName = newDisplayName.trim();
-  user.role = newRole;
+  var displayName = document.getElementById('apEditDisplayName').value.trim();
+  var role = document.getElementById('apEditRole').value;
+  var newPw = document.getElementById('apEditPassword').value;
+  var errorEl = document.getElementById('apError');
+  var successEl = document.getElementById('apSuccess');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
+  if (newPw && newPw.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
+
+  user.displayName = displayName;
+  user.role = role;
   if (newPw && newPw.length >= 3) {
     user.passwordHash = await sha256(newPw);
   }
   users[index] = user;
-  saveUsers(users);
+  var remoteOk = await saveUsers(users);
   apRenderUserList();
-  showToast('Kullanıcı güncellendi.', 'success');
+  successEl.textContent = displayName + ' güncellendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
+  successEl.style.display = 'block';
+  showToast(displayName + ' güncellendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
 }
 
-function apDeleteUser(index) {
+async function apDeleteUser(index) {
   if (getRole() !== ROLE_ADMIN) return;
   var users = getUsers();
   var user = users[index];
@@ -520,9 +586,9 @@ function apDeleteUser(index) {
   if (user.username === 'admin') { showToast('Admin kullanıcısı silinemez.', 'error'); return; }
   if (!confirm('"' + user.displayName + '" kullanıcısını silmek istediğinize emin misiniz?')) return;
   users.splice(index, 1);
-  saveUsers(users);
+  var remoteOk = await saveUsers(users);
   apRenderUserList();
-  showToast('Kullanıcı silindi.', 'success');
+  showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
 }
 
 function getViewerSettings() {
@@ -642,6 +708,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
   await syncPasswordHashesFromRemote().catch(function(){});
+  await syncUsersFromSupabase().catch(function(){}).then(function() { populateLoginUsers(); });
   var existingRole = sessionStorage.getItem('atik_kontrol_role');
   if (existingRole) {
     document.getElementById('loginOverlay').classList.add('hidden');
