@@ -649,7 +649,7 @@ function applyRolePermissions() {
     document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
       var tabId = btn.id.replace('tab-', '');
       var onclick = btn.getAttribute('onclick') || '';
-      if (allowedTabs.indexOf(tabId) === -1 && !onclick.includes('openModal')) btn.style.display = 'none';
+      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
     });
     document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
