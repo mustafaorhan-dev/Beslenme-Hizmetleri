@@ -195,6 +195,8 @@ function isAdminSessionValid() {
 }
 
 function requireAdmin() {
+  var role = getRole();
+  if (role === ROLE_ADMIN || role === ROLE_DEPO) return true;
   if (!isAdminSessionValid()) {
     if (sessionStorage.getItem('atik_kontrol_role') === ROLE_ADMIN) {
       showToast('Oturum süresi doldu veya geçersiz. Lütfen tekrar giriş yapın.', 'error');
