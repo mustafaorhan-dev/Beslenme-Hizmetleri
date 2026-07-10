@@ -688,7 +688,7 @@ function applyRolePermissions() {
     });
   }
   
-  // Aşçı: menü sekmesi (sadece görüntüleme)
+  // Aşçı: menü (düzenleyebilir, kişi sayısını girebilir, not yazabilir)
   if (role === ROLE_ASCI) {
     var allowedTabs = ['menu', 'dashboard'];
     document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
@@ -696,8 +696,19 @@ function applyRolePermissions() {
       if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
     });
     document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = 'none'; });
-    // Menü düzenleme butonlarını gizle
-    document.querySelectorAll('.btn-primary[onclick*="saveWeeklyMenu"], .btn-primary[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: üretim bölümünü devre dışı bırak
+    document.querySelectorAll('#productionSection, #weeklyTotalSection').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: "Yemek Listesi" butonunu gizle
+    document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: yemek seçme, not yazma ve kişi sayısını aktif et
+    for (var ci = 0; ci < 5; ci++) {
+      for (var di = 0; di < 5; di++) {
+        var ta = document.getElementById('m' + ci + '_' + di);
+        if (ta) { ta.readOnly = false; ta.disabled = false; ta.style.opacity = ''; }
+      }
+    }
+    document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
+    document.querySelectorAll('.kisi-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
 }
 
@@ -4774,7 +4785,7 @@ function getWeekStartDate(offset) {
 
 async function saveWeeklyMenu() {
   var role = getRole();
-  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN && role !== ROLE_ASCI) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
