@@ -3779,7 +3779,7 @@ function refreshMenuProduction() {
     const notlar = [];
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.value : '');
+      yemekler.push(el ? el.textContent : '');
     }
     for (let n = 0; n < 10; n++) {
       const el = document.getElementById('mn_' + n + '_' + i);
@@ -5663,7 +5663,7 @@ function buildExportHTML() {
     var cells = [];
     for (var di = 0; di < 5; di++) {
       var el = document.getElementById('m' + ci + '_' + di);
-      cells.push(el ? el.value : '');
+      cells.push(el ? el.textContent : '');
     }
     tableData.push({ label: cesitler[ci], cells: cells });
   }
@@ -5725,7 +5725,7 @@ function buildExportHTML() {
     var dayHasAny = false;
     for (var ci = 0; ci < 5; ci++) {
       var el = document.getElementById('m' + ci + '_' + di);
-      var raw = el ? el.value : '';
+      var raw = el ? el.textContent : '';
       var name = parseName(raw);
       if (!name) continue;
       var dish = findDish(name);
