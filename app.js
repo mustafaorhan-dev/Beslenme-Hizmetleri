@@ -4658,10 +4658,10 @@ async function renderMenu() {
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
         const val = escapeHtml(d.data.yemekler[ci] || '');
-        return `<td><div class="menu-cell-pick" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" style="min-height:60px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem;cursor:pointer;white-space:pre-wrap;word-break:break-word;overflow:hidden">${val || '<span style="color:var(--text-muted);opacity:0.5">' + escapeHtml(label) + '</span>'}</div></td>`;
+        return `<td><div class="menu-cell-pick" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" style="min-height:50px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.82rem;cursor:pointer;white-space:pre-wrap;word-break:break-word;overflow:hidden">${val || '<span style="color:var(--text-muted);opacity:0.5">' + escapeHtml(label) + '</span>'}</div></td>`;
       }).join('')}
     </tr>`;
-  }).join('') + `<tr onclick="event.stopPropagation()">
+  }).join('') + `<tr style="pointer-events:none"><td colspan="6" style="height:8px;padding:0;border:none;background:var(--bg-card)"></td></tr>` + `<tr onclick="event.stopPropagation()">
     <td><strong>Kişi Sayısı</strong></td>
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" onclick="event.stopPropagation()" /></td>`;
@@ -4689,7 +4689,7 @@ async function renderMenu() {
     </td>
       ${days.map((d, di) => {
         const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
-        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()">${val}</textarea></td>`;
+        return `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation">${val}</textarea></td>`;
       }).join('')}`;
     tbody.appendChild(tr);
   }
@@ -4702,20 +4702,20 @@ async function renderMenu() {
   </td>
   ${days.map(() => `<td></td>`).join('')}`;
   tbody.appendChild(addRow);
-  // yemek seçici: event delegation iletbody üzerinden
-  if (!tbody._pickerBound) {
-    tbody.addEventListener('click', function(e) {
-      const cell = e.target.closest('.menu-cell-pick');
-      if (!cell) return;
-      if (getRole() === ROLE_ASCI) return;
-      e.stopPropagation();
-      const m = cell.id.match(/^m(\d)_(\d)$/);
-      if (!m) return;
-      _pickerCi = parseInt(m[1]);
-      _pickerDi = parseInt(m[2]);
-      openMealPicker();
-    });
-    tbody._pickerBound = true;
+  // yemek seçici: her hücreye doğrudan listener + event delegation
+  for (let ci = 0; ci < 5; ci++) {
+    for (let ci2 = 0; ci2 < 5; ci2++) {
+      const cell = document.getElementById('m' + ci + '_' + ci2);
+      if (cell && !cell._pickerAttached) {
+        cell.addEventListener('click', function(e) {
+          e.stopPropagation();
+          _pickerCi = ci;
+          _pickerDi = ci2;
+          openMealPicker();
+        });
+        cell._pickerAttached = true;
+      }
+    }
   }
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
@@ -4871,7 +4871,7 @@ function addNoteRow() {
   tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
     <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
   </td>
-    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()"></textarea></td>`).join('')}`;
+    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation"></textarea></td>`).join('')}`;
   const addRow = document.getElementById('noteAddRow');
   if (addRow) tbody.insertBefore(tr, addRow);
   window._menuNoteCount = ni + 1;

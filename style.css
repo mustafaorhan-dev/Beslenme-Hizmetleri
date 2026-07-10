@@ -1970,6 +1970,7 @@ input.production-input:focus {
   padding: 0.25rem 0.35rem;
   vertical-align: middle;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
 .menu-table td:first-child {
   font-weight: 600;
