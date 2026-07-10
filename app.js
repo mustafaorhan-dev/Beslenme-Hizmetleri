@@ -701,7 +701,7 @@ function applyRolePermissions() {
     document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
   
-  // Aşçı: menü (düzenleyebilir, kişi sayısını girebilir, not yazabilir)
+  // Aşçı: sadece menü, üretim bölümünü göster
   if (role === ROLE_ASCI) {
     var allowedTabs = ['menu'];
     document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
@@ -709,15 +709,13 @@ function applyRolePermissions() {
       if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
     });
     document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = 'none'; });
-    // Menü: üretim bölümünü devre dışı bırak
-    document.querySelectorAll('#productionSection, #weeklyTotalSection').forEach(function(el) { el.style.display = 'none'; });
     // Menü: "Yemek Listesi" butonunu gizle
     document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
-    // Menü: yemek seçme, not yazma ve kişi sayısını aktif et
+    // Hücrelere tıklama ile yemek seçicisini kapat (showMenuMealPicker içinde ROLE_ASCI kontrolü var)
     for (var ci = 0; ci < 5; ci++) {
       for (var di = 0; di < 5; di++) {
         var ta = document.getElementById('m' + ci + '_' + di);
-        if (ta) { ta.readOnly = false; ta.disabled = false; ta.style.opacity = ''; }
+        if (ta) { ta.style.cursor = 'default'; }
       }
     }
     document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
@@ -4701,6 +4699,7 @@ async function renderMenu() {
 let _pickerCi = 0, _pickerDi = 0;
 
 async function showMenuMealPicker(e) {
+  if (getRole() === ROLE_ASCI) return;
   const cell = e.currentTarget;
   if (!cell) return;
   const id = cell.id;
