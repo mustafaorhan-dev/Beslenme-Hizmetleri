@@ -672,19 +672,26 @@ function applyRolePermissions() {
     document.querySelectorAll('.kisi-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
   
-  // Depo: sıcaklık (hacccp), atık yağ, ambalaj sekmeleri
+  // Depo: admin gibi tüm sekmelere erişir, ama admin panelini ve CSV/JSON/yükleme butonlarını görmez; sadece PDF indirir
   if (role === ROLE_DEPO) {
-    var allowedTabs = ['haccp', 'yag', 'ambalaj', 'dashboard'];
-    var allowedSidebar = ['syncAllToSupabase', 'syncAllFromSupabase'];
-    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
-      var tabId = btn.id.replace('tab-', '');
-      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
-    });
+    // Tüm sekmeler açık (admin gibi)
+    // Admin panelini gizle
+    document.getElementById('adminPanelBtn').style.display = 'none';
+    // Sidebar'dan Dışa Aktar butonunu gizle
     document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
-      var allowed = false;
-      allowedSidebar.forEach(function(s) { if (onclick.includes(s)) allowed = true; });
-      if (!allowed) btn.style.display = 'none';
+      if (onclick.includes('exportData')) btn.style.display = 'none';
+    });
+    // CSV/JSON/yükleme butonlarını gizle, PDF butonlarını koru
+    document.querySelectorAll('button[onclick]').forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      if (onclick.includes('triggerImport') || onclick.includes('exportDataCSV') ||
+          onclick.includes('exportHaccpCSV') || onclick.includes('haccpFileInput') ||
+          onclick.includes('yemekCSVUpload') || onclick.includes('exportDataJSON') ||
+          onclick.includes('exportDataSettings') || onclick.includes('importFullBackup') ||
+          onclick.includes('importBackupInput')) {
+        btn.style.display = 'none';
+      }
     });
   }
   
