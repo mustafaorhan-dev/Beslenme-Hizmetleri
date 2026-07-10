@@ -4799,7 +4799,7 @@ async function saveWeeklyMenu() {
     const yemekler = [];
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.value : '');
+      yemekler.push(el ? el.textContent : '');
     }
     const notlar = [];
     for (let n = 0; n < 10; n++) {
