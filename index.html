@@ -1408,32 +1408,46 @@
           <div id="apHarcamaOranSuccess" style="color:#22c55e;font-size:0.85rem;margin-top:0.5rem;display:none"></div>
         </div>
 
-        <!-- Şifre Yönetimi -->
+        <!-- Kullanıcı Yönetimi -->
         <div style="margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Şifre Yönetimi</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Şifreleri değiştirdiğinizde hem tarayıcıya hem sunucuya kaydedilir, böylece geçmiş temizlense bile şifreler korunur.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Admin Şifresi</div>
-              <div style="font-size:1.1rem;font-weight:700;color:var(--accent);font-family:monospace;letter-spacing:2px" id="apCurrentAdminPw">-</div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Görüntüleme Şifresi</div>
-              <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);font-family:monospace;letter-spacing:2px" id="apCurrentViewerPw">-</div>
-            </div>
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:1rem">
-            <div style="margin-bottom:0.75rem">
-              <label for="apAdminPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Admin Şifresi</label>
-              <input type="password" id="apAdminPw" placeholder="Yeni admin şifresi (en az 3 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" oninput="updatePasswordStrength(this, 'apAdminStrength')" />
-              <div style="margin-top:0.3rem;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
-                <div id="apAdminStrength" style="height:100%;width:0%;border-radius:2px;transition:width 0.3s,background 0.3s"></div>
+          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Kullanıcı Yönetimi</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Kullanıcıları ekleyin, düzenleyin veya silin. Değişiklikler config.js dosyasına kaydedilir.</p>
+          
+          <!-- Kullanıcı Listesi -->
+          <div id="apUserList" style="margin-bottom:1rem"></div>
+          
+          <!-- Yeni Kullanıcı Ekleme -->
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Yeni Kullanıcı Ekle</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+              <div>
+                <label for="apNewUsername" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Kullanıcı Adı</label>
+                <input type="text" id="apNewUsername" placeholder="ör: diyetisyen" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+              </div>
+              <div>
+                <label for="apNewDisplayName" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Görünen Ad</label>
+                <input type="text" id="apNewDisplayName" placeholder="ör: Diy. Elif Yılmaz" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
               </div>
             </div>
-            <div style="margin-bottom:0.75rem">
-              <label for="apViewerPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem">Yeni Görüntüleme Şifresi</label>
-              <input type="password" id="apViewerPw" placeholder="Yeni görüntüleme şifresi (en az 2 karakter)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+              <div>
+                <label for="apNewPassword" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Şifre</label>
+                <input type="password" id="apNewPassword" placeholder="En az 3 karakter" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+              </div>
+              <div>
+                <label for="apNewRole" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>
+                <select id="apNewRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">
+                  <option value="admin">Admin</option>
+                  <option value="diyetisyen">Diyetisyen</option>
+                  <option value="depo">Depo Sorumlusu</option>
+                  <option value="asci">Aşçı</option>
+                </select>
+              </div>
             </div>
+            <button class="btn btn-primary btn-sm" onclick="apAddUser()" style="width:100%">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+              Kullanıcı Ekle
+            </button>
           </div>
         </div>
 

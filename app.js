@@ -259,10 +259,6 @@ function openAdminPanel() {
   document.getElementById('apReAuthPw').value = '';
   document.getElementById('apReAuthError').style.display = 'none';
   document.getElementById('apReAuthError').textContent = '';
-  document.getElementById('apAdminPw').value = '';
-  document.getElementById('apViewerPw').value = '';
-  document.getElementById('apCurrentAdminPw').textContent = '•••••';
-  document.getElementById('apCurrentViewerPw').textContent = '•••••';
   document.getElementById('apError').style.display = 'none';
   document.getElementById('apError').textContent = '';
   document.getElementById('apSuccess').style.display = 'none';
@@ -305,9 +301,8 @@ async function apReAuth() {
     document.getElementById('apReAuthContainer').style.display = 'none';
     document.getElementById('apPanelBody').style.display = 'block';
     errorEl.style.display = 'none';
-    document.getElementById('apCurrentAdminPw').textContent = '••••• (' + pw.length + ' karakter)';
-    document.getElementById('apCurrentViewerPw').textContent = '•••••';
     document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
+    apRenderUserList();
   } else {
     errorEl.textContent = 'Admin şifresi yanlış!';
     errorEl.style.display = 'block';
@@ -380,49 +375,10 @@ function updatePasswordStrength(input, barId) {
 
 async function saveAdminSettings() {
   if (getRole() !== ROLE_ADMIN) return;
-  const adminPw = document.getElementById('apAdminPw').value.trim();
-  const viewerPw = document.getElementById('apViewerPw').value.trim();
   const errorEl = document.getElementById('apError');
   const successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
-
-  var changed = false;
-
-  // Store hashes temporarily to send to remote
-  var newAdminHash = null;
-  var newViewerHash = null;
-
-  if (adminPw && viewerPw && adminPw === viewerPw) {
-    errorEl.textContent = 'Admin ve görüntüleme şifreleri aynı olamaz.';
-    errorEl.style.display = 'block';
-    return;
-  }
-
-  if (adminPw) {
-    if (adminPw.length < 3) {
-      errorEl.textContent = 'Admin şifresi en az 3 karakter olmalı.';
-      errorEl.style.display = 'block';
-      return;
-    }
-    const hash = await sha256(adminPw);
-    newAdminHash = hash;
-    document.getElementById('apCurrentAdminPw').textContent = '••••• (' + adminPw.length + ' karakter)';
-    document.getElementById('apAdminPw').value = '';
-    changed = true;
-  }
-  if (viewerPw) {
-    if (viewerPw.length < 2) {
-      errorEl.textContent = 'Görüntüleme şifresi en az 2 karakter olmalı.';
-      errorEl.style.display = 'block';
-      return;
-    }
-    const hash = await sha256(viewerPw);
-    newViewerHash = hash;
-    document.getElementById('apCurrentViewerPw').textContent = '••••• (' + viewerPw.length + ' karakter)';
-    document.getElementById('apViewerPw').value = '';
-    changed = true;
-  }
 
   var settings = getViewerSettings();
   settings.editAllowed = document.getElementById('apEditAllowed').checked;
@@ -436,43 +392,137 @@ async function saveAdminSettings() {
   });
   localStorage.setItem('atik_kontrol_viewer_settings', JSON.stringify(settings));
 
-  if (changed) {
-    if (!supabaseClient) {
-      errorEl.textContent = 'Supabase bağlantısı yok, şifre değiştirilemez.';
-      errorEl.style.display = 'block';
-      applyViewerRestrictions();
-      return;
+  successEl.textContent = 'Ayarlar güncellendi.';
+  successEl.style.display = 'block';
+  showToast('Ayarlar kaydedildi.', 'success');
+  applyRolePermissions();
+}
+
+// ─── KULLANICI YÖNETİMİ ─────────────────────────────────────────────────────
+function getUsers() {
+  var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  if (cfg.users && Array.isArray(cfg.users)) return JSON.parse(JSON.stringify(cfg.users));
+  return [];
+}
+
+function saveUsers(users) {
+  APP_CONFIG.users = users;
+  try { localStorage.setItem('atik_kontrol_users', JSON.stringify(users)); } catch (_) {}
+}
+
+function loadUsersFromStorage() {
+  try {
+    var saved = localStorage.getItem('atik_kontrol_users');
+    if (saved) {
+      var users = JSON.parse(saved);
+      if (Array.isArray(users) && users.length > 0) APP_CONFIG.users = users;
     }
-    var upserts = [];
-    if (newAdminHash) upserts.push({ key: 'admin_hash', value: newAdminHash });
-    if (newViewerHash) upserts.push({ key: 'viewer_hash', value: newViewerHash });
-    if (upserts.length > 0) {
-      try {
-        var { error: upsertError } = await supabaseClient.from('config').upsert(upserts, { onConflict: 'key' });
-        if (upsertError) throw upsertError;
-        if (newAdminHash) {
-          remoteHashes.adminHash = newAdminHash;
-          // Session proof'u da g�ncelle ki admin oturumu ge�erlili�ini korusun
-          sessionStorage.setItem('atik_kontrol_admin_hash_proof', newAdminHash);
-          sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
-        }
-        if (newViewerHash) remoteHashes.viewerHash = newViewerHash;
-        successEl.textContent = 'Şifreler ve görüntüleme ayarları güncellendi (Supabase).';
-        successEl.style.display = 'block';
-        showToast('Ayarlar güncellendi ve Supabase\'e kaydedildi.', 'success');
-      } catch (e) {
-        errorEl.textContent = 'Supabase kaydedilemedi: ' + e.message;
-        errorEl.style.display = 'block';
-        applyViewerRestrictions();
-        return;
-      }
-    }
-  } else {
-    successEl.textContent = 'Görüntüleme ayarları güncellendi.';
-    successEl.style.display = 'block';
-    showToast('Görüntüleme ayarları güncellendi.', 'success');
+  } catch (_) {}
+}
+
+function apRenderUserList() {
+  var container = document.getElementById('apUserList');
+  if (!container) return;
+  var users = getUsers();
+  if (users.length === 0) {
+    container.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);margin:0">Kayıtlı kullanıcı yok.</p>';
+    return;
   }
-  applyViewerRestrictions();
+  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
+  var roleColors = { admin: '#ef4444', diyetisyen: '#6366f1', depo: '#f59e0b', asci: '#22c55e' };
+  var html = '<div style="display:flex;flex-direction:column;gap:0.5rem">';
+  users.forEach(function(user, i) {
+    var roleLabel = roleLabels[user.role] || user.role;
+    var roleColor = roleColors[user.role] || '#888';
+    html += '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">';
+    html += '<div style="flex:1">';
+    html += '<div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)">' + escapeHtml(user.displayName) + '</div>';
+    html += '<div style="font-size:0.75rem;color:var(--text-muted)">@' + escapeHtml(user.username) + ' &middot; <span style="color:' + roleColor + ';font-weight:600">' + roleLabel + '</span></div>';
+    html += '</div>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apEditUser(' + i + ')" title="Düzenle" style="padding:4px 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteUser(' + i + ')" title="Sil" style="padding:4px 8px;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function apAddUser() {
+  if (getRole() !== ROLE_ADMIN) return;
+  var username = document.getElementById('apNewUsername').value.trim().toLowerCase();
+  var displayName = document.getElementById('apNewDisplayName').value.trim();
+  var password = document.getElementById('apNewPassword').value;
+  var role = document.getElementById('apNewRole').value;
+  var errorEl = document.getElementById('apError');
+  var successEl = document.getElementById('apSuccess');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  if (!username) { errorEl.textContent = 'Kullanıcı adı gerekli.'; errorEl.style.display = 'block'; return; }
+  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
+  if (!password || password.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
+
+  var users = getUsers();
+  if (users.some(function(u) { return u.username === username; })) {
+    errorEl.textContent = 'Bu kullanıcı adı zaten var.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  var hash = await sha256(password);
+  users.push({ username: username, passwordHash: hash, role: role, displayName: displayName });
+  saveUsers(users);
+
+  document.getElementById('apNewUsername').value = '';
+  document.getElementById('apNewDisplayName').value = '';
+  document.getElementById('apNewPassword').value = '';
+  apRenderUserList();
+  successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.';
+  successEl.style.display = 'block';
+  showToast('Kullanıcı eklendi.', 'success');
+}
+
+async function apEditUser(index) {
+  if (getRole() !== ROLE_ADMIN) return;
+  var users = getUsers();
+  var user = users[index];
+  if (!user) return;
+
+  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
+  var newDisplayName = prompt('Görünen Ad:', user.displayName);
+  if (newDisplayName === null) return;
+  if (!newDisplayName.trim()) { showToast('Görünen ad boş olamaz.', 'error'); return; }
+
+  var newRole = prompt('Rol (admin/diyetisyen/depo/asci):', user.role);
+  if (newRole === null) return;
+  newRole = newRole.trim().toLowerCase();
+  if (['admin', 'diyetisyen', 'depo', 'asci'].indexOf(newRole) === -1) { showToast('Geçersiz rol.', 'error'); return; }
+
+  var newPw = prompt('Yeni şifre (boş bırakırsan değişmez):');
+  if (newPw === null) return;
+
+  user.displayName = newDisplayName.trim();
+  user.role = newRole;
+  if (newPw && newPw.length >= 3) {
+    user.passwordHash = await sha256(newPw);
+  }
+  users[index] = user;
+  saveUsers(users);
+  apRenderUserList();
+  showToast('Kullanıcı güncellendi.', 'success');
+}
+
+function apDeleteUser(index) {
+  if (getRole() !== ROLE_ADMIN) return;
+  var users = getUsers();
+  var user = users[index];
+  if (!user) return;
+  if (user.username === 'admin') { showToast('Admin kullanıcısı silinemez.', 'error'); return; }
+  if (!confirm('"' + user.displayName + '" kullanıcısını silmek istediğinize emin misiniz?')) return;
+  users.splice(index, 1);
+  saveUsers(users);
+  apRenderUserList();
+  showToast('Kullanıcı silindi.', 'success');
 }
 
 function getViewerSettings() {
@@ -588,6 +638,7 @@ function populateLoginUsers() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  loadUsersFromStorage();
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
   await syncPasswordHashesFromRemote().catch(function(){});
