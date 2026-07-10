@@ -3450,74 +3450,89 @@ function renderWeeklyTotal(dishEntries, days) {
 function importYemekCSV(event) { if (!requireAdmin()) return;
   const file = event.target.files[0];
   if (!file) return;
+  const inputEl = event.target;
   const reader = new FileReader();
   reader.onload = function(ev) {
     try {
-      const text = ev.target.result.replace(/^\uFEFF/, '');
-      const lines = text.split(/\r?\n/).filter(l => l.trim());
-      if (!lines.length) throw new Error('CSV boş');
-      const headers = parseCSVLine(lines[0]);
-      const adIdx = headers.findIndex(h => /yemek.*ad|adı|^ad$/i.test(h));
-      const kaloriIdx = headers.findIndex(h => /kalori|kcal/i.test(h));
-      const alerjenIdx = headers.findIndex(h => /alerjen/i.test(h));
-      // ürün/miktar/birim sütunlarını bul
-      const urunCols = [];
-      const miktarCols = [];
-      const birimCols = [];
-      headers.forEach((h, i) => {
-        const m = h.match(/^\s*[üu]r[üu]n\s*(\d+)\s*$/i);
-        if (m) urunCols.push({ idx: i, num: parseInt(m[1]) });
-        if (/^\s*miktar\s*\d+\s*$/i.test(h)) miktarCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
-        if (/^\s*birim\s*\d+\s*$/i.test(h)) birimCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
-      });
-      const list = loadYemekler();
-      const basla = adIdx === -1 ? 0 : 1;
-      for (let r = basla; r < lines.length; r++) {
-        const cols = parseCSVLine(lines[r]);
-        let ad = '';
-        if (adIdx !== -1 && adIdx < cols.length) {
-          ad = (cols[adIdx] || '').trim();
-        } else if (basla === 0) {
-          ad = (cols[0] || '').trim();
-        }
-        if (!ad) continue;
-        // tarifi oluştur
-        const tarif = [];
-        urunCols.forEach((uc) => {
-          const malzeme = (cols[uc.idx] || '').trim();
-          if (!malzeme) return;
-          const mc = miktarCols.find(m => m.num === uc.num);
-          const bc = birimCols.find(b => b.num === uc.num);
-          let miktarStr = (mc && mc.idx < cols.length) ? (cols[mc.idx] || '').trim() : '';
-          // Türkçe ondalık ayracını (,) noktaya çevir
-          miktarStr = miktarStr.replace(',', '.');
-          const miktar_kisi = parseFloat(miktarStr) || 0;
-          const birim = (bc && bc.idx < cols.length) ? (cols[bc.idx] || '').trim() : 'gr';
-          tarif.push({ malzeme, miktar_kisi, birim });
-        });
-        const mevcut = list.findIndex(y => y.ad.toLowerCase() === ad.toLowerCase());
-        const yemek = {
-          id: mevcut !== -1 ? list[mevcut].id : 'y_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          ad: ad,
-          kalori: (kaloriIdx !== -1 && kaloriIdx < cols.length) ? (cols[kaloriIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].kalori || '' : ''),
-          alerjen: (alerjenIdx !== -1 && alerjenIdx < cols.length) ? (cols[alerjenIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].alerjen || '' : ''),
-          tarif: tarif.length ? tarif : (mevcut !== -1 ? list[mevcut].tarif || [] : [])
+      var text = ev.target.result;
+      var hasMojibake = /[Ãâ€€ŸŒŽšž]/.test(text) || /\?EHR|ORUM/.test(text);
+      if (hasMojibake && !text.includes('Ş')) {
+        var reader2 = new FileReader();
+        reader2.onload = function(ev2) {
+          try { processYemekCSV(ev2.target.result.replace(/^\uFEFF/, '')); }
+          catch(e2) { showToast('CSV işleme hatası: ' + e2.message, 'error'); }
         };
-        if (mevcut !== -1) {
-          list[mevcut] = yemek;
-        } else {
-          list.push(yemek);
-        }
+        reader2.readAsText(file, 'ISO-8859-9');
+        return;
       }
-      saveYemekler(list);
-      renderYemekListesi();
-      showToast(list.length + ' yemek yüklendi.', 'success');
-    } catch (err) {
-      showToast('CSV yükleme hatası: ' + err.message, 'error');
-    }
+      processYemekCSV(text.replace(/^\uFEFF/, ''));
+    } catch(e) { showToast('CSV okuma hatası: ' + e.message, 'error'); }
+    inputEl.value = '';
   };
-  reader.readAsText(file, 'UTF-8');
+  reader.readAsText(file);
   event.target.value = '';
+}
+
+function processYemekCSV(text) {
+  try {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) throw new Error('CSV boş');
+    const headers = parseCSVLine(lines[0]);
+    const adIdx = headers.findIndex(h => /yemek.*ad|adı|^ad$/i.test(h));
+    const kaloriIdx = headers.findIndex(h => /kalori|kcal/i.test(h));
+    const alerjenIdx = headers.findIndex(h => /alerjen/i.test(h));
+    const urunCols = [];
+    const miktarCols = [];
+    const birimCols = [];
+    headers.forEach((h, i) => {
+      const m = h.match(/^\s*[üu]r[üu]n\s*(\d+)\s*$/i);
+      if (m) urunCols.push({ idx: i, num: parseInt(m[1]) });
+      if (/^\s*miktar\s*\d+\s*$/i.test(h)) miktarCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
+      if (/^\s*birim\s*\d+\s*$/i.test(h)) birimCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
+    });
+    const list = loadYemekler();
+    const basla = adIdx === -1 ? 0 : 1;
+    for (let r = basla; r < lines.length; r++) {
+      const cols = parseCSVLine(lines[r]);
+      let ad = '';
+      if (adIdx !== -1 && adIdx < cols.length) {
+        ad = (cols[adIdx] || '').trim();
+      } else if (basla === 0) {
+        ad = (cols[0] || '').trim();
+      }
+      if (!ad) continue;
+      const tarif = [];
+      urunCols.forEach((uc) => {
+        const malzeme = (cols[uc.idx] || '').trim();
+        if (!malzeme) return;
+        const mc = miktarCols.find(m => m.num === uc.num);
+        const bc = birimCols.find(b => b.num === uc.num);
+        let miktarStr = (mc && mc.idx < cols.length) ? (cols[mc.idx] || '').trim() : '';
+        miktarStr = miktarStr.replace(',', '.');
+        const miktar_kisi = parseFloat(miktarStr) || 0;
+        const birim = (bc && bc.idx < cols.length) ? (cols[bc.idx] || '').trim() : 'gr';
+        tarif.push({ malzeme, miktar_kisi, birim });
+      });
+      const mevcut = list.findIndex(y => y.ad.toLowerCase() === ad.toLowerCase());
+      const yemek = {
+        id: mevcut !== -1 ? list[mevcut].id : 'y_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        ad: ad,
+        kalori: (kaloriIdx !== -1 && kaloriIdx < cols.length) ? (cols[kaloriIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].kalori || '' : ''),
+        alerjen: (alerjenIdx !== -1 && alerjenIdx < cols.length) ? (cols[alerjenIdx] || '').trim() : (mevcut !== -1 ? list[mevcut].alerjen || '' : ''),
+        tarif: tarif.length ? tarif : (mevcut !== -1 ? list[mevcut].tarif || [] : [])
+      };
+      if (mevcut !== -1) {
+        list[mevcut] = yemek;
+      } else {
+        list.push(yemek);
+      }
+    }
+    saveYemekler(list);
+    renderYemekListesi();
+    showToast(list.length + ' yemek yüklendi.', 'success');
+  } catch (err) {
+    showToast('CSV yükleme hatası: ' + err.message, 'error');
+  }
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
