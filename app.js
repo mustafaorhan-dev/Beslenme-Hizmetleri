@@ -149,6 +149,118 @@ const ROLE_DEPO = 'depo';
 const ROLE_ASCI = 'asci';
 const ROLE_VIEWER = 'viewer';
 
+const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', viewer: 'Görüntüleme' };
+
+const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
+const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
+
+const DEFAULT_ROLE_PERMISSIONS = {
+  diyetisyen: {
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, yag: false, ambalaj: false, charts: true },
+    canEditMenu: true,
+    canSaveMenu: true,
+    canSeeProduction: true,
+    canAddRecord: false,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: false,
+    canEditYag: false,
+    canEditAmbalaj: false
+  },
+  depo: {
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    canEditMenu: false,
+    canSaveMenu: false,
+    canSeeProduction: true,
+    canAddRecord: true,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: true,
+    canEditYag: true,
+    canEditAmbalaj: true
+  },
+  asci: {
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, yag: false, ambalaj: false, charts: false },
+    canEditMenu: false,
+    canSaveMenu: false,
+    canSeeProduction: true,
+    canAddRecord: false,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: false,
+    canEditYag: false,
+    canEditAmbalaj: false
+  },
+  viewer: {
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    canEditMenu: false,
+    canSaveMenu: false,
+    canSeeProduction: true,
+    canAddRecord: false,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: false,
+    canEditYag: false,
+    canEditAmbalaj: false
+  }
+};
+
+let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+
+function getRolePermissions(role) {
+  if (role === ROLE_ADMIN) return null;
+  return rolePermissions[role] || rolePermissions.viewer || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.viewer));
+}
+
+function loadRolePermissions() {
+  try {
+    var saved = localStorage.getItem(ROLE_PERMISSIONS_KEY);
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
+          rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), parsed[role] || {});
+        });
+      }
+    }
+  } catch (_) {}
+}
+
+function saveRolePermissions() {
+  try { localStorage.setItem(ROLE_PERMISSIONS_KEY, JSON.stringify(rolePermissions)); } catch (_) {}
+}
+
+async function syncRolePermissionsToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { error } = await supabaseClient.from('config').upsert(
+      { key: ROLE_PERMISSIONS_SUPABASE_KEY, value: JSON.stringify(rolePermissions), last_modified: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+  } catch (_) {}
+}
+
+async function syncRolePermissionsFromSupabase() {
+  if (!supabaseClient) return false;
+  try {
+    var { data, error } = await supabaseClient.from('config').select('value').eq('key', ROLE_PERMISSIONS_SUPABASE_KEY).single();
+    if (error || !data || !data.value) return false;
+    var parsed = JSON.parse(data.value);
+    if (parsed && typeof parsed === 'object') {
+      Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
+        rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), parsed[role] || {});
+      });
+      saveRolePermissions();
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
@@ -276,7 +388,6 @@ function openAdminPanel() {
     showToast('Bu işlem için admin yetkisi gerekli.', 'error');
     return;
   }
-  // Güvenlik: admin şifresini tekrar sor
   document.getElementById('apReAuthContainer').style.display = 'block';
   document.getElementById('apPanelBody').style.display = 'none';
   document.getElementById('apReAuthPw').value = '';
@@ -286,19 +397,7 @@ function openAdminPanel() {
   document.getElementById('apError').textContent = '';
   document.getElementById('apSuccess').style.display = 'none';
   document.getElementById('apSuccess').textContent = '';
-
-  var settings = getViewerSettings();
-  document.getElementById('apEditAllowed').checked = settings.editAllowed;
-  document.getElementById('apShowExport').checked = settings.showExportBtn;
-  document.getElementById('apShowSync').checked = settings.showSyncBtn;
-  document.getElementById('apShowActions').checked = settings.showActions;
-  var tabKeys = Object.keys(settings.tabs);
-  tabKeys.forEach(function(key) {
-    var cb = document.getElementById('apTab_' + key);
-    if (cb) cb.checked = settings.tabs[key];
-  });
-
-  // Oturum bilgilerini göster
+  apRenderRolePermissions();
   var roleLabel = getRole() === ROLE_ADMIN ? 'Yönetici' : 'Görüntüleme';
   document.getElementById('apSessionRole').textContent = roleLabel;
   var lastLogin = localStorage.getItem('atik_kontrol_last_login');
@@ -311,7 +410,6 @@ function openAdminPanel() {
     document.getElementById('apLastLogin').textContent = 'Bu oturum';
   }
   document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
-
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -326,6 +424,7 @@ async function apReAuth() {
     errorEl.style.display = 'none';
     document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
     apRenderUserList();
+    apRenderRolePermissions();
   } else {
     errorEl.textContent = 'Admin şifresi yanlış!';
     errorEl.style.display = 'block';
@@ -358,7 +457,7 @@ function closeAdminPanel() {
 
 function doLogout() {
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -398,27 +497,74 @@ function updatePasswordStrength(input, barId) {
 
 async function saveAdminSettings() {
   if (getRole() !== ROLE_ADMIN) return;
-  const errorEl = document.getElementById('apError');
-  const successEl = document.getElementById('apSuccess');
+  var errorEl = document.getElementById('apError');
+  var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
-
-  var settings = getViewerSettings();
-  settings.editAllowed = document.getElementById('apEditAllowed').checked;
-  settings.showExportBtn = document.getElementById('apShowExport').checked;
-  settings.showSyncBtn = document.getElementById('apShowSync').checked;
-  settings.showActions = document.getElementById('apShowActions').checked;
-  var tabKeys = Object.keys(settings.tabs);
-  tabKeys.forEach(function(key) {
-    var cb = document.getElementById('apTab_' + key);
-    if (cb) settings.tabs[key] = cb.checked;
+  var roles = ['diyetisyen', 'depo', 'asci', 'viewer'];
+  roles.forEach(function(role) {
+    var perm = rolePermissions[role];
+    if (!perm) return;
+    var prefix = 'apRole_' + role + '_';
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'yag', 'ambalaj', 'charts'];
+    tabs.forEach(function(tab) {
+      var cb = document.getElementById(prefix + 'tab_' + tab);
+      if (cb) perm.tabs[tab] = cb.checked;
+    });
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditYag', 'canEditAmbalaj'];
+    checks.forEach(function(key) {
+      var cb = document.getElementById(prefix + key);
+      if (cb) perm[key] = cb.checked;
+    });
   });
-  localStorage.setItem('atik_kontrol_viewer_settings', JSON.stringify(settings));
-
-  successEl.textContent = 'Ayarlar güncellendi.';
+  saveRolePermissions();
+  syncRolePermissionsToSupabase();
+  successEl.textContent = 'Rol izinleri güncellendi.';
   successEl.style.display = 'block';
   showToast('Ayarlar kaydedildi.', 'success');
   applyRolePermissions();
+}
+
+function apRenderRolePermissions() {
+  var container = document.getElementById('apRolePermissions');
+  if (!container) return;
+  var roles = ['diyetisyen', 'depo', 'asci', 'viewer'];
+  var permLabels = {
+    canEditMenu: 'Menüdüzenleyebilir',
+    canSaveMenu: 'Menüyü kaydedebilir',
+    canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
+    canAddRecord: 'Yeni kayıt ekleyebilir',
+    canExport: 'Dışa aktarabilir',
+    canSync: 'Senkronizasyon yapabilir',
+    canSeeAdminPanel: 'Yönetim panelini görebilir',
+    canEditHaccp: 'Gıda güvenliği kayıtlarını düzenleyebilir',
+    canEditYag: 'Atık yağ kayıtlarını düzenleyebilir',
+    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir'
+  };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
+  var html = '';
+  roles.forEach(function(role) {
+    var perm = rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role] || {}));
+    var prefix = 'apRole_' + role + '_';
+    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.75rem">';
+    html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">' + (ROLE_LABELS[role] || role) + '</div>';
+    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Görünen Sekmeler</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem;margin-bottom:0.75rem">';
+    Object.keys(tabLabels).forEach(function(tab) {
+      html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
+      html += '<input type="checkbox" id="' + prefix + 'tab_' + tab + '"' + (perm.tabs[tab] ? ' checked' : '') + ' /> ' + tabLabels[tab];
+      html += '</label>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">İzinler</div>';
+    Object.keys(permLabels).forEach(function(key) {
+      html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
+      html += '<input type="checkbox" id="' + prefix + key + '"' + (perm[key] ? ' checked' : '') + ' /> ' + permLabels[key];
+      html += '</label>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
 }
 
 // ─── KULLANICI YÖNETİMİ ─────────────────────────────────────────────────────
@@ -587,96 +733,42 @@ async function apDeleteUser(index) {
 }
 
 function getViewerSettings() {
-  try {
-    const saved = localStorage.getItem('atik_kontrol_viewer_settings');
-    if (saved) return JSON.parse(saved);
-  } catch (_) {}
-  return {
-    editAllowed: false,
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
-    showExportBtn: false,
-    showSyncBtn: false,
-    showActions: false
-  };
+  return { editAllowed: false, tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true }, showExportBtn: false, showSyncBtn: false, showActions: false };
 }
 
 function applyViewerRestrictions() {
-  if (getRole() !== ROLE_ADMIN) {
-    const settings = getViewerSettings();
-    Object.keys(settings.tabs).forEach(function(key) {
-      var btn = document.getElementById('tab-' + key);
-      if (btn) btn.style.display = settings.tabs[key] ? '' : 'none';
+  if (getRole() === ROLE_ADMIN) return;
+  var perm = getRolePermissions(getRole());
+  if (!perm) return;
+  Object.keys(perm.tabs || {}).forEach(function(key) {
+    var btn = document.getElementById('tab-' + key);
+    if (btn) btn.style.display = perm.tabs[key] ? '' : 'none';
+  });
+  var actionBtn = document.querySelector('.sidebar-nav .tab-btn[onclick*="openModal"]');
+  if (actionBtn) actionBtn.style.display = perm.canAddRecord ? '' : 'none';
+  var exportBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="exportData"]');
+  if (exportBtn) exportBtn.style.display = perm.canExport ? '' : 'none';
+  var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllToSupabase"]');
+  if (syncBtn) syncBtn.style.display = perm.canSync ? '' : 'none';
+  var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
+  if (pullBtn) pullBtn.style.display = perm.canSync ? '' : 'none';
+  var adminBtn = document.getElementById('adminPanelBtn');
+  if (adminBtn) adminBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
+  if (!perm.canEditMenu) {
+    document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input').forEach(function(el) {
+      el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
     });
-    var actionBtn = document.querySelector('.sidebar-nav .tab-btn[onclick*="openModal"]');
-    if (actionBtn) actionBtn.style.display = settings.showActions ? '' : 'none';
-    var exportBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="exportData"]');
-    if (exportBtn) exportBtn.style.display = settings.showExportBtn ? '' : 'none';
-    var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllToSupabase"]');
-    if (syncBtn) syncBtn.style.display = settings.showSyncBtn ? '' : 'none';
-    var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
-    if (pullBtn) pullBtn.style.display = settings.showSyncBtn ? '' : 'none';
-    if (!settings.editAllowed) {
-      document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input, #haccpForm textarea, #haccpForm input, #haccpForm select, #entryForm input, #entryForm select, #entryForm textarea, #yagForm input, #yagForm select, #ambalajForm input, #ambalajForm select').forEach(function(el) {
-        el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
-      });
-      document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
-      document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
-    }
+    document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
   }
-}
-
-function applyRolePermissions() {
-  var role = getRole();
-  // Tüm sekmeleri başlangıçta göster
-  document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.style.display = ''; });
-  
-  if (role === ROLE_ADMIN) {
-    // Admin: her şeye erişebilir
-    return;
-  }
-  
-  // Diyetisyen: menü ve rapor sekmeleri, diğerleri gizli
-  if (role === ROLE_DIYETISYEN) {
-    var allowedTabs = ['menu', 'report', 'charts'];
-    var allowedSidebar = [];
-    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
-      var tabId = btn.id.replace('tab-', '');
-      var onclick = btn.getAttribute('onclick') || '';
-      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
-    });
-    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
-      var onclick = btn.getAttribute('onclick') || '';
-      var allowed = false;
-      allowedSidebar.forEach(function(s) { if (onclick.includes(s)) allowed = true; });
-      if (!allowed) btn.style.display = 'none';
-    });
+  if (!perm.canAddRecord) {
     document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
-    // Menü: üretim bölümü diyetisyen için de görünür
-    // Menü: "Yemek Listesi" butonunu gizle
-    document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
-    // Menü: yemek seçme ve not yazma alanlarını aktif et (applyViewerRestrictions devre dışı bırakmış olabilir)
-    for (var ci = 0; ci < 5; ci++) {
-      for (var di = 0; di < 5; di++) {
-        var ta = document.getElementById('m' + ci + '_' + di);
-        if (ta) { ta.readOnly = false; ta.disabled = false; ta.style.opacity = ''; }
-      }
-    }
-    document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
-    // Kişi sayısını aktif et
-    document.querySelectorAll('.kisi-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
-  
-  // Depo: admin gibi tüm sekmelere erişir, ama admin panelini ve CSV/JSON/yükleme butonlarını görmez; sadece PDF indirir
-  if (role === ROLE_DEPO) {
-    // Tüm sekmeler açık (admin gibi)
-    // Admin panelini gizle
-    document.getElementById('adminPanelBtn').style.display = 'none';
-    // Sidebar'dan Dışa Aktar, Supabase'e Yedekle ve Supabase'ten Çek butonlarını gizle
-    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) {
-      var onclick = btn.getAttribute('onclick') || '';
-      if (onclick.includes('exportData') || onclick.includes('syncAllToSupabase') || onclick.includes('syncAllFromSupabase')) btn.style.display = 'none';
+  if (!perm.canEditHaccp) {
+    document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) {
+      el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
     });
-    // CSV/JSON/yükleme butonlarını gizle, PDF butonlarını koru
+  }
+  if (!perm.canExport) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
       if (onclick.includes('triggerImport') || onclick.includes('exportDataCSV') ||
@@ -687,30 +779,40 @@ function applyRolePermissions() {
         btn.style.display = 'none';
       }
     });
-    // HACCP, yağ, ambalaj ekleme butonlarını geri aç
-    document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = ''; });
-    // HACCP form alanlarını aktif et
-    document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
   }
-  
-  // Aşçı: sadece menü, üretim bölümünü göster
-  if (role === ROLE_ASCI) {
-    var allowedTabs = ['menu'];
-    document.querySelectorAll('.sidebar-nav .tab-btn').forEach(function(btn) {
-      var tabId = btn.id.replace('tab-', '');
-      if (allowedTabs.indexOf(tabId) === -1) btn.style.display = 'none';
+}
+
+function applyRolePermissions() {
+  var role = getRole();
+  document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.style.display = ''; });
+  document.getElementById('adminPanelBtn').style.display = 'none';
+  document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = ''; });
+  if (role === ROLE_ADMIN) return;
+  applyViewerRestrictions();
+  var perm = getRolePermissions(role);
+  if (!perm) return;
+  if (!perm.canSaveMenu) {
+    document.querySelectorAll('.menu-table + .menu-hint .btn-primary, #content-menu .btn-primary[onclick*="saveWeeklyMenu"]').forEach(function(el) { el.style.display = 'none'; });
+    var saveBtns = document.querySelectorAll('#content-menu button');
+    saveBtns.forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      if (onclick.includes('saveWeeklyMenu')) btn.style.display = 'none';
     });
-    document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = 'none'; });
-    // Menü: "Yemek Listesi" butonunu gizle
-    document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
-    // Hücrelere tıklama ile yemek seçicisini kapat (showMenuMealPicker içinde ROLE_ASCI kontrolü var)
+  }
+  if (!perm.canSeeProduction) {
+    var ps = document.getElementById('productionSection');
+    if (ps) ps.style.display = 'none';
+    var wts = document.getElementById('weeklyTotalSection');
+    if (wts) wts.style.display = 'none';
+  }
+  document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
+  if (role === ROLE_ASCI) {
     for (var ci = 0; ci < 5; ci++) {
       for (var di = 0; di < 5; di++) {
         var ta = document.getElementById('m' + ci + '_' + di);
         if (ta) { ta.style.cursor = 'default'; }
       }
     }
-    document.querySelectorAll('.note-input, .kisi-input, .menu-table textarea, .menu-table input').forEach(function(el) { el.readOnly = true; el.disabled = true; el.style.opacity = '0.7'; });
   }
 }
 
@@ -731,6 +833,7 @@ function populateLoginUsers() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  loadRolePermissions();
   loadUsersFromStorage();
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
@@ -784,6 +887,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (_) {}
     filteredRecords = [...records];
+  }
+
+  if (supabaseClient) {
+    await syncRolePermissionsFromSupabase().catch(function(){});
   }
 
   // Yag ve ambalaj her sayfada Supabase'ten çekilir
@@ -4817,7 +4924,7 @@ function getWeekStartDate(offset) {
 
 async function saveWeeklyMenu() {
   var role = getRole();
-  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN && role !== ROLE_ASCI) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);

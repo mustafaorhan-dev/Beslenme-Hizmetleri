@@ -1451,58 +1451,11 @@
           </div>
         </div>
 
-        <!-- Görüntüleme Yetkisi Ayarları -->
+        <!-- Rol Bazlı İzin Ayarları -->
         <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)">Görüntüleme Yetkisi Ayarları</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Görüntüleme şifresi ile giren kullanıcıların hangi özellikleri göreceğini ayarlayın.</p>
-
-          <!-- Genel İzinler -->
-          <div style="margin-bottom:1rem">
-            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Genel İzinler</div>
-            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
-              <input type="checkbox" id="apEditAllowed" /> Düzenlemeye izin ver (form alanları aktif olsun)
-            </label>
-            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
-              <input type="checkbox" id="apShowActions" /> Yeni kayıt ekleme butonlarını göster
-            </label>
-            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
-              <input type="checkbox" id="apShowExport" /> Veri dışa aktarma butonunu göster
-            </label>
-            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;font-size:0.85rem">
-              <input type="checkbox" id="apShowSync" /> Senkronizasyon butonlarını göster
-            </label>
-          </div>
-
-          <!-- Sekme Görünürlüğü -->
-          <div style="margin-bottom:0.75rem">
-            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Görünen Sekmeler</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem">
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_dashboard" checked /> Panel
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_menu" checked /> Menü
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_records" checked /> Kayıtlar
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_report" checked /> Rapor
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_haccp" checked /> Gıda Güvenliği
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_yag" checked /> Atık Yağ
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_ambalaj" checked /> Ambalaj Atıkları
-              </label>
-              <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;font-size:0.85rem">
-                <input type="checkbox" id="apTab_charts" checked /> Grafikler
-              </label>
-            </div>
-          </div>
+          <h3 style="font-size:0.95rem;margin:0 0 0.25rem;color:var(--text-primary)">Rol Bazlı İzin Ayarları</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Her rol için hangi sekmeleri görebileceğini ve ne yapabileceğini ayarlayın.</p>
+          <div id="apRolePermissions"></div>
         </div>
 
         <!-- Hata ve Başarı Mesajları -->
