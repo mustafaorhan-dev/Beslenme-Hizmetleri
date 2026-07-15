@@ -189,9 +189,7 @@ function isAdminSessionValid() {
     const adminHashes = cfg.users.filter(u => u.role === ROLE_ADMIN).map(u => u.passwordHash);
     if (adminHashes.includes(storedHash)) return true;
   }
-  // Eski sistem: adminHash ile kontrol
-  const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : [];
-  return adminHashes.includes(storedHash);
+  return false;
 }
 
 function requireAdmin() {
@@ -228,7 +226,7 @@ async function doLogin() {
   let displayName = '';
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   
-  // Yeni sistem: users listesinden kontrol
+  // Yeni sistem: users listesinden kontrol (kullanıcı adı + şifre)
   if (cfg.users && Array.isArray(cfg.users)) {
     const user = cfg.users.find(u => u.username === username && u.passwordHash === inputHash);
     if (user) {
@@ -236,14 +234,9 @@ async function doLogin() {
       displayName = user.displayName;
     }
   }
-  
-  // Eski sistem: admin/viewer hash'lerinden kontrol (geriye uyumluluk)
-  if (!role) {
-    const adminHashes = remoteHashes.adminHash ? [remoteHashes.adminHash] : [];
-    const viewerHashes = remoteHashes.viewerHash ? [remoteHashes.viewerHash] : [];
-    if (adminHashes.includes(inputHash)) { role = ROLE_ADMIN; displayName = 'Admin'; }
-    else if (viewerHashes.includes(inputHash)) { role = ROLE_VIEWER; displayName = 'Görüntüleme'; }
-  }
+
+  // Eski sistem geriye uyumluluğu KALDIRILDI — yeni sistem aktifken eski hash kontrolü yapılıyor ve
+  // bu durum herhangi bir şifre ile roller arası geçişe neden oluyordu.
 
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
