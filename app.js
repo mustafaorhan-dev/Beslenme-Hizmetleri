@@ -658,8 +658,7 @@ function applyRolePermissions() {
       if (!allowed) btn.style.display = 'none';
     });
     document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
-    // Menü: üretim bölümünü devre dışı bırak
-    document.querySelectorAll('#productionSection, #weeklyTotalSection').forEach(function(el) { el.style.display = 'none'; });
+    // Menü: üretim bölümü diyetisyen için de görünür
     // Menü: "Yemek Listesi" butonunu gizle
     document.querySelectorAll('.btn-ghost[onclick*="openYemekModal"]').forEach(function(el) { el.style.display = 'none'; });
     // Menü: yemek seçme ve not yazma alanlarını aktif et (applyViewerRestrictions devre dışı bırakmış olabilir)
@@ -718,8 +717,7 @@ function applyRolePermissions() {
         if (ta) { ta.style.cursor = 'default'; }
       }
     }
-    document.querySelectorAll('.note-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
-    document.querySelectorAll('.kisi-input').forEach(function(el) { el.readOnly = false; el.disabled = false; el.style.opacity = ''; });
+    document.querySelectorAll('.note-input, .kisi-input, .menu-table textarea, .menu-table input').forEach(function(el) { el.readOnly = true; el.disabled = true; el.style.opacity = '0.7'; });
   }
 }
 
