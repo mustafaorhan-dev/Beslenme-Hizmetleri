@@ -154,6 +154,8 @@ const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Soru
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
 
+const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
+
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
     tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, yag: false, ambalaj: false, charts: true },
@@ -509,7 +511,7 @@ async function saveAdminSettings() {
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
-  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi', 'temizlikci'];
+  var roles = Object.keys(rolePermissions);
   roles.forEach(function(role) {
     var perm = rolePermissions[role];
     if (!perm) return;
@@ -536,7 +538,7 @@ async function saveAdminSettings() {
 function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
-  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi', 'temizlikci'];
+  var roles = Object.keys(rolePermissions);
   var permLabels = {
     canEditMenu: 'Menüdüzenleyebilir',
     canSaveMenu: 'Menüyü kaydedebilir',
@@ -552,15 +554,24 @@ function apRenderRolePermissions() {
   var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
   var html = '';
   roles.forEach(function(role) {
-    var perm = rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role] || {}));
+    var perm = rolePermissions[role] || {};
     var prefix = 'apRole_' + role + '_';
+    var isCore = CORE_ROLES.indexOf(role) !== -1;
+    var label = (ROLE_LABELS[role] || role);
     html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.75rem">';
-    html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">' + (ROLE_LABELS[role] || role) + '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">';
+    html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">' + label + (isCore ? '' : ' <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">(özel rol)</span>') + '</div>';
+    html += '<div style="display:flex;gap:0.4rem">';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apResetRolePermissions(\'' + role + '\')" title="Varsayılana sıfırla" style="font-size:0.75rem;padding:3px 8px;color:var(--accent)">Sıfırla</button>';
+    if (!isCore) {
+      html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteRole(\'' + role + '\')" title="Bu rolü sil" style="font-size:0.75rem;padding:3px 8px;color:#ef4444">Sil</button>';
+    }
+    html += '</div></div>';
     html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Görünen Sekmeler</div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem;margin-bottom:0.75rem">';
     Object.keys(tabLabels).forEach(function(tab) {
       html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
-      html += '<input type="checkbox" id="' + prefix + 'tab_' + tab + '"' + (perm.tabs[tab] ? ' checked' : '') + ' /> ' + tabLabels[tab];
+      html += '<input type="checkbox" id="' + prefix + 'tab_' + tab + '"' + (perm.tabs && perm.tabs[tab] ? ' checked' : '') + ' /> ' + tabLabels[tab];
       html += '</label>';
     });
     html += '</div>';
@@ -572,7 +583,56 @@ function apRenderRolePermissions() {
     });
     html += '</div>';
   });
+  html += '<div style="background:var(--bg-card);border:1px dashed var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.75rem">';
+  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Yeni Rol Ekle</div>';
+  html += '<div style="display:flex;gap:0.5rem">';
+  html += '<input type="text" id="apNewRoleName" placeholder="Rol adı (ör: temizlikçi)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />';
+  html += '<button class="btn btn-primary btn-sm" onclick="apAddRole()">Ekle</button>';
+  html += '</div></div>';
   container.innerHTML = html;
+}
+
+function apResetRolePermissions(role) {
+  if (getRole() !== ROLE_ADMIN) return;
+  if (!confirm('Bu rolün izinlerini varsayılana sıfırlamak istediğinize emin misiniz?')) return;
+  if (DEFAULT_ROLE_PERMISSIONS[role]) {
+    rolePermissions[role] = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
+  } else {
+    delete rolePermissions[role];
+  }
+  saveRolePermissions();
+  syncRolePermissionsToSupabase();
+  apRenderRolePermissions();
+  applyRolePermissions();
+  showToast((ROLE_LABELS[role] || role) + ' izinleri sıfırlandı.', 'success');
+}
+
+function apDeleteRole(role) {
+  if (getRole() !== ROLE_ADMIN) return;
+  if (CORE_ROLES.indexOf(role) !== -1) { showToast('Temel roller silinemez.', 'error'); return; }
+  if (!confirm('"' + (ROLE_LABELS[role] || role) + '" rolünü silmek istediğinize emin misiniz?')) return;
+  delete rolePermissions[role];
+  delete ROLE_LABELS[role];
+  saveRolePermissions();
+  syncRolePermissionsToSupabase();
+  apRenderRolePermissions();
+  showToast((ROLE_LABELS[role] || role) + ' rolü silindi.', 'success');
+}
+
+function apAddRole() {
+  if (getRole() !== ROLE_ADMIN) return;
+  var nameInput = document.getElementById('apNewRoleName');
+  var name = (nameInput.value || '').trim().toLowerCase().replace(/\s+/g, '_');
+  if (!name) { showToast('Rol adı gerekli.', 'error'); return; }
+  if (rolePermissions[name]) { showToast('Bu rol zaten var.', 'error'); return; }
+  if (['admin'].indexOf(name) !== -1) { showToast('Bu rol adı kullanılamaz.', 'error'); return; }
+  ROLE_LABELS[name] = nameInput.value.trim();
+  rolePermissions[name] = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
+  saveRolePermissions();
+  syncRolePermissionsToSupabase();
+  nameInput.value = '';
+  apRenderRolePermissions();
+  showToast('"' + ROLE_LABELS[name] + '" rolü eklendi. İzinleri özelleştirebilirsiniz.', 'success');
 }
 
 // ─── KULLANICI YÖNETİMİ ─────────────────────────────────────────────────────
