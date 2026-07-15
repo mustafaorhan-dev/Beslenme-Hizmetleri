@@ -2492,9 +2492,9 @@ function autoCalcAtik() {
   const fire    = parseFloat(document.getElementById('fFire').value)   || 0;
   const toplam  = parseInt(document.getElementById('fToplam').value)   || 0;
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: (ÜretilenYemek - FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
-  // Örnek: (550 - 55 - 443) x 400 / 1000 = 20,80 kg
-  const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
+  // Formül: (FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
+  // Örnek: fire=495, toplam=443, porsiyon=400 → (495-443)*400/1000 = 20,80 kg
+  const atik = Math.max(0, (fire - toplam) * porsiyon / 1000);
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
 
@@ -2548,7 +2548,7 @@ function saveRecord(e) {
     const ogrenci  = parseInt(document.getElementById('fOgrenci').value)  || 0;
     const toplam  = parseInt(document.getElementById('fToplam').value)    || 0;
     const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-    const atik = Math.max(0, (yemek - fire - toplam) * porsiyon / 1000);
+    const atik = Math.max(0, (fire - toplam) * porsiyon / 1000);
     const harcama_tutari = ogrenci * getOgrenciBasiHarcamaOrani();
 
     const rec = {
