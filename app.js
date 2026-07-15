@@ -147,8 +147,9 @@ const ROLE_DIYETISYEN = 'diyetisyen';
 const ROLE_DEPO = 'depo';
 const ROLE_ASCI = 'asci';
 const ROLE_GIDA_MUHENDISI = 'gida_muhendisi';
+const ROLE_TEMIZLIKCI = 'temizlikci';
 
-const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', gida_muhendisi: 'Gıda Mühendisi' };
+const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', gida_muhendisi: 'Gıda Mühendisi', temizlikci: 'Temizlikçi' };
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
@@ -194,6 +195,19 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditAmbalaj: false
   },
   gida_muhendisi: {
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    canEditMenu: false,
+    canSaveMenu: false,
+    canSeeProduction: true,
+    canAddRecord: false,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: false,
+    canEditYag: false,
+    canEditAmbalaj: false
+  },
+  temizlikci: {
     tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
@@ -495,7 +509,7 @@ async function saveAdminSettings() {
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
-  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi'];
+  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi', 'temizlikci'];
   roles.forEach(function(role) {
     var perm = rolePermissions[role];
     if (!perm) return;
@@ -522,7 +536,7 @@ async function saveAdminSettings() {
 function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
-  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi'];
+  var roles = ['diyetisyen', 'depo', 'asci', 'gida_muhendisi', 'temizlikci'];
   var permLabels = {
     canEditMenu: 'Menüdüzenleyebilir',
     canSaveMenu: 'Menüyü kaydedebilir',
@@ -670,7 +684,7 @@ function apEditUser(index) {
   html += '<input type="password" id="apEditPassword" placeholder="Yeni şifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
   html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>';
   html += '<select id="apEditRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">';
-  ['admin','diyetisyen','depo','asci','gida_muhendisi'].forEach(function(r) {
+  ['admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci'].forEach(function(r) {
     html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + (roleLabels[r] || r) + '</option>';
   });
   html += '</select></div>';
