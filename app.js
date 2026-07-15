@@ -2475,7 +2475,7 @@ function populateForm(rec) {
 // ─── AUTO CALC ─────────────────────────────────────────────────────────────────
 function autoCalc() {
   const yemek = parseFloat(document.getElementById('fYemek').value) || 0;
-  document.getElementById('fFire').value = (yemek * 0.1).toFixed(2);
+  document.getElementById('fFire').value = (yemek * 0.9).toFixed(2);
   autoCalcGecis();
 }
 
