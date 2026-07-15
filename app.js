@@ -21,16 +21,15 @@ try {
 } catch (_) {}
 
 // ─── REMOTE PASSWORD HASH CACHE ──────────────────────────────────────────────
-let remoteHashes = { adminHash: null, viewerHash: null };
+let remoteHashes = { adminHash: null };
 
 async function syncPasswordHashesFromRemote() {
   try {
     if (!supabaseClient) return;
-    var { data, error } = await supabaseClient.from('config').select('key,value').in('key', ['admin_hash','viewer_hash']);
+    var { data, error } = await supabaseClient.from('config').select('key,value').eq('key', 'admin_hash');
     if (error) return;
     data.forEach(function(r) {
       if (r.key === 'admin_hash') remoteHashes.adminHash = r.value;
-      if (r.key === 'viewer_hash') remoteHashes.viewerHash = r.value;
     });
   } catch (_) {}
 }
@@ -147,9 +146,8 @@ const ROLE_ADMIN = 'admin';
 const ROLE_DIYETISYEN = 'diyetisyen';
 const ROLE_DEPO = 'depo';
 const ROLE_ASCI = 'asci';
-const ROLE_VIEWER = 'viewer';
 
-const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', viewer: 'Görüntüleme' };
+const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
@@ -193,19 +191,6 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHaccp: false,
     canEditYag: false,
     canEditAmbalaj: false
-  },
-  viewer: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
-    canEditMenu: false,
-    canSaveMenu: false,
-    canSeeProduction: true,
-    canAddRecord: false,
-    canExport: false,
-    canSync: false,
-    canSeeAdminPanel: false,
-    canEditHaccp: false,
-    canEditYag: false,
-    canEditAmbalaj: false
   }
 };
 
@@ -213,7 +198,7 @@ let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
 
 function getRolePermissions(role) {
   if (role === ROLE_ADMIN) return null;
-  return rolePermissions[role] || rolePermissions.viewer || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.viewer));
+  return rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
 }
 
 function loadRolePermissions() {
@@ -276,13 +261,8 @@ function getAdminHash() {
   return '';
 }
 
-function getViewerHash() {
-  if (remoteHashes.viewerHash) return remoteHashes.viewerHash;
-  return '';
-}
-
 function getRole() {
-  return sessionStorage.getItem('atik_kontrol_role') || ROLE_VIEWER;
+  return sessionStorage.getItem('atik_kontrol_role') || '';
 }
 
 function isAdminSessionValid() {
@@ -457,7 +437,7 @@ function closeAdminPanel() {
 
 function doLogout() {
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'atik_kontrol_viewer_settings', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -501,7 +481,7 @@ async function saveAdminSettings() {
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
-  var roles = ['diyetisyen', 'depo', 'asci', 'viewer'];
+  var roles = ['diyetisyen', 'depo', 'asci'];
   roles.forEach(function(role) {
     var perm = rolePermissions[role];
     if (!perm) return;
@@ -528,7 +508,7 @@ async function saveAdminSettings() {
 function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
-  var roles = ['diyetisyen', 'depo', 'asci', 'viewer'];
+  var roles = ['diyetisyen', 'depo', 'asci'];
   var permLabels = {
     canEditMenu: 'Menüdüzenleyebilir',
     canSaveMenu: 'Menüyü kaydedebilir',
@@ -730,10 +710,6 @@ async function apDeleteUser(index) {
   var remoteOk = await saveUsers(users);
   apRenderUserList();
   showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
-}
-
-function getViewerSettings() {
-  return { editAllowed: false, tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true }, showExportBtn: false, showSyncBtn: false, showActions: false };
 }
 
 function applyViewerRestrictions() {
