@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS ambalaj_records (
   tarih TEXT NOT NULL,
   tur TEXT DEFAULT '',
   miktar NUMERIC DEFAULT 0,
+  birim TEXT DEFAULT 'kg',
   not_ TEXT DEFAULT '',
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
@@ -142,3 +143,6 @@ CREATE POLICY "anon_all_config" ON config FOR ALL TO anon USING (true) WITH CHEC
 -- 2. RLS politikaları JWT claim'lerine göre daraltılmalı
 -- 3. Admin işlemleri service_role key ile yapılmalı
 -- 4. Config tablosundaki hash'ler asla anon key ile okunmamalı
+
+-- Mevcut ambalaj_records tablosuna birim kolonu ekle (çalıştırılması gereken ALTER)
+ALTER TABLE ambalaj_records ADD COLUMN IF NOT EXISTS birim TEXT DEFAULT 'kg';

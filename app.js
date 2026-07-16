@@ -1545,6 +1545,7 @@ function ambalajRecordToDB(r) {
     tarih: r.tarih || '',
     tur: r.tur || '',
     miktar: Number(r.miktar) || 0,
+    birim: r.birim || 'kg',
     not_: r.not || '',
     last_modified: new Date().toISOString()
   };
@@ -1583,6 +1584,7 @@ async function syncAmbalajFromSupabase() {
           tarih: normalizeDate(r.tarih || ''),
           tur: r.tur || '',
           miktar: Number(r.miktar) || 0,
+          birim: r.birim || 'kg',
           not: r.not_ || ''
         };
       });
@@ -1604,6 +1606,7 @@ async function refreshAmbalajFromSupabase() {
         tarih: normalizeDate(r.tarih || ''),
         tur: r.tur || '',
         miktar: Number(r.miktar) || 0,
+        birim: r.birim || 'kg',
         not: r.not_ || ''
       }; });
       saveAmbalajData();
@@ -5640,7 +5643,7 @@ function renderAmbalajTable() {
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
-      <td>${(r.miktar || 0) < 1 ? (r.miktar || 0).toFixed(3) : (r.miktar || 0).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted)">kg</span></td>
+      <td>${(r.miktar || 0) < 1 && (r.birim || 'kg') === 'kg' ? (r.miktar || 0).toFixed(3) : (r.miktar || 0).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted)">${(r.birim || 'kg') === 'g' ? 'gr' : 'kg'}</span></td>
       <td>${escapeHtml(r.not || '—')}</td>
       <td>
         <button class="btn-icon" onclick="editAmbalajRecord(${r.id})" title="Düzenle">
@@ -5689,8 +5692,17 @@ function openAmbalajModal(id) {
     title.textContent = 'Ambalaj Atığı Kaydını Düzenle';
     document.getElementById('afTarih').value = rec.tarih;
     document.getElementById('afTur').value = rec.tur || '';
-    document.getElementById('afMiktar').value = rec.miktar || '';
     document.getElementById('afNot').value = rec.not || '';
+
+    ambalajBirim = rec.birim || 'kg';
+    var btn = document.getElementById('afBirimToggle');
+    if (btn) {
+      btn.textContent = ambalajBirim === 'g' ? 'g' : 'kg';
+      var inp = document.getElementById('afMiktar');
+      if (ambalajBirim === 'g') { inp.step = '1'; inp.placeholder = '0'; }
+      else { inp.step = '0.001'; inp.placeholder = '0.000'; }
+    }
+    document.getElementById('afMiktar').value = rec.miktar || '';
   } else {
     title.textContent = 'Yeni Ambalaj Atığı Kaydı';
     document.getElementById('afTur').value = '';
@@ -5711,13 +5723,13 @@ function saveAmbalajRecord(e) {
   e.preventDefault();
 
   var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
-  if (ambalajBirim === 'g') rawMiktar = rawMiktar / 1000;
 
   const rec = {
     id: editingAmbalajId || Date.now(),
     tarih: document.getElementById('afTarih').value,
     tur: document.getElementById('afTur').value,
     miktar: rawMiktar,
+    birim: ambalajBirim || 'kg',
     not: document.getElementById('afNot').value.trim()
   };
 
@@ -5787,7 +5799,8 @@ function drawAmbalajChart() {
     if (!r.tarih) return;
     if (ambalajChartYear !== '' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
-    monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
+    var kg = (r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0);
+    monthly[mk] = (monthly[mk] || 0) + kg;
   });
   var labels = Object.keys(monthly).sort(function(a, b) {
     var pa = a.split('/'), pb = b.split('/');
@@ -6102,16 +6115,17 @@ function printAmbalajList() {
   });
   html += '</tr></thead><tbody>';
   list.forEach(function(r) {
+    var birimLabel = (r.birim || 'kg') === 'g' ? ' gr' : ' kg';
     html += '<tr>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.tarih) + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed(1) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed((r.birim || 'kg') === 'g' ? 0 : 1) + birimLabel + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || '—') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
-  var total = list.reduce(function(s, r) { return s + (r.miktar || 0); }, 0);
-  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + total.toFixed(1) + ' kg</div>';
+  var totalKg = list.reduce(function(s, r) { return s + ((r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0)); }, 0);
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + totalKg.toFixed(1) + ' kg</div>';
   html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Ambalaj Atığı Kayıt Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
