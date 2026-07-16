@@ -735,6 +735,7 @@
             <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Atık Yağ Grafiği — yıl seçin, aya tıklayın</span>
             <div id="yagChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
           </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);padding:0.1rem 0 0.3rem">Yıl filtresi bu grafiği, tarih filtresi aşağıdaki tabloyu filtreler.</div>
           <div class="chart-area" id="chartYag" style="height:170px">
             <canvas id="canvasYag"></canvas>
             <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
@@ -811,6 +812,7 @@
             <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Ambalaj Atığı Grafiği — yıl seçin, aya tıklayın</span>
             <div id="ambalajChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
           </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);padding:0.1rem 0 0.3rem">Yıl filtresi bu grafiği, tarih filtresi aşağıdaki tabloyu filtreler.</div>
           <div class="chart-area" id="chartAmbalaj" style="height:170px">
             <canvas id="canvasAmbalaj"></canvas>
             <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
@@ -863,10 +865,12 @@
         <div class="chart-year-filter" id="chartYearFilter" style="flex:1"></div>
         <div class="toolbar-actions">
           <button class="btn btn-outline" onclick="exportChartsPDF()" title="Grafikleri PDF olarak yazdır">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012-2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             PDF Yazdır
           </button>
         </div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">Yıl ve ay filtresi, aşağıdaki tüm grafikleri (Üretim, Turnike, Atık, Harcama vb.) birlikte filtreler.</div>
       </div>
       <div class="charts-grid">
 
