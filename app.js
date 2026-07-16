@@ -4301,7 +4301,7 @@ const chartValueLabelPlugin = {
         const isTL = ds.label && ds.label.includes('₺');
         const display = isTL
           ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
-          : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
+          : val === 0 ? '0' : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
         if (pos === 'inside') {
           ctx.fillStyle = '#000000';
           ctx.font = 'bold 11px Inter, sans-serif';
