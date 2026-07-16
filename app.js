@@ -374,6 +374,7 @@ async function doLogin() {
     renderAdminPanelBtn();
     applyRolePermissions();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
+    logIslem('login', displayName + ' sisteme giriş yaptı');
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
     error.textContent = 'Hatalı kullanıcı adı veya şifre!';
@@ -422,6 +423,7 @@ function openAdminPanel() {
   document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  apLoadLogs();
 }
 
 async function apReAuth() {
@@ -466,6 +468,7 @@ function closeAdminPanel() {
 }
 
 function doLogout() {
+  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' çıkış yaptı');
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
   var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY];
   var preserved = {};
@@ -719,6 +722,7 @@ async function apAddUser() {
   successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
   successEl.style.display = 'block';
   showToast('Kullanıcı eklendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  logIslem('kullanici_ekle', displayName + ' (' + role + ') eklendi');
 }
 
 function apEditUser(index) {
@@ -785,6 +789,7 @@ async function apSaveEditUser() {
   successEl.textContent = displayName + ' güncellendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
   successEl.style.display = 'block';
   showToast(displayName + ' güncellendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  logIslem('kullanici_duzenle', displayName + ' güncellendi');
 }
 
 async function apDeleteUser(index) {
@@ -798,6 +803,39 @@ async function apDeleteUser(index) {
   var remoteOk = await saveUsers(users);
   apRenderUserList();
   showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  logIslem('kullanici_sil', user.displayName + ' silindi');
+}
+
+async function apLoadLogs() {
+  var container = document.getElementById('apLogList');
+  if (!container) return;
+  if (!supabaseClient) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Supabase bağlı değil.</div>'; return; }
+  container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Yükleniyor...</div>';
+  try {
+    var { data, error } = await supabaseClient.from('user_logs').select('*').order('tarih', { ascending: false }).limit(200);
+    if (error) throw error;
+    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Henüz log kaydı yok.</div>'; return; }
+    var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#8b5cf6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
+    var islemEtiket = { login: 'Giriş', logout: 'Çıkış', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_sil: 'Kullanıcı Sil' };
+    var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
+    html += '<thead><tr style="background:var(--bg);position:sticky;top:0"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
+    data.forEach(function(r) {
+      var tarih = '';
+      try { tarih = new Date(r.tarih).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { tarih = r.tarih || ''; }
+      var renk = islemRenk[r.islem] || 'var(--text-muted)';
+      var etiket = islemEtiket[r.islem] || r.islem;
+      html += '<tr style="border-bottom:1px solid var(--border)">';
+      html += '<td style="padding:5px 8px;white-space:nowrap;color:var(--text-muted)">' + tarih + '</td>';
+      html += '<td style="padding:5px 8px;font-weight:600">' + escapeHtml(r.kullanici || '') + ' <span style="font-size:0.7rem;color:var(--text-muted)">(' + escapeHtml(r.rol || '') + ')</span></td>';
+      html += '<td style="padding:5px 8px"><span style="background:' + renk + '22;color:' + renk + ';padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.72rem">' + etiket + '</span></td>';
+      html += '<td style="padding:5px 8px;color:var(--text-muted)">' + escapeHtml(r.detay || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (_) {
+    container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--danger)">Loglar yüklenemedi.</div>';
+  }
 }
 
 function applyViewerRestrictions() {
@@ -1067,6 +1105,7 @@ function resetInactivityTimer() {
 }
 
 function lockScreen() {
+  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kapattı');
   stopPolling();
   sessionStorage.removeItem('atik_kontrol_role');
   document.getElementById('loginOverlay').classList.remove('hidden');
@@ -1570,6 +1609,21 @@ function syncAmbalajSilent() {
       await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
     } catch (_) {}
   }, 400);
+}
+
+async function logIslem(islem, detay) {
+  if (!supabaseClient) return;
+  var displayName = sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor';
+  var role = sessionStorage.getItem('atik_kontrol_role') || '';
+  try {
+    await supabaseClient.from('user_logs').insert({
+      tarih: new Date().toISOString(),
+      kullanici: displayName,
+      rol: role,
+      islem: islem || '',
+      detay: detay || ''
+    });
+  } catch (_) {}
 }
 
 async function syncAmbalajFromSupabase() {
@@ -2735,9 +2789,11 @@ function saveRecord(e) {
       const idx = records.findIndex(r => r.id === savedEditingId);
       if (idx !== -1) records[idx] = rec;
       showToast('Kayıt başarıyla güncellendi.', 'success');
+      logIslem('kayit_duzenle', 'yemek #' + savedEditingId + ' güncellendi');
     } else {
       records.push(rec);
       showToast('Yeni kayıt başarıyla eklendi.', 'success');
+      logIslem('yeni_kayit', 'yemek ' + (rec.tarih || '') + ' eklendi');
     }
 
     records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
@@ -2770,6 +2826,7 @@ async function deleteRecord(id) { if (!requireAdmin()) return;
     renderAll();
     drawAllCharts();
     showToast('Kayıt silindi.', 'success');
+    logIslem('kayit_sil', 'yemek #' + id + ' silindi');
   } catch (e) {
     showToast('Hata: ' + e.message, 'error');
   }
@@ -5375,9 +5432,11 @@ function saveYagRecord(e) {
     const idx = yagRecords.findIndex(r => r.id === editingYagId);
     if (idx !== -1) yagRecords[idx] = rec;
     showToast('Atık yağ kaydı güncellendi.', 'success');
+    logIslem('kayit_duzenle', 'yag #' + editingYagId + ' güncellendi');
   } else {
     yagRecords.push(rec);
     showToast('Atık yağ kaydı eklendi.', 'success');
+    logIslem('yeni_kayit', 'yag ' + (rec.tur || '') + ' ' + rec.miktar + ' lt eklendi');
   }
 
   saveYagData();
@@ -5399,6 +5458,7 @@ async function deleteYagRecord(id) {
   renderYagTable();
   syncYagSilent();
   showToast('Atık yağ kaydı silindi.', 'success');
+  logIslem('kayit_sil', 'yag #' + id + ' silindi');
 }
 
 let yagChartInstance = null;
@@ -5737,9 +5797,11 @@ function saveAmbalajRecord(e) {
     const idx = ambalajRecords.findIndex(r => r.id === editingAmbalajId);
     if (idx !== -1) ambalajRecords[idx] = rec;
     showToast('Ambalaj atığı kaydı güncellendi.', 'success');
+    logIslem('kayit_duzenle', 'ambalaj #' + editingAmbalajId + ' güncellendi');
   } else {
     ambalajRecords.push(rec);
     showToast('Ambalaj atığı kaydı eklendi.', 'success');
+    logIslem('yeni_kayit', 'ambalaj ' + (rec.tur || '') + ' ' + rec.miktar + ' ' + (rec.birim || 'kg'));
   }
 
   saveAmbalajData();
@@ -5761,6 +5823,7 @@ async function deleteAmbalajRecord(id) {
   renderAmbalajTable();
   syncAmbalajSilent();
   showToast('Ambalaj atığı kaydı silindi.', 'success');
+  logIslem('kayit_sil', 'ambalaj #' + id + ' silindi');
 }
 
 let ambalajChartInstance = null;

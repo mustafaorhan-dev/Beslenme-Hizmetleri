@@ -1463,6 +1463,18 @@
           <div id="apRolePermissions"></div>
         </div>
 
+        <!-- Log Kayıtları -->
+        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+            <div>
+              <h3 style="font-size:0.95rem;margin:0;color:var(--text-primary)">İşlem Log Kayıtları</h3>
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0.25rem 0 0">Kullanıcı giriş/çıkış ve kayıt işlemleri</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="apLoadLogs()">Yenile</button>
+          </div>
+          <div id="apLogList" style="max-height:300px;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:0.8rem"></div>
+        </div>
+
         <!-- Hata ve Başarı Mesajları -->
         <div id="apError" style="color:#ef4444;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
         <div id="apSuccess" style="color:#22c55e;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>

@@ -146,3 +146,16 @@ CREATE POLICY "anon_all_config" ON config FOR ALL TO anon USING (true) WITH CHEC
 
 -- Mevcut ambalaj_records tablosuna birim kolonu ekle (çalıştırılması gereken ALTER)
 ALTER TABLE ambalaj_records ADD COLUMN IF NOT EXISTS birim TEXT DEFAULT 'kg';
+
+-- 8. KULLANICI İŞLEM LOG TABLOSU
+CREATE TABLE IF NOT EXISTS user_logs (
+  id BIGSERIAL PRIMARY KEY,
+  tarih TEXT NOT NULL,
+  kullanici TEXT DEFAULT '',
+  rol TEXT DEFAULT '',
+  islem TEXT DEFAULT '',
+  detay TEXT DEFAULT ''
+);
+
+ALTER TABLE user_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all_user_logs" ON user_logs FOR ALL TO anon USING (true) WITH CHECK (true);
