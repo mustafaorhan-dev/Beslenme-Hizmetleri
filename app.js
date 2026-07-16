@@ -3641,6 +3641,29 @@ function renderWeeklyTotal(dishEntries, days) {
   const section = document.getElementById('weeklyTotalSection');
   if (!section) return;
 
+  const kategoriSozluk = {
+    'Kuru Bakliyat': ['nohut', 'mercimek', 'fasulye', 'pirinç', 'pirinc', 'bulgur', 'mısır', 'misir', 'arpa', 'buğday', 'bugday', 'kuru fasulye', 'maş', 'barbunya', 'keşkek', 'keskek', 'susam', 'tahin'],
+    'Süt Ürünleri': ['süt', 'sut', 'yoğurt', 'yogurt', 'peynir', 'tereyağı', 'tereyagi', 'tereyağ', 'ayran', 'kaşar', 'kasar', 'krema', 'çökelek', 'cökelek', 'yoğurt', 'süzme', 'kaymak', 'beyaz peynir', 'lor', 'kefir'],
+    'Sebze ve Meyve': ['domates', 'biber', 'soğan', 'sogan', 'sarımsoğ', 'sarımsak', 'patates', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'taze soğan', 'rok', 'nane', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'fasulye yeşil', 'bezelye', 'mantar', 'brokoli', 'kuşkonmaz', 'kuşkonmaz', 'enginar'],
+    'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'et', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto']
+  };
+
+  var kategoriSirasi = ['Et Ürünleri', 'Süt Ürünleri', 'Kuru Bakliyat', 'Sebze ve Meyve', 'Diğer'];
+
+  function getKategori(malzemeAdi) {
+    var ad = malzemeAdi.toLowerCase().trim()
+      .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (var kategori in kategoriSozluk) {
+      var keywords = kategoriSozluk[kategori];
+      for (var i = 0; i < keywords.length; i++) {
+        var kw = keywords[i].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (ad.indexOf(kw) !== -1 || kw.indexOf(ad) !== -1) return kategori;
+      }
+    }
+    return 'Diğer';
+  }
+
   const fmtTotal = (total, birim) => {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
@@ -3681,16 +3704,54 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
-  section.innerHTML = `<div class="weekly-total-card">
+  var kategoriler = {};
+  var kategoriSiralama = {};
+  kategoriSirasi.forEach(function(k, i) { kategoriSiralama[k] = i; });
+
+  entries.forEach(function(e) {
+    var kategori = getKategori(e.ad);
+    if (!kategoriler[kategori]) kategoriler[kategori] = [];
+    kategoriler[kategori].push(e);
+  });
+
+  var siraliKategoriler = Object.keys(kategoriler).sort(function(a, b) {
+    var sa = kategoriSiralama[a] !== undefined ? kategoriSiralama[a] : 99;
+    var sb = kategoriSiralama[b] !== undefined ? kategoriSiralama[b] : 99;
+    return sa - sb;
+  });
+
+  var kategoriRenkleri = {
+    'Et Ürünleri': { bg: '#fef2f2', border: '#fca5a5', icon: '🥩', renk: '#dc2626' },
+    'Süt Ürünleri': { bg: '#eff6ff', border: '#93c5fd', icon: '🧀', renk: '#2563eb' },
+    'Kuru Bakliyat': { bg: '#fefce8', border: '#fde047', icon: '🫘', renk: '#ca8a04' },
+    'Sebze ve Meyve': { bg: '#f0fdf4', border: '#86efac', icon: '🥬', renk: '#16a34a' },
+    'Diğer': { bg: '#f8fafc', border: '#cbd5e1', icon: '📦', renk: '#64748b' }
+  };
+
+  var globalIdx = 0;
+  var html = `<div class="weekly-total-card">
     <div class="weekly-total-header">Haftalık Toplam İhtiyaç Listesi</div>
-    <div class="weekly-total-body">
-      <div class="weekly-total-grid">${entries.map((e, idx) => {
-        const total = e.total;
-        if (total <= 0) return '';
-        return `<div class="weekly-total-item"><span class="weekly-total-num">${idx + 1}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
-      }).filter(Boolean).join('')}</div>
-    </div>
-  </div>`;
+    <div class="weekly-total-body">`;
+
+  siraliKategoriler.forEach(function(kategori) {
+    var items = kategoriler[kategori];
+    var renk = kategoriRenkleri[kategori] || kategoriRenkleri['Diğer'];
+    html += `<div class="wt-kategori">
+      <div class="wt-kategori-header" style="background:${renk.bg};border-left:4px solid ${renk.border};color:${renk.renk}">
+        <span>${renk.icon}</span> ${kategori} <span style="font-weight:400;font-size:0.75rem;opacity:0.7;margin-left:4px">(${items.length})</span>
+      </div>
+      <div class="weekly-total-grid">`;
+    items.forEach(function(e) {
+      var total = e.total;
+      if (total <= 0) return;
+      globalIdx++;
+      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+    });
+    html += '</div></div>';
+  });
+
+  html += '</div></div>';
+  section.innerHTML = html;
 }
 
 function importYemekCSV(event) { if (!requireAdmin()) return;

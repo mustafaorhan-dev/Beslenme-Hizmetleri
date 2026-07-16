@@ -1187,6 +1187,22 @@ body {
   font-weight: 600;
   color: var(--accent);
 }
+.wt-kategori {
+  margin-bottom: 0.6rem;
+}
+.wt-kategori:last-child {
+  margin-bottom: 0;
+}
+.wt-kategori-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
 
 /* ---- CHECKBOX ---- */
 .row-checkbox, #selectAll {
