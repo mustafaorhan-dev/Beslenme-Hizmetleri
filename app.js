@@ -3642,13 +3642,14 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!section) return;
 
   const kategoriSozluk = {
+    'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'et ', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto'],
+    'Süt Ürünleri': ['süt', 'sut', 'yoğurt', 'yogurt', 'peynir', 'tereyağı', 'tereyagi', 'tereyağ', 'ayran', 'kaşar', 'kasar', 'krema', 'çökelek', 'cökelek', 'süzme', 'kaymak', 'beyaz peynir', 'lor', 'kefir'],
     'Kuru Bakliyat': ['nohut', 'mercimek', 'fasulye', 'pirinç', 'pirinc', 'bulgur', 'mısır', 'misir', 'arpa', 'buğday', 'bugday', 'kuru fasulye', 'maş', 'barbunya', 'keşkek', 'keskek', 'susam', 'tahin'],
-    'Süt Ürünleri': ['süt', 'sut', 'yoğurt', 'yogurt', 'peynir', 'tereyağı', 'tereyagi', 'tereyağ', 'ayran', 'kaşar', 'kasar', 'krema', 'çökelek', 'cökelek', 'yoğurt', 'süzme', 'kaymak', 'beyaz peynir', 'lor', 'kefir'],
-    'Sebze ve Meyve': ['domates', 'biber', 'soğan', 'sogan', 'sarımsoğ', 'sarımsak', 'patates', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'taze soğan', 'rok', 'nane', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'fasulye yeşil', 'bezelye', 'mantar', 'brokoli', 'kuşkonmaz', 'kuşkonmaz', 'enginar'],
-    'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'et', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto']
+    'Baharatlar': ['biber', 'kırmızı biber', 'pul biber', 'toz biber', 'nane', 'kuru nane', 'taze nane', 'karabiber', 'kimyon', 'kekik', 'sumak', 'zerdeçal', 'tarçın', 'yenibahar', 'mahlep', 'safran', 'köri', 'hardal', 'vanilya', 'kakule', 'zencefil', 'muskat', 'çöven', 'isot', 'tatlı biber', 'acı biber', 'çemen', 'çemenotu', 'rigan', 'reyhan', 'defne yaprağı', 'hing', 'darçın', 'anason', 'yıldız anason', 'karanfil', 'alibiber', 'çam fıstığı', 'fındık içi', 'badem', 'ceviz'],
+    'Sebze ve Meyve': ['domates', 'biber', 'soğan', 'sogan', 'sarımsak', 'patates', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'rok', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'bezelye', 'mantar', 'kuşkonmaz', 'enginar']
   };
 
-  var kategoriSirasi = ['Et Ürünleri', 'Süt Ürünleri', 'Kuru Bakliyat', 'Sebze ve Meyve', 'Diğer'];
+  var kategoriSirasi = ['Et Ürünleri', 'Süt Ürünleri', 'Kuru Bakliyat', 'Baharatlar', 'Sebze ve Meyve', 'Diğer'];
 
   function getKategori(malzemeAdi) {
     var ad = malzemeAdi.toLowerCase().trim()
@@ -3724,6 +3725,7 @@ function renderWeeklyTotal(dishEntries, days) {
     'Et Ürünleri': { bg: '#fef2f2', border: '#fca5a5', icon: '🥩', renk: '#dc2626' },
     'Süt Ürünleri': { bg: '#eff6ff', border: '#93c5fd', icon: '🧀', renk: '#2563eb' },
     'Kuru Bakliyat': { bg: '#fefce8', border: '#fde047', icon: '🫘', renk: '#ca8a04' },
+    'Baharatlar': { bg: '#fff7ed', border: '#fdba74', icon: '🌶️', renk: '#ea580c' },
     'Sebze ve Meyve': { bg: '#f0fdf4', border: '#86efac', icon: '🥬', renk: '#16a34a' },
     'Diğer': { bg: '#f8fafc', border: '#cbd5e1', icon: '📦', renk: '#64748b' }
   };
