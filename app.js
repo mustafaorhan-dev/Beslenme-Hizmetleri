@@ -3728,7 +3728,7 @@ function renderWeeklyTotal(dishEntries, days) {
     'Kuru Bakliyat': { bg: '#fefce8', border: '#fde047', icon: '🫘', renk: '#ca8a04' },
     'Baharatlar': { bg: '#fff7ed', border: '#fdba74', icon: '🌶️', renk: '#ea580c' },
     'Sebze ve Meyve': { bg: '#f0fdf4', border: '#86efac', icon: '🥬', renk: '#16a34a' },
-    'Diğer': { bg: '#f8fafc', border: '#cbd5e1', icon: '📦', renk: '#64748b' }
+    'Diğer': { bg: '#f1f5f9', border: '#94a3b8', icon: '📦', renk: '#475569' }
   };
 
   var globalIdx = 0;
