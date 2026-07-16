@@ -390,8 +390,10 @@ async function doLogin() {
 
 function renderAdminPanelBtn() {
   const btn = document.getElementById('adminPanelBtn');
-  if (!btn) return;
-  btn.style.display = getRole() === ROLE_ADMIN ? '' : 'none';
+  const logBtn = document.getElementById('logPanelBtn');
+  const isAdmin = getRole() === ROLE_ADMIN;
+  if (btn) btn.style.display = isAdmin ? '' : 'none';
+  if (logBtn) logBtn.style.display = isAdmin ? '' : 'none';
 }
 
 function openAdminPanel() {
