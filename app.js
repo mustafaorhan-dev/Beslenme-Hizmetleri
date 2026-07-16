@@ -3642,11 +3642,11 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!section) return;
 
   const kategoriSozluk = {
-    'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'et ', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto'],
+    'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto', 'adana', 'urfa', 'dana'],
     'Süt Ürünleri': ['süt', 'sut', 'yoğurt', 'yogurt', 'peynir', 'tereyağı', 'tereyagi', 'tereyağ', 'ayran', 'kaşar', 'kasar', 'krema', 'çökelek', 'cökelek', 'süzme', 'kaymak', 'beyaz peynir', 'lor', 'kefir'],
     'Kuru Bakliyat': ['nohut', 'mercimek', 'fasulye', 'pirinç', 'pirinc', 'bulgur', 'mısır', 'misir', 'arpa', 'buğday', 'bugday', 'kuru fasulye', 'maş', 'barbunya', 'keşkek', 'keskek', 'susam', 'tahin'],
-    'Baharatlar': ['biber', 'kırmızı biber', 'pul biber', 'toz biber', 'nane', 'kuru nane', 'taze nane', 'karabiber', 'kimyon', 'kekik', 'sumak', 'zerdeçal', 'tarçın', 'yenibahar', 'mahlep', 'safran', 'köri', 'hardal', 'vanilya', 'kakule', 'zencefil', 'muskat', 'çöven', 'isot', 'tatlı biber', 'acı biber', 'çemen', 'çemenotu', 'rigan', 'reyhan', 'defne yaprağı', 'hing', 'darçın', 'anason', 'yıldız anason', 'karanfil', 'alibiber', 'çam fıstığı', 'fındık içi', 'badem', 'ceviz'],
-    'Sebze ve Meyve': ['domates', 'biber', 'soğan', 'sogan', 'sarımsak', 'patates', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'rok', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'bezelye', 'mantar', 'kuşkonmaz', 'enginar']
+    'Baharatlar': ['tuz', 'biber', 'kırmızı biber', 'pul biber', 'toz biber', 'nane', 'kuru nane', 'taze nane', 'karabiber', 'kimyon', 'kekik', 'sumak', 'zerdeçal', 'tarçın', 'yenibahar', 'mahlep', 'safran', 'köri', 'hardal', 'vanilya', 'kakule', 'zencefil', 'muskat', 'çöven', 'isot', 'tatlı biber', 'acı biber', 'çemen', 'çemenotu', 'rigan', 'reyhan', 'defne yaprağı', 'hing', 'darçın', 'anason', 'yıldız anason', 'karanfil', 'alibiber', 'çam fıstığı', 'fındık içi', 'badem', 'ceviz'],
+    'Sebze ve Meyve': ['domates', 'biber', 'soğan', 'sogan', 'sarımsak', 'patates', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'rok', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'bezelye', 'mantar', 'kuşkonmaz', 'enginar', 'kuru incir', 'incir', 'kuru kayısı', 'kayısı', 'kuru üzüm', 'kuru erik', 'erik', 'kiraz', 'vişne', 'nar', 'armut', 'kavun', 'karpuz', 'ananas', 'greyfurt', 'mandalina', 'kivi', 'balkabağı', 'kestane']
   };
 
   var kategoriSirasi = ['Et Ürünleri', 'Süt Ürünleri', 'Kuru Bakliyat', 'Baharatlar', 'Sebze ve Meyve', 'Diğer'];
@@ -3659,7 +3659,8 @@ function renderWeeklyTotal(dishEntries, days) {
       var keywords = kategoriSozluk[kategori];
       for (var i = 0; i < keywords.length; i++) {
         var kw = keywords[i].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (ad.indexOf(kw) !== -1 || kw.indexOf(ad) !== -1) return kategori;
+        var re = new RegExp('(?:^|[\\s,;|/])' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:[\\s,;|/]|$)');
+        if (re.test(ad) || kw === ad) return kategori;
       }
     }
     return 'Diğer';
