@@ -807,14 +807,22 @@ async function apDeleteUser(index) {
 }
 
 async function apLoadLogs() {
-  var container = document.getElementById('apLogList');
+  var container = document.getElementById('logPanelBody') || document.getElementById('apLogList');
   if (!container) return;
   if (!supabaseClient) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Supabase bağlı değil.</div>'; return; }
   container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Yükleniyor...</div>';
   try {
-    var { data, error } = await supabaseClient.from('user_logs').select('*').order('tarih', { ascending: false }).limit(200);
+    var filterIslem = document.getElementById('logFilterIslem');
+    var filterKullanici = document.getElementById('logFilterKullanici');
+    var query = supabaseClient.from('user_logs').select('*').order('tarih', { ascending: false }).limit(200);
+    if (filterIslem && filterIslem.value) query = query.eq('islem', filterIslem.value);
+    var { data, error } = await query;
     if (error) throw error;
-    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Henüz log kaydı yok.</div>'; return; }
+    if (filterKullanici && filterKullanici.value && data) {
+      var arama = filterKullanici.value.toLowerCase();
+      data = data.filter(function(r) { return (r.kullanici || '').toLowerCase().indexOf(arama) !== -1; });
+    }
+    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>'; return; }
     var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#8b5cf6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
     var islemEtiket = { login: 'Giriş', logout: 'Çıkış', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_sil: 'Kullanıcı Sil' };
     var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
@@ -838,6 +846,18 @@ async function apLoadLogs() {
   }
 }
 
+function openLogPanel() {
+  if (getRole() !== ROLE_ADMIN) return;
+  document.getElementById('logPanelModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  apLoadLogs();
+}
+
+function closeLogPanel() {
+  document.getElementById('logPanelModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function applyViewerRestrictions() {
   if (getRole() === ROLE_ADMIN) return;
   var perm = getRolePermissions(getRole());
@@ -856,6 +876,8 @@ function applyViewerRestrictions() {
   if (pullBtn) pullBtn.style.display = perm.canSync ? '' : 'none';
   var adminBtn = document.getElementById('adminPanelBtn');
   if (adminBtn) adminBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
+  var logBtn = document.getElementById('logPanelBtn');
+  if (logBtn) logBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
   if (!perm.canEditMenu) {
     document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input').forEach(function(el) {
       el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
