@@ -3432,11 +3432,11 @@ function renderComparison() {
   ];
   badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label"></span>'
-    + '<span class="comparison-old">İlk Yarı</span>'
+    + '<span class="comparison-label">TARİH</span>'
+    + '<span class="comparison-old">ATİK</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">Son Yarı</span>'
-    + '<span class="comparison-diff">fark</span>'
+    + '<span class="comparison-new">ATİK</span>'
+    + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(it => {
     const diff = it.f2 - it.f1;
@@ -3498,11 +3498,11 @@ function renderWeeklyComparison() {
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label"></span>'
-    + '<span class="comparison-old">Geçen Hafta</span>'
+    + '<span class="comparison-label">TARİH</span>'
+    + '<span class="comparison-old">ATİK</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">Bu Hafta</span>'
-    + '<span class="comparison-diff">fark</span>'
+    + '<span class="comparison-new">ATİK</span>'
+    + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
