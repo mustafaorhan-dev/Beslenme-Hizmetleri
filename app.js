@@ -3431,16 +3431,26 @@ function renderComparison() {
     { label: 'Ort. Geçiş', f1: avg(first, 'toplam'), f2: avg(second, 'toplam'), unit: '', lower: false },
   ];
   badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
-  grid.innerHTML = items.map(it => {
+  grid.innerHTML = '<div class="comparison-header-row">'
+    + '<span class="comparison-label"></span>'
+    + '<span class="comparison-old">İlk Yarı</span>'
+    + '<span class="comparison-arrow"></span>'
+    + '<span class="comparison-new">Son Yarı</span>'
+    + '<span class="comparison-diff">Fark</span>'
+    + '</div>'
+    + items.map(it => {
     const diff = it.f2 - it.f1;
     const pct = it.f1 ? (diff / it.f1) * 100 : 0;
     const good = it.lower ? diff < 0 : diff > 0;
+    const cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+    const arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    const diffLabel = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + it.unit;
     return `<div class="comparison-item">
       <span class="comparison-label">${it.label}</span>
       <span class="comparison-old">${it.f1.toFixed(1)}${it.unit}</span>
       <span class="comparison-arrow">→</span>
       <span class="comparison-new">${it.f2.toFixed(1)}${it.unit}</span>
-      <span class="comparison-diff" style="color:${good ? '#10b981' : '#ef4444'};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}${it.unit}</span>
+      <span class="comparison-diff"><span class="comparison-badge ${cls}">${diffLabel}</span></span>
     </div>`;
   }).join('');
 }
