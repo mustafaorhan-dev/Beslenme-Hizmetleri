@@ -3297,10 +3297,10 @@ function renderWeeklySummary() {
   }
 
   body.innerHTML =
-    '<div class="ts-item"><span class="ts-label">Üretilen Yemek</span><span class="ts-value">' + topYemek.toLocaleString('tr-TR') + '</span></div>' +
-    '<div class="ts-item"><span class="ts-label">Toplam Geçiş</span><span class="ts-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ts-sub">Turnike: ' + topTurnike.toLocaleString('tr-TR') + ' &middot; Personel: ' + topPersonel.toLocaleString('tr-TR') + '</span></div>' +
-    '<div class="ts-item"><span class="ts-label">Atık Miktarı</span><span class="ts-value' + (topAtik > 0 ? '' : ' muted') + '">' + topAtik.toFixed(1) + ' kg</span></div>' +
-    '<div class="ts-item"><span class="ts-label">Yemek Hiz. Yar. Öğrenci</span><span class="ts-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div>';
+    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg></div><div class="ws-card-content"><span class="ws-label">Üretilen Yemek</span><span class="ws-value">' + topYemek.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="ws-card-content"><span class="ws-label">Toplam Geçiş</span><span class="ws-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ws-sub">Turnike: ' + topTurnike.toLocaleString('tr-TR') + ' &middot; Y. Hiz. Yr. SKS: ' + topPersonel.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ws-card-content"><span class="ws-label">Atık Miktarı</span><span class="ws-value">' + topAtik.toFixed(1) + ' kg</span></div></div>' +
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg></div><div class="ws-card-content"><span class="ws-label">Y.H. Yar. Öğrenci</span><span class="ws-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div></div>';
 }
 
 function renderDataInfo() {
