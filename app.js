@@ -3487,7 +3487,14 @@ function renderWeeklyComparison() {
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
-  grid.innerHTML = items.map(function(it) {
+  grid.innerHTML = '<div class="comparison-header-row">'
+    + '<span class="comparison-label"></span>'
+    + '<span class="comparison-old">Geçen Hafta</span>'
+    + '<span class="comparison-arrow"></span>'
+    + '<span class="comparison-new">Bu Hafta</span>'
+    + '<span class="comparison-diff">Fark</span>'
+    + '</div>'
+    + items.map(function(it) {
     var diff = it.val - it.prev;
     var pct = it.prev ? (diff / it.prev) * 100 : 0;
     var good = it.lower ? diff < 0 : diff > 0;

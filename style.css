@@ -2035,6 +2035,8 @@ input.production-input:focus {
 /* ---- COMPARISON ---- */
 .comparison-grid { display: flex; flex-direction: column; gap: 0.5rem; overflow-x: auto; }
 .comparison-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-card); font-size: 0.82rem; overflow-wrap: break-word; word-break: break-word; }
+.comparison-header-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.3rem 0.75rem; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.comparison-header-row .comparison-label { width: 130px; flex-shrink: 0; }
 .comparison-label { width: 130px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
 .comparison-old { color: var(--text-muted); min-width: 60px; text-align: right; }
 .comparison-arrow { color: var(--text-muted); flex-shrink: 0; }
