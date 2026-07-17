@@ -3227,7 +3227,7 @@ function renderTodaySummary() {
     <div class="ts-item"><span class="ts-label">Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
     <div class="ts-item"><span class="ts-label">Porsiyon</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
     <div class="ts-item"><span class="ts-label">Atık Oranı</span><span class="ts-value warn">%${pct}</span></div>
-    <div class="ts-item"><span class="ts-label">Ort. Atık</span><span class="ts-value">${avgAtik} kg</span></div>
+    <div class="ts-item"><span class="ts-label">Bugünkü Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
   `;
 }
 
