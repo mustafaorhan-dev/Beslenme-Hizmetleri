@@ -3436,7 +3436,7 @@ function renderComparison() {
     + '<span class="comparison-old">İlk Yarı</span>'
     + '<span class="comparison-arrow"></span>'
     + '<span class="comparison-new">Son Yarı</span>'
-    + '<span class="comparison-diff">Fark</span>'
+    + '<span class="comparison-diff">fark</span>'
     + '</div>'
     + items.map(it => {
     const diff = it.f2 - it.f1;
@@ -3502,7 +3502,7 @@ function renderWeeklyComparison() {
     + '<span class="comparison-old">Geçen Hafta</span>'
     + '<span class="comparison-arrow"></span>'
     + '<span class="comparison-new">Bu Hafta</span>'
-    + '<span class="comparison-diff">Fark</span>'
+    + '<span class="comparison-diff">fark</span>'
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
