@@ -9,6 +9,7 @@ let records = [];
 let editingId = null;
 let filteredRecords = [];
 let yemeklerCache = [];
+let weeklySummaryOffset = 0;
 
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
@@ -2537,6 +2538,7 @@ function exportDashboardPDF() {
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
   const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
+  const weeklyHtml = content.querySelector('.weekly-summary') ? content.querySelector('.weekly-summary').outerHTML : '';
   const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Pano - Atık Kontrol</title>
@@ -2554,7 +2556,15 @@ function exportDashboardPDF() {
       .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
       .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; }
       .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
-      .toolbar, .kpi-trend, canvas, .btn, .badge { display: none; }
+      .weekly-summary { border: 1px solid #ddd; border-radius: 8px; padding: 0.85rem 1.25rem; margin-bottom: 1rem; page-break-inside: avoid; }
+      .weekly-summary-header { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.5rem; }
+      .weekly-nav-btn { display: none !important; }
+      .weekly-summary-body { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; }
+      .weekly-summary-body .ts-item { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; padding: 0.5rem 0.8rem; border: 1px solid #ddd; border-radius: 8px; min-width: 110px; flex: 1; }
+      .weekly-summary-body .ts-label { font-size: 0.65rem; color: #666; font-weight: 600; }
+      .weekly-summary-body .ts-value { font-size: 1rem; font-weight: 700; }
+      .toolbar, .kpi-trend, canvas, .btn { display: none; }
+      .weekly-summary .badge { display: inline !important; font-size: 0.7rem; color: #666; }
       .prod-day { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; overflow: hidden; page-break-inside: avoid; }
       .prod-day-header { font-size: 0.85rem; font-weight: 700; padding: 0.5rem 0.75rem; background: #f5f5f5; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 0.5rem; }
       .prod-day-header .prod-day-kisi { margin-left: auto; font-size: 0.7rem; color: #666; }
@@ -2574,6 +2584,7 @@ function exportDashboardPDF() {
     <h1>Yemekhane Atık Kontrol Paneli</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
+    ${weeklyHtml}
     ${cardsHtml}
     <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
@@ -3177,6 +3188,7 @@ function handleFullBackupImport(e) {
 // ─── RENDER ────────────────────────────────────────────────────────────────────
 function renderAll() {
   renderKPIs();
+  renderWeeklySummary();
   renderTodaySummary();
   renderDataInfo();
   renderLastRecordsTable();
@@ -3217,6 +3229,79 @@ function renderTodaySummary() {
     <div class="ts-item"><span class="ts-label">Atık Oranı</span><span class="ts-value warn">%${pct}</span></div>
     <div class="ts-item"><span class="ts-label">Ort. Atık</span><span class="ts-value">${avgAtik} kg</span></div>
   `;
+}
+
+// ─── WEEKLY SUMMARY ──────────────────────────────────────────────────────────
+function getWeeklyDateRange(offset) {
+  var now = new Date();
+  var dayOfWeek = now.getDay();
+  var monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  var monday = new Date(now);
+  monday.setDate(now.getDate() + monOffset + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  var sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { monday: monday, sunday: sunday };
+}
+
+function fmtDateShort(d) {
+  return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+}
+
+function changeWeeklyOffset(delta) {
+  weeklySummaryOffset += delta;
+  renderWeeklySummary();
+}
+
+function renderWeeklySummary() {
+  var el = document.getElementById('weeklySummary');
+  var body = document.getElementById('weeklySummaryBody');
+  var badge = document.getElementById('weeklySummaryBadge');
+  var label = document.getElementById('weeklySummaryLabel');
+  if (!el || !body) return;
+
+  if (records.length === 0) {
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">Henüz kayıt yok</span></div>';
+    return;
+  }
+
+  var range = getWeeklyDateRange(weeklySummaryOffset);
+  var mon = range.monday;
+  var sun = range.sunday;
+
+  function fmtISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  var monStr = fmtISO(mon);
+  var sunStr = fmtISO(sun);
+
+  var weekRecs = records.filter(function(r) { return r.tarih >= monStr && r.tarih <= sunStr; });
+
+  var topYemek = weekRecs.reduce(function(s, r) { return s + (r.yemek || 0); }, 0);
+  var topTurnike = weekRecs.reduce(function(s, r) { return s + (r.turnike || 0); }, 0);
+  var topPersonel = weekRecs.reduce(function(s, r) { return s + (r.personel || 0); }, 0);
+  var topAtik = weekRecs.reduce(function(s, r) { return s + (r.atik || 0); }, 0);
+  var topOgrenci = weekRecs.reduce(function(s, r) { return s + (r.ogrenci || 0); }, 0);
+
+  var isCurrentWeek = weeklySummaryOffset === 0;
+  label.textContent = isCurrentWeek ? 'Bu Hafta' : 'Haftalık Özet';
+  badge.textContent = fmtDateShort(mon) + ' — ' + fmtDateShort(sun);
+
+  document.getElementById('weeklyPrev').disabled = false;
+  document.getElementById('weeklyNext').disabled = weeklySummaryOffset >= 0;
+
+  if (weekRecs.length === 0) {
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">Bu hafta kayıt yok</span></div>';
+    return;
+  }
+
+  body.innerHTML =
+    '<div class="ts-item"><span class="ts-label">Üretilen Yemek</span><span class="ts-value">' + topYemek.toLocaleString('tr-TR') + '</span></div>' +
+    '<div class="ts-item"><span class="ts-label">Turnike Geçiş</span><span class="ts-value">' + topTurnike.toLocaleString('tr-TR') + '</span></div>' +
+    '<div class="ts-item"><span class="ts-label">Çalışan Personel</span><span class="ts-value">' + topPersonel.toLocaleString('tr-TR') + '</span></div>' +
+    '<div class="ts-item"><span class="ts-label">Atık Miktarı</span><span class="ts-value' + (topAtik > 0 ? '' : ' muted') + '">' + topAtik.toFixed(1) + ' kg</span></div>' +
+    '<div class="ts-item"><span class="ts-label">Yemek Hiz. Yar. Öğrenci</span><span class="ts-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div>';
 }
 
 function renderDataInfo() {

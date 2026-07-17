@@ -285,6 +285,26 @@
         </div>
       </div>
 
+      <!-- Weekly Summary -->
+      <div class="weekly-summary" id="weeklySummary">
+        <div class="weekly-summary-header">
+          <button class="weekly-nav-btn" id="weeklyPrev" onclick="changeWeeklyOffset(-1)" title="Önceki Hafta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="weekly-summary-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="weeklySummaryLabel">Haftalık Özet</span>
+            <span class="badge" id="weeklySummaryBadge"></span>
+          </div>
+          <button class="weekly-nav-btn" id="weeklyNext" onclick="changeWeeklyOffset(1)" title="Sonraki Hafta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="weekly-summary-body" id="weeklySummaryBody">
+          <div class="today-summary-loading">Yükleniyor...</div>
+        </div>
+      </div>
+
       <!-- Today's Summary -->
       <div class="today-summary" id="todaySummary">
         <div class="today-summary-header">
