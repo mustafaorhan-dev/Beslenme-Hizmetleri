@@ -2033,7 +2033,7 @@ input.production-input:focus {
 }
 
 /* ---- COMPARISON ---- */
-.comparison-grid { display: flex; flex-direction: column; gap: 0.6rem; overflow-x: auto; padding: 0.25rem 0; }
+.comparison-grid { display: flex; flex-direction: column; gap: 0.6rem; overflow-x: hidden; padding: 0.25rem 0; }
 .comparison-item { display: flex; align-items: center; gap: 1.25rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border); font-size: 0.85rem; overflow-wrap: break-word; word-break: break-word; transition: all 0.2s; }
 .comparison-item:hover { border-color: var(--border-hover); transform: translateX(3px); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
 .comparison-header-row { display: flex; align-items: center; gap: 1.25rem; padding: 0.5rem 1rem 0.2rem; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
