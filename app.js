@@ -3298,8 +3298,7 @@ function renderWeeklySummary() {
 
   body.innerHTML =
     '<div class="ts-item"><span class="ts-label">Üretilen Yemek</span><span class="ts-value">' + topYemek.toLocaleString('tr-TR') + '</span></div>' +
-    '<div class="ts-item"><span class="ts-label">Turnike Geçiş</span><span class="ts-value">' + topTurnike.toLocaleString('tr-TR') + '</span></div>' +
-    '<div class="ts-item"><span class="ts-label">Çalışan Personel</span><span class="ts-value">' + topPersonel.toLocaleString('tr-TR') + '</span></div>' +
+    '<div class="ts-item"><span class="ts-label">Toplam Geçiş</span><span class="ts-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ts-sub">Turnike: ' + topTurnike.toLocaleString('tr-TR') + ' &middot; Personel: ' + topPersonel.toLocaleString('tr-TR') + '</span></div>' +
     '<div class="ts-item"><span class="ts-label">Atık Miktarı</span><span class="ts-value' + (topAtik > 0 ? '' : ' muted') + '">' + topAtik.toFixed(1) + ' kg</span></div>' +
     '<div class="ts-item"><span class="ts-label">Yemek Hiz. Yar. Öğrenci</span><span class="ts-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div>';
 }

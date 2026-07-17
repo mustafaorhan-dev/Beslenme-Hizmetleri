@@ -1487,6 +1487,7 @@ body {
 .weekly-summary-body .ts-value.good { color: #10b981; }
 .weekly-summary-body .ts-value.warn { color: #f59e0b; }
 .weekly-summary-body .ts-value.bad { color: #ef4444; }
+.weekly-summary-body .ts-sub { font-size: 0.65rem; color: var(--text-muted); font-weight: 400; opacity: 0.8; }
 
 @media (max-width: 768px) {
   .weekly-summary-body { gap: 0.35rem; }
