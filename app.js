@@ -10,6 +10,7 @@ let editingId = null;
 let filteredRecords = [];
 let yemeklerCache = [];
 let weeklySummaryOffset = 0;
+let dailySummaryOffset = 0;
 
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
@@ -3190,6 +3191,7 @@ function renderAll() {
   renderKPIs();
   renderWeeklySummary();
   renderTodaySummary();
+  renderDailySummary();
   renderDataInfo();
   renderLastRecordsTable();
   renderRecordsTable();
@@ -3229,6 +3231,65 @@ function renderTodaySummary() {
     <div class="ts-item"><span class="ts-label">Atık Oranı</span><span class="ts-value warn">%${pct}</span></div>
     <div class="ts-item"><span class="ts-label">Bugünkü Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
   `;
+}
+
+// ─── DAILY DETAIL PANEL ─────────────────────────────────────────────────────
+function changeDailyOffset(delta) {
+  dailySummaryOffset += delta;
+  renderDailySummary();
+}
+
+function renderDailySummary() {
+  var el = document.getElementById('dailySummary');
+  var body = document.getElementById('dailySummaryBody');
+  var badge = document.getElementById('dailySummaryBadge');
+  var label = document.getElementById('dailySummaryLabel');
+  if (!el || !body) return;
+
+  if (records.length === 0) {
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">Henüz kayıt yok</span></div>';
+    el.style.display = 'none';
+    return;
+  }
+
+  var now = new Date();
+  now.setDate(now.getDate() + dailySummaryOffset);
+  var dayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var dayLabel = displayDate(dayStr);
+
+  var rec = records.find(function(r) { return r.tarih === dayStr; });
+
+  var isToday = dailySummaryOffset === 0;
+  label.textContent = isToday ? 'Bugünün Detayı' : 'Günlük Detay';
+  badge.textContent = dayLabel;
+
+  document.getElementById('dailyPrev').disabled = false;
+  document.getElementById('dailyNext').disabled = dailySummaryOffset >= 0;
+
+  if (!rec) {
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + dayLabel + ' - Kayıt yok</span></div>';
+    return;
+  }
+
+  var yemek = rec.yemek || 0;
+  var fire = rec.fire || 0;
+  var turnike = rec.turnike || 0;
+  var personel = rec.personel || 0;
+  var toplam = rec.toplam || 0;
+  var porsiyon = rec.porsiyon || 0;
+  var atik = rec.atik || 0;
+
+  var kalanYemek = yemek - fire - toplam;
+  var copPorsiyon = porsiyon > 0 ? (atik * 1000 / porsiyon) : 0;
+
+  var avgAtik = records.length > 0 ? (records.reduce(function(s,r){return s+(r.atik||0);},0) / records.length) : 0;
+  var atikStatus = atik > avgAtik * 1.2 ? 'bad' : (atik < avgAtik * 0.8 ? 'good' : 'warn');
+
+  body.innerHTML =
+    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg></div><div class="ws-card-content"><span class="ws-label">Üretilen Yemek</span><span class="ws-value">' + yemek.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="ws-card-content"><span class="ws-label">Toplam Geçiş</span><span class="ws-value">' + toplam.toLocaleString('tr-TR') + '</span><span class="ws-sub">Tk: ' + turnike + ' &middot; Prs: ' + personel + '</span></div></div>' +
+    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ws-card-content"><span class="ws-label">Atık Miktarı</span><span class="ws-value">' + atik.toFixed(1) + ' kg</span><span class="ws-sub">Fire: ' + fire + '</span></div></div>' +
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="ws-card-content"><span class="ws-label">Çöpe Giden</span><span class="ws-value" style="color:#ef4444">' + copPorsiyon.toFixed(0) + ' porsiyon</span><span class="ws-sub" style="font-size:0.58rem">' + atik.toFixed(1) + ' × 1000 ÷ ' + porsiyon + ' = ' + copPorsiyon.toFixed(0) + '</span></div></div>';
 }
 
 // ─── WEEKLY SUMMARY ──────────────────────────────────────────────────────────

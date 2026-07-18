@@ -317,6 +317,26 @@
         </div>
       </div>
 
+      <!-- Daily Detail Panel -->
+      <div class="weekly-summary" id="dailySummary">
+        <div class="weekly-summary-header">
+          <button class="weekly-nav-btn" id="dailyPrev" onclick="changeDailyOffset(-1)" title="Önceki Gün">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="weekly-summary-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span id="dailySummaryLabel">Günlük Detay</span>
+            <span class="badge" id="dailySummaryBadge"></span>
+          </div>
+          <button class="weekly-nav-btn" id="dailyNext" onclick="changeDailyOffset(1)" title="Sonraki Gün">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="weekly-summary-body" id="dailySummaryBody">
+          <div class="today-summary-loading">Yükleniyor...</div>
+        </div>
+      </div>
+
       <!-- Data Info -->
       <div class="data-info" id="dataInfo" style="display:none">
         <span id="dataInfoRange"></span>
