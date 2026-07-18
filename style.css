@@ -1923,6 +1923,10 @@ input.production-input:focus {
   .header-logo span { font-size: 0.8rem; }
   .header-logo svg { width: 28px; height: 28px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .comparison-item { gap: 0.6rem; padding: 0.55rem 0.75rem; }
+  .comparison-label { width: auto; min-width: 80px; font-size: 0.75rem; }
+  .comparison-old, .comparison-new { min-width: 50px; font-size: 0.75rem; }
+  .comparison-diff { min-width: 60px; font-size: 0.75rem; }
   #content-dashboard.active,
   #content-records.active,
   #content-charts.active,
@@ -1948,11 +1952,14 @@ input.production-input:focus {
   .header-right { gap: 0.3rem; }
   .page-title { display: none; }
   .search-box { min-width: 0; width: 100%; }
-  .comparison-label { width: auto; min-width: 60px; font-size: 0.7rem; }
-  .comparison-old { min-width: 40px; font-size: 0.7rem; }
-  .comparison-new { min-width: 40px; font-size: 0.7rem; }
-  .comparison-diff { min-width: 50px; font-size: 0.7rem; }
-  .comparison-item { gap: 0.4rem; padding: 0.4rem 0.5rem; font-size: 0.72rem; }
+  .comparison-grid { overflow-x: visible; }
+  .comparison-header-row { display: none; }
+  .comparison-item { flex-wrap: wrap; gap: 0.35rem 0.6rem; padding: 0.6rem 0.75rem; font-size: 0.78rem; }
+  .comparison-label { width: 100%; font-size: 0.75rem; margin-bottom: 0.15rem; }
+  .comparison-old { min-width: 0; font-size: 0.78rem; }
+  .comparison-arrow { display: none; }
+  .comparison-new { min-width: 0; font-size: 0.78rem; font-weight: 700; }
+  .comparison-diff { min-width: 0; width: 100%; margin-top: 0.1rem; }
   .btn-logout { width: 30px; height: 30px; }
   .data-table th, .data-table td { padding: 0.35rem 0.4rem; font-size: 0.65rem; }
 }
