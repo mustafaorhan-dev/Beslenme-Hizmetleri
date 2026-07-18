@@ -349,7 +349,20 @@
           <span class="badge" id="anomalyBadge">Anormal Atık Günleri</span>
         </div>
         <div style="font-size:0.8rem;color:var(--text-muted);margin:-0.5rem 0 1rem;padding:0 0.5rem">Atık ortalamanın çok üstünde olan günler. Eşik: ortalama + 1.5×standart sapma (1.5 = hassas eşik, normalden sapan günleri yakalar).</div>
-        <div class="comparison-grid" id="anomalyGrid"></div>
+        <div class="table-wrapper" id="anomalyTableWrapper">
+          <table class="data-table" id="anomalyTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Atık (kg)</th>
+                <th>Ortalama (kg)</th>
+                <th>Fark (%)</th>
+                <th>Yemek Türü</th>
+              </tr>
+            </thead>
+            <tbody id="anomalyTbody"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Last Records Preview -->

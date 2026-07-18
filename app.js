@@ -3523,7 +3523,8 @@ function renderWeeklyComparison() {
 
 function renderAnomalies() {
   const card = document.getElementById('anomalyCard');
-  const grid = document.getElementById('anomalyGrid');
+  const table = document.getElementById('anomalyTable');
+  const tbody = document.getElementById('anomalyTbody');
   const badge = document.getElementById('anomalyBadge');
   if (!card || records.length < 5) { if (card) card.style.display = 'none'; return; }
 
@@ -3539,23 +3540,16 @@ function renderAnomalies() {
   card.style.display = 'block';
   badge.textContent = anomalies.length + ' anormal gün';
 
-  var header = '<div class="anomaly-header">'
-    + '<span style="width:28px;flex-shrink:0"></span>'
-    + '<span style="min-width:90px;text-align:center">Tarih</span>'
-    + '<span style="min-width:90px">Atık</span>'
-    + '<span style="min-width:70px;text-align:center">Fark</span>'
-    + '<span style="margin-left:auto">Yemek</span>'
-    + '</div>';
-
-  grid.innerHTML = header + anomalies.map(function(r) {
+  table.style.display = 'table';
+  tbody.innerHTML = anomalies.map(function(r) {
     var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
-    return '<div class="anomaly-item">'
-      + '<span class="anomaly-icon">⚠</span>'
-      + '<span class="anomaly-date">' + displayDate(r.tarih) + '</span>'
-      + '<span style="font-weight:700;font-size:1.05rem;min-width:90px">' + (r.atik || 0).toFixed(1) + ' kg</span>'
-      + '<span style="color:var(--text-muted);font-size:0.78rem;min-width:70px;text-align:center">+' + pctAbove.toFixed(0) + '%</span>'
-      + '<span style="color:var(--text-muted);margin-left:auto;font-size:0.85rem">' + (r.yemek_adi || '—') + '</span>'
-      + '</div>';
+    return '<tr>'
+      + '<td style="font-weight:600;white-space:nowrap">' + displayDate(r.tarih) + '</td>'
+      + '<td class="td-atik">' + (r.atik || 0).toFixed(1) + '</td>'
+      + '<td>' + mean.toFixed(1) + '</td>'
+      + '<td><span class="comparison-badge up">+' + pctAbove.toFixed(0) + '%</span></td>'
+      + '<td>' + (r.yemek_adi || '—') + '</td>'
+      + '</tr>';
   }).join('');
 }
 
