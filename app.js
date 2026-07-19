@@ -3494,9 +3494,9 @@ function renderComparison() {
   badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
   grid.innerHTML = '<div class="comparison-header-row">'
     + '<span class="comparison-label">TARİH</span>'
-    + '<span class="comparison-old">ATİK</span>'
+    + '<span class="comparison-old">ATIK</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">ATİK</span>'
+    + '<span class="comparison-new">ATIK</span>'
     + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(it => {
@@ -3560,9 +3560,9 @@ function renderWeeklyComparison() {
 
   grid.innerHTML = '<div class="comparison-header-row">'
     + '<span class="comparison-label">TARİH</span>'
-    + '<span class="comparison-old">ATİK</span>'
+    + '<span class="comparison-old">ATIK</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">ATİK</span>'
+    + '<span class="comparison-new">ATIK</span>'
     + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(function(it) {
