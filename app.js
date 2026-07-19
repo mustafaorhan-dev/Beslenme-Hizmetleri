@@ -4812,9 +4812,9 @@ function drawAllCharts() {
   const clickHandler = (label) => { const r = getRecordsByLabel(label); if (r) showChartDetailModal(label, r); };
 
   // --- Charts (her biri try-catch ile izole) ---
-  try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylik Atik (kg)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
-  try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim Sayisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
-  try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylik Turnike Gecisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
+  try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
+  try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
+  try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylık Turnike Geçisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
 
   const prevYearAtik = allMonthLabels.map(m => {
     const [ay, yil] = m.split('/');
@@ -4822,32 +4822,32 @@ function drawAllCharts() {
   });
   const hasPrevYear = prevYearAtik.some(v => v > 0);
   const aylikSets = [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylik Uretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylik Gecis' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylik Atik (kg)' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' },
   ];
-  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Gecen Yil Atik (kg)', dashed: true });
+  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Geçen Yıl Atık (kg)', dashed: true });
   try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
-  try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Uretim ile Turnike Gecisi Arasindaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
+  try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Üretim ile Turnike Geçişi Arasındaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
 
   const aylikOran = allMonthLabels.map(m => {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
     return y > 0 ? (a / y * 100) : 0;
   });
-  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylik Atik Orani %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
-  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylik Ogrenci Sayisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
-  try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylik Harcama Tutari (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); }
+  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
+  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
+  try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylık Harcama Tutarı (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); }
 
   const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak Izi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
+  try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
     return t > 0 ? a / t : 0;
   });
-  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kisi Basi Atik (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
+  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kişi Başı Atık (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
 
   // Weekly
   const weeklyData = {};
