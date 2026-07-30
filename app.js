@@ -3722,9 +3722,11 @@ function renderAnomalies() {
   table.style.display = 'table';
   tbody.innerHTML = anomalies.map(function(r) {
     var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
+    var por = (r.porsiyon || 400) > 0 ? ((r.atik || 0) * 1000 / (r.porsiyon || 400)) : 0;
     return '<tr>'
       + '<td style="font-weight:600;white-space:nowrap">' + displayDate(r.tarih) + '</td>'
       + '<td class="td-atik">' + (r.atik || 0).toFixed(1) + '</td>'
+      + '<td style="color:var(--accent-orange)">' + por.toFixed(0) + '</td>'
       + '<td>' + mean.toFixed(1) + '</td>'
       + '<td><span class="comparison-badge up">+' + pctAbove.toFixed(0) + '%</span></td>'
       + '<td>' + (r.yemek_adi || '—') + '</td>'
