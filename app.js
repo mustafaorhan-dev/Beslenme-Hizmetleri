@@ -5681,24 +5681,6 @@ function renderYagTable() {
 
   badge.textContent = yagRecords.length + ' kayıt';
 
-  // Yıl bazında özet
-  const yagYilOzet = document.getElementById('yagYilOzet');
-  if (yagYilOzet) {
-    const yilToplam = {};
-    yagRecords.forEach(r => {
-      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
-      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
-    });
-    const yillar = Object.keys(yilToplam).sort();
-    yagYilOzet.innerHTML = yillar.map(y => {
-      const m = yilToplam[y];
-      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
-        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
-        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">lt</span></div>
-      </div>`;
-    }).join('');
-  }
-
   if (yagRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
@@ -5722,6 +5704,24 @@ function renderYagTable() {
     return;
   }
   empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
+
+  // Filtrelenmiş yıl özeti
+  const yagYilOzet = document.getElementById('yagYilOzet');
+  if (yagYilOzet) {
+    const yilToplam = {};
+    filtered.forEach(r => {
+      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
+      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
+    });
+    const yillar = Object.keys(yilToplam).sort();
+    yagYilOzet.innerHTML = yillar.map(y => {
+      const m = yilToplam[y];
+      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
+        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">lt</span></div>
+      </div>`;
+    }).join('');
+  }
 
   empty.style.display = 'none';
   table.style.display = 'table';
@@ -6050,23 +6050,6 @@ function renderAmbalajTable() {
 
   badge.textContent = ambalajRecords.length + ' kayıt';
 
-  const ambalajYilOzet = document.getElementById('ambalajYilOzet');
-  if (ambalajYilOzet) {
-    const yilToplam = {};
-    ambalajRecords.forEach(r => {
-      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
-      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
-    });
-    const yillar = Object.keys(yilToplam).sort();
-    ambalajYilOzet.innerHTML = yillar.map(y => {
-      const m = yilToplam[y];
-      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
-        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
-        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">kg</span></div>
-      </div>`;
-    }).join('');
-  }
-
   if (ambalajRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
@@ -6090,6 +6073,24 @@ function renderAmbalajTable() {
     return;
   }
   empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
+
+  // Filtrelenmiş yıl özeti
+  const ambalajYilOzet = document.getElementById('ambalajYilOzet');
+  if (ambalajYilOzet) {
+    const yilToplam = {};
+    filtered.forEach(r => {
+      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
+      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
+    });
+    const yillar = Object.keys(yilToplam).sort();
+    ambalajYilOzet.innerHTML = yillar.map(y => {
+      const m = yilToplam[y];
+      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
+        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">kg</span></div>
+      </div>`;
+    }).join('');
+  }
 
   empty.style.display = 'none';
   table.style.display = 'table';
