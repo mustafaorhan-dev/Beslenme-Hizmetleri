@@ -1185,10 +1185,6 @@
               <input type="number" id="fPersonel" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" class="person-input" />
             </div>
             <div class="form-group">
-              <label for="fPorsiyon">Porsiyon Miktarı (gr) <span class="required">*</span></label>
-              <input type="number" id="fPorsiyon" value="400" readonly required class="production-input" />
-            </div>
-            <div class="form-group">
               <label for="fOgrenci">Yemek Hiz. Yar. Öğr. Sayısı <span class="required">*</span></label>
               <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required class="person-input" oninput="autoCalcHarcama()" />
             </div>
@@ -1229,6 +1225,13 @@
                 <span class="auto-badge">Otomatik</span>
               </label>
               <input type="number" id="fAtik" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fPorsiyon">
+                Porsiyon Miktarı (gr)
+                <span class="auto-badge">Sabit</span>
+              </label>
+              <input type="number" id="fPorsiyon" value="400" readonly class="readonly-input" />
             </div>
             <div class="form-group">
               <label for="fHarcama">
