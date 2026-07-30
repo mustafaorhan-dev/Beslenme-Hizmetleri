@@ -4781,7 +4781,7 @@ function drawAllCharts() {
     const date = new Date(r.tarih + 'T12:00:00');
     const monthKey = (date.getMonth() + 1) + '/' + date.getFullYear();
     if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0, harcama: 0 };
+      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0, harcama: 0, porsiyon: 0, atikPorsiyon: 0 };
     }
     monthlyData[monthKey].yemek += r.yemek;
     monthlyData[monthKey].toplam += r.toplam;
@@ -4789,6 +4789,11 @@ function drawAllCharts() {
     monthlyData[monthKey].turnike += r.turnike;
     monthlyData[monthKey].ogrenci += r.ogrenci;
     monthlyData[monthKey].harcama += (r.harcama_tutari || 0);
+    monthlyData[monthKey].porsiyon += r.porsiyon;
+    // Çöpe giden porsiyon = atık kg × 1000 / porsiyon gr
+    if (r.porsiyon > 0) {
+      monthlyData[monthKey].atikPorsiyon += r.atik * 1000 / r.porsiyon;
+    }
   });
 
   const chartYears = [Number(chartYearFilter)];
@@ -4936,15 +4941,15 @@ function drawAllCharts() {
 
   const prevYearAtik = allMonthLabels.map(m => {
     const [ay, yil] = m.split('/');
-    return getMonthVal(ay + '/' + (parseInt(yil) - 1), 'atik');
+    return getMonthVal(ay + '/' + (parseInt(yil) - 1), 'atikPorsiyon');
   });
   const hasPrevYear = prevYearAtik.some(v => v > 0);
   const aylikSets = [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f59e0b', label: 'Aylık Atık (kg)' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim (kişi)' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş (kişi)' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#f59e0b', label: 'Aylık Çöpe Giden (porsiyon)' },
   ];
-  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Geçen Yıl Atık (kg)', dashed: true });
+  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Geçen Yıl Çöpe Giden (porsiyon)', dashed: true });
   try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
