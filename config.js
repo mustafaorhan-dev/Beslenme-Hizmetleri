@@ -1,4 +1,23 @@
-﻿const APP_CONFIG = {
+﻿/*
+  ============================================
+  GÜVENLİK NOTU - 2026
+  ============================================
+  Bu dosyadaki users listesi LEGACY (eski) auth içindir.
+  Supabase Auth'a geçiş yapıldıysa buradaki kullanıcılar
+  sadece yedek giriş yöntemi olarak çalışır.
+  
+  ÖNERİLEN: Supabase Auth kullanın.
+  Kullanıcıları Supabase Dashboard > Authentication > Users
+  sayfasından oluşturup rollerini user_roles tablosundan atayın.
+  
+  Supabase Auth aktifken giriş:
+  - email: kullaniciadi@kurumadi.com (veya @beslenme.local)
+  - password: (Supabase'de belirlediğiniz şifre)
+  ============================================
+*/
+
+const APP_CONFIG = {
+  // LEGACY kullanıcılar - Supabase Auth'a geçildiğinde boşaltılabilir
   users: [
     { username: 'admin', passwordHash: 'e4b4617b9d7c3c1bed904600c772cf9ae83896aaff83a9cf9c04fa46fc11f126', role: 'admin', displayName: 'Admin' },
     { username: 'diyetisyen', passwordHash: '27bb63ed6f711388cd6e7b053728de769515945977022b6414ecc9ca546a0889', role: 'diyetisyen', displayName: 'Diyetisyen' },
@@ -7,5 +26,5 @@
     { username: 'gida_muhendisi', passwordHash: '83e19a9ce479dc064bab4bd50134db14918cc967debd3ad223bb8993c523788d', role: 'gida_muhendisi', displayName: 'Gıda Mühendisi' }
   ],
   supabaseUrl: 'https://ydbeltktutcxfeosqmai.supabase.co',
-  supabaseAnonKey: 'sb_publishable_-c9dOMEYdhnFFmRrW3In9Q_CS8YREh4'
+  supabaseAnonKey: 'sb_publishable_tUj9gU4n1VKLgwJZw5FmDQ_9W1E2nmA'
 };

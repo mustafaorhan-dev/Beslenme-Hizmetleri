@@ -1,9 +1,50 @@
 -- ============================================
 -- Yemekhane Atık Takip Sistemi - Supabase Schema
--- RLS enabled with proper policies
+-- GÜVENLİ SÜRÜM - RLS + Supabase Auth
 -- ============================================
 
--- 1. ANA KAYITLAR (Atık Kontrol Sistemi)
+-- ÖNCE RLS'yi kaldır (yeniden oluşturmak için)
+DROP POLICY IF EXISTS "anon_all_records" ON records;
+DROP POLICY IF EXISTS "anon_all_haccp" ON haccp_records;
+DROP POLICY IF EXISTS "anon_all_haccp_depo" ON haccp_depo_adlari;
+DROP POLICY IF EXISTS "anon_all_yag" ON yag_records;
+DROP POLICY IF EXISTS "anon_all_ambalaj" ON ambalaj_records;
+DROP POLICY IF EXISTS "anon_all_dishes" ON dishes;
+DROP POLICY IF EXISTS "anon_all_weekly_menu" ON weekly_menu;
+DROP POLICY IF EXISTS "anon_all_config" ON config;
+DROP POLICY IF EXISTS "anon_all_user_logs" ON user_logs;
+DROP POLICY IF EXISTS "auth_all_user_logs" ON user_logs;
+DROP POLICY IF EXISTS "service_role_all_config" ON config;
+
+-- 1. KULLANICI ROLLERİ (Supabase Auth ile bağlantılı)
+CREATE TABLE IF NOT EXISTS user_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'asci' CHECK (role IN ('admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci')),
+  display_name TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
+-- Her kullanıcı kendi rolünü görebilir; admin tümünü görebilir
+CREATE POLICY "user_roles_select" ON user_roles FOR SELECT
+  USING (auth.uid() = auth_user_id OR EXISTS (
+    SELECT 1 FROM user_roles WHERE auth_user_id = auth.uid() AND role = 'admin'
+  ));
+
+-- Sadece admin tarafından eklenebilir/güncellenebilir
+CREATE POLICY "user_roles_insert" ON user_roles FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM user_roles WHERE auth_user_id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "user_roles_update" ON user_roles FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE auth_user_id = auth.uid() AND role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM user_roles WHERE auth_user_id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "user_roles_delete" ON user_roles FOR DELETE
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE auth_user_id = auth.uid() AND role = 'admin'));
+
+-- 2. ANA KAYITLAR (Atık Kontrol Sistemi)
 CREATE TABLE IF NOT EXISTS records (
   id BIGINT PRIMARY KEY,
   tarih TEXT NOT NULL,
@@ -17,10 +58,27 @@ CREATE TABLE IF NOT EXISTS records (
   ogrenci NUMERIC DEFAULT 0,
   harcama_tutari NUMERIC DEFAULT 0,
   yemek_adi TEXT DEFAULT '',
+  created_by UUID REFERENCES auth.users(id),
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 2. HACCP KAYITLARI (Gıda Güvenliği)
+ALTER TABLE records ENABLE ROW LEVEL SECURITY;
+
+-- Giriş yapan tüm kullanıcılar görebilir, ekleyebilir, güncelleyebilir, silebilir
+CREATE POLICY "records_select" ON records FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "records_insert" ON records FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "records_update" ON records FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "records_delete" ON records FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 3. HACCP KAYITLARI (Gıda Güvenliği)
 CREATE TABLE IF NOT EXISTS haccp_records (
   id BIGINT PRIMARY KEY,
   type TEXT NOT NULL DEFAULT 'sicaklik',
@@ -30,10 +88,26 @@ CREATE TABLE IF NOT EXISTS haccp_records (
   sicaklik NUMERIC,
   nem NUMERIC,
   not_ TEXT DEFAULT '',
+  created_by UUID REFERENCES auth.users(id),
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 3. DEPO ADLARI
+ALTER TABLE haccp_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "haccp_records_select" ON haccp_records FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_records_insert" ON haccp_records FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_records_update" ON haccp_records FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_records_delete" ON haccp_records FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 4. DEPO ADLARI
 CREATE TABLE IF NOT EXISTS haccp_depo_adlari (
   id SERIAL PRIMARY KEY,
   ad TEXT NOT NULL UNIQUE,
@@ -41,7 +115,22 @@ CREATE TABLE IF NOT EXISTS haccp_depo_adlari (
   max_limit NUMERIC
 );
 
--- 4. ATIK YAĞ KAYITLARI
+ALTER TABLE haccp_depo_adlari ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "haccp_depo_select" ON haccp_depo_adlari FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_depo_insert" ON haccp_depo_adlari FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_depo_update" ON haccp_depo_adlari FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "haccp_depo_delete" ON haccp_depo_adlari FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 5. ATIK YAĞ KAYITLARI
 CREATE TABLE IF NOT EXISTS yag_records (
   id BIGINT PRIMARY KEY,
   tarih TEXT NOT NULL,
@@ -49,10 +138,26 @@ CREATE TABLE IF NOT EXISTS yag_records (
   tur TEXT DEFAULT '',
   miktar NUMERIC DEFAULT 0,
   not_ TEXT DEFAULT '',
+  created_by UUID REFERENCES auth.users(id),
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 5. AMBALAJ ATIKLARI KAYITLARI
+ALTER TABLE yag_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "yag_records_select" ON yag_records FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "yag_records_insert" ON yag_records FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "yag_records_update" ON yag_records FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "yag_records_delete" ON yag_records FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 6. AMBALAJ ATIKLARI KAYITLARI
 CREATE TABLE IF NOT EXISTS ambalaj_records (
   id BIGINT PRIMARY KEY,
   tarih TEXT NOT NULL,
@@ -60,10 +165,26 @@ CREATE TABLE IF NOT EXISTS ambalaj_records (
   miktar NUMERIC DEFAULT 0,
   birim TEXT DEFAULT 'kg',
   not_ TEXT DEFAULT '',
+  created_by UUID REFERENCES auth.users(id),
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 6. YEMEK LİSTESİ (Dish Pool)
+ALTER TABLE ambalaj_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "ambalaj_records_select" ON ambalaj_records FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "ambalaj_records_insert" ON ambalaj_records FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "ambalaj_records_update" ON ambalaj_records FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "ambalaj_records_delete" ON ambalaj_records FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 7. YEMEK LİSTESİ (Dish Pool)
 CREATE TABLE IF NOT EXISTS dishes (
   id TEXT PRIMARY KEY,
   ad TEXT NOT NULL,
@@ -73,27 +194,62 @@ CREATE TABLE IF NOT EXISTS dishes (
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 7. HAFTALIK MENÜ
+ALTER TABLE dishes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "dishes_select" ON dishes FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "dishes_insert" ON dishes FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "dishes_update" ON dishes FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "dishes_delete" ON dishes FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 8. HAFTALIK MENÜ
 CREATE TABLE IF NOT EXISTS weekly_menu (
   week_key TEXT PRIMARY KEY,
   data JSONB NOT NULL,
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- 8. YAPILANDIRMA (şifre hashleri, viewer ayarları vb.)
+ALTER TABLE weekly_menu ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "weekly_menu_select" ON weekly_menu FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "weekly_menu_insert" ON weekly_menu FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "weekly_menu_update" ON weekly_menu FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "weekly_menu_delete" ON weekly_menu FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- 9. YAPILANDIRMA (sadece service_role ile erişilebilir)
+-- NOT: Bu tabloya anon key ile erişilemez. Sadece Supabase Dashboard'dan
+-- veya service_role key ile yapılan işlemler erişebilir.
 CREATE TABLE IF NOT EXISTS config (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
 
--- Varsayılan config değerleri
-INSERT INTO config (key, value) VALUES
-  ('admin_hash', '83e19a9ce479dc064bab4bd50134db14918cc967debd3ad223bb8993c523788d'),
-  ('viewer_hash', '137d2ccfeadfd410b7f455133360a5ad6650d0768c3b773c13cd5e7e871e483f'),
-  ('viewer_settings', '{"editAllowed":false,"tabs":{"dashboard":true,"menu":true,"records":true,"report":true,"haccp":true,"yag":true,"ambalaj":true,"charts":true},"showExportBtn":false,"showSyncBtn":false,"showActions":false}'),
-  ('users_list', '[{"username":"admin","passwordHash":"e4b4617b9d7c3c1bed904600c772cf9ae83896aaff83a9cf9c04fa46fc11f126","role":"admin","displayName":"Admin"},{"username":"diyetisyen","passwordHash":"27bb63ed6f711388cd6e7b053728de769515945977022b6414ecc9ca546a0889","role":"diyetisyen","displayName":"Diyetisyen"},{"username":"depo","passwordHash":"fddc599a3afe6c68b8098f7ef3db02335f7e398e3c0bd34b663f04f424886aeb","role":"depo","displayName":"Depo Sorumlusu"},{"username":"ascı","passwordHash":"a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3","role":"asci","displayName":"Aşçı"}]')
-ON CONFLICT (key) DO NOTHING;
+ALTER TABLE config ENABLE ROW LEVEL SECURITY;
+
+-- NOT: Bu tabloya hiçbir policy eklenmez. Sadece service_role erişebilir.
+-- Bu sayede kullanıcı hash'leri ve ayarlar anon key'den korunur.
+
+-- Varsayılan config değerleri (Service Role ile çalıştırılmalı)
+-- Aşağıdaki INSERT'ler service_role ile çalıştırılmalıdır, anon ile çalışmaz.
+-- INSERT INTO config (key, value) VALUES
+--   ('users_list', '[{"username":"admin","passwordHash":"...","role":"admin","displayName":"Admin"}]')
+-- ON CONFLICT (key) DO NOTHING;
 
 -- Mevcut tabloya limit kolonlarını ekle (geriye uyumlu)
 ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS min_limit NUMERIC;
@@ -110,44 +266,7 @@ INSERT INTO haccp_depo_adlari (ad) VALUES
   ('Soğuk Hava Deposu 8')
 ON CONFLICT (ad) DO NOTHING;
 
--- ============================================
--- RLS GÜVENLİK POLİTİKALARI
--- Uygulama kendi kimlik doğrulamasını kullandığı için
--- anon key ile tüm işlemlere izin veriyoruz.
--- İleride Supabase Auth entegrasyonu ile
--- kısıtlanabilir.
--- ============================================
-
--- Önce RLS'yi aktifleştir
-ALTER TABLE records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE haccp_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE haccp_depo_adlari ENABLE ROW LEVEL SECURITY;
-ALTER TABLE yag_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ambalaj_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE dishes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE weekly_menu ENABLE ROW LEVEL SECURITY;
-ALTER TABLE config ENABLE ROW LEVEL SECURITY;
-
--- Anonim kullanıcılar için tüm tablolarda tam yetki
-CREATE POLICY "anon_all_records" ON records FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_haccp" ON haccp_records FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_haccp_depo" ON haccp_depo_adlari FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_yag" ON yag_records FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_ambalaj" ON ambalaj_records FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_dishes" ON dishes FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_weekly_menu" ON weekly_menu FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all_config" ON config FOR ALL TO anon USING (true) WITH CHECK (true);
-
--- NOT: Güvenlik için ileride şu adımlar atılmalıdır:
--- 1. Supabase Auth (email/şifre veya magic link) entegre edilmeli
--- 2. RLS politikaları JWT claim'lerine göre daraltılmalı
--- 3. Admin işlemleri service_role key ile yapılmalı
--- 4. Config tablosundaki hash'ler asla anon key ile okunmamalı
-
--- Mevcut ambalaj_records tablosuna birim kolonu ekle (çalıştırılması gereken ALTER)
-ALTER TABLE ambalaj_records ADD COLUMN IF NOT EXISTS birim TEXT DEFAULT 'kg';
-
--- 8. KULLANICI İŞLEM LOG TABLOSU
+-- 10. KULLANICI İŞLEM LOG TABLOSU
 CREATE TABLE IF NOT EXISTS user_logs (
   id BIGSERIAL PRIMARY KEY,
   tarih TEXT NOT NULL,
@@ -158,4 +277,9 @@ CREATE TABLE IF NOT EXISTS user_logs (
 );
 
 ALTER TABLE user_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon_all_user_logs" ON user_logs FOR ALL TO anon USING (true) WITH CHECK (true);
+
+CREATE POLICY "user_logs_select" ON user_logs FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "user_logs_insert" ON user_logs FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');

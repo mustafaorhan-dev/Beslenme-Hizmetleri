@@ -18,50 +18,89 @@ const SUPABASE_ANON_KEY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabas
 var supabaseClient = null;
 try {
   if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage
+      }
+    });
   }
 } catch (_) {}
 
-// ─── REMOTE PASSWORD HASH CACHE ──────────────────────────────────────────────
-let remoteHashes = { adminHash: null };
+// ─── SUPABASE AUTH STATE ──────────────────────────────────────────────────────
+let supabaseSession = null;
 
-async function syncPasswordHashesFromRemote() {
+async function initSupabaseAuth() {
+  if (!supabaseClient) return;
+  // Get current session
+  var { data: { session } } = await supabaseClient.auth.getSession();
+  supabaseSession = session;
+
+  // Listen for auth state changes
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    supabaseSession = session;
+    if (event === 'SIGNED_IN' && session) {
+      handleSupabaseLogin(session);
+    } else if (event === 'SIGNED_OUT') {
+      handleSupabaseLogout();
+    }
+  });
+}
+
+async function handleSupabaseLogin(session) {
+  if (!session || !session.user) return;
+  var userId = session.user.id;
+  // Get user role from user_roles table
   try {
-    if (!supabaseClient) return;
-    var { data, error } = await supabaseClient.from('config').select('key,value').eq('key', 'admin_hash');
-    if (error) return;
-    data.forEach(function(r) {
-      if (r.key === 'admin_hash') remoteHashes.adminHash = r.value;
-    });
+    var { data, error } = await supabaseClient.from('user_roles')
+      .select('role, display_name')
+      .eq('auth_user_id', userId)
+      .single();
+    if (error || !data) {
+      // Role atanmamış kullanıcı - varsayılan rol
+      return;
+    }
+    var role = data.role || 'asci';
+    var displayName = data.display_name || session.user.email || 'Kullanıcı';
+    sessionStorage.setItem('atik_kontrol_role', role);
+    sessionStorage.setItem('atik_kontrol_display_name', displayName);
+    sessionStorage.setItem('atik_kontrol_supabase_auth', 'true');
+    sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+    localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.body.setAttribute('data-role', role);
+    document.getElementById('roleBadge').textContent = displayName;
+    renderAdminPanelBtn();
+    applyRolePermissions();
+    if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
+    logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
   } catch (_) {}
 }
 
+function handleSupabaseLogout() {
+  sessionStorage.removeItem('atik_kontrol_role');
+  sessionStorage.removeItem('atik_kontrol_display_name');
+  sessionStorage.removeItem('atik_kontrol_supabase_auth');
+}
+
+// ─── REMOTE PASSWORD HASH CACHE (legacy) ──────────────────────────────────────
+let remoteHashes = { adminHash: null };
+
+async function syncPasswordHashesFromRemote() {
+  // Legacy: config tablosu anon erişime kapalı, bu yüzden çalışmaz
+  // Sadece Supabase Auth ile devam edin
+}
+
 async function syncUsersFromSupabase() {
-  try {
-    if (!supabaseClient) return false;
-    var { data, error } = await supabaseClient.from('config').select('value').eq('key', 'users_list').single();
-    if (error || !data || !data.value) return false;
-    var users = JSON.parse(data.value);
-    if (Array.isArray(users) && users.length > 0) {
-      APP_CONFIG.users = users;
-      try { localStorage.setItem('atik_kontrol_users', JSON.stringify(users)); } catch (_) {}
-      return true;
-    }
-    return false;
-  } catch (_) { return false; }
+  // Legacy: config tablosu anon erişime kapalı
+  return false;
 }
 
 async function saveUsersToSupabase(users) {
-  try {
-    if (!supabaseClient) return false;
-    var json = JSON.stringify(users);
-    var { error } = await supabaseClient.from('config').upsert(
-      { key: 'users_list', value: json, last_modified: new Date().toISOString() },
-      { onConflict: 'key' }
-    );
-    if (error) throw error;
-    return true;
-  } catch (_) { return false; }
+  // Legacy: config tablosu anon erişime kapalı
+  return false;
 }
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
@@ -283,31 +322,31 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
-function getAdminHash() {
-  if (remoteHashes.adminHash) return remoteHashes.adminHash;
-  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  if (cfg.users && Array.isArray(cfg.users)) {
-    const adminUser = cfg.users.find(u => u.role === ROLE_ADMIN);
-    if (adminUser) return adminUser.passwordHash;
-  }
-  return '';
-}
-
 function getRole() {
   return sessionStorage.getItem('atik_kontrol_role') || '';
 }
 
+function isUsingSupabaseAuth() {
+  return sessionStorage.getItem('atik_kontrol_supabase_auth') === 'true';
+}
+
 function isAdminSessionValid() {
   if (getRole() !== ROLE_ADMIN) return false;
+
+  // Supabase Auth ile giriş yapıldıysa cache'lenmiş session'ı kontrol et
+  if (isUsingSupabaseAuth()) {
+    return !!supabaseSession;
+  }
+
+  // Legacy: client-side hash kontrolü
   const storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
   if (!storedHash) return false;
   const loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
-  if (Date.now() - loginTime > 3600000) { // 1 saat oturum süresi
+  if (Date.now() - loginTime > 3600000) {
     sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
     sessionStorage.removeItem('atik_kontrol_login_time');
     return false;
   }
-  // Yeni sistem: users listesinden admin hash'lerini kontrol et
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   if (cfg.users && Array.isArray(cfg.users)) {
     const adminHashes = cfg.users.filter(u => u.role === ROLE_ADMIN).map(u => u.passwordHash);
@@ -318,18 +357,33 @@ function isAdminSessionValid() {
 
 function requireAdmin() {
   var role = getRole();
-  if (role === ROLE_ADMIN || role === ROLE_DEPO) return true;
-  if (!isAdminSessionValid()) {
-    if (sessionStorage.getItem('atik_kontrol_role') === ROLE_ADMIN) {
-      showToast('Oturum süresi doldu veya geçersiz. Lütfen tekrar giriş yapın.', 'error');
+  if (!role) { showToast('Oturum bulunamadı. Lütfen giriş yapın.', 'error'); return false; }
+  
+  // Supabase Auth kullanılıyorsa session varlığını kontrol et
+  if (isUsingSupabaseAuth() && supabaseClient) {
+    if (!supabaseSession) {
+      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
       sessionStorage.removeItem('atik_kontrol_role');
-      sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
       location.reload();
-    } else {
-      showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+      return false;
     }
-    return false;
+  } else if (role === ROLE_ADMIN) {
+    // Legacy admin: hash proof kontrolü
+    var storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
+    if (!storedHash) {
+      showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+      return false;
+    }
+    var loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
+    if (Date.now() - loginTime > 3600000) {
+      sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
+      sessionStorage.removeItem('atik_kontrol_login_time');
+      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
+      location.reload();
+      return false;
+    }
   }
+  
   return true;
 }
 
@@ -338,19 +392,34 @@ async function doLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
   const username = usernameSelect.value;
-  const inputHash = await sha256(input.value);
+  const password = input.value;
   
   if (!username) {
     error.textContent = 'Lütfen kullanıcı seçin!';
     error.style.display = 'block';
     return;
   }
+
+  // 1. Önce Supabase Auth ile dene (e-posta olarak @ekle)
+  if (supabaseClient) {
+    var email = username.indexOf('@') === -1 ? username + '@beslenme.local' : username;
+    var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (!signInError && signInData && signInData.session) {
+      // Başarılı Supabase Auth - rol user_roles'dan gelecek
+      return;
+    }
+  }
+
+  // 2. Supabase Auth başarısız = legacy auth dene
+  const inputHash = await sha256(password);
   
   let role = null;
   let displayName = '';
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   
-  // Yeni sistem: users listesinden kontrol (kullanıcı adı + şifre)
   if (cfg.users && Array.isArray(cfg.users)) {
     const user = cfg.users.find(u => u.username === username && u.passwordHash === inputHash);
     if (user) {
@@ -359,12 +428,10 @@ async function doLogin() {
     }
   }
 
-  // Eski sistem geriye uyumluluğu KALDIRILDI — yeni sistem aktifken eski hash kontrolü yapılıyor ve
-  // bu durum herhangi bir şifre ile roller arası geçişe neden oluyordu.
-
   if (role) {
     sessionStorage.setItem('atik_kontrol_role', role);
     sessionStorage.setItem('atik_kontrol_display_name', displayName);
+    sessionStorage.removeItem('atik_kontrol_supabase_auth');
     if (role === ROLE_ADMIN) {
       sessionStorage.setItem('atik_kontrol_admin_hash_proof', inputHash);
       sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
@@ -376,7 +443,7 @@ async function doLogin() {
     renderAdminPanelBtn();
     applyRolePermissions();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
-    logIslem('login', displayName + ' sisteme giriş yaptı');
+    logIslem('login', displayName + ' (legacy) sisteme giriş yaptı');
   } else {
     window._loginAttempts = (window._loginAttempts || 0) + 1;
     error.textContent = 'Hatalı kullanıcı adı veya şifre!';
@@ -424,6 +491,8 @@ function openAdminPanel() {
   } else {
     document.getElementById('apLastLogin').textContent = 'Bu oturum';
   }
+  var authMode = isUsingSupabaseAuth() ? 'Supabase Auth' : 'Legacy (SHA-256)';
+  document.getElementById('apAuthMode').textContent = authMode;
   document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -432,9 +501,33 @@ function openAdminPanel() {
 
 async function apReAuth() {
   const pw = document.getElementById('apReAuthPw').value;
-  const hash = await sha256(pw);
   const errorEl = document.getElementById('apReAuthError');
-  if (hash === getAdminHash()) {
+
+  // Supabase Auth ile giriş yapıldıysa session doğrulaması yap
+  if (isUsingSupabaseAuth() && supabaseClient) {
+    try {
+      var { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        document.getElementById('apReAuthContainer').style.display = 'none';
+        document.getElementById('apPanelBody').style.display = 'block';
+        errorEl.style.display = 'none';
+        document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
+        apRenderUserList();
+        apRenderRolePermissions();
+        return;
+      }
+    } catch (_) {}
+  }
+
+  // Legacy fallback: SHA-256 hash kontrolü
+  const hash = await sha256(pw);
+  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+  var adminHash = '';
+  if (cfg.users && Array.isArray(cfg.users)) {
+    const adminUser = cfg.users.find(u => u.role === ROLE_ADMIN);
+    if (adminUser) adminHash = adminUser.passwordHash;
+  }
+  if (hash === adminHash) {
     document.getElementById('apReAuthContainer').style.display = 'none';
     document.getElementById('apPanelBody').style.display = 'block';
     errorEl.style.display = 'none';
@@ -473,8 +566,12 @@ function closeAdminPanel() {
 
 function doLogout() {
   logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' çıkış yaptı');
+  // Supabase Auth'ten çıkış yap
+  if (supabaseClient && isUsingSupabaseAuth()) {
+    supabaseClient.auth.signOut();
+  }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -961,21 +1058,39 @@ function populateLoginUsers() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Önce Supabase Auth'u başlat (session varsa otomatik giriş yapar)
+  await initSupabaseAuth();
+
   loadRolePermissions();
   loadUsersFromStorage();
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
-  await syncPasswordHashesFromRemote().catch(function(){});
-  await syncUsersFromSupabase().catch(function(){}).then(function() { populateLoginUsers(); });
+
   var existingRole = sessionStorage.getItem('atik_kontrol_role');
+  var isSupabaseAuth = isUsingSupabaseAuth();
+
   if (existingRole) {
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.body.setAttribute('data-role', existingRole);
-    var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
-    document.getElementById('roleBadge').textContent = displayName;
-    renderAdminPanelBtn();
-    applyRolePermissions();
-  } else {
+    // Supabase Auth ile giriş yapıldıysa session'ı doğrula
+    if (isSupabaseAuth && supabaseClient) {
+      var { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        // Session geçersiz, legacy'e düş veya login göster
+        sessionStorage.removeItem('atik_kontrol_role');
+        sessionStorage.removeItem('atik_kontrol_supabase_auth');
+      }
+    }
+    existingRole = sessionStorage.getItem('atik_kontrol_role');
+    if (existingRole) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.body.setAttribute('data-role', existingRole);
+      var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
+      document.getElementById('roleBadge').textContent = displayName;
+      renderAdminPanelBtn();
+      applyRolePermissions();
+    }
+  }
+
+  if (!sessionStorage.getItem('atik_kontrol_role')) {
     await new Promise(resolve => {
       window._loginResolve = resolve;
       window._loginAttempts = 0;
@@ -1133,6 +1248,9 @@ function resetInactivityTimer() {
 function lockScreen() {
   logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kapattı');
   stopPolling();
+  if (supabaseClient && isUsingSupabaseAuth()) {
+    supabaseClient.auth.signOut();
+  }
   sessionStorage.removeItem('atik_kontrol_role');
   document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('loginPassword').value = '';

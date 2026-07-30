@@ -65,7 +65,11 @@
         <div id="loginError" style="color:#ef4444;font-size:0.85rem;margin:0;text-align:center;display:none"></div>
         <span style="font-size:0.7rem;color:var(--text-muted);opacity:0.5;margin-top:2px">Şifrenizi yöneticinizden alabilirsiniz</span>
       </div>
-      <span style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--text-muted);opacity:0.3;font-weight:600;letter-spacing:1px;user-select:none">FMG</span>
+        <span style="position:absolute;bottom:10px;right:14px;font-size:9px;color:var(--text-muted);opacity:0.3;font-weight:600;letter-spacing:1px;user-select:none">FMG</span>
+        <div style="position:absolute;top:8px;left:14px;display:flex;gap:4px">
+          <span style="font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(99,102,241,0.1);color:var(--accent);opacity:0.5">Supabase Auth</span>
+          <span style="font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(245,158,11,0.1);color:#f59e0b;opacity:0.5">Legacy</span>
+        </div>
     </div>
   </div>
 
@@ -1446,6 +1450,10 @@
           <div>
             <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Son Giriş</div>
             <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apLastLogin">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Auth Yöntemi</div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apAuthMode">Supabase Auth</div>
           </div>
           <div>
             <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem">Şifre Deposu</div>
