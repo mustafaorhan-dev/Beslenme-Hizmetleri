@@ -5692,9 +5692,9 @@ function renderYagTable() {
     const yillar = Object.keys(yilToplam).sort();
     yagYilOzet.innerHTML = yillar.map(y => {
       const m = yilToplam[y];
-      return `<div style="flex:1;min-width:120px;padding:0.5rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
-        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Yılı Toplam</div>
-        <div style="font-size:1.1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">lt</span></div>
+      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
+        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">lt</span></div>
       </div>`;
     }).join('');
   }
