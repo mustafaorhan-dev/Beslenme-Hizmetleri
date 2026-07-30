@@ -4957,7 +4957,7 @@ function drawAllCharts() {
 
   const aylikOran = allMonthLabels.map(m => {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
-    return y > 0 ? (a / y * 100) : 0;
+    return y > 0 ? (a * 250 / y) : 0;
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
