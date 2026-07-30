@@ -5681,6 +5681,24 @@ function renderYagTable() {
 
   badge.textContent = yagRecords.length + ' kayıt';
 
+  // Yıl bazında özet
+  const yagYilOzet = document.getElementById('yagYilOzet');
+  if (yagYilOzet) {
+    const yilToplam = {};
+    yagRecords.forEach(r => {
+      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
+      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
+    });
+    const yillar = Object.keys(yilToplam).sort();
+    yagYilOzet.innerHTML = yillar.map(y => {
+      const m = yilToplam[y];
+      return `<div style="flex:1;min-width:120px;padding:0.5rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
+        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Yılı Toplam</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">lt</span></div>
+      </div>`;
+    }).join('');
+  }
+
   if (yagRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
