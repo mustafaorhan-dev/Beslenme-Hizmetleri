@@ -4952,6 +4952,30 @@ function drawAllCharts() {
   if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Geçen Yıl Çöpe Giden (porsiyon)', dashed: true });
   try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
+  // Aylık hesaplama detayı
+  const hesaplamaDiv = document.getElementById('aylikHesaplamalar');
+  const hesaplamaDetay = document.getElementById('aylikHesaplamaDetay');
+  if (hesaplamaDiv && hesaplamaDetay) {
+    const lines = allMonthLabels.map(m => {
+      const d = monthlyData[m];
+      if (!d || d.porsiyon === 0) return null;
+      const cp = d.atik * 1000 / d.porsiyon;
+      return `<div style="margin-bottom:0.25rem"><strong>${m}</strong> &ndash; ` +
+        `Üretim: ${d.yemek.toLocaleString('tr')} kişi, ` +
+        `Geçiş: ${d.toplam.toLocaleString('tr')} kişi, ` +
+        `Atık: ${d.atik.toFixed(1)} kg, ` +
+        `Porsiyon: ${d.porsiyon.toLocaleString('tr')} gr, ` +
+        `Çöpe Giden: <strong>${cp.toFixed(1)} porsiyon</strong> ` +
+        `(=${d.atik}×1000÷${d.porsiyon})</div>`;
+    }).filter(Boolean);
+    if (lines.length > 0) {
+      hesaplamaDetay.innerHTML = lines.join('');
+      hesaplamaDiv.style.display = 'block';
+    } else {
+      hesaplamaDiv.style.display = 'none';
+    }
+  }
+
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
   try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Üretim ile Turnike Geçişi Arasındaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
 
