@@ -6049,6 +6049,10 @@ function saveAmbalajData() {
   try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
 }
 
+function ambalajToKg(r) {
+  return (r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0);
+}
+
 function renderAmbalajTable() {
   const tbody = document.getElementById('ambalajTbody');
   const table = document.getElementById('ambalajTable');
@@ -6087,7 +6091,7 @@ function renderAmbalajTable() {
     const yilToplam = {};
     filtered.forEach(r => {
       const y = new Date(r.tarih + 'T12:00:00').getFullYear();
-      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + (r.miktar || 0);
+      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + ambalajToKg(r);
     });
     const yillar = Object.keys(yilToplam).sort();
     ambalajYilOzet.innerHTML = yillar.map(y => {
@@ -6272,7 +6276,7 @@ function drawAmbalajChart() {
     if (!r.tarih) return;
     if (ambalajChartYear !== '' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
-    var kg = (r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0);
+    var kg = ambalajToKg(r);
     monthly[mk] = (monthly[mk] || 0) + kg;
   });
   var labels = Object.keys(monthly).sort(function(a, b) {

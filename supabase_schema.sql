@@ -157,6 +157,12 @@ ALTER TABLE haccp_depo_adlari ADD COLUMN IF NOT EXISTS max_limit NUMERIC;
 -- Mevcut kayıt tablosuna harcama_tutari kolonunu ekle (geriye uyumlu)
 ALTER TABLE records ADD COLUMN IF NOT EXISTS harcama_tutari NUMERIC DEFAULT 0;
 
+-- Mevcut ambalaj tablosuna birim kolonunu ekle (g/kg desteği, geriye uyumlu)
+-- NOT: Bu ALTER olmadan ambalaj kayıtlarının Supabase senkronu başarısız olur
+-- (ambalajRecordToDB birim alanı gönderdiği için upsert 42703 hatası verir).
+ALTER TABLE ambalaj_records ADD COLUMN IF NOT EXISTS birim TEXT DEFAULT 'kg';
+ALTER TABLE yag_records ADD COLUMN IF NOT EXISTS birim TEXT DEFAULT 'lt';
+
 -- Varsayılan depo adları
 INSERT INTO haccp_depo_adlari (ad) VALUES
   ('Soğuk Hava Deposu 5'),
