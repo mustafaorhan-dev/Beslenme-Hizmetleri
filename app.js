@@ -2767,6 +2767,7 @@ async function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
+  if (name === 'harcama') renderHarcamaMenu();
   if (name === 'report') renderReport();
   if (name === 'records') {
     if (filteredRecords.length === 0) {
@@ -2783,7 +2784,7 @@ async function switchTab(name) {
   if (name === 'haccp') loadHaccpData();
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
-  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
+  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -2854,7 +2855,6 @@ function populateForm(rec) {
   document.getElementById('fToplam').value = rec.toplam;
   document.getElementById('fPorsiyon').value = rec.porsiyon;
   document.getElementById('fOgrenci').value = rec.ogrenci;
-  document.getElementById('fHarcama').value = (rec.harcama_tutari || 0).toFixed(2);
   autoCalc();
   autoCalcHarcama();
 }
@@ -2889,7 +2889,8 @@ function autoCalcHarcama() {
   const ogrenci = parseInt(document.getElementById('fOgrenci').value) || 0;
   const oran = getOgrenciBasiHarcamaOrani();
   const harcama = ogrenci * oran;
-  document.getElementById('fHarcama').value = harcama.toFixed(2);
+  const el = document.getElementById('fHarcama');
+  if (el) el.value = harcama.toFixed(2);
 }
 
 // ─── DEFERRED RENDER ───────────────────────────────────────────────────────────
@@ -3839,8 +3840,8 @@ function buildRow(r, showActions) {
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
     <td>${safe(r.ogrenci).toLocaleString('tr-TR')}</td>
-    <td class="td-harcama">${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>
-    <td>${mealBadge}</td>
+    ${showActions ? `
+    <td>${mealBadge}</td>` : ''}
     ${actions}
   </tr>`;
 
@@ -4576,7 +4577,6 @@ function renderReport() {
   const avgPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0) / n;
   const totalAtik = records.reduce((s,r) => s+(r.atik||0), 0);
   const totalOgrenci = records.reduce((s,r) => s+(r.ogrenci||0), 0);
-  const totalHarcama = records.reduce((s,r) => s+(r.harcama_tutari||0), 0);
   const atikValues = records.map(r => r.atik || 0);
   const maxAtik = Math.max(...atikValues);
   const minAtik = Math.min(...atikValues);
@@ -4638,7 +4638,6 @@ function renderReport() {
   document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
-  document.getElementById('rTotalHarcama').textContent = totalHarcama.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ₺';
   document.getElementById('rMaxAtik').innerHTML = `${maxAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${maxAtikDate}</span>`;
   document.getElementById('rMinAtik').innerHTML = `${minAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${minAtikDate}</span>`;
 
@@ -4775,8 +4774,8 @@ function drawAllCharts() {
     return y === Number(chartYearFilter);
   });
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty','chartHarcamaEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik','canvasHarcama'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -4986,7 +4985,6 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
-  if (canSeeHarcama()) { try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylık Harcama Tutarı (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); } }
 
   const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
   try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
@@ -5151,6 +5149,177 @@ function drawAllCharts() {
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
   }
 
+}
+
+// ─── HARCAMA MENÜSÜ ────────────────────────────────────────────────────────────
+let harcamaMenuChart = null;
+
+function renderHarcamaMenu() {
+  const oranInput = document.getElementById('hcOran');
+  if (oranInput && document.activeElement !== oranInput) {
+    oranInput.value = getOgrenciBasiHarcamaOrani().toFixed(2);
+  }
+  const oran = parseFloat(oranInput && oranInput.value) || 0;
+  const status = document.getElementById('hcOranStatus');
+  if (status) {
+    const saved = getOgrenciBasiHarcamaOrani();
+    status.textContent = 'Kayıtlı oran: ' + saved.toFixed(2) + ' ₺' + (oran !== saved ? ' (kaydedilmemiş değişiklik)' : '');
+    status.style.color = oran !== saved ? '#f59e0b' : '#22c55e';
+  }
+  renderHarcamaMenuKpis(oran);
+  renderHarcamaMenuChart(oran);
+  renderHarcamaMenuTable(oran);
+}
+
+function renderHarcamaMenuKpis(oran) {
+  const el = document.getElementById('hcKpis');
+  if (!el) return;
+  const withOgrenci = records.filter(r => (r.ogrenci || 0) > 0);
+  const totalHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
+  const totalOgrenci = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0), 0);
+  const monthly = {};
+  withOgrenci.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const key = (d.getMonth() + 1) + '/' + d.getFullYear();
+    if (!monthly[key]) monthly[key] = 0;
+    monthly[key] += (r.ogrenci || 0) * oran;
+  });
+  const vals = Object.values(monthly);
+  const avgMonthly = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  const maxKey = vals.length ? Object.keys(monthly).reduce((a, b) => monthly[a] >= monthly[b] ? a : b) : null;
+  el.innerHTML = `
+    <div class="report-item report-item-highlight">
+      <span class="report-label">Toplam Harcama (₺)</span>
+      <span class="report-value" id="hcTotal">${totalHarcama.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Ort. Aylık Harcama (₺)</span>
+      <span class="report-value" id="hcAvg">${avgMonthly.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Toplam Öğrenci</span>
+      <span class="report-value" id="hcOgrenci">${totalOgrenci.toLocaleString('tr-TR')}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">En Yüksek Ay</span>
+      <span class="report-value" id="hcMaxMonth">${maxKey || '—'}</span>
+    </div>
+  `;
+}
+
+function renderHarcamaMenuChart(oran) {
+  const canvas = document.getElementById('canvasHarcamaMenu');
+  const empty = document.getElementById('hcChartEmpty');
+  if (!canvas || !empty) return;
+  const monthly = {};
+  const ordered = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+  ordered.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const key = (d.getMonth() + 1) + '/' + d.getFullYear();
+    if (!monthly[key]) monthly[key] = 0;
+    monthly[key] += (r.ogrenci || 0) * oran;
+  });
+  const labels = Object.keys(monthly);
+  const data = labels.map(k => monthly[k]);
+  if (harcamaMenuChart) { harcamaMenuChart.destroy(); harcamaMenuChart = null; }
+  if (labels.length === 0) {
+    empty.style.display = 'block';
+    canvas.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+  const parent = canvas.parentElement;
+  const w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  const h = Math.min(parent.offsetHeight || 300, parent.clientHeight || 300);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const colors = {
+    text: isDark ? '#e2e8f0' : '#1e293b',
+    grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+  };
+  const color = '#14b8a6';
+  harcamaMenuChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Aylık Harcama (₺)',
+        data,
+        backgroundColor: color,
+        borderColor: color,
+        borderRadius: 6,
+        barPercentage: 0.85,
+        categoryPercentage: 0.8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      plugins: {
+        legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        tooltip: {
+          backgroundColor: '#000000',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          bodyFont: { size: 11, family: 'Inter' },
+          titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+        },
+        valueLabels: true,
+      },
+      scales: {
+        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: colors.text, font: { size: 12, family: 'Inter' } }, grid: { color: colors.grid } }
+      }
+    },
+    plugins: [chartValueLabelPlugin]
+  });
+}
+
+function renderHarcamaMenuTable(oran) {
+  const tbody = document.getElementById('hcTbody');
+  if (!tbody) return;
+  const sorted = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = sorted.map(r => {
+    const tutar = (r.ogrenci || 0) * oran;
+    return `<tr>
+      <td>${displayDate(r.tarih)}</td>
+      <td>${(r.ogrenci || 0).toLocaleString('tr-TR')}</td>
+      <td>${oran.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
+      <td>${tutar.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
+    </tr>`;
+  }).join('');
+}
+
+function hcKaydetOran() {
+  const input = document.getElementById('hcOran');
+  const val = parseFloat(input && input.value);
+  const status = document.getElementById('hcOranStatus');
+  if (!status) return;
+  if (!val || isNaN(val) || val <= 0) {
+    status.textContent = 'Geçerli bir oran girin!';
+    status.style.color = '#ef4444';
+    return;
+  }
+  setOgrenciBasiHarcamaOrani(val);
+  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.style.color = '#22c55e';
+  renderHarcamaMenu();
 }
 
 
