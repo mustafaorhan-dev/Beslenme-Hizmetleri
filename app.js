@@ -3942,7 +3942,7 @@ function buildRow(r, showActions) {
     <td>${safe(r.turnike).toLocaleString('tr-TR')}</td>
     <td>${safe(r.personel).toLocaleString('tr-TR')}</td>
     <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
-    <td>${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
+    <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
     <td>${safe(r.ogrenci).toLocaleString('tr-TR')}</td>
@@ -4681,6 +4681,7 @@ function renderReport() {
   const totalPersonel = records.reduce((s,r) => s+(r.personel||0), 0);
   const totalGecis = records.reduce((s,r) => s+(r.toplam||0), 0);
   const avgPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0) / n;
+  const porsiyonFarklari = records.filter(r => (r.porsiyon||0) !== 400);
   const totalAtik = records.reduce((s,r) => s+(r.atik||0), 0);
   const totalOgrenci = records.reduce((s,r) => s+(r.ogrenci||0), 0);
   const atikValues = records.map(r => r.atik || 0);
@@ -4737,7 +4738,7 @@ function renderReport() {
   document.getElementById('rTotalGecis').textContent = totalGecis.toLocaleString('tr-TR');
   const totalPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0);
   const copPorsiyon = records.reduce((s,r) => s + ((r.porsiyon||0) > 0 ? (r.atik||0) * 1000 / (r.porsiyon||400) : 0), 0);
-  document.getElementById('rAvgPorsiyon').textContent = avgPorsiyon.toFixed(0) + ' gr';
+  document.getElementById('rAvgPorsiyon').innerHTML = avgPorsiyon.toFixed(0) + ' gr' + (porsiyonFarklari.length > 0 ? `<span style="display:block;font-size:0.7rem;color:#ef4444;font-weight:600">${porsiyonFarklari.length} kayıt 400 değil</span>` : '');
   document.getElementById('rTotalPorsiyon').textContent = totalPorsiyon.toLocaleString('tr-TR') + ' gr';
   document.getElementById('rCopPorsiyon').textContent = copPorsiyon.toFixed(0).toLocaleString('tr-TR') + ' porsiyon';
   document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Geçiş)</span>` : '—';

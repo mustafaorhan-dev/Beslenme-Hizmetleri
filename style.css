@@ -1413,6 +1413,11 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .chart-note { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim, #94a3b8); text-align: center; line-height: 1.4; }
 #recordsTable th, #recordsTable td { text-align: center; }
 #recordsTable th:first-child, #recordsTable td:first-child { text-align: left; }
+td.porsiyon-warn {
+  background: rgba(239,68,68,0.14) !important;
+  color: #ef4444 !important;
+  font-weight: 700;
+}
 #recordsTable td:last-child { text-align: center; }
 .formula-box { margin-top:0.75rem; padding:0.5rem 0.75rem; background:rgba(99,102,241,0.04); border:1px solid rgba(99,102,241,0.1); border-radius:6px; font-size:0.78rem; color:var(--text-secondary); line-height:1.6; text-align:center }
 
