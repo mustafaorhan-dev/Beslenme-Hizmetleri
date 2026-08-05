@@ -326,6 +326,16 @@ function getRole() {
   return sessionStorage.getItem('atik_kontrol_role') || '';
 }
 
+// Harcama (₺) bilgileri yalnızca admin rolüne görünür
+function canSeeHarcama() {
+  return getRole() === ROLE_ADMIN;
+}
+
+// Dışa aktarma (PDF/yazdırma) pencerelerinde harcama öğelerini gizleyen CSS kuralı
+function harcamaHiddenCss() {
+  return canSeeHarcama() ? '' : '.col-harcama,.td-harcama,.report-item-harcama,.chart-card-harcama,.field-harcama{display:none!important}';
+}
+
 function isUsingSupabaseAuth() {
   return sessionStorage.getItem('atik_kontrol_supabase_auth') === 'true';
 }
@@ -2032,6 +2042,7 @@ function exportPDF() {
         .badge, .btn, .toolbar, .year-btn { display: none; }
       .note-input { width: 100%; padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.7rem; resize: vertical; min-height: 24px; font-family: inherit; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      ${harcamaHiddenCss()}
       </style>
     </head><body>
       <h1>Atık Kontrol Raporu</h1>
@@ -2640,6 +2651,7 @@ function exportChartsPDF() {
       .chart-year-filter { display: none; }
       .toolbar-actions { display: none; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      ${harcamaHiddenCss()}
     </style>
   </head><body>
     <h1>Grafikler - Atık Kontrol Yönetim Sistemi</h1>
@@ -2698,6 +2710,7 @@ function exportDashboardPDF() {
       .prod-qty { width: 4.5rem; text-align: right; flex-shrink: 0; font-weight: 600; }
       .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.5rem 0; color: #333; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      ${harcamaHiddenCss()}
     </style>
   </head><body>
     <h1>Yemekhane Atık Kontrol Paneli</h1>
@@ -2727,6 +2740,7 @@ function exportRecordsPDF() {
       .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
       .toolbar, .bulk-bar, .pagination, .btn, .empty-state svg { display: none; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      ${harcamaHiddenCss()}
     </style>
   </head><body>
     <h1>Tüm Kayıtlar</h1>
@@ -3239,11 +3253,15 @@ function exportDataJSON() {
 
 function exportDataCSV() {
   if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
-  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Harcama Tutarı (₺)','Yemek Adı'];
-  var rows = records.map(function(r) { return [
-    r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
-    r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, r.harcama_tutari || 0, (r.yemek_adi || '').replace(/"/g,'""')
-  ]; });
+  var showHarcama = canSeeHarcama();
+  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
+  if (showHarcama) headers.splice(9, 0, 'Harcama Tutarı (₺)');
+  var rows = records.map(function(r) {
+    var row = [r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
+      r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, (r.yemek_adi || '').replace(/"/g,'""')];
+    if (showHarcama) row.splice(9, 0, r.harcama_tutari || 0);
+    return row;
+  });
   var csv = '\uFEFF' + headers.join(';') + '\n' + rows.map(function(r) { return r.join(';'); }).join('\n');
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   var url = URL.createObjectURL(blob);
@@ -4968,7 +4986,7 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
-  try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylık Harcama Tutarı (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); }
+  if (canSeeHarcama()) { try { makeChart('canvasHarcama', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'harcama')), color: '#14b8a6', label: 'Aylık Harcama Tutarı (₺)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHarcama error:', e); } }
 
   const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
   try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
@@ -5190,14 +5208,14 @@ function showChartDetailModal(title, records) {
   } else {
     body.innerHTML = `<div style="overflow-x:auto;max-height:400px;overflow-y:auto">
       <table class="data-table" style="min-width:400px">
-        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th><th>Harcama</th><th>Yemek Türü</th></tr></thead>
+        <thead><tr><th>Tarih</th><th>Üretim</th><th>Geçiş</th><th>Atık</th><th>Öğrenci</th>${canSeeHarcama() ? '<th>Harcama</th>' : ''}<th>Yemek Türü</th></tr></thead>
         <tbody>${records.slice(0, 100).map(r => `<tr>
           <td>${displayDate(r.tarih)}</td>
           <td>${r.yemek || '—'}</td>
           <td>${r.toplam || '—'}</td>
           <td>${(r.atik||0).toFixed(1)}</td>
           <td>${r.ogrenci || '—'}</td>
-          <td>${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>
+          ${canSeeHarcama() ? `<td>${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>` : ''}
           <td>${r.yemek_adi || '—'}</td>
         </tr>`).join('')}</tbody>
       </table>

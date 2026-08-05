@@ -503,6 +503,12 @@ body {
 [data-role="viewer"] .btn-logout { display: inline-flex !important; }
 [data-role="viewer"] .sidebar-actions { gap: 0.25rem; }
 [data-role="viewer"] .menu-date-nav .btn-ghost { display: inline-flex !important; }
+/* Harcama bilgileri yalnızca admin (Yönetici) rolüne görünür */
+body[data-role]:not([data-role="admin"]) th.col-harcama,
+body[data-role]:not([data-role="admin"]) td.td-harcama,
+body[data-role]:not([data-role="admin"]) .report-item-harcama,
+body[data-role]:not([data-role="admin"]) .chart-card-harcama,
+body[data-role]:not([data-role="admin"]) .field-harcama { display: none !important; }
 
 /* ---- BUTTONS ---- */
 .btn {
