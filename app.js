@@ -4743,12 +4743,8 @@ function renderReport() {
   const copPorsiyon = records.reduce((s,r) => s + ((r.porsiyon||0) > 0 ? (r.atik||0) * 1000 / (r.porsiyon||400) : 0), 0);
   const avgPorItem = document.getElementById('rAvgPorsiyonItem');
   const avgPorEl = document.getElementById('rAvgPorsiyon');
-  if (porsiyonFarklari.length === 0) {
-    if (avgPorItem) avgPorItem.style.display = 'none';
-  } else {
-    if (avgPorItem) avgPorItem.style.display = '';
-    if (avgPorEl) avgPorEl.innerHTML = `<span style="color:#ef4444">${avgPorsiyon.toFixed(0)} gr</span><span style="display:block;font-size:0.7rem;color:#ef4444;font-weight:600">${porsiyonFarklari.length} kayıt 400 değil</span>`;
-  }
+  if (avgPorItem) avgPorItem.style.display = '';
+  if (avgPorEl) avgPorEl.innerHTML = '400 gr' + (porsiyonFarklari.length > 0 ? `<span style="display:block;font-size:0.7rem;color:#ef4444;font-weight:600">${porsiyonFarklari.length} kayıt 400 değil</span>` : '');
   document.getElementById('rTotalPorsiyon').textContent = totalPorsiyon.toLocaleString('tr-TR') + ' gr';
   document.getElementById('rCopPorsiyon').textContent = copPorsiyon.toFixed(0).toLocaleString('tr-TR') + ' porsiyon';
   document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Geçiş)</span>` : '—';
