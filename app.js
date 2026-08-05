@@ -272,6 +272,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
+    canEditDepo: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -285,6 +286,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: true,
+    canEditDepo: true,
     canEditYag: true,
     canEditAmbalaj: true
   },
@@ -298,6 +300,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
+    canEditDepo: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -311,6 +314,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
+    canEditDepo: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -324,6 +328,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
+    canEditDepo: false,
     canEditYag: false,
     canEditAmbalaj: false
   }
@@ -682,7 +687,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditYag', 'canEditAmbalaj'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditYag', 'canEditAmbalaj'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -709,6 +714,7 @@ function apRenderRolePermissions() {
     canSync: 'Senkronizasyon yapabilir',
     canSeeAdminPanel: 'Yönetim panelini görebilir',
     canEditHaccp: 'Gıda güvenliği kayıtlarını düzenleyebilir',
+    canEditDepo: 'Depo adlarını düzenleyebilir',
     canEditYag: 'Atık yağ kayıtlarını düzenleyebilir',
     canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir'
   };
@@ -1049,6 +1055,10 @@ function applyViewerRestrictions() {
     document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) {
       el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
     });
+  }
+  if (!perm.canEditDepo) {
+    var depoBtn = document.querySelector('button[onclick*="showHaccpDepoYonetim"]');
+    if (depoBtn) depoBtn.style.display = 'none';
   }
   if (!perm.canExport) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
@@ -2172,6 +2182,7 @@ function getHaccpDepoAdlari() {
 }
 
 function saveDepoLimitsFromRow(input) {
+  if (!canEditDepoAdlari()) return;
   var row = input.closest('[data-depo]');
   if (!row) return;
   var depoAd = row.dataset.depo;
@@ -2196,6 +2207,7 @@ function addHaccpDepoAdi(name) {
 }
 
 function removeHaccpDepoAdi(name) {
+  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const list = loadHaccpDepoAdlari().filter(n => n !== name);
   saveHaccpDepoAdlari(list);
   delete depoLimitleriCache[name];
@@ -2204,7 +2216,15 @@ function removeHaccpDepoAdi(name) {
   return list;
 }
 
+function canEditDepoAdlari() {
+  var role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(role);
+  return !!(perm && perm.canEditDepo);
+}
+
 function showHaccpDepoYonetim() {
+  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   document.getElementById('haccpDepoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   renderHaccpDepoListesi();
@@ -2216,6 +2236,7 @@ function closeHaccpDepoModal() {
 }
 
 function addHaccpDepoAdiFromInput() {
+  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('haccpYeniDepoInput');
   if (!input || !input.value.trim()) return;
   addHaccpDepoAdi(input.value.trim());
