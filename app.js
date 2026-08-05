@@ -1038,6 +1038,15 @@ function applyViewerRestrictions() {
   if (syncBtn) syncBtn.style.display = perm.canSync ? '' : 'none';
   var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
   if (pullBtn) pullBtn.style.display = perm.canSync ? '' : 'none';
+  // Sekme içindeki tüm "Supabase'e Kaydet / Supabase'ten Çek" butonları da canSync'e bağlı
+  if (!perm.canSync) {
+    document.querySelectorAll('button[onclick]').forEach(function(btn) {
+      var onclick = btn.getAttribute('onclick') || '';
+      if (/(sync(All|Haccp|Yag|Ambalaj|Dishes|Menu)(To|From)Supabase)/.test(onclick)) {
+        btn.style.display = 'none';
+      }
+    });
+  }
   var adminBtn = document.getElementById('adminPanelBtn');
   if (adminBtn) adminBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
   var logBtn = document.getElementById('logPanelBtn');
@@ -1060,6 +1069,11 @@ function applyViewerRestrictions() {
     var depoBtn = document.querySelector('button[onclick*="showHaccpDepoYonetim"]');
     if (depoBtn) depoBtn.style.display = 'none';
   }
+  // Harcama oranı yalnızca admin tarafından değiştirilebilir
+  var hcOran = document.getElementById('hcOran');
+  if (hcOran) { hcOran.readOnly = true; hcOran.title = 'Oranı yalnızca admin değiştirebilir.'; }
+  var hcOranBtn = document.querySelector('button[onclick*="hcKaydetOran"]');
+  if (hcOranBtn) hcOranBtn.style.display = 'none';
   if (!perm.canExport) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
@@ -5376,6 +5390,7 @@ function renderHarcamaMenuTable(oran) {
 }
 
 function hcKaydetOran() {
+  if (getRole() !== ROLE_ADMIN) { showToast('Bu işlem için admin yetkisi gerekli.', 'error'); return; }
   const input = document.getElementById('hcOran');
   const val = parseFloat(input && input.value);
   const status = document.getElementById('hcOranStatus');
