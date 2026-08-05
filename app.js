@@ -2913,6 +2913,23 @@ function openModal(id = null) {
     document.getElementById('fTarih').value = formatLocalDate(new Date());
   }
 
+  // Porsiyon: yeni kayıtta sabit (400), düzenlemede değiştirilebilir (eski hataları düzeltmek için)
+  const fPorsiyonEl = document.getElementById('fPorsiyon');
+  const fPorsiyonBadge = document.getElementById('fPorsiyonBadge');
+  if (fPorsiyonEl) {
+    if (id !== null) {
+      fPorsiyonEl.readOnly = false;
+      fPorsiyonEl.classList.remove('readonly-input');
+      fPorsiyonEl.oninput = autoCalcAtik;
+      if (fPorsiyonBadge) fPorsiyonBadge.textContent = 'Düzenlenebilir';
+    } else {
+      fPorsiyonEl.readOnly = true;
+      fPorsiyonEl.classList.add('readonly-input');
+      fPorsiyonEl.oninput = null;
+      if (fPorsiyonBadge) fPorsiyonBadge.textContent = 'Sabit';
+    }
+  }
+
   // Form değişiklik izleme
   document.querySelectorAll('#entryForm input').forEach(el => {
     el.addEventListener('input', () => { formModified = true; }, { once: true });
