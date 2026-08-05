@@ -1390,6 +1390,24 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .charts-grid .section-card { padding: 1.25rem; }
 .chart-card .section-header { padding: 0; margin-bottom: 1rem; }
+.chart-total {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.05;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.chart-total small {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-dim, #94a3b8);
+  text-align: right;
+  letter-spacing: 0.4px;
+  margin-top: 0.15rem;
+}
 .chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
 .chart-note { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim, #94a3b8); text-align: center; line-height: 1.4; }

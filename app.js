@@ -4863,6 +4863,22 @@ function drawAllCharts() {
     return y === Number(chartYearFilter);
   });
 
+  // Grafik kartlarındaki canlı yıl toplamları (veri değiştikçe güncellenir)
+  const totYemek = chartRecords.reduce((s, r) => s + (Number(r.yemek) || 0), 0);
+  const totTurnike = chartRecords.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
+  const totOgrenci = chartRecords.reduce((s, r) => s + (Number(r.ogrenci) || 0), 0);
+  const totAtik = chartRecords.reduce((s, r) => s + (Number(r.atik) || 0), 0);
+  function setChartTotal(id, val, isKg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const fmt = isKg ? val.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) : Math.round(val).toLocaleString('tr-TR');
+    el.innerHTML = fmt + '<small>Yıl Toplamı</small>';
+  }
+  setChartTotal('chartTotalYemek', totYemek, false);
+  setChartTotal('chartTotalTurnike', totTurnike, false);
+  setChartTotal('chartTotalOgrenci', totOgrenci, false);
+  setChartTotal('chartTotalAtik', totAtik, true);
+
   const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
   const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
 
