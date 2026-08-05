@@ -273,6 +273,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSeeAdminPanel: false,
     canEditHaccp: false,
     canEditDepo: false,
+    canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -287,6 +288,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSeeAdminPanel: false,
     canEditHaccp: true,
     canEditDepo: true,
+    canEditHarcamaOran: false,
     canEditYag: true,
     canEditAmbalaj: true
   },
@@ -301,6 +303,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSeeAdminPanel: false,
     canEditHaccp: false,
     canEditDepo: false,
+    canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -315,6 +318,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSeeAdminPanel: false,
     canEditHaccp: false,
     canEditDepo: false,
+    canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false
   },
@@ -687,7 +691,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditYag', 'canEditAmbalaj'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -715,6 +719,7 @@ function apRenderRolePermissions() {
     canSeeAdminPanel: 'Yönetim panelini görebilir',
     canEditHaccp: 'Gıda güvenliği kayıtlarını düzenleyebilir',
     canEditDepo: 'Depo adlarını düzenleyebilir',
+    canEditHarcamaOran: 'Harcama oranını değiştirebilir',
     canEditYag: 'Atık yağ kayıtlarını düzenleyebilir',
     canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir'
   };
@@ -1069,11 +1074,12 @@ function applyViewerRestrictions() {
     var depoBtn = document.querySelector('button[onclick*="showHaccpDepoYonetim"]');
     if (depoBtn) depoBtn.style.display = 'none';
   }
-  // Harcama oranı yalnızca admin tarafından değiştirilebilir
-  var hcOran = document.getElementById('hcOran');
-  if (hcOran) { hcOran.readOnly = true; hcOran.title = 'Oranı yalnızca admin değiştirebilir.'; }
-  var hcOranBtn = document.querySelector('button[onclick*="hcKaydetOran"]');
-  if (hcOranBtn) hcOranBtn.style.display = 'none';
+  if (!perm.canEditHarcamaOran) {
+    var hcOran = document.getElementById('hcOran');
+    if (hcOran) { hcOran.readOnly = true; hcOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    var hcOranBtn = document.querySelector('button[onclick*="hcKaydetOran"]');
+    if (hcOranBtn) hcOranBtn.style.display = 'none';
+  }
   if (!perm.canExport) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
@@ -5389,8 +5395,15 @@ function renderHarcamaMenuTable(oran) {
   }).join('');
 }
 
+function canEditHarcamaOran() {
+  var role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(role);
+  return !!(perm && perm.canEditHarcamaOran);
+}
+
 function hcKaydetOran() {
-  if (getRole() !== ROLE_ADMIN) { showToast('Bu işlem için admin yetkisi gerekli.', 'error'); return; }
+  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('hcOran');
   const val = parseFloat(input && input.value);
   const status = document.getElementById('hcOranStatus');
