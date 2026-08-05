@@ -6279,6 +6279,58 @@ function ambalajToKg(r) {
   return (r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0);
 }
 
+function renderAmbalajOzet(list) {
+  const grid = document.getElementById('ambalajOzetGrid');
+  if (!grid) return;
+  const adet = list.length;
+  const toplam = list.reduce((s, r) => s + ambalajToKg(r), 0);
+  const ort = adet ? toplam / adet : 0;
+  const maxR = adet ? Math.max(...list.map(r => ambalajToKg(r))) : 0;
+  const minR = adet ? Math.min(...list.map(r => ambalajToKg(r))) : 0;
+  const turler = new Set(list.map(r => r.tur).filter(Boolean));
+  const yilToplam = {};
+  list.forEach(r => {
+    const y = new Date(r.tarih + 'T12:00:00').getFullYear();
+    if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + ambalajToKg(r);
+  });
+  const yillar = Object.keys(yilToplam).sort();
+  const fmt = (v) => v.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kg';
+  let html = `
+    <div class="report-item">
+      <span class="report-label">Toplam Kayıt</span>
+      <span class="report-value">${adet.toLocaleString('tr-TR')}</span>
+    </div>
+    <div class="report-item report-item-highlight" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25);">
+      <span class="report-label">Toplam Ambalaj Atığı</span>
+      <span class="report-value" style="color:#10b981">${fmt(toplam)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Ort. Miktar / Kayıt</span>
+      <span class="report-value">${fmt(ort)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">En Yüksek Miktar</span>
+      <span class="report-value">${fmt(maxR)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">En Düşük Miktar</span>
+      <span class="report-value">${fmt(minR)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Atık Türü Çeşidi</span>
+      <span class="report-value">${turler.size.toLocaleString('tr-TR')}</span>
+    </div>
+  `;
+  yillar.forEach(y => {
+    html += `
+    <div class="report-item">
+      <span class="report-label">${y} Toplam</span>
+      <span class="report-value" style="color:var(--accent)">${fmt(yilToplam[y])}</span>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
 function renderAmbalajTable() {
   const tbody = document.getElementById('ambalajTbody');
   const table = document.getElementById('ambalajTable');
@@ -6290,6 +6342,7 @@ function renderAmbalajTable() {
   if (ambalajRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    renderAmbalajOzet([]);
     drawAmbalajChart();
     return;
   }
@@ -6306,28 +6359,14 @@ function renderAmbalajTable() {
     table.style.display = 'none';
     empty.style.display = 'flex';
     empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
+    renderAmbalajOzet([]);
     drawAmbalajChart();
     return;
   }
   empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
 
-  // Filtrelenmiş yıl özeti
-  const ambalajYilOzet = document.getElementById('ambalajYilOzet');
-  if (ambalajYilOzet) {
-    const yilToplam = {};
-    filtered.forEach(r => {
-      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
-      if (!isNaN(y)) yilToplam[y] = (yilToplam[y] || 0) + ambalajToKg(r);
-    });
-    const yillar = Object.keys(yilToplam).sort();
-    ambalajYilOzet.innerHTML = yillar.map(y => {
-      const m = yilToplam[y];
-      return `<div style="flex:1;min-width:100px;padding:0.4rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center">
-        <div style="font-size:0.72rem;color:var(--text-muted)">${y} Toplam</div>
-        <div style="font-size:1rem;font-weight:700;color:var(--accent)">${m.toFixed(1)} <span style="font-size:0.65rem;font-weight:400;color:var(--text-muted)">kg</span></div>
-      </div>`;
-    }).join('');
-  }
+  // Filtrelenmiş özet kartları
+  renderAmbalajOzet(filtered);
 
   empty.style.display = 'none';
   table.style.display = 'table';
