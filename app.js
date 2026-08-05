@@ -4868,16 +4868,21 @@ function drawAllCharts() {
   const totTurnike = chartRecords.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
   const totOgrenci = chartRecords.reduce((s, r) => s + (Number(r.ogrenci) || 0), 0);
   const totAtik = chartRecords.reduce((s, r) => s + (Number(r.atik) || 0), 0);
-  function setChartTotal(id, val, isKg) {
+  const totFark = totYemek - totTurnike;
+  const totAtikOran = totYemek > 0 ? (totAtik * 250 / totYemek) : 0;
+  const totAtikPerKisi = totTurnike > 0 ? (totAtik / totTurnike) : 0;
+  function setChartTotal(id, val, formatter, label) {
     const el = document.getElementById(id);
     if (!el) return;
-    const fmt = isKg ? val.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) : Math.round(val).toLocaleString('tr-TR');
-    el.innerHTML = fmt + '<small>Yıl Toplamı</small>';
+    el.innerHTML = formatter(val) + '<small>' + (label || 'Yıl Toplamı') + '</small>';
   }
-  setChartTotal('chartTotalYemek', totYemek, false);
-  setChartTotal('chartTotalTurnike', totTurnike, false);
-  setChartTotal('chartTotalOgrenci', totOgrenci, false);
-  setChartTotal('chartTotalAtik', totAtik, true);
+  setChartTotal('chartTotalYemek', totYemek, v => Math.round(v).toLocaleString('tr-TR'));
+  setChartTotal('chartTotalTurnike', totTurnike, v => Math.round(v).toLocaleString('tr-TR'));
+  setChartTotal('chartTotalOgrenci', totOgrenci, v => Math.round(v).toLocaleString('tr-TR'));
+  setChartTotal('chartTotalAtik', totAtik, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }));
+  setChartTotal('chartTotalFark', totFark, v => (Math.round(v)).toLocaleString('tr-TR'));
+  setChartTotal('chartTotalAtikOran', totAtikOran, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' %', 'Yıl Ortalaması');
+  setChartTotal('chartTotalAtikPerKisi', totAtikPerKisi, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 2 }), 'Yıl Ortalaması');
 
   const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
   const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
