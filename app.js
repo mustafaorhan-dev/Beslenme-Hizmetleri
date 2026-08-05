@@ -587,7 +587,6 @@ async function apReAuth() {
         document.getElementById('apReAuthContainer').style.display = 'none';
         document.getElementById('apPanelBody').style.display = 'block';
         errorEl.style.display = 'none';
-        document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
         apRenderUserList();
         apRenderRolePermissions();
         return;
@@ -607,7 +606,6 @@ async function apReAuth() {
     document.getElementById('apReAuthContainer').style.display = 'none';
     document.getElementById('apPanelBody').style.display = 'block';
     errorEl.style.display = 'none';
-    document.getElementById('apHarcamaOran').value = getOgrenciBasiHarcamaOrani();
     apRenderUserList();
     apRenderRolePermissions();
   } else {
@@ -616,23 +614,6 @@ async function apReAuth() {
     document.getElementById('apReAuthPw').value = '';
     document.getElementById('apReAuthPw').focus();
   }
-}
-
-function apKaydetHarcamaOrani() {
-  const val = parseFloat(document.getElementById('apHarcamaOran').value);
-  if (isNaN(val) || val <= 0) {
-    document.getElementById('apHarcamaOranSuccess').textContent = 'Geçerli bir oran girin!';
-    document.getElementById('apHarcamaOranSuccess').style.color = '#ef4444';
-    document.getElementById('apHarcamaOranSuccess').style.display = 'block';
-    return;
-  }
-  setOgrenciBasiHarcamaOrani(val);
-  document.getElementById('apHarcamaOranSuccess').textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
-  document.getElementById('apHarcamaOranSuccess').style.color = '#22c55e';
-  document.getElementById('apHarcamaOranSuccess').style.display = 'block';
-  setTimeout(function() {
-    document.getElementById('apHarcamaOranSuccess').style.display = 'none';
-  }, 3000);
 }
 
 function closeAdminPanel() {
