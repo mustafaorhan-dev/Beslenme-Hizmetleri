@@ -4892,6 +4892,7 @@ function drawAllCharts() {
   const totTurnike = chartRecords.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
   const totOgrenci = chartRecords.reduce((s, r) => s + (Number(r.ogrenci) || 0), 0);
   const totAtik = chartRecords.reduce((s, r) => s + (Number(r.atik) || 0), 0);
+  const totAtikPorsiyon = chartRecords.reduce((s, r) => s + ((Number(r.porsiyon) || 0) > 0 ? (Number(r.atik) || 0) * 1000 / (Number(r.porsiyon) || 400) : 0), 0);
   const totFark = totYemek - totTurnike;
   const totAtikOran = totYemek > 0 ? (totAtik * 250 / totYemek) : 0;
   const totAtikPerKisi = totTurnike > 0 ? (totAtik / totTurnike) : 0;
@@ -4907,9 +4908,10 @@ function drawAllCharts() {
   setChartTotal('chartTotalFark', totFark, v => (Math.round(v)).toLocaleString('tr-TR'));
   setChartTotal('chartTotalAtikOran', totAtikOran, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' %', 'Yıl Ortalaması');
   setChartTotal('chartTotalAtikPerKisi', totAtikPerKisi, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 2 }), 'Yıl Ortalaması');
+  setChartTotal('chartTotalAtikPorsiyon', totAtikPorsiyon, v => Math.round(v).toLocaleString('tr-TR'));
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasHaftalikGecis','canvasHaccpAylik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -5094,6 +5096,7 @@ function drawAllCharts() {
 
   // --- Charts (her biri try-catch ile izole) ---
   try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
+  try { makeChart('canvasAtikPorsiyon', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#fb923c', label: 'Aylık Atık (porsiyon)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPorsiyon error:', e); }
   try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
   try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylık Turnike Geçisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
 

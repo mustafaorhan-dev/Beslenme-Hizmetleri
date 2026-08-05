@@ -1006,6 +1006,20 @@
         </div>
         <div class="section-card chart-card chart-card-full">
           <div class="section-header">
+            <h2>Aylık Atık Miktarı (porsiyon)</h2>
+            <span class="chart-total" id="chartTotalAtikPorsiyon">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartAtikPorsiyon">
+            <canvas id="canvasAtikPorsiyon"></canvas>
+            <div class="chart-empty" id="chartAtikPorsiyonEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Günlük çöpe giden porsiyonların aylık toplamı (Atık kg × 1000 ÷ Porsiyon gr)</div>
+          <div class="formula-box">
+            <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ Porsiyon gr
+          </div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
             <h2>Üretim - Geçiş - Atık Karşılaştırması</h2>
           </div>
           <div class="chart-area" id="chartAylik">
