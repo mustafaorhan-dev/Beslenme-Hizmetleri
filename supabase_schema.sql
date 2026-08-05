@@ -201,3 +201,26 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 -- Geçiş döneminde herkes görebilir; Supabase Auth aktifleşince kısıtlanır
 CREATE POLICY "user_roles_all" ON user_roles FOR ALL
   USING (true) WITH CHECK (true);
+
+-- Her auth kullanıcısına en fazla bir rol satırı (assign_user_role ve
+-- uygulamanın upsert/insert işlemleri için gerekli benzersizlik)
+ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_auth_user_id_key;
+ALTER TABLE user_roles ADD CONSTRAINT user_roles_auth_user_id_key UNIQUE (auth_user_id);
+
+-- 12. UYGULAMA KULLANICILARI (legacy listesinin Supabase üzerinden senkronu)
+-- Yönetim panelindeki kullanıcı yönetimi (şifre/rol değişikliği) bu tabloya
+-- yazılır ve tüm cihazlarda app_users'tan çekilir. Böylece şifre değişikliği
+-- yalnızca tek tarayıcıda değil, her cihazda geçerli olur.
+CREATE TABLE IF NOT EXISTS app_users (
+  username TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'asci' CHECK (role IN ('admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci')),
+  display_name TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
+
+-- Geçiş döneminde herkes görebilir/yazabilir; ileride sadece authenticated'e kısıtlanır
+CREATE POLICY "app_users_all" ON app_users FOR ALL
+  USING (true) WITH CHECK (true);

@@ -1,4 +1,4 @@
-const CACHE = 'atik-kontrol-v12';
+const CACHE = 'atik-kontrol-v13';
 const URLS = ['index.html', 'style.css', 'app.js', 'manifest.json', 'config.js'];
 
 self.addEventListener('install', e => {
@@ -18,16 +18,17 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Network-first: çevrimiçiyken her zaman güncel dosyalar alınır,
+  // çevrimdışıysa önbellekteki kopya kullanılır.
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       try {
-        const cached = await cache.match(e.request);
-        const network = fetch(e.request).then(res => {
-          try { if (res && (res.ok || res.type === 'opaque')) cache.put(e.request, res.clone()); } catch (_) {}
-          return res;
-        }).catch(() => cached);
-        return cached || network;
+        const network = await fetch(e.request);
+        try { if (network && (network.ok || network.type === 'opaque')) cache.put(e.request, network.clone()); } catch (_) {}
+        return network;
       } catch (_) {
+        const cached = await cache.match(e.request);
+        if (cached) return cached;
         return fetch(e.request);
       }
     })

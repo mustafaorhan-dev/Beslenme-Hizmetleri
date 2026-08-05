@@ -52,31 +52,50 @@ async function initSupabaseAuth() {
 async function handleSupabaseLogin(session) {
   if (!session || !session.user) return;
   var userId = session.user.id;
-  // Get user role from user_roles table
   try {
     var { data, error } = await supabaseClient.from('user_roles')
       .select('role, display_name')
       .eq('auth_user_id', userId)
       .single();
     if (error || !data) {
-      // Role atanmamış kullanıcı - varsayılan rol
+      // user_roles'da kayıt yoksa legacy kullanıcı listesinden bulup otomatik at
+      // (böylece Supabase'de "kullanıcı rolleri" boş kalmaz)
+      var email = session.user.email || '';
+      var username = email.split('@')[0].toLowerCase();
+      var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+      var legacyUser = null;
+      if (cfg.users && Array.isArray(cfg.users)) {
+        legacyUser = cfg.users.find(function(u) { return (u.username || '').toLowerCase() === username; }) || null;
+      }
+      var role = legacyUser ? (legacyUser.role || 'asci') : 'asci';
+      var displayName = legacyUser ? (legacyUser.displayName || username) : (session.user.email || 'Kullanıcı');
+      try {
+        await supabaseClient.from('user_roles').insert({ auth_user_id: userId, role: role, display_name: displayName });
+      } catch (_) {}
+      applyLoginState(role, displayName, true);
+      logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
       return;
     }
     var role = data.role || 'asci';
     var displayName = data.display_name || session.user.email || 'Kullanıcı';
-    sessionStorage.setItem('atik_kontrol_role', role);
-    sessionStorage.setItem('atik_kontrol_display_name', displayName);
-    sessionStorage.setItem('atik_kontrol_supabase_auth', 'true');
-    sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
-    localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.body.setAttribute('data-role', role);
-    document.getElementById('roleBadge').textContent = displayName;
-    renderAdminPanelBtn();
-    applyRolePermissions();
-    if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
+    applyLoginState(role, displayName, true);
     logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
   } catch (_) {}
+}
+
+function applyLoginState(role, displayName, isSupabaseAuth) {
+  sessionStorage.setItem('atik_kontrol_role', role);
+  sessionStorage.setItem('atik_kontrol_display_name', displayName);
+  if (isSupabaseAuth) sessionStorage.setItem('atik_kontrol_supabase_auth', 'true');
+  else sessionStorage.removeItem('atik_kontrol_supabase_auth');
+  sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+  localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.body.setAttribute('data-role', role);
+  document.getElementById('roleBadge').textContent = displayName;
+  renderAdminPanelBtn();
+  applyRolePermissions();
+  if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
 }
 
 function handleSupabaseLogout() {
@@ -94,13 +113,58 @@ async function syncPasswordHashesFromRemote() {
 }
 
 async function syncUsersFromSupabase() {
-  // Legacy: config tablosu anon erişime kapalı
-  return false;
+  // Kullanıcı listesi app_users tablosundan çekilir (çoklu cihaz desteği)
+  if (!supabaseClient) return false;
+  try {
+    var { data, error } = await supabaseClient.from('app_users')
+      .select('username, password_hash, role, display_name');
+    if (error || !data || data.length === 0) return false;
+    var remoteUsers = data.map(function(r) {
+      return {
+        username: r.username,
+        passwordHash: r.password_hash,
+        role: r.role || 'asci',
+        displayName: r.display_name || r.username
+      };
+    });
+    var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+    var localUsers = (cfg.users && Array.isArray(cfg.users)) ? cfg.users : [];
+    var remoteByUsername = {};
+    remoteUsers.forEach(function(u) { remoteByUsername[u.username] = u; });
+    var combined = [];
+    // Yereldeki kullanıcıları koru, uzaktaki güncel kayıtla değiştir
+    localUsers.forEach(function(u) {
+      if (remoteByUsername[u.username]) combined.push(remoteByUsername[u.username]);
+      else combined.push(u);
+    });
+    // Uzaktaki yeni kullanıcıları ekle (başka cihazdan eklenen)
+    remoteUsers.forEach(function(u) {
+      if (!localUsers.some(function(l) { return l.username === u.username; })) combined.push(u);
+    });
+    if (combined.length > 0) {
+      APP_CONFIG.users = combined;
+      try { localStorage.setItem('atik_kontrol_users', JSON.stringify(combined)); } catch (_) {}
+    }
+    return true;
+  } catch (_) { return false; }
 }
 
 async function saveUsersToSupabase(users) {
-  // Legacy: config tablosu anon erişime kapalı
-  return false;
+  // Kullanıcı listesi app_users tablosuna yazılır (çoklu cihaz desteği)
+  if (!supabaseClient) return false;
+  try {
+    var rows = users.map(function(u) {
+      return {
+        username: u.username,
+        password_hash: u.passwordHash,
+        role: u.role || 'asci',
+        display_name: u.displayName || u.username
+      };
+    });
+    var { error } = await supabaseClient.from('app_users').upsert(rows, { onConflict: 'username' });
+    if (error) return false;
+    return true;
+  } catch (_) { return false; }
 }
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
@@ -410,20 +474,7 @@ async function doLogin() {
     return;
   }
 
-  // 1. Önce Supabase Auth ile dene (e-posta olarak @ekle)
-  if (supabaseClient) {
-    var email = username.indexOf('@') === -1 ? username + '@beslenme.local' : username;
-    var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-    if (!signInError && signInData && signInData.session) {
-      // Başarılı Supabase Auth - rol user_roles'dan gelecek
-      return;
-    }
-  }
-
-  // 2. Supabase Auth başarısız = legacy auth dene
+  // 1. Önce legacy auth dene (yönetim panelinde değiştirilen şifre burada geçerli)
   const inputHash = await sha256(password);
   
   let role = null;
@@ -454,16 +505,31 @@ async function doLogin() {
     applyRolePermissions();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
     logIslem('login', displayName + ' (legacy) sisteme giriş yaptı');
-  } else {
-    window._loginAttempts = (window._loginAttempts || 0) + 1;
-    error.textContent = 'Hatalı kullanıcı adı veya şifre!';
-    error.style.display = 'block';
-    input.value = '';
-    input.focus();
-    if (window._loginAttempts >= 5) {
-      error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
-      setTimeout(() => location.reload(), 2000);
+    return;
+  }
+
+  // 2. Legacy yoksa/başarısızsa Supabase Auth ile dene (e-posta olarak @ekle)
+  if (supabaseClient) {
+    var email = username.indexOf('@') === -1 ? username + '@beslenme.local' : username;
+    var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (!signInError && signInData && signInData.session) {
+      // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek
+      return;
     }
+  }
+
+  // 3. Her ikisi de başarısız
+  window._loginAttempts = (window._loginAttempts || 0) + 1;
+  error.textContent = 'Hatalı kullanıcı adı veya şifre!';
+  error.style.display = 'block';
+  input.value = '';
+  input.focus();
+  if (window._loginAttempts >= 5) {
+    error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
+    setTimeout(() => location.reload(), 2000);
   }
 }
 
@@ -1073,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadRolePermissions();
   loadUsersFromStorage();
+  await syncUsersFromSupabase();
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
 
