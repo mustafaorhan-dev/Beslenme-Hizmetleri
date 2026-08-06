@@ -1117,7 +1117,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   opacity: 0.7;
 }
 .prod-sep {
-  display: none;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
 }
 .prod-qty {
   flex-shrink: 0;
@@ -1180,7 +1182,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   padding-left: 0.1rem;
 }
 .weekly-total-sep {
-  display: none;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
 }
 .weekly-total-qty {
   flex-shrink: 0;
@@ -2027,10 +2031,9 @@ input.production-input:focus {
   .prod-num { font-size: 0.65rem; min-width: 1.2rem; flex-shrink: 0; }
   .prod-name { font-size: 0.72rem; white-space: normal; overflow: visible; text-overflow: unset; flex: 0 1 auto; }
   .prod-kisi-birim { font-size: 0.6rem; }
-  .prod-sep { display: none; }
+  .prod-sep { flex-shrink: 0; color: var(--text-muted); }
   .prod-qty { font-size: 0.72rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
 }
-
 @media (max-width: 380px) {
   .kpi-grid { grid-template-columns: 1fr; }
   .kpi-card { flex-direction: column; text-align: center; gap: 0.5rem; }
@@ -2067,7 +2070,7 @@ input.production-input:focus {
   .prod-ing { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.3rem; font-size: 0.72rem; line-height: 1.65; color: #555; }
   .prod-num { flex-shrink: 0; color: #888; font-weight: 500; }
   .prod-name { min-width: 0; color: #333; }
-  .prod-sep { display: none; }
+  .prod-sep { flex-shrink: 0; color: #bbb; }
   .prod-qty { flex-shrink: 0; font-weight: 600; color: #333; }
   .weekly-total-card { border: 1px solid #ddd; border-radius: 10px; margin-top: 0.8rem; overflow: hidden; background: #fff; page-break-inside: avoid; }
   .weekly-total-header { font-size: 0.88rem; font-weight: 700; padding: 0.45rem 0.8rem; background: #f5f5f5; border-bottom: 1px solid #ddd; color: #333; }
@@ -2076,7 +2079,7 @@ input.production-input:focus {
   .weekly-total-item { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.3rem; font-size: 0.75rem; line-height: 1.8; }
   .weekly-total-num { flex-shrink: 0; color: #888; font-weight: 500; }
   .weekly-total-name { min-width: 0; color: #333; }
-  .weekly-total-sep { display: none; }
+  .weekly-total-sep { flex-shrink: 0; color: #bbb; }
   .weekly-total-qty { flex-shrink: 0; font-weight: 600; color: #333; }
 }
 

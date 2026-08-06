@@ -4014,7 +4014,7 @@ function renderProduction(_weekKey, _weekData, days) {
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
           const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
-          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
         });
       }
       html += '</div>';
@@ -4150,7 +4150,7 @@ function renderWeeklyTotal(dishEntries, days) {
       var total = e.total;
       if (total <= 0) return;
       globalIdx++;
-      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
     });
     html += '</div></div>';
   });
