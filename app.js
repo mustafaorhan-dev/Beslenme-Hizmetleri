@@ -2025,14 +2025,6 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
   }
 }
 
-// ─── CARBON FOOTPRINT ────────────────────────────────────────────────────────
-function calcCarbonFootprint(totalAtikKg) {
-  return totalAtikKg * 2.5;
-}
-function calcDailyCarbon(atikKg) {
-  return atikKg * 2.5;
-}
-
 // ─── PREDICTION ──────────────────────────────────────────────────────────────
 function getLast7AvgWaste() {
   const last7 = records.slice(0, Math.min(7, records.length));
@@ -4669,7 +4661,7 @@ function renderReport() {
   if (n === 0) {
     ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
      'rTotalGecis','rAvgPorsiyon','rTotalPorsiyon','rCopPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
-     'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis','rCarbonFootprint'].forEach(id => {
+     'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis'].forEach(id => {
       document.getElementById(id).textContent = '—';
     });
     document.getElementById('reportTbody').innerHTML = '';
@@ -4753,13 +4745,6 @@ function renderReport() {
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
   document.getElementById('rMaxAtik').innerHTML = `${maxAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${maxAtikDate}</span>`;
   document.getElementById('rMinAtik').innerHTML = `${minAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg<br><span class="report-subdate">${minAtikDate}</span>`;
-
-  // Karbon Ayak İzi = toplam atık (kg) × 2.5 kg CO₂e/kg
-  const carbonFootprint = totalAtik * 2.5;
-  const carbonEl = document.getElementById('rCarbonFootprint');
-  if (carbonEl) {
-    carbonEl.innerHTML = `${carbonFootprint.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg CO₂<br><span class="report-subdate">atık × 2.5 CO₂e/kg</span>`;
-  }
 
   // Trend
   const trendAtikEl = document.getElementById('rTrendAtik');
@@ -4910,8 +4895,8 @@ function drawAllCharts() {
   setChartTotal('chartTotalAtikPerKisi', totAtikPerKisi, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 2 }), 'Yıl Ortalaması');
   setChartTotal('chartTotalAtikPorsiyon', totAtikPorsiyon, v => Math.round(v).toLocaleString('tr-TR'));
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartKarbonEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasKarbon','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -5122,9 +5107,6 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
-
-  const karbonData = allMonthLabels.map(m => getMonthVal(m, 'atik') * 2.5);
-  try { makeChart('canvasKarbon', allMonthLabels, [{ data: karbonData, color: '#22c55e', label: 'Karbon Ayak İzi (kg CO2)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartKarbon error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
