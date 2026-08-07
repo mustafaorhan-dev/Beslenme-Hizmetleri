@@ -13,7 +13,7 @@
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background:
     radial-gradient(ellipse at 12% 18%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 55%),
-    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--accent-purple) 22%, transparent), transparent 55%),
+    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--accent-orange) 20%, transparent), transparent 55%),
     radial-gradient(ellipse at 85% 90%, color-mix(in srgb, var(--accent-cyan) 20%, transparent), transparent 55%),
     radial-gradient(ellipse at 16% 88%, color-mix(in srgb, var(--accent-green) 18%, transparent), transparent 50%),
     linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -31,7 +31,7 @@
 }
 .login-overlay::after {
   content: ''; position: absolute; width: 560px; height: 560px; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-purple) 26%, transparent), transparent 65%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-orange) 20%, transparent), transparent 65%);
   bottom: -160px; right: -140px;
   animation: loginFloat 20s ease-in-out infinite alternate-reverse;
   pointer-events: none;
@@ -63,7 +63,7 @@
 }
 .login-box::before {
   content: ''; position: absolute; top: 0; left: 28px; right: 28px; height: 3px;
-  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-purple), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-cyan), transparent);
   border-radius: 0 0 6px 6px; opacity: 0.9;
 }
 .login-logo {
@@ -74,7 +74,7 @@
 }
 .login-title {
   font-size: 1.28rem; font-weight: 800; line-height: 1.4; text-align: center;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--accent) 30%, transparent));
@@ -83,7 +83,7 @@
 .login-title .login-sub {
   display: block; margin-top: 0.4rem;
   font-size: 0.9rem; font-weight: 700; letter-spacing: 1.6px;
-  background: linear-gradient(135deg, var(--accent-orange), var(--accent-red), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-red));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
