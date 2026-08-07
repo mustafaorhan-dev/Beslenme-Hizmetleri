@@ -5735,11 +5735,12 @@ async function menuOnayBildirim() {
   } catch (_) {}
 }
 
-function renderMenuDurumBar(durumMeta) {
+function renderMenuDurumBar(durumMeta, pendingCount) {
   const role = getRole();
   const badge = document.getElementById('menuDurumBadge');
   const warn = document.getElementById('menuOnayUyari');
   const warnMetin = document.getElementById('menuOnayUyariMetin');
+  const pendingGoBtn = document.getElementById('menuPendingGoBtn');
 
   let badgeClass = 'badge';
   if (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI) badgeClass += ' badge-ok';
@@ -5772,22 +5773,51 @@ function renderMenuDurumBar(durumMeta) {
   if (withdrawBtn) withdrawBtn.style.display = role === ROLE_ADMIN && (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI || durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) ? '' : 'none';
 
   if (warn) {
-    if (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI) {
-      warn.style.display = 'none';
-    } else {
+    const isApprover = canMenuOnayla();
+    const isCurrentPending = durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
+    if (isApprover && !isCurrentPending && pendingCount > 0) {
       warn.style.display = '';
-      let metin = 'Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.';
-      if (durumMeta.durum === MENU_DURUMLAR.REDDEDILDI) {
-        metin = 'Bu menü reddedildi' + (durumMeta.onaylayan ? ' (' + durumMeta.onaylayan + ')' : '');
-        if (durumMeta.onay_notu) metin += ': ' + durumMeta.onay_notu;
-        metin += '. Diyetisyen düzelttikten sonra yeniden onaya gönderebilir.';
-      } else if (durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
-        metin = 'Bu menü onay bekliyor. Onaylanmadan üretim listesinde "onaysız" olarak işaretlenir.';
+      if (warnMetin) warnMetin.textContent = pendingCount + ' haftanın menüsü onay bekliyor. Bekleyen haftaya gidip onaylayabilirsiniz.';
+      if (pendingGoBtn) pendingGoBtn.style.display = '';
+    } else {
+      if (pendingGoBtn) pendingGoBtn.style.display = 'none';
+      if (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI) {
+        warn.style.display = 'none';
+      } else {
+        warn.style.display = '';
+        let metin = 'Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.';
+        if (durumMeta.durum === MENU_DURUMLAR.REDDEDILDI) {
+          metin = 'Bu menü reddedildi' + (durumMeta.onaylayan ? ' (' + durumMeta.onaylayan + ')' : '');
+          if (durumMeta.onay_notu) metin += ': ' + durumMeta.onay_notu;
+          metin += '. Diyetisyen düzelttikten sonra yeniden onaya gönderebilir.';
+        } else if (durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
+          metin = 'Bu menü onay bekliyor. Onaylanmadan üretim listesinde "onaysız" olarak işaretlenir.';
+        }
+        if (warnMetin) warnMetin.textContent = metin;
       }
-      if (warnMetin) warnMetin.textContent = metin;
     }
   }
   return canEdit;
+}
+
+function menuGecBekleyenHafta() {
+  fetchMenuData().then(function(allData) {
+    var pending = Object.keys(allData).filter(function(k) {
+      return getMenuDurumMeta(allData[k]).durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
+    });
+    if (!pending.length) return;
+    var base = formatDateStr(getWeekStartDate(menuWeekOffset));
+    var best = null;
+    pending.forEach(function(k) {
+      var start = k.split('-').slice(0, 3).join('-');
+      var diff = Math.round((new Date(start + 'T12:00:00') - new Date(base + 'T12:00:00')) / 86400000);
+      var abs = Math.abs(diff);
+      if (best === null || abs < best.abs) best = { abs: abs, diff: diff };
+    });
+    if (best === null) return;
+    menuWeekOffset += best.diff / 7;
+    renderMenu();
+  });
 }
 
 async function renderMenu() {
@@ -5803,7 +5833,10 @@ async function renderMenu() {
   const allData = await fetchMenuData();
   const weekData = allData[weekKey] || {};
   currentMenuDurumMeta = getMenuDurumMeta(weekData);
-  const canEdit = renderMenuDurumBar(currentMenuDurumMeta);
+  const pendingCount = Object.keys(allData).filter(function(k) {
+    return getMenuDurumMeta(allData[k]).durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
+  }).length;
+  const canEdit = renderMenuDurumBar(currentMenuDurumMeta, pendingCount);
 
   // Gün verilerini topla
   const days = GUNLER.map((gun, i) => {

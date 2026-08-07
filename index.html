@@ -670,8 +670,9 @@
             </button>
           </div>
         </div>
-        <div id="menuOnayUyari" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:8px;font-size:0.8rem;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.25)">
+        <div id="menuOnayUyari" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:8px;font-size:0.8rem;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
           <strong>⚠ Onaysız Menü:</strong> <span id="menuOnayUyariMetin">Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.</span>
+          <button class="btn btn-outline btn-sm" id="menuPendingGoBtn" onclick="menuGecBekleyenHafta()" style="display:none;margin-left:auto">Bekleyen Haftaya Git →</button>
         </div>
         <div class="menu-date-nav">
           <button class="btn btn-ghost btn-sm" onclick="shiftMenuWeek(-1)">◀ Önceki</button>
