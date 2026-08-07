@@ -1030,6 +1030,23 @@ function closeLogPanel() {
   document.body.style.overflow = '';
 }
 
+function openManualModal() {
+  var el = document.getElementById('manualModal');
+  if (!el) return;
+  var vLabel = document.getElementById('manualVersion');
+  if (vLabel && typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) {
+    vLabel.textContent = 'v' + APP_CONFIG.version;
+  }
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeManualModal() {
+  var el = document.getElementById('manualModal');
+  if (el) el.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function applyViewerRestrictions() {
   if (getRole() === ROLE_ADMIN) return;
   var perm = getRolePermissions(getRole());
@@ -1259,6 +1276,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   setCurrentDate();
+  if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) {
+    var vLabel = document.getElementById('appVersionLabel');
+    if (vLabel) vLabel.textContent = 'v' + APP_CONFIG.version;
+  }
   renderAll();
   drawAllCharts();
   await restoreActiveTab();

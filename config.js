@@ -17,6 +17,7 @@
 */
 
 const APP_CONFIG = {
+  version: '1.1.0',
   // LEGACY kullanıcılar - Supabase Auth'a geçildiğinde boşaltılabilir
   users: [
     { username: 'admin', passwordHash: 'e4b4617b9d7c3c1bed904600c772cf9ae83896aaff83a9cf9c04fa46fc11f126', role: 'admin', displayName: 'Admin' },

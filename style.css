@@ -1860,6 +1860,130 @@ td.porsiyon-warn {
 .modal-close svg { width: 14px; height: 14px; }
 .modal-close:hover { background: rgba(239,68,68,0.15); color: var(--accent-red); border-color: rgba(239,68,68,0.3); }
 
+/* ---- VERSİYON ETİKETİ ---- */
+.sidebar-version {
+  margin: 0.35rem 0.75rem 0.75rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  cursor: default;
+  user-select: none;
+}
+
+/* ---- KULLANIM KILAVUZU ---- */
+.manual-body {
+  overflow-y: auto;
+  padding: 1.25rem 1.75rem 1.75rem;
+}
+.manual-hero {
+  text-align: center;
+  padding: 1.25rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 65%);
+}
+.manual-hero-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--gradient-main);
+  border-radius: 999px;
+}
+.manual-hero h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.manual-hero p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.manual-toc {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.03);
+}
+.manual-toc > strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.manual-toc-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.25rem 1rem;
+}
+.manual-toc-links a {
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.manual-toc-links a:hover { text-decoration: underline; }
+.manual-section {
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 1rem;
+}
+.manual-section:last-child { border-bottom: none; }
+.manual-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.manual-section h3::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--gradient-main);
+  flex-shrink: 0;
+}
+.manual-section p {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.manual-section ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.manual-section li {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.manual-section li strong { color: var(--text-primary); }
+.manual-section li em {
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ---- FORM ---- */
 .form-grid {
   display: grid;

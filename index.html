@@ -204,7 +204,12 @@
           <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
           <span>Tema</span>
         </button>
+        <button class="tab-btn" onclick="openManualModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          <span>Kullanım Kılavuzu</span>
+        </button>
       </div>
+      <div class="sidebar-version" id="appVersionLabel" title="Uygulama Sürümü">v1.1.0</div>
     </aside>
 
     <main class="main-content">
@@ -1700,11 +1705,209 @@
     </div>
   </div>
 
+  <!-- KULLANIM KILAVUZU MODAL -->
+  <div class="modal-overlay" id="manualModal" onclick="if(event.target===this)closeManualModal()">
+    <div class="modal" style="max-width:760px;max-height:88vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h2>Kullanım Kılavuzu</h2>
+        <button class="modal-close" onclick="closeManualModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="manual-body">
+        <div class="manual-hero">
+          <div class="manual-hero-badge" id="manualVersion">v1.1.0</div>
+          <h3>Kırşehir Ahi Evran Üniversitesi</h3>
+          <p>Yemekhane Beslenme Hizmetleri - Üretim, Tüketim ve Atık Kontrol Sistemi</p>
+        </div>
+
+        <div class="manual-toc">
+          <strong>İçindekiler</strong>
+          <div class="manual-toc-links">
+            <a href="#man-giris">1. Giriş ve Roller</a>
+            <a href="#man-panel">2. Panel</a>
+            <a href="#man-menu">3. Haftalık Menü</a>
+            <a href="#man-kayit">4. Kayıtlar</a>
+            <a href="#man-rapor">5. Rapor</a>
+            <a href="#man-gida">6. Gıda Güvenliği (HACCP)</a>
+            <a href="#man-giris-form">7. Üretim Tüketim Atık Gir</a>
+            <a href="#man-yag">8. Atık Yağ</a>
+            <a href="#man-ambalaj">9. Ambalaj Atıkları</a>
+            <a href="#man-grafik">10. Grafikler</a>
+            <a href="#man-harcama">11. Harcama</a>
+            <a href="#man-yedek">12. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem">13. Tema ve Görünüm</a>
+            <a href="#man-yonetim">14. Yönetim ve Log Kayıtları</a>
+            <a href="#man-ipucu">15. İpuçları</a>
+          </div>
+        </div>
+
+        <div class="manual-section" id="man-giris">
+          <h3>1. Giriş ve Roller</h3>
+          <p>Sistem, yemekhane üretim süreçlerinin dijital ortamda takip edilmesini sağlar. Her kullanıcı rolü, yalnızca kendi yetkisindeki bölümleri görür ve kullanır:</p>
+          <ul>
+            <li><strong>Admin:</strong> Tüm bölümler + Yönetim (kullanıcı ekleme/silme) ve Log Kayıtları.</li>
+            <li><strong>Diyetisyen:</strong> Haftalık menü oluşturma, onaylama ve raporlar.</li>
+            <li><strong>Depo Sorumlusu:</strong> Gıda güvenliği kontrolleri ve depo sıcaklık takibi.</li>
+            <li><strong>Aşçı:</strong> Üretim/tüketim/atık kayıtları girişi.</li>
+            <li><strong>Gıda Mühendisi:</strong> Gıda güvenliği ve kalite takibi.</li>
+          </ul>
+          <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir. Çıkış yapmak için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın.</p>
+        </div>
+
+        <div class="manual-section" id="man-panel">
+          <h3>2. Panel</h3>
+          <p>Açılış ekranıdır. Sistemin genel durumunu özet kartlar halinde gösterir:</p>
+          <ul>
+            <li><strong>Toplam Kayıt:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
+            <li><strong>Bugünkü Kayıt:</strong> Bugün eklenen kayıt sayısı ve üretim miktarı.</li>
+            <li><strong>Son 7 Gün Atık:</strong> Haftalık toplam atık miktarı ve değişim yüzdesi.</li>
+            <li><strong>Haftalık Menü Durumu:</strong> Aktif menünün onay durumu.</li>
+          </ul>
+          <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz. "PDF Yazdır" butonu ile paneli yazdırabilir veya PDF kaydedebilirsiniz.</p>
+        </div>
+
+        <div class="manual-section" id="man-menu">
+          <h3>3. Haftalık Menü</h3>
+          <ul>
+            <li>Haftanın her günü için <strong>sabah, öğle ve akşam</strong> yemek listesi oluşturulur.</li>
+            <li>Yemek adını yazmaya başlayınca otomatik tamamlama önerileri çıkar; listeden seçebilirsiniz.</li>
+            <li>Menü <strong>Diyetisyen</strong> tarafından hazırlanıp <em>Onaya Gönder</em> ile gönderilir; onaylanmadan kayıt aşamasına geçilmez.</li>
+            <li>Onay bekleyen menüler "Reddet" butonu ile diyetisyene geri gönderilebilir; gerekçe yazılması zorunludur.</li>
+            <li>Kaydedilen menü daha sonra <strong>Düzenle</strong> butonuyla değiştirilebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-kayit">
+          <h3>4. Kayıtlar</h3>
+          <ul>
+            <li>Tüm üretim, tüketim ve atık kayıtlarının listelendiği bölümdür.</li>
+            <li>Üstteki arama kutusu ve tarih filtresiyle kayıtları daraltabilirsiniz.</li>
+            <li>Her kayıt için <strong>Düzenle</strong> (kalem) ve <strong>Sil</strong> (çöp kutusu) butonları bulunur.</li>
+            <li>Sayfalama alttadır: <strong>« ‹ 1/2 › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; "N kayıt" bilgisi toplam kayıt sayısını gösterir.</li>
+            <li>Her tablo için <strong>Excel/CSV</strong> dışa aktarma butonları mevcuttur.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-rapor">
+          <h3>5. Rapor</h3>
+          <ul>
+            <li>Belirli bir tarih aralığında üretim, tüketim ve atık miktarlarını gösterir.</li>
+            <li>Rapor, <strong>günlük</strong> ve <strong>aylık</strong> bazda derlenir.</li>
+            <li>Üstteki butonlarla raporu <strong>yazdırabilir</strong> veya <strong>Excel</strong> olarak dışa aktarabilirsiniz.</li>
+            <li>Rapor sonuçları otomatik olarak <strong>atık oranı</strong> hesaplar ve çeşit kırılımını gösterir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-gida">
+          <h3>6. Gıda Güvenliği (HACCP)</h3>
+          <ul>
+            <li>HACCP kontrol noktalarının (soğuk oda, derin dondurucu, üretim alanı vb.) sıcaklık takibini sağlar.</li>
+            <li><strong>Yeni Kontrol</strong> butonu ile tarih, alan, sıcaklık ve kontrol eden bilgisi girilir.</li>
+            <li>Limit dışı değerler otomatik olarak kırmızı ile işaretlenir ve uyarı verilir.</li>
+            <li>Kontroller ayrıca <strong>Depo Sıcaklıkları</strong> sekmesinde kaydedilebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-giris-form">
+          <h3>7. Üretim Tüketim Atık Gir</h3>
+          <ul>
+            <li>Sol menüdeki <strong>"Üretim Tüketim Atık Gir"</strong> butonu ile günlük veri girişi yapılır.</li>
+            <li>Tarih, öğün, yemek adı, üretim miktarı, tüketim miktarı ve atık miktarı alanları doldurulur.</li>
+            <li>Atık oranı otomatik hesaplanır: <em>Atık / Üretim × 100</em>.</li>
+            <li>Kayıt kaydedildikten sonra Panel, Grafikler ve Harcama bölümleri anında güncellenir.</li>
+            <li>Hatalı kayıtlar <strong>Kayıtlar</strong> bölümünden düzenlenebilir veya silinebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yag">
+          <h3>8. Atık Yağ</h3>
+          <ul>
+            <li>Bitkisel atık yağ toplama ve tahliye kayıtlarının tutulduğu bölümdür.</li>
+            <li>Biriktirilen yağ miktarı ve teslim edilen miktar ayrı ayrı izlenir.</li>
+            <li>Kayıtlar aylık bazda özetlenir ve Grafikler bölümünde gösterilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ambalaj">
+          <h3>9. Ambalaj Atıkları</h3>
+          <ul>
+            <li>Plastik, kağıt, cam ve metal ambalaj atıklarının kayıtlarının tutulduğu bölümdür.</li>
+            <li>Her tür için ayrı ayrı miktar girilir ve aylık özet görüntülenir.</li>
+            <li>Veriler geri dönüşüm raporlaması için Grafikler bölümünde kullanılır.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-grafik">
+          <h3>10. Grafikler</h3>
+          <ul>
+            <li>Üretim, tüketim, atık, depo sıcaklıkları, atık yağ ve ambalaj atıkları grafikleri burada toplanır.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
+            <li><strong>"Tümü | Ocak | Şubat ... Aralık"</strong> butonları ile görünüm tek aya veya tüm yıla göre ayarlanır.</li>
+            <li>Çubukların üzerindeki sayılar değeri gösterir; uzun grafiklerde yatay kaydırma çubuğu kullanılır.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-harcama">
+          <h3>11. Harcama</h3>
+          <ul>
+            <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
+            <li><strong>"Öğrenci Başı Harcama Hesaplama"</strong> kutusuna öğrenci sayısını girip hesaplatabilirsiniz.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafiği filtrelenir.</li>
+            <li>En üstteki kartlar: Toplam Maliyet, Öğrenci Sayısı, Öğrenci Başı Harcama ve En Yüksek Ay bilgisini gösterir.</li>
+            <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yedek">
+          <h3>12. Veri Yedekleme ve Senkronizasyon</h3>
+          <ul>
+            <li><strong>Dışa Aktar:</strong> Tüm verileri Excel/CSV olarak bilgisayara indirir.</li>
+            <li><strong>Supabase'e Yedekle:</strong> Tüm verileri bulut veritabanına (Supabase) yükler; farklı cihazlar arasında senkronizasyon sağlar.</li>
+            <li><strong>Supabase'ten Çek:</strong> Buluttaki verileri cihaza indirir.</li>
+            <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
+            <li><strong>Yedek Yükle:</strong> Daha önce indirilen JSON yedeğini geri yükler.</li>
+            <li>Düzenli olarak <strong>Supabase'e Yedekle</strong> yapmanız önerilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-sistem">
+          <h3>13. Tema ve Görünüm</h3>
+          <ul>
+            <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
+            <li>Tema tercihi otomatik olarak hatırlanır.</li>
+            <li>Mobil ve tablette sol menü, üstteki menü ikonu ile açılıp kapatılır.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yonetim">
+          <h3>14. Yönetim ve Log Kayıtları</h3>
+          <ul>
+            <li><strong>Yönetim</strong> (yalnızca Admin): Kullanıcı ekleme, rol değiştirme, şifre sıfırlama ve kullanıcı silme işlemleri yapılır.</li>
+            <li><strong>Log Kayıtları</strong> (yalnızca Admin): Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi tutulur.</li>
+            <li>Loglar işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ipucu">
+          <h3>15. İpuçları</h3>
+          <ul>
+            <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
+            <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
+            <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
+            <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
+            <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
