@@ -11,6 +11,8 @@ let filteredRecords = [];
 let yemeklerCache = [];
 let weeklySummaryOffset = 0;
 let dailySummaryOffset = 0;
+let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıtlardan türetilir)
+let hcSelectedMonth = null;  // Harcama menüsünde seçili ay (null => Tüm Yıl, 0-11 => belirli ay)
 
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
@@ -4898,6 +4900,7 @@ const chartValueLabelPlugin = {
         const val = ds.data[idx];
         if (val === undefined || val === null || isNaN(val)) return;
         const isTL = ds.label && ds.label.includes('₺');
+        if (isTL && val === 0) return;
         const display = isTL
           ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
           : val === 0 ? '0' : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
@@ -5332,6 +5335,7 @@ function drawAllCharts() {
 let harcamaMenuChart = null;
 
 function renderHarcamaMenu() {
+  hcUpdateNav();
   const oranInput = document.getElementById('hcOran');
   if (oranInput && document.activeElement !== oranInput) {
     oranInput.value = getOgrenciBasiHarcamaOrani().toFixed(2);
@@ -5351,7 +5355,7 @@ function renderHarcamaMenu() {
 function renderHarcamaMenuKpis(oran) {
   const el = document.getElementById('hcKpis');
   if (!el) return;
-  const withOgrenci = records.filter(r => (r.ogrenci || 0) > 0);
+  const withOgrenci = hcActiveRecords().filter(r => (r.ogrenci || 0) > 0);
   const totalHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
   const totalOgrenci = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0), 0);
   const monthly = {};
@@ -5389,37 +5393,63 @@ function renderHarcamaMenuChart(oran) {
   const canvas = document.getElementById('canvasHarcamaMenu');
   const empty = document.getElementById('hcChartEmpty');
   if (!canvas || !empty) return;
-  const monthly = {};
-  const ordered = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-  ordered.forEach(r => {
-    const d = new Date(r.tarih + 'T12:00:00');
-    if (isNaN(d)) return;
-    const key = (d.getMonth() + 1) + '/' + d.getFullYear();
-    if (!monthly[key]) monthly[key] = 0;
-    monthly[key] += (r.ogrenci || 0) * oran;
-  });
-  const labels = Object.keys(monthly);
-  const data = labels.map(k => monthly[k]);
   if (harcamaMenuChart) { harcamaMenuChart.destroy(); harcamaMenuChart = null; }
-  if (labels.length === 0) {
+
+  // Hiç kayıt yoksa boş durumu göster
+  const hasAnyDate = records.some(r => { const d = new Date(r.tarih + 'T12:00:00'); return !isNaN(d); });
+  if (!hasAnyDate) {
     empty.style.display = 'block';
     canvas.style.display = 'none';
     return;
   }
   empty.style.display = 'none';
   canvas.style.display = 'block';
-  const parent = canvas.parentElement;
-  const w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
-  const h = Math.min(parent.offsetHeight || 300, parent.clientHeight || 300);
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
+
+  // Seçili yıl/aya göre aylık toplamlar
+  const active = hcActiveRecords();
+  const monthly = {};
+  active.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const m = d.getMonth();
+    monthly[m] = (monthly[m] || 0) + (r.ogrenci || 0) * oran;
+  });
+
+  // Tüm Yıl => 12 ay (boş aylar 0 ile), belirli ay => tek çubuk
+  let labels, data;
+  if (hcSelectedMonth === null) {
+    labels = HC_MONTHS_TR.map((m, i) => m.slice(0, 3) + ' ' + String(hcSelectedYear).slice(2));
+    data = HC_MONTHS_TR.map((_, i) => monthly[i] || 0);
+  } else {
+    labels = [HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear];
+    data = [monthly[hcSelectedMonth] || 0];
+  }
+
+  const area = canvas.parentElement;
+  // Kaydırma için kanvas boyutu: 12 ay => geniş kanvas (yatay kaydırma çubuğu görünür)
+  const areaW = Math.max(area.clientWidth || 400, 320);
+  const barW = 88;
+  const targetW = Math.max(areaW, labels.length * barW + 70);
+  const canvasH = 480;
+  canvas.style.width = targetW + 'px';
+  canvas.style.height = canvasH + 'px';
+  canvas.width = targetW;
+  canvas.height = canvasH;
+  area.style.width = '100%';
+
   const ctx = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const colors = {
     text: isDark ? '#e2e8f0' : '#1e293b',
     grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
   };
-  const color = '#14b8a6';
+  const baseColor = '#14b8a6';
+  const selColor = '#f59e0b';
+  const barColors = data.map((v, i) =>
+    hcSelectedMonth !== null && i === 0 ? selColor :
+    hcSelectedMonth === null && monthly[i] === 0 ? 'rgba(148,163,184,0.25)' : baseColor
+  );
+
   harcamaMenuChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -5427,20 +5457,20 @@ function renderHarcamaMenuChart(oran) {
       datasets: [{
         label: 'Aylık Harcama (₺)',
         data,
-        backgroundColor: color,
-        borderColor: color,
+        backgroundColor: barColors,
+        borderColor: barColors,
         borderRadius: 6,
-        barPercentage: 0.85,
-        categoryPercentage: 0.8,
+        barPercentage: 0.8,
+        categoryPercentage: 0.75,
       }]
     },
     options: {
-      responsive: true,
+      responsive: false,
       maintainAspectRatio: false,
       devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       animation: { duration: 600, easing: 'easeOutCubic' },
       plugins: {
-        legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
         tooltip: {
           backgroundColor: '#000000',
           titleColor: '#ffffff',
@@ -5467,7 +5497,7 @@ function renderHarcamaMenuChart(oran) {
 function renderHarcamaMenuTable(oran) {
   const tbody = document.getElementById('hcTbody');
   if (!tbody) return;
-  const sorted = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  const sorted = hcActiveRecords().sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   if (sorted.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
     return;
@@ -5481,6 +5511,105 @@ function renderHarcamaMenuTable(oran) {
       <td>${tutar.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
     </tr>`;
   }).join('');
+}
+
+// ─── HARCAMA MENÜSÜ NAV (yıl / ay / kaydırma) ────────────────────────────────
+const HC_MONTHS_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+function hcGetYears() {
+  var set = {};
+  records.forEach(function (r) {
+    var d = new Date(r.tarih + 'T12:00:00');
+    if (!isNaN(d)) set[d.getFullYear()] = true;
+  });
+  set[new Date().getFullYear()] = true;
+  return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+}
+
+function hcDefaultYear() {
+  var years = hcGetYears();
+  return years.length ? years[years.length - 1] : new Date().getFullYear();
+}
+
+function hcPopulateYearSelect() {
+  var sel = document.getElementById('hcYearSelect');
+  var years = hcGetYears();
+  if (hcSelectedYear === null) hcSelectedYear = hcDefaultYear();
+  if (years.indexOf(hcSelectedYear) === -1) years = years.concat([hcSelectedYear]).sort(function (a, b) { return a - b; });
+  if (!sel) return;
+  sel.innerHTML = years.map(function (y) { return '<option value="' + y + '">' + y + '</option>'; }).join('');
+  sel.value = String(hcSelectedYear);
+}
+
+function hcSetYearFromSelect() {
+  var sel = document.getElementById('hcYearSelect');
+  if (!sel) return;
+  var y = parseInt(sel.value, 10);
+  if (!isNaN(y) && y !== hcSelectedYear) { hcSelectedYear = y; renderHarcamaMenu(); }
+}
+
+function hcYear(delta) {
+  var years = hcGetYears();
+  var idx = years.indexOf(hcSelectedYear === null ? hcDefaultYear() : hcSelectedYear);
+  idx = Math.max(0, Math.min(years.length - 1, idx + delta));
+  if (years[idx] !== undefined) { hcSelectedYear = years[idx]; renderHarcamaMenu(); }
+}
+
+function hcMonth(delta) {
+  if (hcSelectedMonth === null) {
+    hcSelectedMonth = delta > 0 ? 0 : 11;
+  } else {
+    var m = hcSelectedMonth + delta;
+    if (m < 0) { m = 11; hcSelectedYear -= 1; }
+    else if (m > 11) { m = 0; hcSelectedYear += 1; }
+    hcSelectedMonth = m;
+  }
+  renderHarcamaMenu();
+}
+
+function hcMonthReset() {
+  hcSelectedMonth = null;
+  renderHarcamaMenu();
+}
+
+function hcScrollTo(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var container = document.getElementById('content-harcama');
+  if (container) {
+    var top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  } else {
+    el.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function hcActiveRecords() {
+  var year = hcSelectedYear === null ? hcDefaultYear() : hcSelectedYear;
+  return records.filter(function (r) {
+    var d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return false;
+    if (d.getFullYear() !== year) return false;
+    if (hcSelectedMonth !== null && d.getMonth() !== hcSelectedMonth) return false;
+    return true;
+  });
+}
+
+function hcUpdateNav() {
+  var label = document.getElementById('hcMonthLabel');
+  if (label) {
+    label.textContent = hcSelectedMonth === null ? 'Tüm Yıl' : HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
+  }
+  var badge = document.getElementById('hcChartBadge');
+  if (badge) {
+    if (hcSelectedMonth === null) {
+      badge.style.display = 'none';
+    } else {
+      badge.style.display = 'inline-flex';
+      badge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
+    }
+  }
+  hcPopulateYearSelect();
 }
 
 function canEditHarcamaOran() {

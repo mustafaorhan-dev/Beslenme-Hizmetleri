@@ -788,7 +788,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active,
 #content-haccp.active,
 #content-yag.active,
-#content-ambalaj.active {
+#content-ambalaj.active,
+#content-harcama.active {
   height: calc(100vh - 100px);
   overflow-y: auto;
   padding-right: 6px;
@@ -800,7 +801,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active::-webkit-scrollbar,
 #content-haccp.active::-webkit-scrollbar,
 #content-yag.active::-webkit-scrollbar,
-#content-ambalaj.active::-webkit-scrollbar { width: 10px; }
+#content-ambalaj.active::-webkit-scrollbar,
+#content-harcama.active::-webkit-scrollbar { width: 10px; }
 #content-dashboard.active::-webkit-scrollbar-track,
 #content-records.active::-webkit-scrollbar-track,
 #content-charts.active::-webkit-scrollbar-track,
@@ -808,7 +810,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active::-webkit-scrollbar-track,
 #content-haccp.active::-webkit-scrollbar-track,
 #content-yag.active::-webkit-scrollbar-track,
-#content-ambalaj.active::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
+#content-ambalaj.active::-webkit-scrollbar-track,
+#content-harcama.active::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
 #content-dashboard.active::-webkit-scrollbar-thumb,
 #content-records.active::-webkit-scrollbar-thumb,
 #content-charts.active::-webkit-scrollbar-thumb,
@@ -816,7 +819,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active::-webkit-scrollbar-thumb,
 #content-haccp.active::-webkit-scrollbar-thumb,
 #content-yag.active::-webkit-scrollbar-thumb,
-#content-ambalaj.active::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
+#content-ambalaj.active::-webkit-scrollbar-thumb,
+#content-harcama.active::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
 #content-dashboard.active::-webkit-scrollbar-thumb:hover,
 #content-records.active::-webkit-scrollbar-thumb:hover,
 #content-charts.active::-webkit-scrollbar-thumb:hover,
@@ -824,7 +828,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active::-webkit-scrollbar-thumb:hover,
 #content-haccp.active::-webkit-scrollbar-thumb:hover,
 #content-yag.active::-webkit-scrollbar-thumb:hover,
-#content-ambalaj.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
+#content-ambalaj.active::-webkit-scrollbar-thumb:hover,
+#content-harcama.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
 /* Firefox scrollbar */
 #content-dashboard.active,
 #content-records.active,
@@ -833,7 +838,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-menu.active,
 #content-haccp.active,
 #content-yag.active,
-#content-ambalaj.active {
+#content-ambalaj.active,
+#content-harcama.active {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) rgba(0,0,0,0.05);
 }
@@ -1632,6 +1638,141 @@ td.porsiyon-warn {
   color: var(--text-muted);
   font-size: 0.85rem;
   text-align: center;
+}
+
+/* ---- HARCAMA MENÜSÜ ---- */
+.hc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+.hc-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.hc-nav-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.hc-nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-input));
+}
+.hc-nav-btn:active { transform: scale(0.94); }
+.hc-nav-btn.hc-reset {
+  width: auto;
+  padding: 0 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.hc-select {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.hc-select:hover, .hc-select:focus { border-color: var(--accent); outline: none; }
+.hc-month-label {
+  min-width: 118px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-input));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  white-space: nowrap;
+}
+
+/* Harcama grafiği: çift yönlü (yatay + dikey) kaydırma */
+#hcChartArea {
+  overflow: auto;
+  height: 360px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+#hcChartArea canvas {
+  max-width: none;
+  max-height: none;
+  margin: auto;
+}
+#hcChartArea::-webkit-scrollbar { width: 10px; height: 10px; }
+#hcChartArea::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; }
+#hcChartArea::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+#hcChartArea::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+#hcChartArea::-webkit-scrollbar-corner { background: transparent; }
+#hcChartArea { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(0,0,0,0.05); }
+
+/* Harcama: sağ kenar bölüm gezinme (aşağı/yukarı gitme) çubukları */
+.hc-scroll-nav {
+  position: fixed;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 7px;
+  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+.hc-scroll-nav button {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.hc-scroll-nav button:hover {
+  background: var(--accent);
+  transform: scale(1.5);
 }
 
 /* ---- REPORT ---- */
