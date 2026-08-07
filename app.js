@@ -3397,6 +3397,23 @@ function exportDataCSV() {
   showToast('CSV dosyası indirildi.', 'success');
 }
 
+function exportAllCSV() {
+  var done = 0;
+  var total = 3;
+  var tasks = [
+    function() { exportDataCSV(); },
+    function() { exportHaccpCSV(); },
+    function() { exportYemekCSV(); }
+  ];
+  tasks.forEach(function(fn, i) {
+    setTimeout(function() {
+      fn();
+      done++;
+      if (done === total) showToast('Tüm CSV dosyaları indirildi.', 'success');
+    }, i * 500);
+  });
+}
+
 function exportDataSettings() {
   const settings = {
     version: 3,
