@@ -2073,7 +2073,7 @@ function renderSparklines() {
   if (records.length < 2) return;
   const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
   const atikData = sorted.map(r => r.atik);
-  const gecisData = sorted.map(r => r.toplam);
+  const gecisData = sorted.map(r => r.turnike || 0);
   drawSparkline('sparklineAtik', atikData, '#f97316');
   drawSparkline('sparklineGecis', gecisData, '#22c55e');
 }
@@ -3656,7 +3656,7 @@ function renderKPIs() {
   const avgAtik = totalAtik / n;
   document.getElementById('kpiAvgAtik').textContent = avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const lastRec = records[0];
-  document.getElementById('kpiLastGecis').textContent = lastRec ? (lastRec.toplam || 0).toLocaleString('tr-TR') : '0';
+  document.getElementById('kpiLastGecis').textContent = lastRec ? (lastRec.turnike || 0).toLocaleString('tr-TR') : '0';
   document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
