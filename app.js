@@ -278,7 +278,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditDepo: false,
     canEditHarcamaOran: false,
     canEditYag: false,
-    canEditAmbalaj: false
+    canEditAmbalaj: false,
+    canMenuOnayaGonder: true,
+    canMenuOnayla: false,
+    canMenuReddet: false
   },
   depo: {
     tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
@@ -293,7 +296,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditDepo: true,
     canEditHarcamaOran: false,
     canEditYag: true,
-    canEditAmbalaj: true
+    canEditAmbalaj: true,
+    canMenuOnayaGonder: false,
+    canMenuOnayla: false,
+    canMenuReddet: false
   },
   asci: {
     tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, yag: false, ambalaj: false, charts: false },
@@ -308,7 +314,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditDepo: false,
     canEditHarcamaOran: false,
     canEditYag: false,
-    canEditAmbalaj: false
+    canEditAmbalaj: false,
+    canMenuOnayaGonder: false,
+    canMenuOnayla: false,
+    canMenuReddet: false
   },
   gida_muhendisi: {
     tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
@@ -323,7 +332,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditDepo: false,
     canEditHarcamaOran: false,
     canEditYag: false,
-    canEditAmbalaj: false
+    canEditAmbalaj: false,
+    canMenuOnayaGonder: false,
+    canMenuOnayla: true,
+    canMenuReddet: true
   },
   temizlikci: {
     tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
@@ -336,8 +348,12 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSeeAdminPanel: false,
     canEditHaccp: false,
     canEditDepo: false,
+    canEditHarcamaOran: false,
     canEditYag: false,
-    canEditAmbalaj: false
+    canEditAmbalaj: false,
+    canMenuOnayaGonder: false,
+    canMenuOnayla: false,
+    canMenuReddet: false
   }
 };
 
@@ -694,7 +710,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -724,7 +740,10 @@ function apRenderRolePermissions() {
     canEditDepo: 'Depo adlarını düzenleyebilir',
     canEditHarcamaOran: 'Harcama oranını değiştirebilir',
     canEditYag: 'Atık yağ kayıtlarını düzenleyebilir',
-    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir'
+    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir',
+    canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
+    canMenuOnayla: 'Menüyü onaylayabilir',
+    canMenuReddet: 'Menüyü reddedebilir'
   };
   var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
   var html = '';
@@ -5846,7 +5865,23 @@ function getMenuDurumMeta(weekData) {
 
 function canMenuOnayla() {
   const role = getRole();
-  return role === ROLE_GIDA_MUHENDISI || role === ROLE_ADMIN;
+  if (role === ROLE_ADMIN) return true;
+  const perm = getRolePermissions(role);
+  return !!(perm && perm.canMenuOnayla);
+}
+
+function canMenuReddet() {
+  const role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  const perm = getRolePermissions(role);
+  return !!(perm && perm.canMenuReddet);
+}
+
+function canMenuOnayaGonder() {
+  const role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  const perm = getRolePermissions(role);
+  return !!(perm && perm.canMenuOnayaGonder);
 }
 
 function canMenuDuzenle(durum) {
@@ -5888,11 +5923,10 @@ function collectMenuWeekFromDOM() {
 }
 
 async function menuOnayaGonder() {
-  const role = getRole();
-  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için diyetisyen yetkisi gerekli.', 'error'); return; }
+  if (!canMenuOnayaGonder()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
-  if (!canMenuDuzenle(meta.durum)) {
+  if (meta.durum !== MENU_DURUMLAR.TASLAK && meta.durum !== MENU_DURUMLAR.REDDEDILDI) {
     showToast('Menü zaten onay sürecinde veya onaylanmış. Onayı kaldırmadan gönderemezsiniz.', 'error');
     return;
   }
@@ -5923,7 +5957,7 @@ async function menuOnayla() {
 }
 
 function menuReddet() {
-  if (!canMenuOnayla()) { showToast('Bu işlem için gıda mühendisi veya admin yetkisi gerekli.', 'error'); return; }
+  if (!canMenuReddet()) { showToast('Bu işlem için menü reddetme yetkisi gerekli.', 'error'); return; }
   document.getElementById('menuRedNotu').value = '';
   document.getElementById('menuRedError').style.display = 'none';
   document.getElementById('menuRedModal').classList.add('open');
@@ -6005,6 +6039,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
   }
 
   const canEdit = canMenuDuzenle(durumMeta.durum);
+  const durumDuzeltilebilir = durumMeta.durum === MENU_DURUMLAR.TASLAK || durumMeta.durum === MENU_DURUMLAR.REDDEDILDI;
   const saveBtn = document.getElementById('menuSaveBtn');
   const clearBtn = document.getElementById('menuClearBtn');
   const sendBtn = document.getElementById('menuSendBtn');
@@ -6012,9 +6047,9 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
   const rejectBtn = document.getElementById('menuRejectBtn');
   const withdrawBtn = document.getElementById('menuWithdrawBtn');
 
-  if (saveBtn) saveBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
+  if (saveBtn) saveBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && durumDuzeltilebilir ? '' : 'none';
   if (clearBtn) clearBtn.style.display = role === ROLE_ADMIN && canEdit ? '' : 'none';
-  if (sendBtn) sendBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
+  if (sendBtn) sendBtn.style.display = canMenuOnayaGonder() && durumDuzeltilebilir ? '' : 'none';
   if (approveBtn) {
     approveBtn.style.display = canMenuOnayla() ? '' : 'none';
     approveBtn.disabled = durumMeta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR;
@@ -6023,7 +6058,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
       : 'Menü henüz onaya gönderilmedi. Diyetisyen "Onaya Gönder"e bastığında buradan onaylayabilirsiniz.';
   }
   if (rejectBtn) {
-    rejectBtn.style.display = canMenuOnayla() ? '' : 'none';
+    rejectBtn.style.display = canMenuReddet() ? '' : 'none';
     rejectBtn.disabled = durumMeta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR;
     rejectBtn.title = durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR
       ? 'Menüyü gerekçeli olarak reddet'
