@@ -1093,8 +1093,6 @@ function applyViewerRestrictions() {
   });
   var actionBtn = document.querySelector('.sidebar-nav .tab-btn[onclick*="openModal"]');
   if (actionBtn) actionBtn.style.display = perm.canAddRecord ? '' : 'none';
-  var exportBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="exportData"]');
-  if (exportBtn) exportBtn.style.display = perm.canExport ? '' : 'none';
   var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllToSupabase"]');
   if (syncBtn) syncBtn.style.display = perm.canSync ? '' : 'none';
   var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
@@ -1137,15 +1135,10 @@ function applyViewerRestrictions() {
     if (hcOranBtn) hcOranBtn.style.display = 'none';
   }
   if (!perm.canExport) {
+    var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF)|print(Menu|Report|Qr|YagList|AmbalajList)|triggerImport|importBackupInput|importFullBackup|haccpFileInput|yemekCSVUpload/;
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
-      if (onclick.includes('triggerImport') || onclick.includes('exportDataCSV') ||
-          onclick.includes('exportHaccpCSV') || onclick.includes('haccpFileInput') ||
-          onclick.includes('yemekCSVUpload') || onclick.includes('exportDataJSON') ||
-          onclick.includes('exportDataSettings') || onclick.includes('importFullBackup') ||
-          onclick.includes('importBackupInput')) {
-        btn.style.display = 'none';
-      }
+      if (exRe.test(onclick)) btn.style.display = 'none';
     });
   }
 }
@@ -1696,7 +1689,14 @@ function generateHaccpSample() {
 }
 
 // ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
+function canExport() {
+  if (getRole() === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(getRole());
+  return !!(perm && perm.canExport);
+}
+
 function exportHaccpCSV() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
   var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem'];
   var rows = [headers.join(',')];
@@ -2141,6 +2141,7 @@ function renderSparklines() {
 // ─── WASTE DETAIL ────────────────────────────────────────────────────────────
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
 function exportPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
     showToast('Dışa aktarılacak kayıt yok.', 'error');
     return;
@@ -2206,6 +2207,7 @@ function closeQrModal() {
 }
 
 function printQr() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var depoAdi = document.getElementById('qrDepoAdi').textContent;
   var img = document.getElementById('qrImage');
   var printWin = window.open('', '_blank', 'width=400,height=500');
@@ -2762,10 +2764,12 @@ async function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
 
 
 function printReport() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   exportPDF();
 }
 
 function exportChartsPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   // Canvas'ları resim'e çevir
@@ -2807,6 +2811,7 @@ function exportChartsPDF() {
 }
 
 function exportDashboardPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
@@ -2868,6 +2873,7 @@ function exportDashboardPDF() {
 }
 
 function exportRecordsPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>Kayıt yok</p>';
@@ -3393,10 +3399,12 @@ async function clearAllData() { if (!requireAdmin()) return;
 }
 
 function exportData() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   exportDataJSON();
 }
 
 function exportDataJSON() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
     showToast('Dışa aktarılacak kayıt yok.', 'error');
     return;
@@ -3412,6 +3420,7 @@ function exportDataJSON() {
 }
 
 function exportDataCSV() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
   var showHarcama = canSeeHarcama();
   var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
@@ -3434,6 +3443,7 @@ function exportDataCSV() {
 }
 
 function exportAllCSV() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var done = 0;
   var total = 3;
   var tasks = [
@@ -3451,6 +3461,7 @@ function exportAllCSV() {
 }
 
 function exportDataSettings() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const settings = {
     version: 3,
     exportedAt: new Date().toISOString(),
@@ -4319,6 +4330,7 @@ function processYemekCSV(text) {
 }
 
 function exportYemekCSV() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const list = loadYemekler();
   if (!list || !list.length) { showToast('Dışa aktarılacak yemek yok.', 'error'); return; }
   const maxUrun = list.reduce((m, y) => Math.max(m, (y.tarif || []).length), 0);
@@ -4558,6 +4570,7 @@ function closeYemekModal() {
 }
 
 function exportYemekListesiPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const list = loadYemekler();
   if (!list || !list.length) {
     showToast('Dışa aktarılacak yemek yok.', 'error');
@@ -7562,6 +7575,7 @@ function buildExportHTML() {
 }
 
 function printYagList() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var list = yagRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('yagTarihBas');
   var bit = document.getElementById('yagTarihBit');
@@ -7602,6 +7616,7 @@ function printYagList() {
 }
 
 function printAmbalajList() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var list = ambalajRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('ambalajTarihBas');
   var bit = document.getElementById('ambalajTarihBit');
@@ -7642,6 +7657,7 @@ function printAmbalajList() {
 }
 
 function printMenu() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var html = buildExportHTML();
   var win = window.open('', '_blank', 'width=900,height=700');
   if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
