@@ -1553,18 +1553,18 @@ td.porsiyon-warn {
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px;
   border-radius: 8px;
-  border: none;
-  background: var(--gradient-main);
-  color: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .weekly-nav-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 3px 16px color-mix(in srgb, var(--accent) 65%, transparent);
-  filter: brightness(1.12);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+  transform: scale(1.05);
 }
 .weekly-nav-btn:active { transform: scale(0.95); }
 .weekly-nav-btn svg { width: 18px; height: 18px; }
