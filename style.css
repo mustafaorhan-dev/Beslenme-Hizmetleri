@@ -1697,37 +1697,19 @@ td.porsiyon-warn {
 #hcKpis .report-label { font-size: 0.68rem; white-space: nowrap; }
 #hcKpis .report-value { font-size: 1.05rem; white-space: nowrap; }
 
-/* Harcama: tablo sayfalama */
+/* Harcama: tablo sayfalama (Kayıtlar sekmesindeki ile aynı) */
 .hc-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin-top: 0.8rem;
+  gap: 0.35rem;
+  padding: 1rem 0 0;
+  flex-wrap: wrap;
 }
-.hc-page-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.hc-page-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.hc-page-btn:disabled { opacity: 0.35; cursor: default; }
-.hc-page-info {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  font-weight: 600;
+.hc-pagination .btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
 }
 
 /* ---- REPORT ---- */

@@ -5522,10 +5522,18 @@ function renderHarcamaMenuTable(oran) {
   }).join('');
   if (pag) {
     pag.setAttribute('data-total', String(totalPages));
-    pag.innerHTML =
-      `<button class="hc-page-btn" onclick="hcPage(-1)" ${hcTablePage === 0 ? 'disabled' : ''} title="Önceki Sayfa">◀</button>` +
-      `<span class="hc-page-info">Sayfa ${hcTablePage + 1} / ${totalPages} &bull; ${sorted.length} kayıt</span>` +
-      `<button class="hc-page-btn" onclick="hcPage(1)" ${hcTablePage >= totalPages - 1 ? 'disabled' : ''} title="Sonraki Sayfa">▶</button>`;
+    if (totalPages <= 1) {
+      pag.innerHTML = '';
+    } else {
+      const p = hcTablePage + 1;
+      pag.innerHTML =
+        `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(1)" ${p === 1 ? 'disabled' : ''}>&#171;</button>` +
+        `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(${p - 1})" ${p === 1 ? 'disabled' : ''}>&#8249;</button>` +
+        `<span class="page-info">${p} / ${totalPages}</span>` +
+        `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(${p + 1})" ${p === totalPages ? 'disabled' : ''}>&#8250;</button>` +
+        `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(${totalPages})" ${p === totalPages ? 'disabled' : ''}>&#187;</button>` +
+        `<span class="page-total">${sorted.length} kayıt</span>`;
+    }
   }
 }
 
@@ -5586,15 +5594,13 @@ function hcSetMonth(i) {
   renderHarcamaMenu();
 }
 
-function hcPage(dir) {
+function hcGoToPage(p) {
   var pag = document.getElementById('hcPagination');
   var total = 0;
   if (pag) total = parseInt(pag.getAttribute('data-total'), 10) || 0;
-  var np = hcTablePage + dir;
-  if (np < 0) np = 0;
-  if (np > total - 1) np = total - 1;
-  if (np !== hcTablePage) {
-    hcTablePage = np;
+  if (p < 1 || p > total) return;
+  if (p - 1 !== hcTablePage) {
+    hcTablePage = p - 1;
     var oranInput = document.getElementById('hcOran');
     var oran = parseFloat(oranInput && oranInput.value) || 0;
     renderHarcamaMenuTable(oran);
