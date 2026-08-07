@@ -654,12 +654,6 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   margin-left: 60px;
 }
 
-.header, .app-layout { transition: margin-left 0.25s ease; }
-@media (min-width: 601px) {
-  body.sidebar-open .header,
-  body.sidebar-open .app-layout { margin-left: 240px; }
-}
-
 .sidebar {
   width: 60px;
   flex-shrink: 0;
