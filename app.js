@@ -4265,6 +4265,37 @@ function processYemekCSV(text) {
   }
 }
 
+function exportYemekCSV() {
+  const list = loadYemekler();
+  if (!list || !list.length) { showToast('Dışa aktarılacak yemek yok.', 'error'); return; }
+  const maxUrun = list.reduce((m, y) => Math.max(m, (y.tarif || []).length), 0);
+  const headers = ['Yemek Adı', 'Kalori', 'Alerjen'];
+  for (let i = 1; i <= maxUrun; i++) {
+    headers.push('Ürün ' + i, 'Miktar ' + i, 'Birim ' + i);
+  }
+  function cell(v) {
+    var s = String(v == null ? '' : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  const rows = list.map(function(y) {
+    const row = [cell(y.ad), cell(y.kalori), cell(y.alerjen)];
+    for (let i = 0; i < maxUrun; i++) {
+      const t = (y.tarif && y.tarif[i]) || {};
+      row.push(cell(t.malzeme), cell(t.miktar_kisi), cell(t.birim));
+    }
+    return row.join(',');
+  });
+  const csv = '\uFEFF' + headers.map(cell).join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'yemek_listesi_' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('Yemek listesi CSV olarak indirildi.', 'success');
+}
+
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
 function loadYemekler() {
   return yemeklerCache;
