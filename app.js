@@ -257,7 +257,7 @@ const ROLE_ASCI = 'asci';
 const ROLE_GIDA_MUHENDISI = 'gida_muhendisi';
 const ROLE_TEMIZLIKCI = 'temizlikci';
 
-const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', gida_muhendisi: 'Gıda Mühendisi', temizlikci: 'Temizlikçi' };
+const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', gida_muhendisi: 'Gıda Mühendisi', temizlikci: 'Temizlikçi', sadece_gorme: 'Sadece Görme' };
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
@@ -338,6 +338,24 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: true
   },
   temizlikci: {
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    canEditMenu: false,
+    canSaveMenu: false,
+    canSeeProduction: true,
+    canAddRecord: false,
+    canExport: false,
+    canSync: false,
+    canSeeAdminPanel: false,
+    canEditHaccp: false,
+    canEditDepo: false,
+    canEditHarcamaOran: false,
+    canEditYag: false,
+    canEditAmbalaj: false,
+    canMenuOnayaGonder: false,
+    canMenuOnayla: false,
+    canMenuReddet: false
+  },
+  sadece_gorme: {
     tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
@@ -865,7 +883,7 @@ function apRenderUserList() {
   var roleColors = { admin: '#ef4444', diyetisyen: '#6366f1', depo: '#f59e0b', asci: '#22c55e' };
   var html = '<div style="display:flex;flex-direction:column;gap:0.5rem">';
   users.forEach(function(user, i) {
-    var roleLabel = roleLabels[user.role] || user.role;
+    var roleLabel = roleLabels[user.role] || ROLE_LABELS[user.role] || user.role;
     var roleColor = roleColors[user.role] || '#888';
     html += '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">';
     html += '<div style="flex:1">';
@@ -925,8 +943,7 @@ function apEditUser(index) {
   var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
 
   var container = document.getElementById('apUserList');
-  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';
-  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">Kullanıcıyı Düzenle</div>';
+  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">Kullanıcıyı Düzenle</div>';
   html += '<input type="hidden" id="apEditIndex" value="' + index + '" />';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
   html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Kullanıcı Adı</label>';
@@ -939,8 +956,8 @@ function apEditUser(index) {
   html += '<input type="password" id="apEditPassword" placeholder="Yeni şifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
   html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>';
   html += '<select id="apEditRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">';
-  ['admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci'].forEach(function(r) {
-    html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + (roleLabels[r] || r) + '</option>';
+  ['admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci','sadece_gorme'].forEach(function(r) {
+    html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + (roleLabels[r] || ROLE_LABELS[r] || r) + '</option>';
   });
   html += '</select></div>';
   html += '</div>';
