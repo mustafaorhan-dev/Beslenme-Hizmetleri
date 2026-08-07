@@ -1643,79 +1643,16 @@ td.porsiyon-warn {
 /* ---- HARCAMA MENÜSÜ ---- */
 .hc-controls {
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: center;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 0.9rem;
-  margin-bottom: 0.6rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
-.hc-nav-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.hc-nav-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.hc-nav-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg-input));
-}
-.hc-nav-btn:active { transform: scale(0.94); }
-.hc-nav-btn.hc-reset {
-  width: auto;
-  padding: 0 0.8rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-}
-.hc-select {
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.hc-select:hover, .hc-select:focus { border-color: var(--accent); outline: none; }
-.hc-month-label {
-  min-width: 118px;
-  text-align: center;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-input));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: var(--radius-sm);
-  padding: 7px 12px;
-  white-space: nowrap;
+.hc-controls .month-btn.active {
+  background: var(--gradient-main);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 16px rgba(99,102,241,0.3);
 }
 
 /* Harcama grafiği: çift yönlü (yatay + dikey) kaydırma */

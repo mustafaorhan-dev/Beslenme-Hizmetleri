@@ -5522,23 +5522,35 @@ function hcGetYears() {
     var d = new Date(r.tarih + 'T12:00:00');
     if (!isNaN(d)) set[d.getFullYear()] = true;
   });
-  set[new Date().getFullYear()] = true;
-  return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  var years = Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  return years.length ? years : [new Date().getFullYear()];
 }
 
 function hcDefaultYear() {
   var years = hcGetYears();
-  return years.length ? years[years.length - 1] : new Date().getFullYear();
+  return years[years.length - 1];
 }
 
-function hcPopulateYearSelect() {
-  var sel = document.getElementById('hcYearSelect');
+function renderHarcamaNav() {
+  var container = document.getElementById('hcControls');
+  if (!container) return;
   var years = hcGetYears();
-  if (hcSelectedYear === null) hcSelectedYear = hcDefaultYear();
-  if (years.indexOf(hcSelectedYear) === -1) years = years.concat([hcSelectedYear]).sort(function (a, b) { return a - b; });
-  if (!sel) return;
-  sel.innerHTML = years.map(function (y) { return '<option value="' + y + '">' + y + '</option>'; }).join('');
-  sel.value = String(hcSelectedYear);
+  if (hcSelectedYear === null || years.indexOf(hcSelectedYear) === -1) hcSelectedYear = hcDefaultYear();
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">Yıl:</label>';
+  html += '<select id="hcYearSelect" onchange="hcSetYearFromSelect()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text-primary)">';
+  years.forEach(function (y) {
+    html += '<option value="' + y + '"' + (hcSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
+  });
+  html += '</select>';
+  html += '<span style="font-size:0.8rem;color:var(--text-muted);margin-left:4px">Ay:</span>';
+  var months = ['Tümü', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  months.forEach(function (m, i) {
+    var active = (i === 0 ? hcSelectedMonth === null : hcSelectedMonth === i - 1) ? ' active' : '';
+    html += '<button class="year-btn month-btn' + active + '" data-hc-month="' + i + '" onclick="hcSetMonth(' + i + ')">' + m + '</button>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function hcSetYearFromSelect() {
@@ -5548,27 +5560,12 @@ function hcSetYearFromSelect() {
   if (!isNaN(y) && y !== hcSelectedYear) { hcSelectedYear = y; renderHarcamaMenu(); }
 }
 
-function hcYear(delta) {
-  var years = hcGetYears();
-  var idx = years.indexOf(hcSelectedYear === null ? hcDefaultYear() : hcSelectedYear);
-  idx = Math.max(0, Math.min(years.length - 1, idx + delta));
-  if (years[idx] !== undefined) { hcSelectedYear = years[idx]; renderHarcamaMenu(); }
-}
-
-function hcMonth(delta) {
-  if (hcSelectedMonth === null) {
-    hcSelectedMonth = delta > 0 ? 0 : 11;
-  } else {
-    var m = hcSelectedMonth + delta;
-    if (m < 0) { m = 11; hcSelectedYear -= 1; }
-    else if (m > 11) { m = 0; hcSelectedYear += 1; }
-    hcSelectedMonth = m;
+function hcSetMonth(i) {
+  hcSelectedMonth = i === 0 ? null : i - 1;
+  var btns = document.querySelectorAll('#hcControls .month-btn');
+  for (var k = 0; k < btns.length; k++) {
+    btns[k].classList.toggle('active', Number(btns[k].getAttribute('data-hc-month')) === i);
   }
-  renderHarcamaMenu();
-}
-
-function hcMonthReset() {
-  hcSelectedMonth = null;
   renderHarcamaMenu();
 }
 
@@ -5596,10 +5593,7 @@ function hcActiveRecords() {
 }
 
 function hcUpdateNav() {
-  var label = document.getElementById('hcMonthLabel');
-  if (label) {
-    label.textContent = hcSelectedMonth === null ? 'Tüm Yıl' : HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
-  }
+  renderHarcamaNav();
   var badge = document.getElementById('hcChartBadge');
   if (badge) {
     if (hcSelectedMonth === null) {
@@ -5609,7 +5603,6 @@ function hcUpdateNav() {
       badge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
     }
   }
-  hcPopulateYearSelect();
 }
 
 function canEditHarcamaOran() {

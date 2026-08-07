@@ -1117,19 +1117,7 @@
 
     <!-- ===== HARCAMA TAB ===== -->
     <div class="tab-content" id="content-harcama">
-      <div class="hc-controls">
-        <div class="hc-nav-group">
-          <button class="hc-nav-btn" onclick="hcYear(-1)" title="Önceki Yıl">▲</button>
-          <select id="hcYearSelect" class="hc-select" onchange="hcSetYearFromSelect()"></select>
-          <button class="hc-nav-btn" onclick="hcYear(1)" title="Sonraki Yıl">▼</button>
-        </div>
-        <div class="hc-nav-group">
-          <button class="hc-nav-btn" onclick="hcMonth(-1)" title="Önceki Ay">◀</button>
-          <span class="hc-month-label" id="hcMonthLabel">Tüm Yıl</span>
-          <button class="hc-nav-btn" onclick="hcMonth(1)" title="Sonraki Ay">▶</button>
-          <button class="hc-nav-btn hc-reset" onclick="hcMonthReset()" title="Tüm yılın tüm aylarını göster">Tüm Yıl</button>
-        </div>
-      </div>
+      <div class="hc-controls" id="hcControls"></div>
       <div class="hc-scroll-nav" id="hcScrollNav">
         <button onclick="hcScrollTo('hcKpis')" title="Özete Git"></button>
         <button onclick="hcScrollTo('hcChartArea')" title="Grafiğe Git"></button>
