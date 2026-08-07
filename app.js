@@ -2795,7 +2795,7 @@ function exportDashboardPDF() {
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi</h1>
+    <h1>Kırşehir Ahi Evran Üniversitesi - Beslenme ve Atık Yönetim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
     ${weeklyHtml}
@@ -7257,7 +7257,7 @@ function buildExportHTML() {
     html += weeklyHtml;
   }
 
-  html += '<div class="fot">Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi</div>';
+  html += '<div class="fot">Kırşehir Ahi Evran Üniversitesi - Beslenme ve Atık Yönetim Sistemi</div>';
   html += '</div>';
   return html;
 }

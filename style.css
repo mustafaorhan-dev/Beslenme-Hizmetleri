@@ -11,16 +11,34 @@
 /* Login Overlay */
 .login-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg-primary);
+  background:
+    radial-gradient(ellipse at 12% 18%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 55%),
+    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--accent-purple) 22%, transparent), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, color-mix(in srgb, var(--accent-cyan) 20%, transparent), transparent 55%),
+    radial-gradient(ellipse at 16% 88%, color-mix(in srgb, var(--accent-green) 18%, transparent), transparent 50%),
+    linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   display: flex; align-items: center; justify-content: center;
   z-index: 999999;
   transition: opacity 0.5s ease;
+  overflow: hidden;
 }
 .login-overlay::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 60%),
-              radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 50%);
+  content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent), transparent 65%);
+  top: -140px; left: -140px;
+  animation: loginFloat 16s ease-in-out infinite alternate;
   pointer-events: none;
+}
+.login-overlay::after {
+  content: ''; position: absolute; width: 560px; height: 560px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-purple) 26%, transparent), transparent 65%);
+  bottom: -160px; right: -140px;
+  animation: loginFloat 20s ease-in-out infinite alternate-reverse;
+  pointer-events: none;
+}
+@keyframes loginFloat {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(70px, 45px) scale(1.18); }
 }
 .login-overlay.hidden {
   opacity: 0; pointer-events: none;
@@ -29,17 +47,48 @@
   position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 4rem 2.5rem;
-  width: 440px;
+  border-radius: 22px;
+  padding: 3.2rem 2.6rem;
+  width: 460px;
   max-width: 92vw;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.22), 0 0 60px color-mix(in srgb, var(--accent) 14%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: loginCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes loginCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.login-box::before {
+  content: ''; position: absolute; top: 0; left: 28px; right: 28px; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-purple), transparent);
+  border-radius: 0 0 6px 6px; opacity: 0.9;
 }
 .login-logo {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.login-logo svg {
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.login-title {
+  font-size: 1.28rem; font-weight: 800; line-height: 1.4; text-align: center;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--accent) 30%, transparent));
+  margin: 0 0 0.25rem;
+}
+.login-title .login-sub {
+  display: block; margin-top: 0.4rem;
+  font-size: 0.9rem; font-weight: 700; letter-spacing: 1.6px;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-red), var(--accent-purple));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.login-box select, .login-box input {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 /* Loading Overlay */

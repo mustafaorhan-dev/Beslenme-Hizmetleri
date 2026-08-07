@@ -1,6 +1,6 @@
 {
-  "name": "Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi",
-  "short_name": "Menü ve Atık",
+  "name": "Kırşehir Ahi Evran Üniversitesi - Beslenme ve Atık Yönetim Sistemi",
+  "short_name": "Beslenme ve Atık",
   "description": "Kırşehir Ahi Evran Üniversitesi yemekhane menü planlaması ve atık kontrol sistemi",
   "start_url": "index.html",
   "display": "standalone",
