@@ -4930,8 +4930,10 @@ function drawAllCharts() {
 
   let chartRecords = records.filter(r => {
     if (!r.tarih) return false;
-    const y = new Date(r.tarih + 'T12:00:00').getFullYear();
-    return y === Number(chartYearFilter);
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (d.getFullYear() !== Number(chartYearFilter)) return false;
+    if (chartMonthFilter > 0 && d.getMonth() + 1 !== chartMonthFilter) return false;
+    return true;
   });
 
   // Grafik kartlarındaki canlı yıl toplamları (veri değiştikçe güncellenir)
