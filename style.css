@@ -1679,37 +1679,55 @@ td.porsiyon-warn {
 #hcChartArea::-webkit-scrollbar-corner { background: transparent; }
 #hcChartArea { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(0,0,0,0.05); }
 
-/* Harcama: sağ kenar bölüm gezinme (aşağı/yukarı gitme) çubukları */
-.hc-scroll-nav {
-  position: fixed;
-  right: 26px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px 7px;
-  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+/* Harcama: KPI kartları yan yana ve kompakt */
+#hcKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
 }
-.hc-scroll-nav button {
-  width: 10px;
-  height: 10px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
+#hcKpis .report-item {
+  min-height: 54px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+}
+#hcKpis .report-label { font-size: 0.68rem; white-space: nowrap; }
+#hcKpis .report-value { font-size: 1.05rem; white-space: nowrap; }
+
+/* Harcama: tablo sayfalama */
+.hc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+.hc-page-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all var(--transition);
 }
-.hc-scroll-nav button:hover {
-  background: var(--accent);
-  transform: scale(1.5);
+.hc-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.hc-page-btn:disabled { opacity: 0.35; cursor: default; }
+.hc-page-info {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* ---- REPORT ---- */

@@ -13,6 +13,7 @@ let weeklySummaryOffset = 0;
 let dailySummaryOffset = 0;
 let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıtlardan türetilir)
 let hcSelectedMonth = null;  // Harcama menüsünde seçili ay (null => Tüm Yıl, 0-11 => belirli ay)
+let hcTablePage = 0;         // Harcama tablosunda aktif sayfa
 
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
@@ -5430,7 +5431,7 @@ function renderHarcamaMenuChart(oran) {
   const areaW = Math.max(area.clientWidth || 400, 320);
   const barW = 88;
   const targetW = Math.max(areaW, labels.length * barW + 70);
-  const canvasH = 480;
+  const canvasH = 340;
   canvas.style.width = targetW + 'px';
   canvas.style.height = canvasH + 'px';
   canvas.width = targetW;
@@ -5462,6 +5463,7 @@ function renderHarcamaMenuChart(oran) {
         borderRadius: 6,
         barPercentage: 0.8,
         categoryPercentage: 0.75,
+        maxBarThickness: 72,
       }]
     },
     options: {
@@ -5496,13 +5498,20 @@ function renderHarcamaMenuChart(oran) {
 
 function renderHarcamaMenuTable(oran) {
   const tbody = document.getElementById('hcTbody');
+  const pag = document.getElementById('hcPagination');
   if (!tbody) return;
   const sorted = hcActiveRecords().sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   if (sorted.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
+    if (pag) pag.innerHTML = '';
     return;
   }
-  tbody.innerHTML = sorted.map(r => {
+  const perPage = 10;
+  const totalPages = Math.ceil(sorted.length / perPage);
+  if (hcTablePage > totalPages - 1) hcTablePage = totalPages - 1;
+  const start = hcTablePage * perPage;
+  const pageRows = sorted.slice(start, start + perPage);
+  tbody.innerHTML = pageRows.map(r => {
     const tutar = (r.ogrenci || 0) * oran;
     return `<tr>
       <td>${displayDate(r.tarih)}</td>
@@ -5511,6 +5520,13 @@ function renderHarcamaMenuTable(oran) {
       <td>${tutar.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
     </tr>`;
   }).join('');
+  if (pag) {
+    pag.setAttribute('data-total', String(totalPages));
+    pag.innerHTML =
+      `<button class="hc-page-btn" onclick="hcPage(-1)" ${hcTablePage === 0 ? 'disabled' : ''} title="Önceki Sayfa">◀</button>` +
+      `<span class="hc-page-info">Sayfa ${hcTablePage + 1} / ${totalPages} &bull; ${sorted.length} kayıt</span>` +
+      `<button class="hc-page-btn" onclick="hcPage(1)" ${hcTablePage >= totalPages - 1 ? 'disabled' : ''} title="Sonraki Sayfa">▶</button>`;
+  }
 }
 
 // ─── HARCAMA MENÜSÜ NAV (yıl / ay / kaydırma) ────────────────────────────────
@@ -5557,11 +5573,12 @@ function hcSetYearFromSelect() {
   var sel = document.getElementById('hcYearSelect');
   if (!sel) return;
   var y = parseInt(sel.value, 10);
-  if (!isNaN(y) && y !== hcSelectedYear) { hcSelectedYear = y; renderHarcamaMenu(); }
+  if (!isNaN(y) && y !== hcSelectedYear) { hcSelectedYear = y; hcTablePage = 0; renderHarcamaMenu(); }
 }
 
 function hcSetMonth(i) {
   hcSelectedMonth = i === 0 ? null : i - 1;
+  hcTablePage = 0;
   var btns = document.querySelectorAll('#hcControls .month-btn');
   for (var k = 0; k < btns.length; k++) {
     btns[k].classList.toggle('active', Number(btns[k].getAttribute('data-hc-month')) === i);
@@ -5569,15 +5586,18 @@ function hcSetMonth(i) {
   renderHarcamaMenu();
 }
 
-function hcScrollTo(id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var container = document.getElementById('content-harcama');
-  if (container) {
-    var top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-    container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-  } else {
-    el.scrollIntoView({ behavior: 'smooth' });
+function hcPage(dir) {
+  var pag = document.getElementById('hcPagination');
+  var total = 0;
+  if (pag) total = parseInt(pag.getAttribute('data-total'), 10) || 0;
+  var np = hcTablePage + dir;
+  if (np < 0) np = 0;
+  if (np > total - 1) np = total - 1;
+  if (np !== hcTablePage) {
+    hcTablePage = np;
+    var oranInput = document.getElementById('hcOran');
+    var oran = parseFloat(oranInput && oranInput.value) || 0;
+    renderHarcamaMenuTable(oran);
   }
 }
 

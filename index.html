@@ -1117,17 +1117,13 @@
 
     <!-- ===== HARCAMA TAB ===== -->
     <div class="tab-content" id="content-harcama">
+      <div class="report-grid hc-kpis" id="hcKpis"></div>
       <div class="hc-controls" id="hcControls"></div>
-      <div class="hc-scroll-nav" id="hcScrollNav">
-        <button onclick="hcScrollTo('hcKpis')" title="Özete Git"></button>
-        <button onclick="hcScrollTo('hcChartArea')" title="Grafiğe Git"></button>
-        <button onclick="hcScrollTo('hcTableArea')" title="Tabloya Git"></button>
-      </div>
       <div class="section-card">
         <div class="section-header">
           <h2>Öğrenci Başı Harcama Hesaplama</h2>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:1rem">
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:0.5rem">
           <div>
             <label for="hcOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Öğr. Başı Harcama Oranı (₺)</label>
             <input type="number" id="hcOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
@@ -1135,8 +1131,7 @@
           <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()">Oranı Kaydet</button>
           <span id="hcOranStatus" style="font-size:0.85rem"></span>
         </div>
-        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">Harcama Tutarı = Öğrenci Sayısı × Öğr. Başı Harcama Oranı. Oran değiştiğinde tablo ve grafik anında yeniden hesaplanır.</div>
-        <div class="report-grid" id="hcKpis"></div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">Harcama Tutarı = Öğrenci Sayısı × Öğr. Başı Harcama Oranı. Oran değiştiğinde tablo ve grafik anında yeniden hesaplanır.</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem">
@@ -1168,6 +1163,7 @@
             <tbody id="hcTbody"></tbody>
           </table>
         </div>
+        <div class="hc-pagination" id="hcPagination"></div>
       </div>
     </div>
 
