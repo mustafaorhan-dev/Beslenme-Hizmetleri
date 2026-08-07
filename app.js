@@ -5051,6 +5051,7 @@ function drawAllCharts() {
             borderRadius: isLineDS ? 0 : 6,
             barPercentage: isLineDS ? undefined : 0.85,
             categoryPercentage: isLineDS ? undefined : 0.8,
+            maxBarThickness: isLineDS ? undefined : 72,
             pointRadius: isLineDS ? (d.dashed ? 0 : 3) : undefined,
             pointHoverRadius: isLineDS ? (d.dashed ? 0 : 5) : undefined,
             fill: isLineDS ? (d.dashed ? false : true) : undefined,
