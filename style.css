@@ -580,6 +580,13 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .btn-success:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
 
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: auto;
+  filter: grayscale(0.6);
+}
+
 .btn-icon {
   background: rgba(99,102,241,0.12);
   color: var(--accent-blue);

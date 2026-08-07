@@ -5768,8 +5768,20 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
   if (saveBtn) saveBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
   if (clearBtn) clearBtn.style.display = role === ROLE_ADMIN && canEdit ? '' : 'none';
   if (sendBtn) sendBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
-  if (approveBtn) approveBtn.style.display = canMenuOnayla() && durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR ? '' : 'none';
-  if (rejectBtn) rejectBtn.style.display = canMenuOnayla() && durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR ? '' : 'none';
+  if (approveBtn) {
+    approveBtn.style.display = canMenuOnayla() ? '' : 'none';
+    approveBtn.disabled = durumMeta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR;
+    approveBtn.title = durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR
+      ? 'Menüyü onayla'
+      : 'Menü henüz onaya gönderilmedi. Diyetisyen "Onaya Gönder"e bastığında buradan onaylayabilirsiniz.';
+  }
+  if (rejectBtn) {
+    rejectBtn.style.display = canMenuOnayla() ? '' : 'none';
+    rejectBtn.disabled = durumMeta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR;
+    rejectBtn.title = durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR
+      ? 'Menüyü gerekçeli olarak reddet'
+      : 'Menü henüz onaya gönderilmedi. Diyetisyen "Onaya Gönder"e bastığında buradan reddedebilirsiniz.';
+  }
   if (withdrawBtn) withdrawBtn.style.display = role === ROLE_ADMIN && (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI || durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) ? '' : 'none';
 
   if (warn) {
