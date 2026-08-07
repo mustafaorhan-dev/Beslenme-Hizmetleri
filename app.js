@@ -3656,7 +3656,8 @@ function renderKPIs() {
   const avgAtik = totalAtik / n;
   document.getElementById('kpiAvgAtik').textContent = avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const lastRec = records[0];
-  document.getElementById('kpiLastGecis').textContent = lastRec ? (lastRec.turnike || 0).toLocaleString('tr-TR') : '0';
+  const totalGecis = records.reduce((s, r) => s + (r.turnike || 0), 0);
+  document.getElementById('kpiLastGecis').textContent = totalGecis.toLocaleString('tr-TR');
   document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
