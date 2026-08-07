@@ -688,6 +688,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   justify-content: center;
   padding: 0.8rem 0;
 }
+.sidebar:not(.open) .sidebar-version { display: none; }
 
 .sidebar-header {
   display: flex;
