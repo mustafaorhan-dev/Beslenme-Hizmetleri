@@ -5373,22 +5373,48 @@ function renderHarcamaMenuKpis(oran) {
   const vals = Object.values(monthly);
   const avgMonthly = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
   const maxKey = vals.length ? Object.keys(monthly).reduce((a, b) => monthly[a] >= monthly[b] ? a : b) : null;
+  let maxLabel = '—';
+  if (maxKey) {
+    const parts = maxKey.split('/');
+    maxLabel = HC_MONTHS_TR[Number(parts[0]) - 1] + ' ' + parts[1];
+  }
+  const fmtTL = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
   el.innerHTML = `
-    <div class="report-item report-item-highlight">
-      <span class="report-label">Toplam Harcama (₺)</span>
-      <span class="report-value" id="hcTotal">${totalHarcama.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Toplam Harcama</span>
+        <span class="kpi-value" id="hcTotal">${fmtTL(totalHarcama)}</span>
+      </div>
     </div>
-    <div class="report-item">
-      <span class="report-label">Ort. Aylık Harcama (₺)</span>
-      <span class="report-value" id="hcAvg">${avgMonthly.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Ort. Aylık Harcama</span>
+        <span class="kpi-value" id="hcAvg">${fmtTL(avgMonthly)}</span>
+      </div>
     </div>
-    <div class="report-item">
-      <span class="report-label">Toplam Öğrenci</span>
-      <span class="report-value" id="hcOgrenci">${totalOgrenci.toLocaleString('tr-TR')}</span>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Toplam Öğrenci</span>
+        <span class="kpi-value" id="hcOgrenci">${totalOgrenci.toLocaleString('tr-TR')}</span>
+      </div>
     </div>
-    <div class="report-item">
-      <span class="report-label">En Yüksek Ay</span>
-      <span class="report-value" id="hcMaxMonth">${maxKey || '—'}</span>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">En Yüksek Ay</span>
+        <span class="kpi-value" id="hcMaxMonth" style="font-size:1.25rem">${maxLabel}</span>
+      </div>
     </div>
   `;
 }

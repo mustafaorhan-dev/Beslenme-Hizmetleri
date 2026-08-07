@@ -1679,23 +1679,9 @@ td.porsiyon-warn {
 #hcChartArea::-webkit-scrollbar-corner { background: transparent; }
 #hcChartArea { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(0,0,0,0.05); }
 
-/* Harcama: KPI kartları yan yana ve kompakt */
-#hcKpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-#hcKpis .report-item {
-  min-height: 54px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.7rem 0.9rem;
-}
-#hcKpis .report-label { font-size: 0.68rem; white-space: nowrap; }
-#hcKpis .report-value { font-size: 1.05rem; white-space: nowrap; }
+/* Harcama: KPI kartları (Panel'deki kpi-card yapısıyla aynı) */
+.hc-kpis .kpi-value { font-size: 1.5rem; }
+.hc-kpis .kpi-card:nth-child(4) .kpi-value { font-size: 1.2rem; }
 
 /* Harcama: tablo sayfalama (Kayıtlar sekmesindeki ile aynı) */
 .hc-pagination {
