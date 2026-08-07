@@ -4447,6 +4447,62 @@ function closeYemekModal() {
   document.getElementById('yemekModal').classList.remove('open');
 }
 
+function exportYemekListesiPDF() {
+  const list = loadYemekler();
+  if (!list || !list.length) {
+    showToast('Dışa aktarılacak yemek yok.', 'error');
+    return;
+  }
+  const printWin = window.open('', '_blank', 'width=1000,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+
+  const rowsHtml = list.map(function(y) {
+    const tarifHtml = (y.tarif && y.tarif.length)
+      ? '<table class="tarif">' + y.tarif.map(function(t) {
+          const miktar = Number(t.miktar_kisi) || 0;
+          return '<tr><td class="mz">' + escapeHtml(t.malzeme || '') + '</td><td class="mk">' + (miktar ? miktar.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) : '') + ' ' + escapeHtml(t.birim || 'gr') + '</td></tr>';
+        }).join('') + '</table>'
+      : '<div class="tarif-yok">—</div>';
+    return '<tr>' +
+      '<td class="yemek-ad"><strong>' + escapeHtml(y.ad) + '</strong>' + (y.kalori ? '<div class="kalori">' + escapeHtml(y.kalori) + '</div>' : '') + '</td>' +
+      '<td class="alerjen">' + (y.alerjen ? escapeHtml(y.alerjen) : '') + '</td>' +
+      '<td>' + tarifHtml + '</td>' +
+    '</tr>';
+  }).join('');
+
+  printWin.document.write('<!DOCTYPE html><html><head>' +
+    '<meta charset="UTF-8"><title>Yemek Listesi</title>' +
+    '<style>' +
+    'body{font-family:Arial,sans-serif;padding:20px;margin:0}' +
+    'h1{font-size:1.3rem;margin-bottom:0.2rem}' +
+    '.date{font-size:0.8rem;color:#666;margin-bottom:0.3rem}' +
+    '.info{font-size:0.75rem;color:#888;margin-bottom:1rem}' +
+    'table{width:100%;border-collapse:collapse}' +
+    'th{background:#f1f5f9;font-weight:700;padding:6px 8px;text-align:left;border:1px solid #ddd;font-size:0.8rem}' +
+    'td{padding:6px 8px;border:1px solid #ddd;vertical-align:top;font-size:0.78rem}' +
+    '.yemek-ad{width:30%}' +
+    '.kalori{font-size:0.68rem;color:#64748b;margin-top:2px;font-weight:400}' +
+    '.alerjen{width:18%;color:#b91c1c}' +
+    'table.tarif{width:100%;border:none}' +
+    'table.tarif td{border:none;border-bottom:1px solid #eee;padding:2px 4px}' +
+    'table.tarif .mz{width:70%}' +
+    'table.tarif .mk{width:30%;text-align:right;white-space:nowrap}' +
+    '.tarif-yok{color:#999}' +
+    'tr{page-break-inside:avoid}' +
+    '.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}' +
+    '</style></head><body>' +
+    '<h1>Yemek Listesi</h1>' +
+    '<div class="date">' + new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) + '</div>' +
+    '<div class="info">Toplam ' + list.length + ' yemek</div>' +
+    '<table><thead><tr><th>Yemek Adı</th><th>Alerjen</th><th>Reçete (kişi başı)</th></tr></thead>' +
+    '<tbody>' + rowsHtml + '</tbody></table>' +
+    '<div class="footer">Beslenme Hizmetleri &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
+    '</body></html>');
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(function() { try { printWin.print(); } catch(e) {} }, 500);
+}
+
 // -- Supabase dish sync --
 async function syncDishesFromSupabase() {
   if (!supabaseClient) return false;
