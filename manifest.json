@@ -1,7 +1,7 @@
 {
-  "name": "Beslenme Hizmetleri - Menü ve Atık Yönetim Sistemi",
-  "short_name": "Beslenme Hizmetleri",
-  "description": "Haftalık menü planlaması ve atık kontrol sistemi",
+  "name": "Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi",
+  "short_name": "Menü ve Atık",
+  "description": "Kırşehir Ahi Evran Üniversitesi yemekhane menü planlaması ve atık kontrol sistemi",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0a0f1e",

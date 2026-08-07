@@ -2119,7 +2119,7 @@ function exportPDF() {
       <h1>Atık Kontrol Raporu</h1>
       <div class="date">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</div>
       ${cards}
-      <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+      <div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -2795,12 +2795,12 @@ function exportDashboardPDF() {
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Yemekhane Atık Kontrol Paneli</h1>
+    <h1>Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
     ${weeklyHtml}
     ${cardsHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -4497,7 +4497,7 @@ function exportYemekListesiPDF() {
     '<div class="info">Toplam ' + list.length + ' yemek</div>' +
     '<table><thead><tr><th>Yemek Adı</th><th>Alerjen</th><th>Reçete (kişi başı)</th></tr></thead>' +
     '<tbody>' + rowsHtml + '</tbody></table>' +
-    '<div class="footer">Beslenme Hizmetleri &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
+    '<div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
     '</body></html>');
   printWin.document.close();
   printWin.focus();
@@ -7257,7 +7257,7 @@ function buildExportHTML() {
     html += weeklyHtml;
   }
 
-  html += '<div class="fot">Yemekhane Menü ve Atık Yönetim Sistemi</div>';
+  html += '<div class="fot">Kırşehir Ahi Evran Üniversitesi - Menü ve Atık Yönetim Sistemi</div>';
   html += '</div>';
   return html;
 }
