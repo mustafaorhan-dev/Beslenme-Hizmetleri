@@ -1259,6 +1259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAll();
   drawAllCharts();
   await restoreActiveTab();
+  menuOnayBildirim();
 
   // Güvenlik: 10 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
@@ -5577,6 +5578,218 @@ function showChartDetailModal(title, records) {
   overlay.style.display = 'flex';
 }
 
+// ─── MENÜ ONAY AKIŞI (Diyetisyen → Gıda Mühendisi/Admin) ─────────────────────
+const MENU_DURUMLAR = { TASLAK: 'taslak', ONAY_BEKLIYOR: 'onay_bekliyor', ONAYLANDI: 'onaylandi', REDDEDILDI: 'reddedildi' };
+let currentMenuDurumMeta = null;
+
+function menuDurumLabel(durum) {
+  const m = { taslak: 'Taslak', onay_bekliyor: 'Onay Bekliyor', onaylandi: 'Onaylandı', reddedildi: 'Reddedildi' };
+  return m[durum] || 'Taslak';
+}
+
+function getMenuDurumMeta(weekData) {
+  const d = (weekData && weekData._durum) || {};
+  return {
+    durum: d.durum || MENU_DURUMLAR.TASLAK,
+    onaylayan: d.onaylayan || '',
+    onay_tarihi: d.onay_tarihi || '',
+    onay_notu: d.onay_notu || ''
+  };
+}
+
+function canMenuOnayla() {
+  const role = getRole();
+  return role === ROLE_GIDA_MUHENDISI || role === ROLE_ADMIN;
+}
+
+function canMenuDuzenle(durum) {
+  const role = getRole();
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) return false;
+  return durum === MENU_DURUMLAR.TASLAK || durum === MENU_DURUMLAR.REDDEDILDI;
+}
+
+async function getCurrentWeekContext() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+  const allData = await fetchMenuData();
+  return { weekKey: weekKey, allData: allData, weekData: allData[weekKey] || {} };
+}
+
+function collectMenuWeekFromDOM() {
+  const monday = getWeekStartDate(menuWeekOffset);
+  const weekData = {};
+  GUNLER.forEach((_, i) => {
+    const tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    const key = formatDateStr(tarih);
+    const yemekler = [];
+    for (let c = 0; c < 5; c++) {
+      const el = document.getElementById('m' + c + '_' + i);
+      yemekler.push(el ? el.textContent : '');
+    }
+    const notlar = [];
+    for (let n = 0; n < 10; n++) {
+      const el = document.getElementById('mn_' + n + '_' + i);
+      notlar.push(el ? el.value : '');
+    }
+    const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
+    weekData[key] = { yemekler: yemekler, kisi: kisi, notlar: notlar };
+  });
+  return weekData;
+}
+
+async function menuOnayaGonder() {
+  const role = getRole();
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için diyetisyen yetkisi gerekli.', 'error'); return; }
+  const ctx = await getCurrentWeekContext();
+  const meta = getMenuDurumMeta(ctx.weekData);
+  if (!canMenuDuzenle(meta.durum)) {
+    showToast('Menü zaten onay sürecinde veya onaylanmış. Onayı kaldırmadan gönderemezsiniz.', 'error');
+    return;
+  }
+  const weekData = collectMenuWeekFromDOM();
+  weekData._durum = { durum: MENU_DURUMLAR.ONAY_BEKLIYOR, onaylayan: '', onay_tarihi: '', onay_notu: '' };
+  ctx.allData[ctx.weekKey] = weekData;
+  await saveMenuData(ctx.allData);
+  logIslem('menu_onaya_gonder', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
+  showToast('Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.', 'success');
+  await renderMenu();
+}
+
+async function menuOnayla() {
+  if (!canMenuOnayla()) { showToast('Bu işlem için gıda mühendisi veya admin yetkisi gerekli.', 'error'); return; }
+  const ctx = await getCurrentWeekContext();
+  const meta = getMenuDurumMeta(ctx.weekData);
+  if (meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
+    showToast('Onaylanacak bekleyen menü yok (durum: ' + menuDurumLabel(meta.durum) + ').', 'error');
+    return;
+  }
+  const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
+  ctx.weekData._durum = { durum: MENU_DURUMLAR.ONAYLANDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: '' };
+  ctx.allData[ctx.weekKey] = ctx.weekData;
+  await saveMenuData(ctx.allData);
+  logIslem('menu_onayla', displayName + ' ' + ctx.weekKey + ' menüsünü onayladı');
+  showToast('Menü onaylandı.', 'success');
+  await renderMenu();
+}
+
+function menuReddet() {
+  if (!canMenuOnayla()) { showToast('Bu işlem için gıda mühendisi veya admin yetkisi gerekli.', 'error'); return; }
+  document.getElementById('menuRedNotu').value = '';
+  document.getElementById('menuRedError').style.display = 'none';
+  document.getElementById('menuRedModal').classList.add('open');
+}
+
+function menuRedOnayla() {
+  const not = (document.getElementById('menuRedNotu').value || '').trim();
+  if (!not) { document.getElementById('menuRedError').style.display = 'block'; return; }
+  document.getElementById('menuRedModal').classList.remove('open');
+  menuReddetApply(not);
+}
+
+async function menuReddetApply(not) {
+  const ctx = await getCurrentWeekContext();
+  const meta = getMenuDurumMeta(ctx.weekData);
+  if (meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
+    showToast('Menü bekleyen durumda değil.', 'error');
+    return;
+  }
+  const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
+  ctx.weekData._durum = { durum: MENU_DURUMLAR.REDDEDILDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: not };
+  ctx.allData[ctx.weekKey] = ctx.weekData;
+  await saveMenuData(ctx.allData);
+  logIslem('menu_reddet', displayName + ' ' + ctx.weekKey + ' menüsünü reddetti: ' + not);
+  showToast('Menü gerekçeli olarak reddedildi.', 'success');
+  await renderMenu();
+}
+
+async function menuOnayGeriCek() {
+  if (getRole() !== ROLE_ADMIN) { showToast('Bu işlem için admin yetkisi gerekli.', 'error'); return; }
+  if (!confirm('Menünün onayı kaldırılsın mı? Tekrar düzenleme ve onaya gönderme mümkün olacak.')) return;
+  const ctx = await getCurrentWeekContext();
+  const meta = getMenuDurumMeta(ctx.weekData);
+  if (meta.durum !== MENU_DURUMLAR.ONAYLANDI && meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
+    showToast('Onayı kaldırılacak bir durum yok.', 'error');
+    return;
+  }
+  ctx.weekData._durum = { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
+  ctx.allData[ctx.weekKey] = ctx.weekData;
+  await saveMenuData(ctx.allData);
+  logIslem('menu_onay_kaldir', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünün onayını kaldırdı');
+  showToast('Onay kaldırıldı, menü düzenlemeye açık.', 'success');
+  await renderMenu();
+}
+
+async function menuOnayBildirim() {
+  if (!canMenuOnayla() || !supabaseClient) return;
+  try {
+    const allData = await fetchMenuData();
+    const bekleyen = Object.keys(allData).filter(function(k) {
+      return getMenuDurumMeta(allData[k]).durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
+    });
+    if (bekleyen.length > 0) {
+      showToast(bekleyen.length + ' haftanın menüsü onay bekliyor.', 'info');
+    }
+  } catch (_) {}
+}
+
+function renderMenuDurumBar(durumMeta) {
+  const role = getRole();
+  const badge = document.getElementById('menuDurumBadge');
+  const warn = document.getElementById('menuOnayUyari');
+  const warnMetin = document.getElementById('menuOnayUyariMetin');
+
+  let badgeClass = 'badge';
+  if (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI) badgeClass += ' badge-ok';
+  else if (durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) badgeClass += ' badge-warn';
+  else if (durumMeta.durum === MENU_DURUMLAR.REDDEDILDI) badgeClass += ' badge-err';
+
+  let badgeText = menuDurumLabel(durumMeta.durum);
+  if (durumMeta.onaylayan && (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI || durumMeta.durum === MENU_DURUMLAR.REDDEDILDI)) {
+    badgeText += ' · ' + durumMeta.onaylayan;
+  }
+  if (badge) {
+    badge.className = badgeClass;
+    badge.textContent = badgeText;
+    badge.style.display = '';
+  }
+
+  const canEdit = canMenuDuzenle(durumMeta.durum);
+  const saveBtn = document.getElementById('menuSaveBtn');
+  const clearBtn = document.getElementById('menuClearBtn');
+  const sendBtn = document.getElementById('menuSendBtn');
+  const approveBtn = document.getElementById('menuApproveBtn');
+  const rejectBtn = document.getElementById('menuRejectBtn');
+  const withdrawBtn = document.getElementById('menuWithdrawBtn');
+
+  if (saveBtn) saveBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
+  if (clearBtn) clearBtn.style.display = role === ROLE_ADMIN && canEdit ? '' : 'none';
+  if (sendBtn) sendBtn.style.display = (role === ROLE_ADMIN || role === ROLE_DIYETISYEN) && canEdit ? '' : 'none';
+  if (approveBtn) approveBtn.style.display = canMenuOnayla() && durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR ? '' : 'none';
+  if (rejectBtn) rejectBtn.style.display = canMenuOnayla() && durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR ? '' : 'none';
+  if (withdrawBtn) withdrawBtn.style.display = role === ROLE_ADMIN && (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI || durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) ? '' : 'none';
+
+  if (warn) {
+    if (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI) {
+      warn.style.display = 'none';
+    } else {
+      warn.style.display = '';
+      let metin = 'Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.';
+      if (durumMeta.durum === MENU_DURUMLAR.REDDEDILDI) {
+        metin = 'Bu menü reddedildi' + (durumMeta.onaylayan ? ' (' + durumMeta.onaylayan + ')' : '');
+        if (durumMeta.onay_notu) metin += ': ' + durumMeta.onay_notu;
+        metin += '. Diyetisyen düzelttikten sonra yeniden onaya gönderebilir.';
+      } else if (durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
+        metin = 'Bu menü onay bekliyor. Onaylanmadan üretim listesinde "onaysız" olarak işaretlenir.';
+      }
+      if (warnMetin) warnMetin.textContent = metin;
+    }
+  }
+  return canEdit;
+}
+
 async function renderMenu() {
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
@@ -5589,6 +5802,8 @@ async function renderMenu() {
 
   const allData = await fetchMenuData();
   const weekData = allData[weekKey] || {};
+  currentMenuDurumMeta = getMenuDurumMeta(weekData);
+  const canEdit = renderMenuDurumBar(currentMenuDurumMeta);
 
   // Gün verilerini topla
   const days = GUNLER.map((gun, i) => {
@@ -5667,19 +5882,40 @@ async function renderMenu() {
   ${days.map(() => `<td></td>`).join('')}`;
   tbody.appendChild(addRow);
   // yemek seçici: her hücreye doğrudan listener + event delegation
-  for (let ci = 0; ci < 5; ci++) {
-    for (let ci2 = 0; ci2 < 5; ci2++) {
-      const cell = document.getElementById('m' + ci + '_' + ci2);
-      if (cell && !cell._pickerAttached) {
-        cell.addEventListener('click', function(e) {
-          e.stopPropagation();
-          _pickerCi = ci;
-          _pickerDi = ci2;
-          openMealPicker();
-        });
-        cell._pickerAttached = true;
+  if (canEdit) {
+    for (let ci = 0; ci < 5; ci++) {
+      for (let ci2 = 0; ci2 < 5; ci2++) {
+        const cell = document.getElementById('m' + ci + '_' + ci2);
+        if (cell && !cell._pickerAttached) {
+          cell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            _pickerCi = ci;
+            _pickerDi = ci2;
+            openMealPicker();
+          });
+          cell._pickerAttached = true;
+        }
       }
     }
+  }
+  // Menü kilitliyse düzenleme engellensin
+  if (!canEdit) {
+    for (let ci = 0; ci < 5; ci++) {
+      for (let di = 0; di < 5; di++) {
+        const cell = document.getElementById('m' + ci + '_' + di);
+        if (cell) { cell.style.cursor = 'default'; cell.style.pointerEvents = 'none'; }
+      }
+    }
+    GUNLER.forEach((_, i) => {
+      const k = document.getElementById('mk_' + i);
+      if (k) k.disabled = true;
+      for (let n = 0; n < 10; n++) {
+        const el = document.getElementById('mn_' + n + '_' + i);
+        if (el) el.disabled = true;
+      }
+    });
+    const addRow = document.getElementById('noteAddRow');
+    if (addRow) addRow.style.display = 'none';
   }
   renderProduction(weekKey, weekData, days);
   applyViewerRestrictions();
@@ -5793,32 +6029,21 @@ function getWeekStartDate(offset) {
 async function saveWeeklyMenu() {
   var role = getRole();
   if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  const monday = getWeekStartDate(menuWeekOffset);
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-  const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-  const allData = await fetchMenuData();
-  const weekData = {};
-  GUNLER.forEach((_, i) => {
-    const tarih = new Date(monday);
-    tarih.setDate(monday.getDate() + i);
-    const key = formatDateStr(tarih);
-    const yemekler = [];
-    for (let c = 0; c < 5; c++) {
-      const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.textContent : '');
-    }
-    const notlar = [];
-    for (let n = 0; n < 10; n++) {
-      const el = document.getElementById('mn_' + n + '_' + i);
-      notlar.push(el ? el.value : '');
-    }
-    const kisi = parseInt(document.getElementById('mk_' + i).value) || 0;
-    weekData[key] = { yemekler, kisi, notlar };
-  });
-  allData[weekKey] = weekData;
-  await saveMenuData(allData);
-  showToast('Menü kaydedildi.', 'success');
+  const ctx = await getCurrentWeekContext();
+  const meta = getMenuDurumMeta(ctx.weekData);
+  if (!canMenuDuzenle(meta.durum)) {
+    showToast('Menü onay sürecinde; düzenlemek için önce onayı kaldırın.', 'error');
+    return;
+  }
+  const weekData = collectMenuWeekFromDOM();
+  // Kaydet: durum zaten reddedildiyse gerekçe korunsun, değilse taslak olarak kaydet
+  weekData._durum = meta.durum === MENU_DURUMLAR.REDDEDILDI
+    ? { durum: MENU_DURUMLAR.REDDEDILDI, onaylayan: meta.onaylayan, onay_tarihi: meta.onay_tarihi, onay_notu: meta.onay_notu }
+    : { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
+  ctx.allData[ctx.weekKey] = weekData;
+  await saveMenuData(ctx.allData);
+  showToast('Menü taslak olarak kaydedildi.', 'success');
+  await renderMenu();
 }
 
 async function shiftMenuWeek(delta) {
@@ -6948,6 +7173,16 @@ function buildExportHTML() {
 
   // Title + Menu table (must fit on 1 page)
   html += '<h1>Haftalık Menü Listesi</h1><div class="sub">' + escapeHtml(weekLabel) + '</div>';
+  var durum = currentMenuDurumMeta || {};
+  var durumNot = 'Menü Durumu: TASLAK (ONAYSIZ)';
+  if (durum.durum === MENU_DURUMLAR.ONAYLANDI) {
+    durumNot = 'Menü Durumu: ONAYLANDI' + (durum.onaylayan ? ' - ' + durum.onaylayan : '');
+  } else if (durum.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
+    durumNot = 'Menü Durumu: ONAY BEKLİYOR (ONAYSIZ)';
+  } else if (durum.durum === MENU_DURUMLAR.REDDEDILDI) {
+    durumNot = 'Menü Durumu: REDDEDİLDİ' + (durum.onay_notu ? ' - ' + durum.onay_notu : '');
+  }
+  html += '<div class="sub" style="color:#b45309;font-weight:700">' + escapeHtml(durumNot) + '</div>';
   html += '<table class="menu-table"><thead><tr><th></th>';
   for (var di = 0; di < 5; di++) html += '<th>' + gunler[di] + '</th>';
   html += '</tr></thead><tbody>';

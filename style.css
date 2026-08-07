@@ -571,6 +571,15 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .btn-danger:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }
 
+.btn-success {
+  background: rgba(16,185,129,0.12);
+  color: #10b981;
+  border: 1px solid rgba(16,185,129,0.35);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+}
+.btn-success:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+
 .btn-icon {
   background: rgba(99,102,241,0.12);
   color: var(--accent-blue);
