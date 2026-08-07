@@ -674,7 +674,7 @@ function doLogout() {
     supabaseClient.auth.signOut();
   }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
