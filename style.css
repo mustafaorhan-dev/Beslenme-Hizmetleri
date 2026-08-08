@@ -411,12 +411,7 @@ html { scroll-behavior: smooth; color-scheme: var(--color-scheme, dark); overflo
 
 body {
   font-family: var(--font);
-  background:
-    radial-gradient(700px 450px at 8% 6%, rgba(99,102,241,0.10), transparent 60%),
-    radial-gradient(800px 500px at 92% 10%, rgba(34,211,238,0.10), transparent 60%),
-    radial-gradient(700px 520px at 85% 92%, rgba(168,85,247,0.08), transparent 60%),
-    radial-gradient(600px 420px at 8% 90%, rgba(245,158,11,0.06), transparent 60%),
-    var(--bg-primary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   height: 100%;
   overflow: hidden;
