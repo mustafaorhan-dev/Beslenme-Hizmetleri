@@ -5392,7 +5392,7 @@ function renderYearlyCharts() {
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 10, cornerRadius: 8,
-            callbacks: { label: function(c) { return ' ' + c.dataset.label + ': ' + fmt(c.parsed) + unitLabel; } }
+            callbacks: { label: function(c) { return ' ' + c.label; } }
           },
           valueLabels: false
         }

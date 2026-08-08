@@ -1470,7 +1470,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
-.donut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 260px)); gap: 1.25rem; margin-bottom: 1.5rem; }
+.donut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
 .donut-grid .chart-card { padding: 1rem; margin-bottom: 0; }
 .donut-grid .chart-card .section-header { padding: 0; margin-bottom: 0.75rem; }
 .donut-grid .chart-card .section-header h2 { font-size: 0.85rem; line-height: 1.3; }
