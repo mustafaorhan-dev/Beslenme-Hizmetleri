@@ -1470,8 +1470,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
-.donut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-.chart-area-pie { height: 165px; }
+.donut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+.chart-area-pie { height: 130px; }
 .chart-note { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim, #94a3b8); text-align: center; line-height: 1.4; }
 #recordsTable th, #recordsTable td { text-align: center; }
 #recordsTable th:first-child, #recordsTable td:first-child { text-align: left; }

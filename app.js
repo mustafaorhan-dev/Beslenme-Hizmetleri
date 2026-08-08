@@ -5368,10 +5368,11 @@ function renderYearlyCharts() {
     if (empty) empty.style.display = 'none';
     canvas.style.display = 'block';
     var parent = canvas.parentElement;
-    var w = Math.min(parent.offsetWidth || 300, parent.clientWidth || 300);
-    var h = Math.min(parent.offsetHeight || 230, parent.clientHeight || 230);
+    var w = Math.min(parent.offsetWidth || 300, parent.clientWidth || 300, 240);
+    var h = Math.min(parent.offsetHeight || 130, parent.clientHeight || 130);
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
+    canvas.style.margin = '0 auto';
     var ctx = canvas.getContext('2d');
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
@@ -5387,7 +5388,7 @@ function renderYearlyCharts() {
         maintainAspectRatio: false,
         animation: { duration: 900, easing: 'easeOutCubic' },
         plugins: {
-          legend: { position: 'bottom', labels: { color: textColor, font: { size: 12, family: 'Inter' }, boxWidth: 12, padding: 14 } },
+          legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 10 } },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 10, cornerRadius: 8,
