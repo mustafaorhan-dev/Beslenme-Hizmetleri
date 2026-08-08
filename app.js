@@ -3671,7 +3671,8 @@ function renderAll() {
   renderWeeklyComparison();
   renderMonthlyComparison();
   renderYearlyComparison();
-  renderYearlyCharts();
+  var yillikContent = document.getElementById('content-yillik');
+  if (yillikContent && yillikContent.classList.contains('active')) renderYearlyCharts();
   renderAnomalies();
   renderHaccp();
   renderYagTable();
