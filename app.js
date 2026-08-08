@@ -5390,8 +5390,8 @@ function renderYearlyCharts() {
         plugins: {
           legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 10 } },
           tooltip: {
-            backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
-            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 10, cornerRadius: 8,
+            backgroundColor: 'rgba(0,0,0,1)', titleColor: '#ffffff', bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1, padding: 10, cornerRadius: 8,
             callbacks: { label: function(c) { return ' ' + c.label; } }
           },
           valueLabels: false
