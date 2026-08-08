@@ -3621,6 +3621,7 @@ function renderAll() {
   renderSparklines();
   renderWeeklyComparison();
   renderMonthlyComparison();
+  renderYearlyComparison();
   renderAnomalies();
   renderHaccp();
   renderYagTable();
@@ -3931,12 +3932,15 @@ function renderWeeklyComparison() {
   var lastKisi = sum(lastWeek, 'toplam');
   var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+  var thisTurnike = sum(thisWeek, 'turnike');
+  var lastTurnike = sum(lastWeek, 'turnike');
 
   badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
 
   var items = [
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -3995,6 +3999,8 @@ function renderMonthlyComparison() {
   var lastKisi = sum(lastMonth, 'toplam');
   var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+  var thisTurnike = sum(thisMonth, 'turnike');
+  var lastTurnike = sum(lastMonth, 'turnike');
 
   var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
@@ -4002,6 +4008,7 @@ function renderMonthlyComparison() {
   var items = [
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -4010,6 +4017,71 @@ function renderMonthlyComparison() {
     + '<span class="comparison-old">GEÇEN AY</span>'
     + '<span class="comparison-arrow"></span>'
     + '<span class="comparison-new">BU AY</span>'
+    + '<span class="comparison-diff">FARK</span>'
+    + '</div>'
+    + items.map(function(it) {
+    var diff = it.val - it.prev;
+    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
+    return '<div class="comparison-item">'
+      + '<span class="comparison-label">' + it.label + '</span>'
+      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
+      + '</div>';
+  }).join('');
+}
+
+function renderYearlyComparison() {
+  const card = document.getElementById('yearlyCompCard');
+  const grid = document.getElementById('yearlyCompGrid');
+  const badge = document.getElementById('yearlyCompBadge');
+  if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
+
+  var now = new Date();
+  var thisStart = new Date(now.getFullYear(), 0, 1);
+  var thisEnd = now;
+  var lastStart = new Date(now.getFullYear() - 1, 0, 1);
+  var lastEnd = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+
+  function fmt(d) { var y = d.getFullYear(); var m = String(d.getMonth()+1).padStart(2,'0'); var day = String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
+  function inRange(r, start, end) { return r.tarih >= fmt(start) && r.tarih <= fmt(end); }
+
+  var thisYear = records.filter(function(r) { return inRange(r, thisStart, thisEnd); });
+  var lastYear = records.filter(function(r) { return inRange(r, lastStart, lastEnd); });
+
+  if (thisYear.length === 0 && lastYear.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  function sum(arr, field) { return arr.reduce(function(s, r) { return s + (r[field] || 0); }, 0); }
+
+  var thisAtik = sum(thisYear, 'atik');
+  var lastAtik = sum(lastYear, 'atik');
+  var thisYemek = sum(thisYear, 'yemek');
+  var lastYemek = sum(lastYear, 'yemek');
+  var thisKisi = sum(thisYear, 'toplam');
+  var lastKisi = sum(lastYear, 'toplam');
+  var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
+  var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+  var thisTurnike = sum(thisYear, 'turnike');
+  var lastTurnike = sum(lastYear, 'turnike');
+
+  badge.textContent = now.getFullYear() + ' vs ' + (now.getFullYear() - 1);
+
+  var items = [
+    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+  ];
+
+  grid.innerHTML = '<div class="comparison-header-row">'
+    + '<span class="comparison-label">VERİ TÜRÜ</span>'
+    + '<span class="comparison-old">GEÇEN YIL</span>'
+    + '<span class="comparison-arrow"></span>'
+    + '<span class="comparison-new">BU YIL</span>'
     + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(function(it) {
