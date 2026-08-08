@@ -5377,7 +5377,7 @@ function renderYearlyCharts() {
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
     var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
     var chart = new Chart(ctx, {
-      type: 'doughnut',
+      type: 'pie',
       data: {
         labels: [sel + ' (Bu Yıl): ' + fmt(thisTotal) + unitLabel, prev + ' (Geçen Yıl): ' + fmt(prevTotal) + unitLabel],
         datasets: [{ data: [thisTotal, prevTotal], backgroundColor: [color, color + '55'], borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2 }]
@@ -5385,7 +5385,6 @@ function renderYearlyCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '62%',
         animation: { duration: 900, easing: 'easeOutCubic' },
         plugins: {
           legend: { position: 'bottom', labels: { color: textColor, font: { size: 12, family: 'Inter' }, boxWidth: 12, padding: 14 } },
