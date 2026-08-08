@@ -3531,8 +3531,13 @@ function exportAllCSV() {
   });
 }
 
+var exportRunning = false;
+function exportDelay(ms) { return new Promise(function(res) { setTimeout(res, ms); }); }
+
 async function exportEverything() {
+  if (exportRunning) return;
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  exportRunning = true;
   showToast('Tüm veriler indiriliyor...', 'info');
   var yemekler = loadYemekler() || [];
   var tasks = [];
@@ -3540,11 +3545,17 @@ async function exportEverything() {
   if (haccpRecords.length > 0) tasks.push(exportHaccpCSV);
   if (yemekler.length > 0) tasks.push(exportYemekCSV);
   if (records.length > 0) tasks.push(exportDataSettings);
-  tasks.forEach(function(fn, i) {
-    setTimeout(function() { fn(); }, i * 700);
-  });
+  if (tasks.length > 0) {
+    tasks[0]();
+    for (var i = 1; i < tasks.length; i++) {
+      await exportDelay(700);
+      tasks[i]();
+    }
+  }
   try { await exportMenuJSON(); } catch (e) { }
-  setTimeout(function() { showToast('Tüm veriler indirildi.', 'success'); }, tasks.length * 700 + 500);
+  await exportDelay(300);
+  exportRunning = false;
+  showToast('Tüm veriler indirildi.', 'success');
 }
 
 function exportDataSettings() {
@@ -6602,6 +6613,7 @@ function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem i
 
 async function exportMenuJSON() {
   const allData = await fetchMenuData();
+  if (!allData || Object.keys(allData).length === 0) return;
   const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
