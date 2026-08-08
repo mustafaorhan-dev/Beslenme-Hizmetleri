@@ -5359,6 +5359,7 @@ function renderYearlyCharts() {
   });
 
   // Yıllık özet tablosu (grafiklerden ÖNCE çizilir ki bir grafik hatası tabloyu bozmasın)
+  try {
   var summaryCard = document.getElementById('yillikSummaryCard');
   var summaryGrid = document.getElementById('yillikCompGrid');
   var badge = document.getElementById('yillikCompBadge');
@@ -5402,8 +5403,9 @@ function renderYearlyCharts() {
         + '</div>';
     }).join('');
   }
+  } catch (e) { console.warn('yillik summary:', e); }
 
-  function makeYillikDonut(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
+  function makeYillikTotalBar(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     var empty = document.getElementById(emptyId);
@@ -5415,44 +5417,59 @@ function renderYearlyCharts() {
     if (empty) empty.style.display = 'none';
     canvas.style.display = 'block';
     var parent = canvas.parentElement;
-    var w = Math.min(parent.offsetWidth || 300, parent.clientWidth || 300, 240);
-    var h = Math.min(parent.offsetHeight || 130, parent.clientHeight || 130);
+    var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+    var h = Math.min(parent.offsetHeight || 180, parent.clientHeight || 180);
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
-    canvas.style.margin = '0 auto';
     var ctx = canvas.getContext('2d');
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
+    var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
     var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
     var chart = new Chart(ctx, {
-      type: 'pie',
+      type: 'bar',
       data: {
-        labels: [sel + ' (Bu Yıl): ' + fmt(thisTotal) + unitLabel, prev + ' (Geçen Yıl): ' + fmt(prevTotal) + unitLabel],
-        datasets: [{ data: [thisTotal, prevTotal], backgroundColor: [color, color + '55'], borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2 }]
+        labels: [sel + ' (Bu Yıl)', prev + ' (Geçen Yıl)'],
+        datasets: [{
+          label: 'Toplam',
+          data: [thisTotal, prevTotal],
+          backgroundColor: [color, color + '55'],
+          borderColor: [color, color],
+          borderWidth: 0,
+          borderRadius: 6,
+          maxBarThickness: 70,
+          barPercentage: 0.55,
+          categoryPercentage: 0.6
+        }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 900, easing: 'easeOutCubic' },
+        interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 10 } },
+          legend: { display: false },
           tooltip: {
             backgroundColor: 'rgba(0,0,0,1)', titleColor: '#ffffff', bodyColor: '#ffffff',
-            borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1, padding: 10, cornerRadius: 8,
-            callbacks: { label: function(c) { return ' ' + c.label; } }
+            borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1, padding: 8, cornerRadius: 8,
+            callbacks: { label: function(c) { return ' ' + fmt(c.parsed.y) + unitLabel; } }
           },
-          valueLabels: false
+          valueLabels: true
+        },
+        scales: {
+          x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
         }
       },
-      plugins: [pieValueLabelPlugin]
+      plugins: [chartValueLabelPlugin]
     });
     chartInstances.set(canvasId, chart);
   }
 
-  try { makeYillikDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('donut uretim:', e); }
-  try { makeYillikDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('donut turnike:', e); }
-  try { makeYillikDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('donut ogrenci:', e); }
-  try { makeYillikDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('donut atik:', e); }
+  try { makeYillikTotalBar('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('toplam uretim:', e); }
+  try { makeYillikTotalBar('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('toplam turnike:', e); }
+  try { makeYillikTotalBar('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
+  try { makeYillikTotalBar('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('toplam atik:', e); }
 
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
     var canvas = document.getElementById(canvasId);
@@ -5597,40 +5614,6 @@ const chartValueLabelPlugin = {
           ctx.fillText(display, bar.x, bar.y - 7);
         }
       });
-    });
-  }
-};
-
-const pieValueLabelPlugin = {
-  id: 'pieValueLabels',
-  afterDraw(chart) {
-    if (chart.config.type !== 'pie' && chart.config.type !== 'doughnut') return;
-    const ctx = chart.ctx;
-    const meta = chart.getDatasetMeta(0);
-    const ds = chart.data.datasets[0];
-    const total = ds.data.reduce((s, v) => s + (Number(v) || 0), 0);
-    if (!total) return;
-    meta.data.forEach((arc, i) => {
-      const value = Number(ds.data[i]) || 0;
-      if (value <= 0) return;
-      const mid = (arc.startAngle + arc.endAngle) / 2;
-      const radius = (arc.outerRadius + arc.innerRadius) / 2;
-      const x = arc.x + Math.cos(mid) * radius * 0.55;
-      const y = arc.y + Math.sin(mid) * radius * 0.55;
-      const pct = Math.round(value / total * 100);
-      const display = value >= 1000 ? (value / 1000).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + 'B' : Math.round(value).toLocaleString('tr-TR');
-      ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.45)';
-      ctx.shadowBlur = 3;
-      ctx.fillText(display, x, y - 5);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.font = 'bold 10px Inter, sans-serif';
-      ctx.fillText('%' + pct, x, y + 12);
-      ctx.restore();
     });
   }
 };
