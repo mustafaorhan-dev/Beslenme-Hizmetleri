@@ -603,11 +603,10 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .btn-primary {
   background: var(--gradient-main);
   color: #fff;
-  box-shadow: 0 0 20px rgba(99,102,241,0.3);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 24px rgba(99,102,241,0.45);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
 .btn-secondary {
