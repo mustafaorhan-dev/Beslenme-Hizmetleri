@@ -5449,6 +5449,10 @@ function renderYearlyCharts() {
       text: isDark ? '#e2e8f0' : '#1e293b',
       grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
     };
+    var thisArr = monthLabels.map(function(_, m) { return getThis(thisData[m]); });
+    var prevArr = monthLabels.map(function(_, m) { return getPrev(prevData[m]); });
+    var allMax = Math.max.apply(null, thisArr.concat(prevArr));
+    var suggestedMax = allMax > 0 ? allMax * 1.18 : 10;
     var chart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -5456,7 +5460,7 @@ function renderYearlyCharts() {
         datasets: [
           {
             label: sel + ' (Bu Yıl)',
-            data: monthLabels.map(function(_, m) { return getThis(thisData[m]); }),
+            data: thisArr,
             backgroundColor: metricColor,
             borderColor: metricColor,
             borderWidth: 0,
@@ -5467,7 +5471,7 @@ function renderYearlyCharts() {
           },
           {
             label: prev + ' (Geçen Yıl)',
-            data: monthLabels.map(function(_, m) { return getPrev(prevData[m]); }),
+            data: prevArr,
             backgroundColor: metricColor + '35',
             borderColor: metricColor,
             borderWidth: 1,
@@ -5544,7 +5548,8 @@ const chartValueLabelPlugin = {
     if (!chart.options.plugins.valueLabels) return;
     const pos = chart.options.plugins.valueLabelsPosition || 'above';
     const ctx = chart.ctx;
-      chart.data.datasets.forEach((ds, di) => {
+    const top = chart.chartArea ? chart.chartArea.top : 0;
+    chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
         const val = ds.data[idx];
@@ -5554,19 +5559,23 @@ const chartValueLabelPlugin = {
         const display = isTL
           ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
           : val === 0 ? '0' : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
-        if (pos === 'inside') {
+        let inside = pos === 'inside';
+        let labelX = bar.x;
+        let labelY;
+        if (!inside && bar.y - 7 < top) inside = true;
+        if (inside) {
           ctx.fillStyle = '#000000';
-          ctx.font = 'bold 11px Inter, sans-serif';
-          ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(display, bar.x, bar.y + bar.height / 2);
+          labelY = bar.y + bar.height / 2;
+          if (bar.y < top) labelY = Math.max(top + 12, labelY);
         } else {
           ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
-          ctx.font = 'bold 11px Inter, sans-serif';
-          ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
-          ctx.fillText(display, bar.x, bar.y - 7);
+          labelY = bar.y - 7;
         }
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(display, labelX, labelY);
       });
     });
   }
@@ -6167,7 +6176,12 @@ function renderHarcamaMenuChart(oran) {
       },
       scales: {
         x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: colors.text, font: { size: 12, family: 'Inter' } }, grid: { color: colors.grid } }
+          y: {
+            beginAtZero: true,
+            suggestedMax: suggestedMax,
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            grid: { color: colors.grid }
+          }
       }
     },
     plugins: [chartValueLabelPlugin]
