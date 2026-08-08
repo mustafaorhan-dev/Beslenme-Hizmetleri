@@ -844,13 +844,13 @@
             <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.8rem">
-          <span style="color:var(--text-muted)">Tarih:</span>
-          <input type="date" id="yagTarihBas" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
-          <span style="color:var(--text-muted)">—</span>
-          <input type="date" id="yagTarihBit" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
-          <span style="color:var(--text-muted);margin-left:0.5rem">Yağ Türü:</span>
-          <select id="yagTurFilter" onchange="yagPage=0;renderYagTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+        <div class="filter-bar">
+          <span class="filter-label">Tarih:</span>
+          <input type="date" id="yagTarihBas" onchange="yagPage=0;renderYagTable()">
+          <span class="filter-sep">—</span>
+          <input type="date" id="yagTarihBit" onchange="yagPage=0;renderYagTable()">
+          <span class="filter-label">Yağ Türü:</span>
+          <select id="yagTurFilter" onchange="yagPage=0;renderYagTable()">
             <option value="">Tümü</option>
             <option value="Ayçiçek Yağı">Ayçiçek Yağı</option>
             <option value="Mısırözü Yağı">Mısırözü Yağı</option>
@@ -927,13 +927,13 @@
             <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:0.8rem">
-          <span style="color:var(--text-muted)">Tarih:</span>
-          <input type="date" id="ambalajTarihBas" onchange="ambalajPage=0;renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
-          <span style="color:var(--text-muted)">—</span>
-          <input type="date" id="ambalajTarihBit" onchange="ambalajPage=0;renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
-          <span style="color:var(--text-muted);margin-left:0.5rem">Atık Türü:</span>
-          <select id="ambalajTurFilter" onchange="ambalajPage=0;renderAmbalajTable()" style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+        <div class="filter-bar">
+          <span class="filter-label">Tarih:</span>
+          <input type="date" id="ambalajTarihBas" onchange="ambalajPage=0;renderAmbalajTable()">
+          <span class="filter-sep">—</span>
+          <input type="date" id="ambalajTarihBit" onchange="ambalajPage=0;renderAmbalajTable()">
+          <span class="filter-label">Atık Türü:</span>
+          <select id="ambalajTurFilter" onchange="ambalajPage=0;renderAmbalajTable()">
             <option value="">Tümü</option>
             <option value="Metal">Metal</option>
             <option value="Plastik">Plastik</option>
@@ -1275,23 +1275,6 @@
   </div>
 
   <!-- ===== SHORTCUTS HELP ===== -->
-  <div class="shortcuts-overlay" id="shortcutsHelp" onclick="if(event.target===this)this.style.display='none'">
-    <div class="shortcuts-panel">
-      <div class="shortcuts-header">
-        <h2>Klavye Kısayolları</h2>
-        <button class="modal-close" onclick="document.getElementById('shortcutsHelp').style.display='none'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="shortcuts-body">
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>N</kbd><span>Yeni kayıt ekle</span></div>
-        <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>E</kbd><span>CSV dışa aktar</span></div>
-        <div class="shortcut-row"><kbd>Esc</kbd><span>Formu / paneli kapat</span></div>
-        <div class="shortcut-row"><kbd>?</kbd><span>Bu yardımı göster/gizle</span></div>
-      </div>
-    </div>
-  </div>
-
   <!-- ===== MODAL ===== -->
   <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
     <div class="modal" id="modal">
@@ -1461,7 +1444,7 @@
       </div>
       <form id="yagForm" onsubmit="saveYagRecord(event)">
         <div class="modal-body" style="padding:1rem">
-          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-grid">
             <div class="form-group">
               <label for="yfTarih">Tarih <span class="required">*</span></label>
               <input type="date" id="yfTarih" required />
@@ -1514,7 +1497,7 @@
       </div>
       <form id="ambalajForm" onsubmit="saveAmbalajRecord(event)">
         <div class="modal-body" style="padding:1rem">
-          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-grid">
             <div class="form-group">
               <label for="afTarih">Tarih <span class="required">*</span></label>
               <input type="date" id="afTarih" required />
@@ -1867,7 +1850,7 @@
         <div class="manual-section" id="man-yedek">
           <h3>12. Veri Yedekleme ve Senkronizasyon</h3>
           <ul>
-            <li><strong>Dışa Aktar:</strong> Tüm verileri Excel/CSV olarak bilgisayara indirir.</li>
+            <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
             <li><strong>Supabase'e Yedekle:</strong> Tüm verileri bulut veritabanına (Supabase) yükler; farklı cihazlar arasında senkronizasyon sağlar.</li>
             <li><strong>Supabase'ten Çek:</strong> Buluttaki verileri cihaza indirir.</li>
             <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
