@@ -181,13 +181,9 @@
         </button>
       </nav>
       <div class="sidebar-actions">
-        <button class="tab-btn" onclick="exportData()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Dışa Aktar</span>
-        </button>
-        <button class="tab-btn" onclick="exportAllCSV()" title="Tüm CSV dosyalarını indir">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M12 10v6"/><path d="M9 14.5l3 3 3-3"/></svg>
-          <span>Dışa Aktar (Atık Verisi)</span>
+        <button class="tab-btn" onclick="exportEverything()" title="Tüm verileri tek seferde indir (kayıt CSV, HACCP CSV, yemek listesi CSV, menü ve yedek JSON)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Tümünü İndir</span>
         </button>
         <button class="tab-btn" onclick="syncAllToSupabase()">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
@@ -402,6 +398,7 @@
             </thead>
             <tbody id="anomalyTbody"></tbody>
           </table>
+          <div class="pagination" id="anomalyPagination" style="display:none"></div>
         </div>
       </div>
 

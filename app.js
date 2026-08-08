@@ -3531,6 +3531,22 @@ function exportAllCSV() {
   });
 }
 
+async function exportEverything() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  showToast('Tüm veriler indiriliyor...', 'info');
+  var yemekler = loadYemekler() || [];
+  var tasks = [];
+  if (records.length > 0) tasks.push(exportDataCSV);
+  if (haccpRecords.length > 0) tasks.push(exportHaccpCSV);
+  if (yemekler.length > 0) tasks.push(exportYemekCSV);
+  if (records.length > 0) tasks.push(exportDataSettings);
+  tasks.forEach(function(fn, i) {
+    setTimeout(function() { fn(); }, i * 700);
+  });
+  try { await exportMenuJSON(); } catch (e) { }
+  setTimeout(function() { showToast('Tüm veriler indirildi.', 'success'); }, tasks.length * 700 + 500);
+}
+
 function exportDataSettings() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const settings = {
@@ -3978,6 +3994,10 @@ function renderWeeklyComparison() {
   }).join('');
 }
 
+var anomalyPage = 0;
+var ANOMALY_PAGE_SIZE = 5;
+var anomalyList = [];
+
 function renderAnomalies() {
   const card = document.getElementById('anomalyCard');
   const table = document.getElementById('anomalyTable');
@@ -3990,15 +4010,21 @@ function renderAnomalies() {
   var stddev = Math.sqrt(values.reduce(function(s, v) { return s + (v - mean) * (v - mean); }, 0) / values.length);
   var threshold = mean + 1.5 * stddev;
 
-  var anomalies = records.filter(function(r) { return (r.atik || 0) > threshold; });
-  anomalies.sort(function(a, b) { return a.tarih < b.tarih ? 1 : -1; });
+  anomalyList = records.filter(function(r) { return (r.atik || 0) > threshold; });
+  anomalyList.sort(function(a, b) { return a.tarih < b.tarih ? 1 : -1; });
 
-  if (anomalies.length === 0) { card.style.display = 'none'; return; }
+  if (anomalyList.length === 0) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-  badge.textContent = anomalies.length + ' anormal gün';
+  badge.textContent = anomalyList.length + ' anormal gün';
+
+  var totalPages = Math.max(1, Math.ceil(anomalyList.length / ANOMALY_PAGE_SIZE));
+  if (anomalyPage >= totalPages) anomalyPage = totalPages - 1;
+  if (anomalyPage < 0) anomalyPage = 0;
+  var start = anomalyPage * ANOMALY_PAGE_SIZE;
+  var pageList = anomalyList.slice(start, start + ANOMALY_PAGE_SIZE);
 
   table.style.display = 'table';
-  tbody.innerHTML = anomalies.map(function(r) {
+  tbody.innerHTML = pageList.map(function(r) {
     var pctAbove = mean > 0 ? ((r.atik - mean) / mean) * 100 : 0;
     var por = (r.porsiyon || 400) > 0 ? ((r.atik || 0) * 1000 / (r.porsiyon || 400)) : 0;
     return '<tr>'
@@ -4010,6 +4036,33 @@ function renderAnomalies() {
       + '<td>' + (r.yemek_adi || '—') + '</td>'
       + '</tr>';
   }).join('');
+
+  renderAnomalyPagination();
+}
+
+function renderAnomalyPagination() {
+  const container = document.getElementById('anomalyPagination');
+  if (!container) return;
+  const totalPages = Math.max(1, Math.ceil(anomalyList.length / ANOMALY_PAGE_SIZE));
+  if (totalPages <= 1) { container.style.display = 'none'; container.innerHTML = ''; return; }
+  container.style.display = 'flex';
+  const p = anomalyPage + 1;
+  let html = '';
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToAnomalyPage(1)" ${p === 1 ? 'disabled' : ''}>&#171;</button>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToAnomalyPage(${p - 1})" ${p === 1 ? 'disabled' : ''}>&#8249;</button>`;
+  html += `<span class="page-info">${p} / ${totalPages}</span>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToAnomalyPage(${p + 1})" ${p === totalPages ? 'disabled' : ''}>&#8250;</button>`;
+  html += `<button class="btn btn-ghost btn-sm" onclick="goToAnomalyPage(${totalPages})" ${p === totalPages ? 'disabled' : ''}>&#187;</button>`;
+  html += `<span class="page-total">${anomalyList.length} kayıt</span>`;
+  container.innerHTML = html;
+}
+
+function goToAnomalyPage(p) {
+  const totalPages = Math.max(1, Math.ceil(anomalyList.length / ANOMALY_PAGE_SIZE));
+  if (p < 1) p = 1;
+  if (p > totalPages) p = totalPages;
+  anomalyPage = p - 1;
+  renderAnomalies();
 }
 
 function renderLastRecordsTable() {
