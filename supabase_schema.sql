@@ -141,8 +141,12 @@ CREATE TABLE IF NOT EXISTS config (
 
 ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 
--- NOT: Bu tabloya hiçbir policy eklenmez. Sadece service_role erişebilir.
--- Bu sayede kullanıcı hash'leri ve ayarlar anon key'den korunur.
+-- NOT: Yalnızca 'role_permissions' satırına anon erişim izni verilir.
+-- Böylece yönetim panelindeki rol izin kutucukları tüm cihazlara senkronize
+-- olur, diğer config satırları (örn. legacy user hash'leri) korunur.
+CREATE POLICY "anon_role_permissions" ON config FOR ALL
+  USING (key = 'role_permissions')
+  WITH CHECK (key = 'role_permissions');
 
 -- Varsayılan config değerleri (Service Role ile çalıştırılmalı)
 -- Aşağıdaki INSERT'ler service_role ile çalıştırılmalıdır, anon ile çalışmaz.
@@ -191,7 +195,8 @@ CREATE POLICY "user_logs_all" ON user_logs FOR ALL
 CREATE TABLE IF NOT EXISTS user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'asci' CHECK (role IN ('admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci')),
+  -- NOT: role kolonunda CHECK kısıtı yoktur (özel roller + 'sadece_gorme' için).
+  role TEXT NOT NULL DEFAULT 'asci',
   display_name TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -214,7 +219,8 @@ ALTER TABLE user_roles ADD CONSTRAINT user_roles_auth_user_id_key UNIQUE (auth_u
 CREATE TABLE IF NOT EXISTS app_users (
   username TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'asci' CHECK (role IN ('admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci')),
+  -- NOT: role kolonunda CHECK kısıtı yoktur (özel roller + 'sadece_gorme' için).
+  role TEXT NOT NULL DEFAULT 'asci',
   display_name TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -224,3 +230,19 @@ ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 -- Geçiş döneminde herkes görebilir/yazabilir; ileride sadece authenticated'e kısıtlanır
 CREATE POLICY "app_users_all" ON app_users FOR ALL
   USING (true) WITH CHECK (true);
+
+-- ============================================
+-- MİGRASYON (MEVCUT VERİTABANI İÇİN)
+-- ============================================
+-- Bu komutları Supabase Dashboard > SQL Editor'da çalıştırın.
+-- 'sadece_gorme' (görme yetkili) ve yönetim panelinde eklenen özel rollerin
+-- app_users / user_roles tablolarına kaydedilememesi sorununu çözer.
+-- Aksi halde yönetim panelinden eklenen görme yetkili kullanıcı başka
+-- cihazlarda giriş listesinde GÖRÜNMEZ.
+--
+-- ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
+-- ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
+--
+-- CREATE POLICY "anon_role_permissions" ON config FOR ALL
+--   USING (key = 'role_permissions')
+--   WITH CHECK (key = 'role_permissions');

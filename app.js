@@ -382,6 +382,17 @@ function getRolePermissions(role) {
   return rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
 }
 
+function hasPerm(key) {
+  if (getRole() === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(getRole());
+  return !!(perm && perm[key]);
+}
+function canAddRecords() { return hasPerm('canAddRecord'); }
+function canEditHaccpRecords() { return hasPerm('canEditHaccp'); }
+function canEditYagRecords() { return hasPerm('canEditYag'); }
+function canEditAmbalajRecords() { return hasPerm('canEditAmbalaj'); }
+function canEditMenuRecords() { return hasPerm('canEditMenu'); }
+
 function loadRolePermissions() {
   try {
     var saved = localStorage.getItem(ROLE_PERMISSIONS_KEY);
@@ -750,15 +761,15 @@ function apRenderRolePermissions() {
     canEditMenu: 'Menüdüzenleyebilir',
     canSaveMenu: 'Menüyü kaydedebilir',
     canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
-    canAddRecord: 'Yeni kayıt ekleyebilir',
+    canAddRecord: 'Yeni kayıt ekleyebilir (depo sıcaklık, atık yağ, ambalaj)',
     canExport: 'Dışa aktarabilir',
     canSync: 'Senkronizasyon yapabilir',
     canSeeAdminPanel: 'Yönetim panelini görebilir',
-    canEditHaccp: 'Gıda güvenliği kayıtlarını düzenleyebilir',
+    canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
     canEditDepo: 'Depo adlarını düzenleyebilir',
     canEditHarcamaOran: 'Harcama oranını değiştirebilir',
-    canEditYag: 'Atık yağ kayıtlarını düzenleyebilir',
-    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir',
+    canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
+    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
     canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
@@ -1662,6 +1673,7 @@ async function syncHaccpFromSupabase() {
 
 // ─── HACCP 100 KAYIT OLUŞTUR ────────────────────────────────────────────────
 function generateHaccpSample() {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var depo = 'Soğuk Hava Deposu 5';
   var now = Date.now();
   var records = [];
@@ -1734,6 +1746,7 @@ var HACCP_FIELD_MAP = {
 };
 
 function importHaccpFile(event) {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -2523,11 +2536,12 @@ function renderHaccpSicaklik() {
   if (haccpSicaklikPage < 0) haccpSicaklikPage = totalPages - 1;
   var start = haccpSicaklikPage * haccpSicaklikPageSize;
   var pageRecords = records.slice(start, start + haccpSicaklikPageSize);
+  var canEdit = canEditHaccpRecords();
 
   // batch bar
   var batchBar = document.getElementById('haccpBatchBar');
   var batchCount = document.getElementById('haccpBatchCount');
-  if (haccpSelectedIds.size > 0) {
+  if (canEdit && haccpSelectedIds.size > 0) {
     batchBar.style.display = 'flex';
     batchCount.textContent = haccpSelectedIds.size + ' seçili';
   } else {
@@ -2535,34 +2549,40 @@ function renderHaccpSicaklik() {
   }
 
   // header checkbox state
-  var allSelected = pageRecords.every(function(r) { return haccpSelectedIds.has(r.id); });
+  var allSelected = canEdit && pageRecords.every(function(r) { return haccpSelectedIds.has(r.id); });
 
   tbody.innerHTML = pageRecords.map(r => {
     var checked = haccpSelectedIds.has(r.id) ? ' checked' : '';
     const depoAd = r.depoAd || ('Depo ' + r.depoNo);
     const durum = sicaklikDurum(r.sicaklik, depoAd);
+    var chkCell = canEdit
+      ? '<td><input type="checkbox" class="haccp-select-chk" data-id="' + r.id + '"' + checked + ' onchange="haccpToggleSelect(' + r.id + ')" style="cursor:pointer"></td>'
+      : '<td></td>';
+    var actionCell = canEdit
+      ? '<td>' +
+        '<button class="btn-icon" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="Düzenle">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="deleteHaccpRecord(\'sicaklik\',' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+        '</button>' +
+        '</td>'
+      : '<td></td>';
     return `<tr>
-      <td><input type="checkbox" class="haccp-select-chk" data-id="${r.id}"${checked} onchange="haccpToggleSelect(${r.id})" style="cursor:pointer"></td>
+      ${chkCell}
       <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
       <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</strong></td>
       <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : '—'}</td>
       <td>${r.not || '—'}</td>
-      <td>
-        <button class="btn-icon" onclick="editHaccpRecord('sicaklik',${r.id})" title="Düzenle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-icon" onclick="deleteHaccpRecord('sicaklik',${r.id})" title="Sil" style="color:var(--danger)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </button>
-      </td>
+      ${actionCell}
     </tr>`;
   }).join('');
 
   // update header checkbox
   var headerChk = document.getElementById('haccpSelectAllChk');
-  if (headerChk) headerChk.checked = allSelected;
+  if (headerChk) { headerChk.checked = allSelected; headerChk.disabled = !canEdit; }
 
   if (nav) {
     nav.style.display = totalPages > 1 ? 'block' : 'none';
@@ -2622,12 +2642,14 @@ function haccpSicaklikPageNext() {
 }
 
 function haccpToggleSelect(id) {
+  if (!canEditHaccpRecords()) return;
   if (haccpSelectedIds.has(id)) haccpSelectedIds.delete(id);
   else haccpSelectedIds.add(id);
   renderHaccpSicaklik();
 }
 
 function haccpToggleSelectAll(checked) {
+  if (!canEditHaccpRecords()) return;
   var records = getHaccpRecords('sicaklik');
   var filterSelect = document.getElementById('haccpSicaklikDepoFilter');
   if (filterSelect && filterSelect.value) {
@@ -2647,7 +2669,8 @@ function haccpToggleSelectAll(checked) {
   renderHaccpSicaklik();
 }
 
-async function haccpDeleteSelected() { if (!requireAdmin()) return;
+async function haccpDeleteSelected() {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
   if (!confirm('Seçili ' + haccpSelectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
   var ids = [...haccpSelectedIds];
@@ -2669,6 +2692,11 @@ async function haccpDeleteSelected() { if (!requireAdmin()) return;
 
 function openHaccpModal(type, id) {
   if (type !== 'sicaklik') return showToast('Sadece sıcaklık kaydı destekleniyor.', 'error');
+  if (id) {
+    if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   editingHaccpType = type;
   editingHaccpId = id || null;
 
@@ -2713,8 +2741,12 @@ function closeHaccpModal() {
 }
 
 function saveHaccpRecord(e) {
-  if (!requireAdmin()) return;
   e.preventDefault();
+  if (editingHaccpId) {
+    if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   const type = editingHaccpType;
   let rec = { id: editingHaccpId || Date.now(), type };
 
@@ -2743,7 +2775,8 @@ function editHaccpRecord(type, id) {
   openHaccpModal(type, id);
 }
 
-async function deleteHaccpRecord(type, id) { if (!requireAdmin()) return;
+async function deleteHaccpRecord(type, id) {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   if (supabaseClient) {
     try {
@@ -2952,6 +2985,7 @@ function closeSidebar() {
 }
 // ─── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id = null) {
+  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   editingId = id;
   formModified = false;
   const overlay = document.getElementById('modalOverlay');
@@ -3070,7 +3104,7 @@ function scheduleRender() {
 
 // ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
 function saveRecord(e) {
-  if (!requireAdmin()) return;
+  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   e.preventDefault();
 
   const fYemek = document.getElementById('fYemek');
@@ -3140,7 +3174,8 @@ function saveRecord(e) {
 }
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
-async function deleteRecord(id) { if (!requireAdmin()) return;
+async function deleteRecord(id) {
+  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   if (supabaseClient) {
     try {
@@ -3228,12 +3263,14 @@ function renderPagination() {
 
 // ─── BULK DELETE ───────────────────────────────────────────────────────────────
 function toggleSelect(id) {
+  if (!canAddRecords()) return;
   if (selectedIds.has(id)) selectedIds.delete(id);
   else selectedIds.add(id);
   renderRecordsTable();
 }
 
 function toggleSelectAll() {
+  if (!canAddRecords()) return;
   const page = getPaginatedRecords();
   const allSelected = page.every(r => selectedIds.has(r.id));
   if (allSelected) {
@@ -3248,7 +3285,7 @@ function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
   const count = document.getElementById('bulkCount');
   if (!bar || !count) return;
-  if (selectedIds.size > 0) {
+  if (canAddRecords() && selectedIds.size > 0) {
     bar.style.display = 'flex';
     count.textContent = selectedIds.size + ' seçili';
   } else {
@@ -3256,7 +3293,8 @@ function updateBulkBar() {
   }
 }
 
-function deleteSelected() { if (!requireAdmin()) return;
+function deleteSelected() {
+  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (selectedIds.size === 0) {
     showToast('Seçili kayıt yok.', 'error');
     return;
@@ -3994,14 +4032,15 @@ function renderRecordsTable() {
 
 function buildRow(r, showActions) {
   const dateStr = displayDate(r.tarih);
+  const canMutate = showActions && canAddRecords();
 
-  const checkbox = showActions ? `
+  const checkbox = canMutate ? `
     <td>
       <input type="checkbox" class="row-checkbox" ${selectedIds.has(r.id) ? 'checked' : ''}
         onchange="toggleSelect(${r.id})" />
-    </td>` : '';
+    </td>` : (showActions ? '<td></td>' : '');
 
-  const actions = showActions ? `
+  const actions = canMutate ? `
     <td>
       <div style="display:flex;gap:0.4rem">
         <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">
@@ -4011,7 +4050,7 @@ function buildRow(r, showActions) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         </button>
       </div>
-    </td>` : '';
+    </td>` : (showActions ? '<td></td>' : '');
 
   const mealBadge = r.yemek_adi ? `<span class="meal-badge">${escapeHtml(r.yemek_adi)}</span>` : '';
 
@@ -4505,7 +4544,7 @@ function yfTarifSil(idx) {
   renderYemekForm(ad, kalori, alerjen);
 }
 
-function saveYemekForm() { if (!requireAdmin()) return;
+function saveYemekForm() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const ad = document.getElementById('yf_ad').value.trim();
   if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
@@ -4547,7 +4586,7 @@ function editYemek(id) {
   showYemekForm(id);
 }
 
-function deleteYemek(id) { if (!requireAdmin()) return;
+function deleteYemek(id) { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
   let list = loadYemekler();
   list = list.filter(y => y.id !== id);
@@ -6456,7 +6495,7 @@ function removeNoteRow(ni) {
   showToast('Not ' + (ni + 1) + ' silindi.', 'success');
 }
 
-function clearWeeklyMenu() { if (!requireAdmin()) return;
+function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
   const monday = getWeekStartDate(menuWeekOffset);
   GUNLER.forEach((_, i) => {
@@ -6729,23 +6768,27 @@ function renderYagTable() {
   if (yagPage >= totalPages) yagPage = Math.max(0, totalPages - 1);
   const start = yagPage * YAG_PAGE_SIZE;
   const pageItems = sorted.slice(start, start + YAG_PAGE_SIZE);
+  var canEditYag = canEditYagRecords();
 
   tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
+    var actionCell = canEditYag
+      ? '<td>' +
+        '<button class="btn-icon" onclick="editYagRecord(' + r.id + ')" title="Düzenle">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="deleteYagRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+        '</button>' +
+        '</td>'
+      : '<td></td>';
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.makbuzNo || '—')}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
       <td>${(r.miktar || 0).toFixed(1)}</td>
       <td>${escapeHtml(r.not || '—')}</td>
-      <td>
-        <button class="btn-icon" onclick="editYagRecord(${r.id})" title="Düzenle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-icon" onclick="deleteYagRecord(${r.id})" title="Sil" style="color:var(--danger)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </button>
-      </td>
+      ${actionCell}
     </tr>`;
   }).join('');
 
@@ -6767,6 +6810,11 @@ function renderYagTable() {
 }
 
 function openYagModal(id) {
+  if (id) {
+    if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   editingYagId = id || null;
   const overlay = document.getElementById('yagModal');
   const title = document.getElementById('yagModalTitle');
@@ -6799,8 +6847,12 @@ function closeYagModal() {
 }
 
 function saveYagRecord(e) {
-  if (!requireAdmin()) return;
   e.preventDefault();
+  if (editingYagId) {
+    if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
 
   const rec = {
     id: editingYagId || Date.now(),
@@ -6831,7 +6883,7 @@ function saveYagRecord(e) {
 function editYagRecord(id) { openYagModal(id); }
 
 async function deleteYagRecord(id) {
-  if (!requireAdmin()) return;
+  if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
@@ -7142,21 +7194,26 @@ function renderAmbalajTable() {
   const start = ambalajPage * AMBALAJ_PAGE_SIZE;
   const pageItems = sorted.slice(start, start + AMBALAJ_PAGE_SIZE);
 
+  var canEditAmbalaj = canEditAmbalajRecords();
+
   tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
+    var actionCell = canEditAmbalaj
+      ? '<td>' +
+        '<button class="btn-icon" onclick="editAmbalajRecord(' + r.id + ')" title="Düzenle">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="deleteAmbalajRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+        '</button>' +
+        '</td>'
+      : '<td></td>';
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
       <td>${(r.miktar || 0) < 1 && (r.birim || 'kg') === 'kg' ? (r.miktar || 0).toFixed(3) : (r.miktar || 0).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted)">${(r.birim || 'kg') === 'g' ? 'gr' : 'kg'}</span></td>
       <td>${escapeHtml(r.not || '—')}</td>
-      <td>
-        <button class="btn-icon" onclick="editAmbalajRecord(${r.id})" title="Düzenle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-icon" onclick="deleteAmbalajRecord(${r.id})" title="Sil" style="color:var(--danger)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </button>
-      </td>
+      ${actionCell}
     </tr>`;
   }).join('');
 
@@ -7178,6 +7235,11 @@ function renderAmbalajTable() {
 }
 
 function openAmbalajModal(id) {
+  if (id) {
+    if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   editingAmbalajId = id || null;
   const overlay = document.getElementById('ambalajModal');
   const title = document.getElementById('ambalajModalTitle');
@@ -7223,8 +7285,12 @@ function closeAmbalajModal() {
 }
 
 function saveAmbalajRecord(e) {
-  if (!requireAdmin()) return;
   e.preventDefault();
+  if (editingAmbalajId) {
+    if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
 
   var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
 
@@ -7257,7 +7323,7 @@ function saveAmbalajRecord(e) {
 function editAmbalajRecord(id) { openAmbalajModal(id); }
 
 async function deleteAmbalajRecord(id) {
-  if (!requireAdmin()) return;
+  if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();
