@@ -227,6 +227,7 @@ let lastPollData = null;
 // ─── CHART YEAR / MONTH FILTER ──────────────────────────────────────────────
 let chartYearFilter = String(new Date().getFullYear());
 let chartMonthFilter = 0;
+let yillikYearFilter = String(new Date().getFullYear());
 function getAvailableYears() {
   const years = new Set();
   records.forEach(r => {
@@ -2876,6 +2877,53 @@ function exportChartsPDF() {
   setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
 }
 
+function exportYillikPDF() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const printWin = window.open('', '_blank', 'width=1100,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  const canvases = document.querySelectorAll('#content-yillik canvas');
+  const replacements = [];
+  canvases.forEach(c => {
+    const img = document.createElement('img');
+    img.src = c.toDataURL();
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    replacements.push({ old: c.outerHTML, new: img.outerHTML });
+  });
+  let html = document.getElementById('content-yillik').innerHTML;
+  replacements.forEach(r => { html = html.replace(r.old, r.new); });
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Yıllık Karşılaştırma - Atık Kontrol</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1.5rem; }
+      .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; page-break-inside: avoid; }
+      .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+      canvas { max-width: 100%; height: auto !important; }
+      .chart-empty { font-size: 0.8rem; color: #999; text-align: center; padding: 2rem; }
+      .chart-year-filter { display: none; }
+      .toolbar-actions { display: none; }
+      .comparison-grid { font-size: 0.8rem; }
+      .comparison-item { display: flex; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px solid #eee; }
+      .comparison-label { flex: 1; font-weight: 600; }
+      .comparison-old, .comparison-new { width: 110px; text-align: right; }
+      .comparison-diff { width: 130px; text-align: center; }
+      .comparison-badge { font-weight: 700; }
+      .badge { font-size: 0.75rem; color: #555; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+    </style>
+  </head><body>
+    <h1>Yıllık Karşılaştırma - Atık Kontrol Yönetim Sistemi</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${html}
+    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+}
+
 function exportDashboardPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
@@ -2981,6 +3029,7 @@ async function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('content-' + name).classList.add('active');
   if (name === 'charts') drawAllCharts();
+  if (name === 'yillik') renderYearlyCharts();
   if (name === 'harcama') renderHarcamaMenu();
   if (name === 'report') renderReport();
   if (name === 'records') {
@@ -2998,7 +3047,7 @@ async function switchTab(name) {
   if (name === 'haccp') loadHaccpData();
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
-  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
+  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -5234,6 +5283,224 @@ function renderChartYearFilter() {
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ─── YILLIK KARŞILAŞTIRMA TAB ───────────────────────────────────────────────
+function renderYillikYearFilter() {
+  const container = document.getElementById('yillikYearFilter');
+  if (!container) return;
+  const years = getAvailableYears();
+  if (years.length > 0 && years.indexOf(Number(yillikYearFilter)) === -1) {
+    yillikYearFilter = String(years[years.length - 1]);
+  }
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">Karşılaştırma Yılı:</label>';
+  html += '<select onchange="setYillikYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+  years.forEach(function(y) {
+    var sel = yillikYearFilter === String(y) ? ' selected' : '';
+    html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
+  });
+  html += '</select>';
+  html += '<span style="font-size:0.8rem;color:var(--text-muted);margin-left:4px">' + Number(yillikYearFilter) + ' vs ' + (Number(yillikYearFilter) - 1) + '</span>';
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function setYillikYear(year) {
+  yillikYearFilter = String(year);
+  renderYillikYearFilter();
+  renderYearlyCharts();
+}
+
+function renderYearlyCharts() {
+  renderYillikYearFilter();
+  var sel = Number(yillikYearFilter);
+  var prev = sel - 1;
+  var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+
+  function buildYear(year) {
+    var monthly = [];
+    for (var m = 0; m < 12; m++) monthly.push({ uretim: 0, turnike: 0, atik: 0, toplam: 0 });
+    records.forEach(function(r) {
+      if (!r.tarih) return;
+      var d = new Date(r.tarih + 'T12:00:00');
+      if (isNaN(d) || d.getFullYear() !== year) return;
+      var m = d.getMonth();
+      monthly[m].uretim += Number(r.yemek) || 0;
+      monthly[m].turnike += Number(r.turnike) || 0;
+      monthly[m].toplam += Number(r.toplam) || 0;
+      monthly[m].atik += Number(r.atik) || 0;
+    });
+    return monthly;
+  }
+
+  var thisData = buildYear(sel);
+  var prevData = buildYear(prev);
+
+  // Eski yıllık grafikleri temizle
+  chartInstances.forEach(function(c, id) {
+    if (String(id).indexOf('canvasYillik') === 0) { c.destroy(); chartInstances.delete(id); }
+  });
+
+  function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var empty = document.getElementById(emptyId);
+    var hasThis = thisData.some(function(v) { return getThis(v) > 0; });
+    var hasPrev = prevData.some(function(v) { return getPrev(v) > 0; });
+    if (!hasThis && !hasPrev) {
+      if (empty) empty.style.display = 'block';
+      canvas.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    canvas.style.display = 'block';
+    var parent = canvas.parentElement;
+    var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+    var h = Math.min(parent.offsetHeight || 280, parent.clientHeight || 280);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var colors = {
+      text: isDark ? '#e2e8f0' : '#1e293b',
+      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    };
+    var chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: sel + ' (Bu Yıl)',
+            data: monthLabels.map(function(_, m) { return getThis(thisData[m]); }),
+            backgroundColor: metricColor,
+            borderColor: metricColor,
+            borderWidth: 0,
+            borderRadius: 6,
+            barPercentage: 0.7,
+            categoryPercentage: 0.55,
+            maxBarThickness: 44,
+          },
+          {
+            label: prev + ' (Geçen Yıl)',
+            data: monthLabels.map(function(_, m) { return getPrev(prevData[m]); }),
+            backgroundColor: metricColor + '35',
+            borderColor: metricColor,
+            borderWidth: 1,
+            borderDash: [4, 4],
+            borderRadius: 6,
+            barPercentage: 0.7,
+            categoryPercentage: 0.55,
+            maxBarThickness: 44,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+        animation: { duration: 900, easing: 'easeOutCubic' },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+          tooltip: {
+            backgroundColor: '#000000',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.2)',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            bodyFont: { size: 11, family: 'Inter' },
+            titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+            callbacks: {
+              label: function(c) { return ' ' + c.dataset.label + ': ' + (c.parsed.y >= 100 ? Math.round(c.parsed.y) : c.parsed.y >= 10 ? c.parsed.y.toFixed(1) : c.parsed.y.toFixed(2)); }
+            }
+          },
+          valueLabels: true,
+        },
+        scales: {
+          x: {
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            grid: { color: colors.grid }
+          }
+        },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            var m = elements[0].index;
+            var recs = records.filter(function(r) {
+              if (!r.tarih) return false;
+              var d = new Date(r.tarih + 'T12:00:00');
+              return !isNaN(d) && d.getFullYear() === sel && d.getMonth() === m;
+            });
+            if (recs.length > 0) showChartDetailModal(monthLabels[m] + ' ' + sel + ' (Bu Yıl)', recs);
+          }
+        }
+      },
+      plugins: [chartValueLabelPlugin]
+    });
+    chartInstances.set(canvasId, chart);
+  }
+
+  makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; });
+  makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; });
+  makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; });
+
+  // Yıllık özet tablosu
+  var summaryCard = document.getElementById('yillikSummaryCard');
+  var summaryGrid = document.getElementById('yillikCompGrid');
+  var badge = document.getElementById('yillikCompBadge');
+  if (!summaryGrid || !badge) return;
+  function yearTotals(monthly) {
+    var t = { atik: 0, yemek: 0, turnike: 0, toplam: 0 };
+    monthly.forEach(function(v) {
+      t.atik += v.atik; t.yemek += v.uretim; t.turnike += v.turnike; t.toplam += v.toplam;
+    });
+    return t;
+  }
+  var cur = yearTotals(thisData);
+  var past = yearTotals(prevData);
+  var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
+  var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
+  if (summaryCard) {
+    var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0;
+    summaryCard.style.display = hasAny ? 'block' : 'none';
+  }
+  badge.textContent = sel + ' vs ' + prev;
+
+  var items = [
+    { label: 'Toplam Atık (kg)', val: cur.atik, prev: past.atik, unit: ' kg', lower: true, decimals: 1 },
+    { label: 'Toplam Üretim', val: cur.yemek, prev: past.yemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: 'Turnike Geçiş', val: cur.turnike, prev: past.turnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Kişi Başı Atık (gr)', val: curKisiAtik, prev: pastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+  ];
+
+  summaryGrid.innerHTML = '<div class="comparison-header-row">'
+    + '<span class="comparison-label">VERİ TÜRÜ</span>'
+    + '<span class="comparison-old">GEÇEN YIL</span>'
+    + '<span class="comparison-arrow"></span>'
+    + '<span class="comparison-new">BU YIL</span>'
+    + '<span class="comparison-diff">FARK</span>'
+    + '</div>'
+    + items.map(function(it) {
+    var diff = it.val - it.prev;
+    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
+    return '<div class="comparison-item">'
+      + '<span class="comparison-label">' + it.label + '</span>'
+      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
+      + '</div>';
+  }).join('');
 }
 
 const chartInstances = new Map();
