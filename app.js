@@ -3941,10 +3941,10 @@ function renderWeeklyComparison() {
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">TARİH</span>'
-    + '<span class="comparison-old">ATIK</span>'
+    + '<span class="comparison-label">VERİ TÜRÜ</span>'
+    + '<span class="comparison-old">GEÇEN HAFTA</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">ATIK</span>'
+    + '<span class="comparison-new">BU HAFTA</span>'
     + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(function(it) {
@@ -4006,10 +4006,10 @@ function renderMonthlyComparison() {
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">TARİH</span>'
-    + '<span class="comparison-old">ATIK</span>'
+    + '<span class="comparison-label">VERİ TÜRÜ</span>'
+    + '<span class="comparison-old">GEÇEN AY</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">ATIK</span>'
+    + '<span class="comparison-new">BU AY</span>'
     + '<span class="comparison-diff">FARK</span>'
     + '</div>'
     + items.map(function(it) {
