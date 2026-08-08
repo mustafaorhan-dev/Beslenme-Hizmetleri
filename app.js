@@ -5358,53 +5358,6 @@ function renderYearlyCharts() {
     if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) { c.destroy(); chartInstances.delete(id); }
   });
 
-  // Yıllık özet tablosu (grafiklerden ÖNCE çizilir ki bir grafik hatası tabloyu bozmasın)
-  try {
-  var summaryCard = document.getElementById('yillikSummaryCard');
-  var summaryGrid = document.getElementById('yillikCompGrid');
-  var badge = document.getElementById('yillikCompBadge');
-  if (summaryGrid && badge) {
-    var cur = curTot;
-    var past = pastTot;
-    var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
-    var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
-    if (summaryCard) {
-      var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || cur.ogrenci > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0 || past.ogrenci > 0;
-      summaryCard.style.display = hasAny ? 'block' : 'none';
-    }
-    badge.textContent = sel + ' vs ' + prev;
-
-    var items = [
-      { label: 'Toplam Atık (kg)', val: cur.atik, prev: past.atik, unit: ' kg', lower: true, decimals: 1 },
-      { label: 'Toplam Üretim', val: cur.yemek, prev: past.yemek, unit: ' porsiyon', lower: false, decimals: 0 },
-      { label: 'Turnike Geçiş', val: cur.turnike, prev: past.turnike, unit: '', lower: false, decimals: 0 },
-      { label: 'Öğrenci Sayısı', val: cur.ogrenci, prev: past.ogrenci, unit: '', lower: false, decimals: 0 },
-      { label: 'Kişi Başı Atık (gr)', val: curKisiAtik, prev: pastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
-    ];
-
-    summaryGrid.innerHTML = '<div class="comparison-header-row">'
-      + '<span class="comparison-label">VERİ TÜRÜ</span>'
-      + '<span class="comparison-old">GEÇEN YIL</span>'
-      + '<span class="comparison-arrow"></span>'
-      + '<span class="comparison-new">BU YIL</span>'
-      + '<span class="comparison-diff">FARK</span>'
-      + '</div>'
-      + items.map(function(it) {
-      var diff = it.val - it.prev;
-      var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-      var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-      var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
-      return '<div class="comparison-item">'
-        + '<span class="comparison-label">' + it.label + '</span>'
-        + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-        + '<span class="comparison-arrow">→</span>'
-        + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-        + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
-        + '</div>';
-    }).join('');
-  }
-  } catch (e) { console.warn('yillik summary:', e); }
-
   function makeYillikTotalBar(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -5437,9 +5390,9 @@ function renderYearlyCharts() {
           borderColor: [color, color],
           borderWidth: 0,
           borderRadius: 6,
-          maxBarThickness: 70,
-          barPercentage: 0.55,
-          categoryPercentage: 0.6
+          maxBarThickness: 55,
+          barPercentage: 0.5,
+          categoryPercentage: 0.55
         }]
       },
       options: {
@@ -5454,7 +5407,8 @@ function renderYearlyCharts() {
             borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1, padding: 8, cornerRadius: 8,
             callbacks: { label: function(c) { return ' ' + fmt(c.parsed.y) + unitLabel; } }
           },
-          valueLabels: true
+          valueLabels: true,
+          valueLabelsPosition: 'inside'
         },
         scales: {
           x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
