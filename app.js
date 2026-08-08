@@ -5465,9 +5465,9 @@ function renderYearlyCharts() {
             borderColor: metricColor,
             borderWidth: 0,
             borderRadius: 6,
-            barPercentage: 0.7,
-            categoryPercentage: 0.55,
-            maxBarThickness: 44,
+            barPercentage: 0.8,
+            categoryPercentage: 0.65,
+            maxBarThickness: 60,
           },
           {
             label: prev + ' (Geçen Yıl)',
@@ -5477,9 +5477,9 @@ function renderYearlyCharts() {
             borderWidth: 1,
             borderDash: [4, 4],
             borderRadius: 6,
-            barPercentage: 0.7,
-            categoryPercentage: 0.55,
-            maxBarThickness: 44,
+            barPercentage: 0.8,
+            categoryPercentage: 0.65,
+            maxBarThickness: 60,
           }
         ]
       },
