@@ -271,6 +271,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: true,
     canSeeProduction: true,
     canAddRecord: false,
+    canAddHaccp: false,
+    canAddYag: false,
+    canAddAmbalaj: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -289,6 +292,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: true,
+    canAddHaccp: true,
+    canAddYag: true,
+    canAddAmbalaj: true,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -307,6 +313,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
+    canAddHaccp: false,
+    canAddYag: false,
+    canAddAmbalaj: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -325,6 +334,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
+    canAddHaccp: false,
+    canAddYag: false,
+    canAddAmbalaj: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -343,6 +355,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
+    canAddHaccp: false,
+    canAddYag: false,
+    canAddAmbalaj: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -361,6 +376,9 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
+    canAddHaccp: false,
+    canAddYag: false,
+    canAddAmbalaj: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -388,6 +406,9 @@ function hasPerm(key) {
   return !!(perm && perm[key]);
 }
 function canAddRecords() { return hasPerm('canAddRecord'); }
+function canAddHaccpRecords() { return hasPerm('canAddHaccp'); }
+function canAddYagRecords() { return hasPerm('canAddYag'); }
+function canAddAmbalajRecords() { return hasPerm('canAddAmbalaj'); }
 function canEditHaccpRecords() { return hasPerm('canEditHaccp'); }
 function canEditYagRecords() { return hasPerm('canEditYag'); }
 function canEditAmbalajRecords() { return hasPerm('canEditAmbalaj'); }
@@ -739,7 +760,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -761,7 +782,10 @@ function apRenderRolePermissions() {
     canEditMenu: 'Menüdüzenleyebilir',
     canSaveMenu: 'Menüyü kaydedebilir',
     canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
-    canAddRecord: 'Yeni kayıt ekleyebilir (depo sıcaklık, atık yağ, ambalaj)',
+    canAddRecord: 'Yeni kayıt ekleyebilir (üretim/tüketim/atık ana kayıtlar)',
+    canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
+    canAddYag: 'Atık yağ kaydı ekleyebilir',
+    canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
     canExport: 'Dışa aktarabilir',
     canSync: 'Senkronizasyon yapabilir',
     canSeeAdminPanel: 'Yönetim panelini görebilir',
@@ -1128,7 +1152,16 @@ function applyViewerRestrictions() {
     document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
   }
   if (!perm.canAddRecord) {
-    document.querySelectorAll('.btn-primary[onclick*="openModal"], .btn-primary[onclick*="openHaccpModal"], .btn-primary[onclick*="openYagModal"], .btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll('.btn-primary[onclick*="openModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
+  if (!perm.canAddHaccp) {
+    document.querySelectorAll('.btn-primary[onclick*="openHaccpModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
+  if (!perm.canAddYag) {
+    document.querySelectorAll('.btn-primary[onclick*="openYagModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
+  if (!perm.canAddAmbalaj) {
+    document.querySelectorAll('.btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
   }
   if (!perm.canEditHaccp) {
     document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) {
@@ -1673,7 +1706,7 @@ async function syncHaccpFromSupabase() {
 
 // ─── HACCP 100 KAYIT OLUŞTUR ────────────────────────────────────────────────
 function generateHaccpSample() {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var depo = 'Soğuk Hava Deposu 5';
   var now = Date.now();
   var records = [];
@@ -1746,7 +1779,7 @@ var HACCP_FIELD_MAP = {
 };
 
 function importHaccpFile(event) {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -2695,7 +2728,7 @@ function openHaccpModal(type, id) {
   if (id) {
     if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
   editingHaccpType = type;
   editingHaccpId = id || null;
@@ -2745,7 +2778,7 @@ function saveHaccpRecord(e) {
   if (editingHaccpId) {
     if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
   const type = editingHaccpType;
   let rec = { id: editingHaccpId || Date.now(), type };
@@ -6813,7 +6846,7 @@ function openYagModal(id) {
   if (id) {
     if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
   editingYagId = id || null;
   const overlay = document.getElementById('yagModal');
@@ -6851,7 +6884,7 @@ function saveYagRecord(e) {
   if (editingYagId) {
     if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
 
   const rec = {
@@ -7238,7 +7271,7 @@ function openAmbalajModal(id) {
   if (id) {
     if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
   editingAmbalajId = id || null;
   const overlay = document.getElementById('ambalajModal');
@@ -7289,7 +7322,7 @@ function saveAmbalajRecord(e) {
   if (editingAmbalajId) {
     if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
 
   var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
