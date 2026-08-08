@@ -5358,6 +5358,51 @@ function renderYearlyCharts() {
     if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) { c.destroy(); chartInstances.delete(id); }
   });
 
+  // Yıllık özet tablosu (grafiklerden ÖNCE çizilir ki bir grafik hatası tabloyu bozmasın)
+  var summaryCard = document.getElementById('yillikSummaryCard');
+  var summaryGrid = document.getElementById('yillikCompGrid');
+  var badge = document.getElementById('yillikCompBadge');
+  if (summaryGrid && badge) {
+    var cur = curTot;
+    var past = pastTot;
+    var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
+    var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
+    if (summaryCard) {
+      var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || cur.ogrenci > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0 || past.ogrenci > 0;
+      summaryCard.style.display = hasAny ? 'block' : 'none';
+    }
+    badge.textContent = sel + ' vs ' + prev;
+
+    var items = [
+      { label: 'Toplam Atık (kg)', val: cur.atik, prev: past.atik, unit: ' kg', lower: true, decimals: 1 },
+      { label: 'Toplam Üretim', val: cur.yemek, prev: past.yemek, unit: ' porsiyon', lower: false, decimals: 0 },
+      { label: 'Turnike Geçiş', val: cur.turnike, prev: past.turnike, unit: '', lower: false, decimals: 0 },
+      { label: 'Öğrenci Sayısı', val: cur.ogrenci, prev: past.ogrenci, unit: '', lower: false, decimals: 0 },
+      { label: 'Kişi Başı Atık (gr)', val: curKisiAtik, prev: pastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+    ];
+
+    summaryGrid.innerHTML = '<div class="comparison-header-row">'
+      + '<span class="comparison-label">VERİ TÜRÜ</span>'
+      + '<span class="comparison-old">GEÇEN YIL</span>'
+      + '<span class="comparison-arrow"></span>'
+      + '<span class="comparison-new">BU YIL</span>'
+      + '<span class="comparison-diff">FARK</span>'
+      + '</div>'
+      + items.map(function(it) {
+      var diff = it.val - it.prev;
+      var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+      var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+      var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
+      return '<div class="comparison-item">'
+        + '<span class="comparison-label">' + it.label + '</span>'
+        + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+        + '<span class="comparison-arrow">→</span>'
+        + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
+        + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
+        + '</div>';
+    }).join('');
+  }
+
   function makeYillikDonut(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -5404,10 +5449,10 @@ function renderYearlyCharts() {
     chartInstances.set(canvasId, chart);
   }
 
-  makeYillikDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, '');
-  makeYillikDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, '');
-  makeYillikDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, '');
-  makeYillikDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg');
+  try { makeYillikDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('donut uretim:', e); }
+  try { makeYillikDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('donut turnike:', e); }
+  try { makeYillikDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('donut ogrenci:', e); }
+  try { makeYillikDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('donut atik:', e); }
 
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
     var canvas = document.getElementById(canvasId);
@@ -5515,54 +5560,10 @@ function renderYearlyCharts() {
     chartInstances.set(canvasId, chart);
   }
 
-  makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; });
-  makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; });
-  makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#a855f7', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; });
-  makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; });
-
-  // Yıllık özet tablosu
-  var summaryCard = document.getElementById('yillikSummaryCard');
-  var summaryGrid = document.getElementById('yillikCompGrid');
-  var badge = document.getElementById('yillikCompBadge');
-  if (!summaryGrid || !badge) return;
-  var cur = curTot;
-  var past = pastTot;
-  var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
-  var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
-  if (summaryCard) {
-    var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || cur.ogrenci > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0 || past.ogrenci > 0;
-    summaryCard.style.display = hasAny ? 'block' : 'none';
-  }
-  badge.textContent = sel + ' vs ' + prev;
-
-  var items = [
-    { label: 'Toplam Atık (kg)', val: cur.atik, prev: past.atik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: cur.yemek, prev: past.yemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: 'Turnike Geçiş', val: cur.turnike, prev: past.turnike, unit: '', lower: false, decimals: 0 },
-    { label: 'Öğrenci Sayısı', val: cur.ogrenci, prev: past.ogrenci, unit: '', lower: false, decimals: 0 },
-    { label: 'Kişi Başı Atık (gr)', val: curKisiAtik, prev: pastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
-  ];
-
-  summaryGrid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">VERİ TÜRÜ</span>'
-    + '<span class="comparison-old">GEÇEN YIL</span>'
-    + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">BU YIL</span>'
-    + '<span class="comparison-diff">FARK</span>'
-    + '</div>'
-    + items.map(function(it) {
-    var diff = it.val - it.prev;
-    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
-    return '<div class="comparison-item">'
-      + '<span class="comparison-label">' + it.label + '</span>'
-      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
-      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
-      + '</div>';
-  }).join('');
+  try { makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; }); } catch (e) { console.warn('yillik uretim:', e); }
+  try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
+  try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#a855f7', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
+  try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
 }
 
 const chartInstances = new Map();
