@@ -3983,6 +3983,8 @@ function renderWeeklyComparison() {
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
   var thisTurnike = sum(thisWeek, 'turnike');
   var lastTurnike = sum(lastWeek, 'turnike');
+  var thisOgrenci = sum(thisWeek, 'ogrenci');
+  var lastOgrenci = sum(lastWeek, 'ogrenci');
 
   badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
 
@@ -3990,6 +3992,7 @@ function renderWeeklyComparison() {
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -4050,6 +4053,8 @@ function renderMonthlyComparison() {
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
   var thisTurnike = sum(thisMonth, 'turnike');
   var lastTurnike = sum(lastMonth, 'turnike');
+  var thisOgrenci = sum(thisMonth, 'ogrenci');
+  var lastOgrenci = sum(lastMonth, 'ogrenci');
 
   var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
@@ -4058,6 +4063,7 @@ function renderMonthlyComparison() {
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -4116,6 +4122,8 @@ function renderYearlyComparison() {
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
   var thisTurnike = sum(thisYear, 'turnike');
   var lastTurnike = sum(lastYear, 'turnike');
+  var thisOgrenci = sum(thisYear, 'ogrenci');
+  var lastOgrenci = sum(lastYear, 'ogrenci');
 
   badge.textContent = now.getFullYear() + ' vs ' + (now.getFullYear() - 1);
 
@@ -4123,6 +4131,7 @@ function renderYearlyComparison() {
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -5320,7 +5329,7 @@ function renderYearlyCharts() {
 
   function buildYear(year) {
     var monthly = [];
-    for (var m = 0; m < 12; m++) monthly.push({ uretim: 0, turnike: 0, atik: 0, toplam: 0 });
+    for (var m = 0; m < 12; m++) monthly.push({ uretim: 0, turnike: 0, ogrenci: 0, atik: 0, toplam: 0 });
     records.forEach(function(r) {
       if (!r.tarih) return;
       var d = new Date(r.tarih + 'T12:00:00');
@@ -5328,6 +5337,7 @@ function renderYearlyCharts() {
       var m = d.getMonth();
       monthly[m].uretim += Number(r.yemek) || 0;
       monthly[m].turnike += Number(r.turnike) || 0;
+      monthly[m].ogrenci += Number(r.ogrenci) || 0;
       monthly[m].toplam += Number(r.toplam) || 0;
       monthly[m].atik += Number(r.atik) || 0;
     });
@@ -5450,6 +5460,7 @@ function renderYearlyCharts() {
 
   makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; });
   makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; });
+  makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#a855f7', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; });
   makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; });
 
   // Yıllık özet tablosu
@@ -5458,9 +5469,9 @@ function renderYearlyCharts() {
   var badge = document.getElementById('yillikCompBadge');
   if (!summaryGrid || !badge) return;
   function yearTotals(monthly) {
-    var t = { atik: 0, yemek: 0, turnike: 0, toplam: 0 };
+    var t = { atik: 0, yemek: 0, turnike: 0, ogrenci: 0, toplam: 0 };
     monthly.forEach(function(v) {
-      t.atik += v.atik; t.yemek += v.uretim; t.turnike += v.turnike; t.toplam += v.toplam;
+      t.atik += v.atik; t.yemek += v.uretim; t.turnike += v.turnike; t.ogrenci += v.ogrenci; t.toplam += v.toplam;
     });
     return t;
   }
@@ -5469,7 +5480,7 @@ function renderYearlyCharts() {
   var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
   var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
   if (summaryCard) {
-    var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0;
+    var hasAny = cur.atik > 0 || cur.yemek > 0 || cur.turnike > 0 || cur.ogrenci > 0 || past.atik > 0 || past.yemek > 0 || past.turnike > 0 || past.ogrenci > 0;
     summaryCard.style.display = hasAny ? 'block' : 'none';
   }
   badge.textContent = sel + ' vs ' + prev;
@@ -5478,6 +5489,7 @@ function renderYearlyCharts() {
     { label: 'Toplam Atık (kg)', val: cur.atik, prev: past.atik, unit: ' kg', lower: true, decimals: 1 },
     { label: 'Toplam Üretim', val: cur.yemek, prev: past.yemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Turnike Geçiş', val: cur.turnike, prev: past.turnike, unit: '', lower: false, decimals: 0 },
+    { label: 'Öğrenci Sayısı', val: cur.ogrenci, prev: past.ogrenci, unit: '', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: curKisiAtik, prev: pastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
