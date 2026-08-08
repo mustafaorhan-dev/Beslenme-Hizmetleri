@@ -3671,6 +3671,7 @@ function renderAll() {
   renderWeeklyComparison();
   renderMonthlyComparison();
   renderYearlyComparison();
+  renderYearlyCharts();
   renderAnomalies();
   renderHaccp();
   renderYagTable();
