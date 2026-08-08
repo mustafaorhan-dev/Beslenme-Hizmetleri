@@ -7066,7 +7066,7 @@ function drawYagChart() {
         data: values,
         backgroundColor: '#f97316',
         borderRadius: 4,
-        barPercentage: 0.7
+        barPercentage: 0.5
       }]
     },
     options: {
