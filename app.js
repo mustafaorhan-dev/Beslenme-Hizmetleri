@@ -5347,10 +5347,64 @@ function renderYearlyCharts() {
   var thisData = buildYear(sel);
   var prevData = buildYear(prev);
 
+  function fieldTotal(monthly, field) { return monthly.reduce(function(s, v) { return s + (v[field] || 0); }, 0); }
+  var curTot = { uretim: fieldTotal(thisData, 'uretim'), turnike: fieldTotal(thisData, 'turnike'), ogrenci: fieldTotal(thisData, 'ogrenci'), atik: fieldTotal(thisData, 'atik'), toplam: fieldTotal(thisData, 'toplam') };
+  var pastTot = { uretim: fieldTotal(prevData, 'uretim'), turnike: fieldTotal(prevData, 'turnike'), ogrenci: fieldTotal(prevData, 'ogrenci'), atik: fieldTotal(prevData, 'atik'), toplam: fieldTotal(prevData, 'toplam') };
+
   // Eski yıllık grafikleri temizle
   chartInstances.forEach(function(c, id) {
-    if (String(id).indexOf('canvasYillik') === 0) { c.destroy(); chartInstances.delete(id); }
+    if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) { c.destroy(); chartInstances.delete(id); }
   });
+
+  function makeYillikDonut(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var empty = document.getElementById(emptyId);
+    if (thisTotal <= 0 && prevTotal <= 0) {
+      if (empty) empty.style.display = 'block';
+      canvas.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    canvas.style.display = 'block';
+    var parent = canvas.parentElement;
+    var w = Math.min(parent.offsetWidth || 300, parent.clientWidth || 300);
+    var h = Math.min(parent.offsetHeight || 230, parent.clientHeight || 230);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var textColor = isDark ? '#e2e8f0' : '#1e293b';
+    var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
+    var chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: [sel + ' (Bu Yıl): ' + fmt(thisTotal) + unitLabel, prev + ' (Geçen Yıl): ' + fmt(prevTotal) + unitLabel],
+        datasets: [{ data: [thisTotal, prevTotal], backgroundColor: [color, color + '55'], borderColor: 'rgba(255,255,255,0.15)', borderWidth: 2 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        animation: { duration: 900, easing: 'easeOutCubic' },
+        plugins: {
+          legend: { position: 'bottom', labels: { color: textColor, font: { size: 12, family: 'Inter' }, boxWidth: 12, padding: 14 } },
+          tooltip: {
+            backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 10, cornerRadius: 8,
+            callbacks: { label: function(c) { return ' ' + c.dataset.label + ': ' + fmt(c.parsed) + unitLabel; } }
+          },
+          valueLabels: false
+        }
+      }
+    });
+    chartInstances.set(canvasId, chart);
+  }
+
+  makeYillikDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, '');
+  makeYillikDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, '');
+  makeYillikDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, '');
+  makeYillikDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg');
 
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
     var canvas = document.getElementById(canvasId);
@@ -5468,15 +5522,8 @@ function renderYearlyCharts() {
   var summaryGrid = document.getElementById('yillikCompGrid');
   var badge = document.getElementById('yillikCompBadge');
   if (!summaryGrid || !badge) return;
-  function yearTotals(monthly) {
-    var t = { atik: 0, yemek: 0, turnike: 0, ogrenci: 0, toplam: 0 };
-    monthly.forEach(function(v) {
-      t.atik += v.atik; t.yemek += v.uretim; t.turnike += v.turnike; t.ogrenci += v.ogrenci; t.toplam += v.toplam;
-    });
-    return t;
-  }
-  var cur = yearTotals(thisData);
-  var past = yearTotals(prevData);
+  var cur = curTot;
+  var past = pastTot;
   var curKisiAtik = cur.toplam > 0 ? cur.atik / cur.toplam : 0;
   var pastKisiAtik = past.toplam > 0 ? past.atik / past.toplam : 0;
   if (summaryCard) {

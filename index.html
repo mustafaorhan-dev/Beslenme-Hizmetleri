@@ -1148,6 +1148,57 @@
           </button>
         </div>
       </div>
+      <div class="donut-grid">
+
+        <!-- DONUT: ÜRETİM -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Toplam Üretim Dağılımı</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutUretim">
+            <canvas id="canvasDonutUretim"></canvas>
+            <div class="chart-empty" id="chartDonutUretimEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Bu yıl vs geçen yıl - toplam üretim (porsiyon)</div>
+        </div>
+
+        <!-- DONUT: TURNIKE -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Turnike Geçiş Dağılımı</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutTurnike">
+            <canvas id="canvasDonutTurnike"></canvas>
+            <div class="chart-empty" id="chartDonutTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Bu yıl vs geçen yıl - turnike geçiş toplamı</div>
+        </div>
+
+        <!-- DONUT: ÖĞRENCİ -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Öğrenci Turnike Geçiş Dağılımı</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutOgrenci">
+            <canvas id="canvasDonutOgrenci"></canvas>
+            <div class="chart-empty" id="chartDonutOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Bu yıl vs geçen yıl - öğrenci turnike geçiş toplamı</div>
+        </div>
+
+        <!-- DONUT: ATIK -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2>Atık Dağılımı (kg)</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutAtik">
+            <canvas id="canvasDonutAtik"></canvas>
+            <div class="chart-empty" id="chartDonutAtikEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Bu yıl vs geçen yıl - toplam atık (kg)</div>
+        </div>
+      </div>
+
       <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">Seçilen yıl, bir önceki yılla aylık bazda karşılaştırılır. Düz çubuk = seçilen yıl, kesikli çubuk = geçen yıl. Bar'a tıklayınca o ayın kayıtları açılır.</div>
       <div class="charts-grid">
 
