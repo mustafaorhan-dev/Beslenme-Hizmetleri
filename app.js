@@ -5390,9 +5390,9 @@ function renderYearlyCharts() {
           borderColor: [color, color],
           borderWidth: 0,
           borderRadius: 6,
-          maxBarThickness: 55,
-          barPercentage: 0.5,
-          categoryPercentage: 0.55
+          maxBarThickness: 72,
+          barPercentage: 0.62,
+          categoryPercentage: 0.66
         }]
       },
       options: {
