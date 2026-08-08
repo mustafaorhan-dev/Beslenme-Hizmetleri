@@ -3936,7 +3936,7 @@ function renderWeeklyComparison() {
 
   var items = [
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: '', lower: false, decimals: 0 },
+    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
@@ -4001,7 +4001,7 @@ function renderMonthlyComparison() {
 
   var items = [
     { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: '', lower: false, decimals: 0 },
+    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
     { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
