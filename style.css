@@ -335,6 +335,9 @@
 }
 [data-theme="dark"] .report-item:hover {
   background: rgba(99,102,241,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  border-color: rgba(99,102,241,0.3);
 }
 [data-theme="dark"] .toast {
   border-color: rgba(255,255,255,0.12);
@@ -1731,7 +1734,12 @@ td.porsiyon-warn {
   transition: all var(--transition);
 }
 
-.report-item:hover { background: rgba(255,255,255,0.05); }
+.report-item:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: var(--border-hover);
+}
 
 .report-item-highlight {
   background: rgba(34,211,238,0.06);
