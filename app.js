@@ -5395,7 +5395,8 @@ function renderYearlyCharts() {
           },
           valueLabels: false
         }
-      }
+      },
+      plugins: [pieValueLabelPlugin]
     });
     chartInstances.set(canvasId, chart);
   }
@@ -5592,6 +5593,40 @@ const chartValueLabelPlugin = {
           ctx.fillText(display, bar.x, bar.y - 7);
         }
       });
+    });
+  }
+};
+
+const pieValueLabelPlugin = {
+  id: 'pieValueLabels',
+  afterDraw(chart) {
+    if (chart.config.type !== 'pie' && chart.config.type !== 'doughnut') return;
+    const ctx = chart.ctx;
+    const meta = chart.getDatasetMeta(0);
+    const ds = chart.data.datasets[0];
+    const total = ds.data.reduce((s, v) => s + (Number(v) || 0), 0);
+    if (!total) return;
+    meta.data.forEach((arc, i) => {
+      const value = Number(ds.data[i]) || 0;
+      if (value <= 0) return;
+      const mid = (arc.startAngle + arc.endAngle) / 2;
+      const radius = (arc.outerRadius + arc.innerRadius) / 2;
+      const x = arc.x + Math.cos(mid) * radius * 0.55;
+      const y = arc.y + Math.sin(mid) * radius * 0.55;
+      const pct = Math.round(value / total * 100);
+      const display = value >= 1000 ? (value / 1000).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + 'B' : Math.round(value).toLocaleString('tr-TR');
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = 3;
+      ctx.fillText(display, x, y - 5);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.fillText('%' + pct, x, y + 12);
+      ctx.restore();
     });
   }
 };
