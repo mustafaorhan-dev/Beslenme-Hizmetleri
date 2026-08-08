@@ -3619,8 +3619,8 @@ function renderAll() {
   renderRecordsTable();
   renderReport();
   renderSparklines();
-  renderComparison();
   renderWeeklyComparison();
+  renderMonthlyComparison();
   renderAnomalies();
   renderHaccp();
   renderYagTable();
@@ -3898,47 +3898,6 @@ function renderKPIs() {
   }
 }
 
-function renderComparison() {
-  const card = document.getElementById('comparisonCard');
-  const grid = document.getElementById('comparisonGrid');
-  const badge = document.getElementById('comparisonBadge');
-  if (records.length < 4) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-  const mid = Math.floor(records.length / 2);
-  const first = records.slice(mid);
-  const second = records.slice(0, mid);
-  const sum = (arr, f) => arr.reduce((s, r) => s + r[f], 0);
-  const avg = (arr, f) => arr.length ? sum(arr, f) / arr.length : 0;
-  const items = [
-    { label: 'Ort. Atık (kg)', f1: avg(first, 'atik'), f2: avg(second, 'atik'), unit: ' kg', lower: true },
-    { label: 'Ort. Üretim', f1: avg(first, 'yemek'), f2: avg(second, 'yemek'), unit: '', lower: false },
-    { label: 'Ort. Geçiş', f1: avg(first, 'toplam'), f2: avg(second, 'toplam'), unit: '', lower: false },
-  ];
-  badge.textContent = `${first.length} kayıt → ${second.length} kayıt`;
-  grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">TARİH</span>'
-    + '<span class="comparison-old">ATIK</span>'
-    + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">ATIK</span>'
-    + '<span class="comparison-diff">FARK</span>'
-    + '</div>'
-    + items.map(it => {
-    const diff = it.f2 - it.f1;
-    const pct = it.f1 ? (diff / it.f1) * 100 : 0;
-    const good = it.lower ? diff < 0 : diff > 0;
-    const cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    const arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-    const diffLabel = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + it.unit;
-    return `<div class="comparison-item">
-      <span class="comparison-label">${it.label}</span>
-      <span class="comparison-old">${it.f1.toFixed(1)}${it.unit}</span>
-      <span class="comparison-arrow">→</span>
-      <span class="comparison-new">${it.f2.toFixed(1)}${it.unit}</span>
-      <span class="comparison-diff"><span class="comparison-badge ${cls}">${diffLabel}</span></span>
-    </div>`;
-  }).join('');
-}
-
 function renderWeeklyComparison() {
   const card = document.getElementById('weeklyCompCard');
   const grid = document.getElementById('weeklyCompGrid');
@@ -3992,6 +3951,69 @@ function renderWeeklyComparison() {
     var diff = it.val - it.prev;
     var pct = it.prev ? (diff / it.prev) * 100 : 0;
     var good = it.lower ? diff < 0 : diff > 0;
+    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
+    return '<div class="comparison-item">'
+      + '<span class="comparison-label">' + it.label + '</span>'
+      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
+      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
+      + '</div>';
+  }).join('');
+}
+
+function renderMonthlyComparison() {
+  const card = document.getElementById('monthlyCompCard');
+  const grid = document.getElementById('monthlyCompGrid');
+  const badge = document.getElementById('monthlyCompBadge');
+  if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
+
+  var now = new Date();
+  var thisStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var thisEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  var lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  var lastEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  function fmt(d) { var y = d.getFullYear(); var m = String(d.getMonth()+1).padStart(2,'0'); var day = String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
+  function inRange(r, start, end) { return r.tarih >= fmt(start) && r.tarih <= fmt(end); }
+
+  var thisMonth = records.filter(function(r) { return inRange(r, thisStart, thisEnd); });
+  var lastMonth = records.filter(function(r) { return inRange(r, lastStart, lastEnd); });
+
+  if (thisMonth.length === 0 && lastMonth.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  function sum(arr, field) { return arr.reduce(function(s, r) { return s + (r[field] || 0); }, 0); }
+
+  var thisAtik = sum(thisMonth, 'atik');
+  var lastAtik = sum(lastMonth, 'atik');
+  var thisYemek = sum(thisMonth, 'yemek');
+  var lastYemek = sum(lastMonth, 'yemek');
+  var thisKisi = sum(thisMonth, 'toplam');
+  var lastKisi = sum(lastMonth, 'toplam');
+  var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
+  var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+
+  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
+
+  var items = [
+    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: '', lower: false, decimals: 0 },
+    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+  ];
+
+  grid.innerHTML = '<div class="comparison-header-row">'
+    + '<span class="comparison-label">TARİH</span>'
+    + '<span class="comparison-old">ATIK</span>'
+    + '<span class="comparison-arrow"></span>'
+    + '<span class="comparison-new">ATIK</span>'
+    + '<span class="comparison-diff">FARK</span>'
+    + '</div>'
+    + items.map(function(it) {
+    var diff = it.val - it.prev;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
     var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
     var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
