@@ -4010,7 +4010,6 @@ function renderKPIs() {
     document.getElementById('kpiLastGecis').textContent = '0';
     document.getElementById('kpiTotalAtik').textContent = '0';
     document.getElementById('kpiBugunYemek').textContent = '—';
-    document.getElementById('kpiBugunAtik').textContent = '—';
     document.getElementById('kpiHaccpAlarm').textContent = '0';
     document.getElementById('kpiKalibrasyonAlarm').textContent = '0';
     renderTrend('trendAvgAtik', null);
@@ -4028,30 +4027,17 @@ function renderKPIs() {
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
 
-  // Bugünkü Üretim & Atık
+  // Bugünkü Üretim
   const todayStr = formatLocalDate(new Date());
   const todayRec = records.find(r => r.tarih === todayStr);
   const elBugunYemek = document.getElementById('kpiBugunYemek');
-  const elBugunAtik = document.getElementById('kpiBugunAtik');
-  const elBugunAtikDurum = document.getElementById('kpiBugunAtikDurum');
   const elBugunYemekSub = document.getElementById('kpiBugunYemekSub');
   if (todayRec) {
     elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
     elBugunYemekSub.textContent = 'Geçiş: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
-    elBugunAtik.textContent = (todayRec.atik || 0).toFixed(1) + ' kg';
-    const avg = parseFloat(avgAtik);
-    if (avg > 0 && (todayRec.atik||0) > avg * 1.2) {
-      elBugunAtikDurum.innerHTML = '<span style="color:#ef4444;font-size:0.7rem;font-weight:600">▲ Ortalamanın üstünde</span>';
-    } else if (avg > 0 && (todayRec.atik||0) < avg * 0.8) {
-      elBugunAtikDurum.innerHTML = '<span style="color:#10b981;font-size:0.7rem;font-weight:600">▼ Ortalamanın altında</span>';
-    } else {
-      elBugunAtikDurum.innerHTML = '<span style="color:#f59e0b;font-size:0.7rem;font-weight:600">● Ortalamaya yakın</span>';
-    }
   } else {
     elBugunYemek.textContent = '—';
     elBugunYemekSub.textContent = 'Bugün kayıt yok';
-    elBugunAtik.textContent = '—';
-    elBugunAtikDurum.innerHTML = '';
   }
 
   // HACCP Alarm: son 24 saatteki uygunsuz sıcaklıklar
