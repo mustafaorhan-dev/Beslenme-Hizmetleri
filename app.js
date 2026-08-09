@@ -8603,6 +8603,7 @@ function renderKalibrasyon() {
       <td>${displayDate(r.sonrakiKalibrasyon)}</td>
       <td>${escapeHtml(r.konum || '—')}</td>
       <td>${escapeHtml(r.sorumlu || '—')}</td>
+      <td>${escapeHtml(r.not || '—')}</td>
       ${actionCell}
     </tr>`;
   }).join('');

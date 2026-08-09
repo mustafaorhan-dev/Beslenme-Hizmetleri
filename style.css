@@ -812,6 +812,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active,
 #content-menu.active,
 #content-haccp.active,
+#content-kalibrasyon.active,
 #content-yag.active,
 #content-ambalaj.active,
 #content-harcama.active {
@@ -825,6 +826,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active::-webkit-scrollbar,
 #content-menu.active::-webkit-scrollbar,
 #content-haccp.active::-webkit-scrollbar,
+#content-kalibrasyon.active::-webkit-scrollbar,
 #content-yag.active::-webkit-scrollbar,
 #content-ambalaj.active::-webkit-scrollbar,
 #content-harcama.active::-webkit-scrollbar { width: 10px; }
@@ -834,6 +836,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active::-webkit-scrollbar-track,
 #content-menu.active::-webkit-scrollbar-track,
 #content-haccp.active::-webkit-scrollbar-track,
+#content-kalibrasyon.active::-webkit-scrollbar-track,
 #content-yag.active::-webkit-scrollbar-track,
 #content-ambalaj.active::-webkit-scrollbar-track,
 #content-harcama.active::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
@@ -843,6 +846,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active::-webkit-scrollbar-thumb,
 #content-menu.active::-webkit-scrollbar-thumb,
 #content-haccp.active::-webkit-scrollbar-thumb,
+#content-kalibrasyon.active::-webkit-scrollbar-thumb,
 #content-yag.active::-webkit-scrollbar-thumb,
 #content-ambalaj.active::-webkit-scrollbar-thumb,
 #content-harcama.active::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
@@ -852,6 +856,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active::-webkit-scrollbar-thumb:hover,
 #content-menu.active::-webkit-scrollbar-thumb:hover,
 #content-haccp.active::-webkit-scrollbar-thumb:hover,
+#content-kalibrasyon.active::-webkit-scrollbar-thumb:hover,
 #content-yag.active::-webkit-scrollbar-thumb:hover,
 #content-ambalaj.active::-webkit-scrollbar-thumb:hover,
 #content-harcama.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
@@ -872,6 +877,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-report.active,
 #content-menu.active,
 #content-haccp.active,
+#content-kalibrasyon.active,
 #content-yag.active,
 #content-ambalaj.active,
 #content-harcama.active {
