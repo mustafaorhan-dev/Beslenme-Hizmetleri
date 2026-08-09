@@ -855,6 +855,15 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-yag.active::-webkit-scrollbar-thumb:hover,
 #content-ambalaj.active::-webkit-scrollbar-thumb:hover,
 #content-harcama.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
+/* Sol menü (sidebar) scrollbar */
+.sidebar::-webkit-scrollbar { width: 10px; }
+.sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(0,0,0,0.05);
+}
 /* Firefox scrollbar */
 #content-dashboard.active,
 #content-records.active,
