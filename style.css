@@ -1770,6 +1770,15 @@ td.porsiyon-warn {
   letter-spacing: 0.04em;
 }
 
+.report-icon {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
 .report-value {
   font-size: 1.4rem;
   font-weight: 700;
