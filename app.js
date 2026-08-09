@@ -267,7 +267,7 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, yag: false, ambalaj: false, kalibrasyon: false, charts: true },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true },
     canEditMenu: true,
     canSaveMenu: true,
     canSeeProduction: true,
@@ -290,7 +290,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -313,7 +313,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, yag: false, ambalaj: false, kalibrasyon: false, charts: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -336,7 +336,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -359,7 +359,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -382,7 +382,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -770,7 +770,7 @@ async function saveAdminSettings() {
     var perm = rolePermissions[role];
     if (!perm) return;
     var prefix = 'apRole_' + role + '_';
-    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'yag', 'ambalaj', 'kalibrasyon', 'charts'];
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts'];
     tabs.forEach(function(tab) {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
@@ -815,7 +815,7 @@ function apRenderRolePermissions() {
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon', charts: 'Grafikler' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
