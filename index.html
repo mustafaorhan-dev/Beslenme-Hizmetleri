@@ -1036,16 +1036,16 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted);background:rgba(139,92,246,0.06);padding:0.5rem 0.75rem;border-radius:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          <span>Kalibrasyon süresi dolan cihazlar <strong>kırmızı</strong>, 30 gün içinde dolacaklar <strong>sarı</strong> rozetle işaretlenir.</span>
+          <span>Cihaz durumu rozeti (<strong>Çalışır Durumda</strong>/Arızalı/Bakım/Hurda) ve kalibrasyon rozeti (<strong>Geçerli</strong>/Yaklaşıyor/<strong>Süresi Doldu</strong>) ayrı ayrı gösterilir.</span>
         </div>
         <div class="filter-bar">
           <span class="filter-label">Durum:</span>
           <select id="kalibrasyonDurumFilter" onchange="kalibrasyonPage=0;renderKalibrasyon()">
             <option value="">Tümü</option>
-            <option value="gecerli">Geçerli</option>
-            <option value="yakinlasiyor">Yaklaşıyor</option>
-            <option value="suresi_doldu">Süresi Doldu</option>
-            <option value="yapilmadi">Kalibrasyon Yapılmadı</option>
+            <option value="calisir">Çalışır Durumda</option>
+            <option value="arizali">Arızalı</option>
+            <option value="bakim">Bakım Yapılacak</option>
+            <option value="hurda">Hurdaya Ayrılacak</option>
           </select>
           <span class="filter-label">Bölüm:</span>
           <input type="text" id="kalibrasyonKonumFilter" placeholder="Bölüm ara..." style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem;width:150px" oninput="kalibrasyonPage=0;renderKalibrasyon()">
@@ -1065,7 +1065,8 @@
                 <th>Cihaz Adı</th>
                 <th>Marka-Model</th>
                 <th>Sicil No</th>
-                <th>Durum</th>
+                <th>Cihaz Durumu</th>
+                <th>Kalibrasyon</th>
                 <th>Son Kalibrasyon</th>
                 <th>Bir Sonraki</th>
                 <th>Bölüm</th>
@@ -1788,10 +1789,12 @@
               <input type="text" id="kfSicilNo" placeholder="Örn: SN-2026-001" style="width:100%" />
             </div>
             <div class="form-group">
-              <label for="kfYapildi">Kalibrasyon Yapıldı mı? <span class="required">*</span></label>
-              <select id="kfYapildi" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
-                <option value="hayir">Hayır</option>
-                <option value="evet">Evet</option>
+              <label for="kfDurum">Durum <span class="required">*</span></label>
+              <select id="kfDurum" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="calisir">Çalışır Durumda / Kullanılıyor</option>
+                <option value="arizali">Arızalı</option>
+                <option value="bakim">Bakım Yapılacak</option>
+                <option value="hurda">Hurdaya Ayrılacak</option>
               </select>
             </div>
             <div class="form-group">
@@ -2124,9 +2127,9 @@
           <h3>10. Kalibrasyona Tabi Cihazlar</h3>
           <ul>
             <li>Gıda güvenliği denetimlerinde kullanılan ölçüm cihazlarının (dijital termometre, baskül, fırın termometresi vb.) kalibrasyon takibi yapılır.</li>
-            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, kalibrasyon durumu, doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm ve sorumlu kişi girilir.</li>
-            <li>Durum otomatik hesaplanır: <strong>Geçerli</strong> (yeşil), <strong>Yaklaşıyor</strong> (sarı - sonraki kalibrasyona 30 günden az), <strong>Süresi Doldu</strong> (kırmızı) ve <strong>Kalibrasyon Yapılmadı</strong> (kırmızı).</li>
-            <li>Üstteki özet kartları geçerli, süresi dolan ve yapılmayan cihaz sayılarını gösterir. Paneldeki kalibrasyon alarmı da aynı bilgiyi özetler.</li>
+            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, <strong>Durum</strong> (Çalışır Durumda / Arızalı / Bakım Yapılacak / Hurdaya Ayrılacak), doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm ve sorumlu kişi girilir.</li>
+            <li>Tablo iki rozet gösterir: <strong>Cihaz Durumu</strong> (elle seçilir) ve <strong>Kalibrasyon</strong> (tarihlere göre otomatik hesaplanır: <strong>Geçerli</strong> yeşil, <strong>Yaklaşıyor</strong> sarı - sonraki kalibrasyona 30 günden az, <strong>Süresi Doldu</strong> kırmızı, <strong>Yapılmadı</strong> kırmızı).</li>
+            <li>Üstteki özet kartları cihaz durumu (çalışır/arızalı/bakım/hurda) ile kalibrasyon durumunu ayrı ayrı özetler. Paneldeki kalibrasyon alarmı süresi dolan ve yapılmayan cihazları sayar.</li>
             <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır.</li>
           </ul>
         </div>

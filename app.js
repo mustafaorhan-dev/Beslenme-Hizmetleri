@@ -2042,7 +2042,7 @@ function kalibrasyonRecordToDB(r) {
     cihaz_adi: r.cihazAdi || '',
     marka_model: r.markaModel || '',
     sicil_no: r.sicilNo || '',
-    yapildi: !!r.yapildi,
+    durum: r.durum || 'calisir',
     dogrulama: r.dogrulama || '',
     son_kalibrasyon: r.sonKalibrasyon || '',
     sonraki_kalibrasyon: r.sonrakiKalibrasyon || '',
@@ -2086,7 +2086,7 @@ async function syncKalibrasyonFromSupabase() {
           cihazAdi: r.cihaz_adi || '',
           markaModel: r.marka_model || '',
           sicilNo: r.sicil_no || '',
-          yapildi: !!r.yapildi,
+          durum: r.durum || 'calisir',
           dogrulama: r.dogrulama || '',
           sonKalibrasyon: normalizeDate(r.son_kalibrasyon || ''),
           sonrakiKalibrasyon: normalizeDate(r.sonraki_kalibrasyon || ''),
@@ -2113,7 +2113,7 @@ async function refreshKalibrasyonFromSupabase() {
         cihazAdi: r.cihaz_adi || '',
         markaModel: r.marka_model || '',
         sicilNo: r.sicil_no || '',
-        yapildi: !!r.yapildi,
+        durum: r.durum || 'calisir',
         dogrulama: r.dogrulama || '',
         sonKalibrasyon: normalizeDate(r.son_kalibrasyon || ''),
         sonrakiKalibrasyon: normalizeDate(r.sonraki_kalibrasyon || ''),
@@ -8407,9 +8407,22 @@ let editingKalibrasyonId = null;
 let kalibrasyonPage = 0;
 const KALIBRASYON_PAGE_SIZE = 10;
 
+const KALIBRASYON_DURUMLAR = {
+  calisir: { text: 'Çalışır Durumda', cls: 'badge badge-ok' },
+  arizali: { text: 'Arızalı', cls: 'badge badge-err' },
+  bakim: { text: 'Bakım Yapılacak', cls: 'badge badge-warn' },
+  hurda: { text: 'Hurdaya Ayrılacak', cls: 'badge badge-err' }
+};
+
+function getCihazDurumBilgi(r) {
+  var d = KALIBRASYON_DURUMLAR[r.durum];
+  if (!d) return KALIBRASYON_DURUMLAR.calisir;
+  return d;
+}
+
 function getKalibrasyonDurum(r) {
-  if (!r.yapildi) return 'yapilmadi';
   var next = r.sonrakiKalibrasyon;
+  if (!r.sonKalibrasyon && !next) return 'yapilmadi';
   if (!next) return 'gecerli';
   var todayStr = formatLocalDate(new Date());
   if (next < todayStr) return 'suresi_doldu';
@@ -8445,6 +8458,7 @@ function loadKalibrasyonData() {
     }
   } catch (_) { kalibrasyonCihazlari = []; }
   kalibrasyonCihazlari.forEach(function(r) {
+    if (!r.durum) r.durum = 'calisir';
     if (r.sonKalibrasyon) r.sonKalibrasyon = normalizeDate(r.sonKalibrasyon);
     if (r.sonrakiKalibrasyon) r.sonrakiKalibrasyon = normalizeDate(r.sonrakiKalibrasyon);
   });
@@ -8458,7 +8472,7 @@ function renderKalibrasyonOzet(list) {
   const grid = document.getElementById('kalibrasyonOzetGrid');
   if (!grid) return;
   const toplam = list.length;
-  var gecerli = 0, yakin = 0, doldu = 0, yapilmadi = 0, yapilmis = 0;
+  var gecerli = 0, yakin = 0, doldu = 0, yapilmadi = 0, calisir = 0, arizali = 0, bakim = 0, hurda = 0;
   var bolumler = new Set();
   list.forEach(function(r) {
     var st = getKalibrasyonDurum(r);
@@ -8466,34 +8480,47 @@ function renderKalibrasyonOzet(list) {
     else if (st === 'yakinlasiyor') yakin++;
     else if (st === 'suresi_doldu') doldu++;
     else yapilmadi++;
-    if (r.yapildi) yapilmis++;
+    var d = r.durum;
+    if (d === 'arizali') arizali++;
+    else if (d === 'bakim') bakim++;
+    else if (d === 'hurda') hurda++;
+    else calisir++;
     if (r.konum) bolumler.add(r.konum);
   });
   var fmtN = function(v) { return v.toLocaleString('tr-TR'); };
+  var alarmda = doldu + yapilmadi;
   var html = `
     <div class="report-item">
       <span class="report-label">Toplam Cihaz</span>
       <span class="report-value">${fmtN(toplam)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label">Geçerli</span>
+      <span class="report-label">Çalışır Durumda</span>
+      <span class="report-value" style="color:#10b981">${fmtN(calisir)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Arızalı</span>
+      <span class="report-value" style="color:#ef4444">${fmtN(arizali)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Bakım Yapılacak</span>
+      <span class="report-value" style="color:#f59e0b">${fmtN(bakim)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Hurdaya Ayrılacak</span>
+      <span class="report-value" style="color:#ef4444">${fmtN(hurda)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Kalibrasyonu Geçerli</span>
       <span class="report-value" style="color:#10b981">${fmtN(gecerli)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Kalibrasyon Alarmda</span>
+      <span class="report-value" style="color:#ef4444">${fmtN(alarmda)}</span>
     </div>
     <div class="report-item">
       <span class="report-label">Yaklaşıyor (30 gün)</span>
       <span class="report-value" style="color:#f59e0b">${fmtN(yakin)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">Süresi Doldu</span>
-      <span class="report-value" style="color:#ef4444">${fmtN(doldu)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">Yapılmadı</span>
-      <span class="report-value" style="color:#ef4444">${fmtN(yapilmadi)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">Kalibrasyonu Yapılmış</span>
-      <span class="report-value" style="color:var(--accent)">${fmtN(yapilmis)}</span>
     </div>
     <div class="report-item">
       <span class="report-label">Farklı Bölüm</span>
@@ -8522,7 +8549,8 @@ function renderKalibrasyon() {
   let filtered = [...kalibrasyonCihazlari];
   var durumFilter = document.getElementById('kalibrasyonDurumFilter');
   if (durumFilter && durumFilter.value) {
-    filtered = filtered.filter(function(r) { return getKalibrasyonDurum(r) === durumFilter.value; });
+    var fd = durumFilter.value;
+    filtered = filtered.filter(function(r) { return (r.durum || 'calisir') === fd; });
   }
   var konumFilter = document.getElementById('kalibrasyonKonumFilter');
   if (konumFilter && konumFilter.value.trim()) {
@@ -8552,7 +8580,8 @@ function renderKalibrasyon() {
   var canEditK = canEditKalibrasyonRecords();
 
   tbody.innerHTML = pageItems.map(r => {
-    var durumB = getKalibrasyonDurumBilgi(r);
+    var durumB = getCihazDurumBilgi(r);
+    var kalB = getKalibrasyonDurumBilgi(r);
     var actionCell = canEditK
       ? '<td>' +
         '<button class="btn-icon" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
@@ -8568,6 +8597,7 @@ function renderKalibrasyon() {
       <td>${escapeHtml(r.markaModel || '—')}</td>
       <td>${escapeHtml(r.sicilNo || '—')}</td>
       <td><span class="${durumB.cls}">${durumB.text}</span></td>
+      <td><span class="${kalB.cls}">${kalB.text}</span></td>
       <td>${displayDate(r.sonKalibrasyon)}</td>
       <td>${displayDate(r.sonrakiKalibrasyon)}</td>
       <td>${escapeHtml(r.konum || '—')}</td>
@@ -8603,7 +8633,7 @@ function openKalibrasyonModal(id) {
   const form = document.getElementById('kalibrasyonForm');
 
   form.reset();
-  document.getElementById('kfYapildi').value = 'hayir';
+  document.getElementById('kfDurum').value = 'calisir';
 
   if (id) {
     const rec = kalibrasyonCihazlari.find(r => r.id === id);
@@ -8612,7 +8642,7 @@ function openKalibrasyonModal(id) {
     document.getElementById('kfCihazAdi').value = rec.cihazAdi || '';
     document.getElementById('kfMarkaModel').value = rec.markaModel || '';
     document.getElementById('kfSicilNo').value = rec.sicilNo || '';
-    document.getElementById('kfYapildi').value = rec.yapildi ? 'evet' : 'hayir';
+    document.getElementById('kfDurum').value = rec.durum || 'calisir';
     document.getElementById('kfDogrulama').value = rec.dogrulama || '';
     document.getElementById('kfSonKalibrasyon').value = rec.sonKalibrasyon || '';
     document.getElementById('kfSonrakiKalibrasyon').value = rec.sonrakiKalibrasyon || '';
@@ -8649,7 +8679,7 @@ function saveKalibrasyonRecord(e) {
     cihazAdi: cihazAdi,
     markaModel: document.getElementById('kfMarkaModel').value.trim(),
     sicilNo: document.getElementById('kfSicilNo').value.trim(),
-    yapildi: document.getElementById('kfYapildi').value === 'evet',
+    durum: document.getElementById('kfDurum').value,
     dogrulama: document.getElementById('kfDogrulama').value.trim(),
     sonKalibrasyon: document.getElementById('kfSonKalibrasyon').value,
     sonrakiKalibrasyon: document.getElementById('kfSonrakiKalibrasyon').value,
@@ -8696,13 +8726,14 @@ async function deleteKalibrasyonRecord(id) {
 function exportKalibrasyonCSV() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (kalibrasyonCihazlari.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
-  var headers = ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Kalibrasyon Yapıldı', 'Doğrulama', 'Son Kalibrasyon', 'Bir Sonraki Kalibrasyon', 'Bölüm', 'Sorumlu', 'Not', 'id'];
+  var headers = ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Cihaz Durumu', 'Kalibrasyon Durumu', 'Doğrulama', 'Son Kalibrasyon', 'Bir Sonraki Kalibrasyon', 'Bölüm', 'Sorumlu', 'Not', 'id'];
   var rows = [headers.join(',')];
   kalibrasyonCihazlari.forEach(function(r) {
-    var durumB = getKalibrasyonDurumBilgi(r);
+    var cihazB = getCihazDurumBilgi(r);
+    var kalB = getKalibrasyonDurumBilgi(r);
     var vals = [
-      r.cihazAdi || '', r.markaModel || '', r.sicilNo || '', durumB.text,
-      r.yapildi ? 'Evet' : 'Hayır', r.dogrulama || '', r.sonKalibrasyon || '', r.sonrakiKalibrasyon || '',
+      r.cihazAdi || '', r.markaModel || '', r.sicilNo || '', cihazB.text, kalB.text,
+      r.dogrulama || '', r.sonKalibrasyon || '', r.sonrakiKalibrasyon || '',
       r.konum || '', r.sorumlu || '', r.not || '', r.id
     ];
     vals = vals.map(function(v) {
@@ -8732,18 +8763,21 @@ function printKalibrasyonList() {
   html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
   html += '<thead><tr>';
-  ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Son Kal.', 'Bir Sonraki', 'Bölüm', 'Sorumlu'].forEach(function(h) {
+  ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Kal.', 'Son Kal.', 'Bir Sonraki', 'Bölüm', 'Sorumlu'].forEach(function(h) {
     html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
   });
   html += '</tr></thead><tbody>';
   list.forEach(function(r) {
-    var durumB = getKalibrasyonDurumBilgi(r);
-    var renk = durumB.cls.indexOf('err') !== -1 ? '#ef4444' : durumB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
+    var cihazB = getCihazDurumBilgi(r);
+    var kalB = getKalibrasyonDurumBilgi(r);
+    var renkC = cihazB.cls.indexOf('err') !== -1 ? '#ef4444' : cihazB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
+    var renkK = kalB.cls.indexOf('err') !== -1 ? '#ef4444' : kalB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
     html += '<tr>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.cihazAdi || '—') + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.markaModel || '—') + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sicilNo || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renk + '">' + durumB.text + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renkC + '">' + cihazB.text + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renkK + '">' + kalB.text + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonKalibrasyon) + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonrakiKalibrasyon) + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.konum || '—') + '</td>';

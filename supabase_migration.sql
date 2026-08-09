@@ -28,12 +28,13 @@ CREATE POLICY "anon_role_permissions" ON config FOR ALL
   WITH CHECK (key = 'role_permissions');
 
 -- 4) KALİBRASYONA TABİ CİHAZLAR tablosu + erişim politikası
+--    durum değerleri: calisir, arizali, bakim, hurda
 CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
   id BIGINT PRIMARY KEY,
   cihaz_adi TEXT NOT NULL DEFAULT '',
   marka_model TEXT DEFAULT '',
   sicil_no TEXT DEFAULT '',
-  yapildi BOOLEAN DEFAULT false,
+  durum TEXT NOT NULL DEFAULT 'calisir',
   dogrulama TEXT DEFAULT '',
   son_kalibrasyon TEXT DEFAULT '',
   sonraki_kalibrasyon TEXT DEFAULT '',
@@ -42,6 +43,10 @@ CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
   not_ TEXT DEFAULT '',
   last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
+
+-- Eski sürümden (yapildi boolean) gelen tabloyu yeni durum alanına çevir
+ALTER TABLE kalibrasyon_cihazlari DROP COLUMN IF EXISTS yapildi;
+ALTER TABLE kalibrasyon_cihazlari ADD COLUMN IF NOT EXISTS durum TEXT NOT NULL DEFAULT 'calisir';
 
 ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
 

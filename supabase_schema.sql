@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
   cihaz_adi TEXT NOT NULL DEFAULT '',
   marka_model TEXT DEFAULT '',
   sicil_no TEXT DEFAULT '',
-  yapildi BOOLEAN DEFAULT false,
+  durum TEXT NOT NULL DEFAULT 'calisir',
   dogrulama TEXT DEFAULT '',
   son_kalibrasyon TEXT DEFAULT '',
   sonraki_kalibrasyon TEXT DEFAULT '',
