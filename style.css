@@ -949,6 +949,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
 .kpi-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+.kpi-purple { background: rgba(139,92,246,0.15); color: #8b5cf6; }
 
 .kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
 

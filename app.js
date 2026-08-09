@@ -267,7 +267,7 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, yag: false, ambalaj: false, charts: true },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, yag: false, ambalaj: false, kalibrasyon: false, charts: true },
     canEditMenu: true,
     canSaveMenu: true,
     canSeeProduction: true,
@@ -275,6 +275,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: false,
     canAddYag: false,
     canAddAmbalaj: false,
+    canAddKalibrasyon: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -283,12 +284,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false,
+    canEditKalibrasyon: false,
     canMenuOnayaGonder: true,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -296,6 +298,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: true,
     canAddYag: true,
     canAddAmbalaj: true,
+    canAddKalibrasyon: true,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -304,12 +307,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: true,
     canEditAmbalaj: true,
+    canEditKalibrasyon: true,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, yag: false, ambalaj: false, charts: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, yag: false, ambalaj: false, kalibrasyon: false, charts: false },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -317,6 +321,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: false,
     canAddYag: false,
     canAddAmbalaj: false,
+    canAddKalibrasyon: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -325,12 +330,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false,
+    canEditKalibrasyon: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -338,6 +344,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: false,
     canAddYag: false,
     canAddAmbalaj: false,
+    canAddKalibrasyon: true,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -346,12 +353,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false,
+    canEditKalibrasyon: true,
     canMenuOnayaGonder: false,
     canMenuOnayla: true,
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -359,6 +367,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: false,
     canAddYag: false,
     canAddAmbalaj: false,
+    canAddKalibrasyon: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -367,12 +376,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false,
+    canEditKalibrasyon: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, yag: true, ambalaj: true, kalibrasyon: true, charts: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -380,6 +390,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddHaccp: false,
     canAddYag: false,
     canAddAmbalaj: false,
+    canAddKalibrasyon: false,
     canExport: false,
     canSync: false,
     canSeeAdminPanel: false,
@@ -388,6 +399,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditHarcamaOran: false,
     canEditYag: false,
     canEditAmbalaj: false,
+    canEditKalibrasyon: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
@@ -410,9 +422,11 @@ function canAddRecords() { return hasPerm('canAddRecord'); }
 function canAddHaccpRecords() { return hasPerm('canAddHaccp'); }
 function canAddYagRecords() { return hasPerm('canAddYag'); }
 function canAddAmbalajRecords() { return hasPerm('canAddAmbalaj'); }
+function canAddKalibrasyonRecords() { return hasPerm('canAddKalibrasyon'); }
 function canEditHaccpRecords() { return hasPerm('canEditHaccp'); }
 function canEditYagRecords() { return hasPerm('canEditYag'); }
 function canEditAmbalajRecords() { return hasPerm('canEditAmbalaj'); }
+function canEditKalibrasyonRecords() { return hasPerm('canEditKalibrasyon'); }
 function canEditMenuRecords() { return hasPerm('canEditMenu'); }
 
 function loadRolePermissions() {
@@ -756,12 +770,12 @@ async function saveAdminSettings() {
     var perm = rolePermissions[role];
     if (!perm) return;
     var prefix = 'apRole_' + role + '_';
-    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'yag', 'ambalaj', 'charts'];
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'yag', 'ambalaj', 'kalibrasyon', 'charts'];
     tabs.forEach(function(tab) {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canAddKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canEditKalibrasyon', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -787,6 +801,7 @@ function apRenderRolePermissions() {
     canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
     canAddYag: 'Atık yağ kaydı ekleyebilir',
     canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
+    canAddKalibrasyon: 'Kalibrasyona tabi cihaz kaydı ekleyebilir',
     canExport: 'Dışa aktarabilir',
     canSync: 'Senkronizasyon yapabilir',
     canSeeAdminPanel: 'Yönetim panelini görebilir',
@@ -795,11 +810,12 @@ function apRenderRolePermissions() {
     canEditHarcamaOran: 'Harcama oranını değiştirebilir',
     canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
     canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
+    canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
     canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon', charts: 'Grafikler' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -1137,7 +1153,7 @@ function applyViewerRestrictions() {
   if (!perm.canSync) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
-      if (/(sync(All|Haccp|Yag|Ambalaj|Dishes|Menu)(To|From)Supabase)/.test(onclick)) {
+      if (/(sync(All|Haccp|Yag|Ambalaj|Kalibrasyon|Dishes|Menu)(To|From)Supabase)/.test(onclick)) {
         btn.style.display = 'none';
       }
     });
@@ -1164,6 +1180,9 @@ function applyViewerRestrictions() {
   if (!perm.canAddAmbalaj) {
     document.querySelectorAll('.btn-primary[onclick*="openAmbalajModal"]').forEach(function(el) { el.style.display = 'none'; });
   }
+  if (!perm.canAddKalibrasyon) {
+    document.querySelectorAll('.btn-primary[onclick*="openKalibrasyonModal"]').forEach(function(el) { el.style.display = 'none'; });
+  }
   if (!perm.canEditHaccp) {
     document.querySelectorAll('#haccpForm textarea, #haccpForm input, #haccpForm select').forEach(function(el) {
       el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
@@ -1180,7 +1199,7 @@ function applyViewerRestrictions() {
     if (hcOranBtn) hcOranBtn.style.display = 'none';
   }
   if (!perm.canExport) {
-    var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF)|print(Menu|Report|Qr|YagList|AmbalajList)|triggerImport|importBackupInput|importFullBackup|haccpFileInput|yemekCSVUpload/;
+    var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF|KalibrasyonCSV)|print(Menu|Report|Qr|YagList|AmbalajList|KalibrasyonList)|triggerImport|importBackupInput|importFullBackup|haccpFileInput|yemekCSVUpload/;
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
       if (exRe.test(onclick)) btn.style.display = 'none';
@@ -1285,6 +1304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHaccpData();
   loadYagData();
   loadAmbalajData();
+  loadKalibrasyonData();
 
   // Records her sayfa yüklenişinde Supabase'ten çekilir (çoklu cihaz desteği)
   if (supabaseClient) {
@@ -1330,6 +1350,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (ambalajRecords.length > 0) {
         try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
         try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
+      }
+      await syncKalibrasyonFromSupabase();
+      if (kalibrasyonCihazlari.length > 0) {
+        try { sessionStorage.setItem(KALIBRASYON_STORAGE_KEY, JSON.stringify(kalibrasyonCihazlari)); } catch (_) {}
+        try { localStorage.removeItem(KALIBRASYON_STORAGE_KEY); } catch (_) {}
       }
       await syncDishesFromSupabase();
     } catch (_) {}
@@ -2009,6 +2034,99 @@ async function refreshAmbalajFromSupabase() {
   } catch (_) {}
 }
 
+// ─── KALİBRASYON (Kalibrasyona Tabi Cihazlar) SYNC ──────────────────────────
+
+function kalibrasyonRecordToDB(r) {
+  return {
+    id: Number(r.id) || Date.now(),
+    cihaz_adi: r.cihazAdi || '',
+    marka_model: r.markaModel || '',
+    sicil_no: r.sicilNo || '',
+    yapildi: !!r.yapildi,
+    dogrulama: r.dogrulama || '',
+    son_kalibrasyon: r.sonKalibrasyon || '',
+    sonraki_kalibrasyon: r.sonrakiKalibrasyon || '',
+    konum: r.konum || '',
+    sorumlu: r.sorumlu || '',
+    not_: r.not || '',
+    last_modified: new Date().toISOString()
+  };
+}
+
+async function syncKalibrasyonToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    if (kalibrasyonCihazlari.length > 0) {
+      await supabaseClient.from('kalibrasyon_cihazlari').upsert(kalibrasyonCihazlari.map(kalibrasyonRecordToDB), { onConflict: 'id' });
+    }
+    showToast('Kalibrasyon verileri Supabase\'e senkronize edildi.', 'success');
+  } catch (_) {}
+}
+
+let kalibrasyonSyncTimer = null;
+function syncKalibrasyonSilent() {
+  if (kalibrasyonSyncTimer) clearTimeout(kalibrasyonSyncTimer);
+  kalibrasyonSyncTimer = setTimeout(async () => {
+    if (!supabaseClient || kalibrasyonCihazlari.length === 0) return;
+    try {
+      await supabaseClient.from('kalibrasyon_cihazlari').upsert(kalibrasyonCihazlari.map(kalibrasyonRecordToDB), { onConflict: 'id' });
+    } catch (_) {}
+  }, 400);
+}
+
+async function syncKalibrasyonFromSupabase() {
+  if (!supabaseClient) return false;
+  try {
+    var { data, error } = await supabaseClient.from('kalibrasyon_cihazlari').select('*').order('cihaz_adi', { ascending: true });
+    if (error) return false;
+    if (data && data.length > 0) {
+      kalibrasyonCihazlari = data.map(function(r) {
+        return {
+          id: Number(r.id) || Date.now(),
+          cihazAdi: r.cihaz_adi || '',
+          markaModel: r.marka_model || '',
+          sicilNo: r.sicil_no || '',
+          yapildi: !!r.yapildi,
+          dogrulama: r.dogrulama || '',
+          sonKalibrasyon: normalizeDate(r.son_kalibrasyon || ''),
+          sonrakiKalibrasyon: normalizeDate(r.sonraki_kalibrasyon || ''),
+          konum: r.konum || '',
+          sorumlu: r.sorumlu || '',
+          not: r.not_ || ''
+        };
+      });
+      saveKalibrasyonData();
+      renderKalibrasyon();
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+async function refreshKalibrasyonFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { data } = await supabaseClient.from('kalibrasyon_cihazlari').select('*').order('cihaz_adi', { ascending: true });
+    if (data && data.length > 0) {
+      kalibrasyonCihazlari = data.map(function(r) { return {
+        id: Number(r.id) || Date.now(),
+        cihazAdi: r.cihaz_adi || '',
+        markaModel: r.marka_model || '',
+        sicilNo: r.sicil_no || '',
+        yapildi: !!r.yapildi,
+        dogrulama: r.dogrulama || '',
+        sonKalibrasyon: normalizeDate(r.son_kalibrasyon || ''),
+        sonrakiKalibrasyon: normalizeDate(r.sonraki_kalibrasyon || ''),
+        konum: r.konum || '',
+        sorumlu: r.sorumlu || '',
+        not: r.not_ || ''
+      }; });
+      saveKalibrasyonData();
+      renderKalibrasyon();
+    }
+  } catch (_) {}
+}
+
 // -- Retry helper with timeout --
 async function fetchWithRetry(fn, maxRetries = 3, delayMs = 1000, timeoutMs = 10000) {
   for (let i = 0; i < maxRetries; i++) {
@@ -2090,6 +2208,10 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
       await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
       toastMsg.push('Ambalaj: ' + ambalajRecords.length);
     }
+    if (kalibrasyonCihazlari.length > 0) {
+      await supabaseClient.from('kalibrasyon_cihazlari').upsert(kalibrasyonCihazlari.map(kalibrasyonRecordToDB), { onConflict: 'id' });
+      toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
+    }
     showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
   } catch (err) {
     showToast('Supabase hatası: ' + err.message, 'error');
@@ -2127,6 +2249,8 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
     if (hPulled) toastMsg.push('HACCP: ' + haccpRecords.length);
     await syncYagFromSupabase();
     await syncAmbalajFromSupabase();
+    var kPulled = await syncKalibrasyonFromSupabase();
+    if (kPulled) toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
     showToast('Supabase\'ten alındı: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
   } catch (err) {
     showToast('Supabase hatası: ' + err.message, 'error');
@@ -3047,7 +3171,8 @@ async function switchTab(name) {
   if (name === 'haccp') loadHaccpData();
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
-  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları' };
+  if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
+  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -3677,6 +3802,7 @@ function renderAll() {
   renderHaccp();
   renderYagTable();
   renderAmbalajTable();
+  renderKalibrasyon();
 }
 
 function renderTodaySummary() {
@@ -3885,6 +4011,7 @@ function renderKPIs() {
     document.getElementById('kpiBugunYemek').textContent = '—';
     document.getElementById('kpiBugunAtik').textContent = '—';
     document.getElementById('kpiHaccpAlarm').textContent = '0';
+    document.getElementById('kpiKalibrasyonAlarm').textContent = '0';
     renderTrend('trendAvgAtik', null);
     renderTrend('trendTotalAtik', null);
     return;
@@ -3947,6 +4074,30 @@ function renderKPIs() {
     alarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + alarmCount + ' uyarı var</span>';
   } else {
     alarmSub.textContent = 'Tüm değerler uygun';
+  }
+
+  // Kalibrasyon Alarm: süresi dolan veya kalibrasyon yapılmamış cihazlar
+  var kalibrasyonAlarmSayisi = kalibrasyonCihazlari.filter(function(r) {
+    var st = getKalibrasyonDurum(r);
+    return st === 'suresi_doldu' || st === 'yapilmadi';
+  }).length;
+  var kAlarmEl = document.getElementById('kpiKalibrasyonAlarm');
+  var kAlarmSub = document.getElementById('kpiKalibrasyonAlarmSub');
+  if (kAlarmEl) {
+    kAlarmEl.textContent = kalibrasyonAlarmSayisi;
+    if (kalibrasyonAlarmSayisi > 0) {
+      var yakinSayi = kalibrasyonCihazlari.filter(function(r) { return getKalibrasyonDurum(r) === 'yakinlasiyor'; }).length;
+      var subTxt = kalibrasyonAlarmSayisi + ' cihaz alarmda';
+      if (yakinSayi > 0) subTxt += ', ' + yakinSayi + ' yaklaşıyor';
+      kAlarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + subTxt + '</span>';
+    } else {
+      var yakinToplam = kalibrasyonCihazlari.filter(function(r) { return getKalibrasyonDurum(r) === 'yakinlasiyor'; }).length;
+      if (yakinToplam > 0) {
+        kAlarmSub.innerHTML = '<span style="color:#f59e0b;font-weight:600">' + yakinToplam + ' cihaz yaklaşıyor</span>';
+      } else {
+        kAlarmSub.textContent = 'Tüm kalibrasyonlar geçerli';
+      }
+    }
   }
 }
 
@@ -7593,6 +7744,14 @@ document.addEventListener('click', function(e) {
       renderYagTable();
     }
   }
+  btn = e.target.closest('#kalibrasyonPagination .btn-icon');
+  if (btn && btn.hasAttribute('data-kalibrasyon-page') && !btn.disabled) {
+    var page = parseInt(btn.getAttribute('data-kalibrasyon-page'));
+    if (!isNaN(page) && page >= 0) {
+      kalibrasyonPage = page;
+      renderKalibrasyon();
+    }
+  }
 });
 
 function saveAmbalajData() {
@@ -8239,6 +8398,369 @@ function printMenu() {
   win.document.close();
   win.focus();
   setTimeout(function() { win.print(); }, 800);
+}
+
+// ─── KALİBRASYONA TABİ CİHAZLAR ──────────────────────────────────────────────
+const KALIBRASYON_STORAGE_KEY = 'atik_kontrol_kalibrasyon';
+let kalibrasyonCihazlari = [];
+let editingKalibrasyonId = null;
+let kalibrasyonPage = 0;
+const KALIBRASYON_PAGE_SIZE = 10;
+
+function getKalibrasyonDurum(r) {
+  if (!r.yapildi) return 'yapilmadi';
+  var next = r.sonrakiKalibrasyon;
+  if (!next) return 'gecerli';
+  var todayStr = formatLocalDate(new Date());
+  if (next < todayStr) return 'suresi_doldu';
+  var d = new Date();
+  d.setDate(d.getDate() + 30);
+  var limitStr = formatLocalDate(d);
+  if (next <= limitStr) return 'yakinlasiyor';
+  return 'gecerli';
+}
+
+function getKalibrasyonDurumBilgi(r) {
+  var st = getKalibrasyonDurum(r);
+  if (st === 'yakinlasiyor') return { text: 'Yaklaşıyor', cls: 'badge badge-warn' };
+  if (st === 'suresi_doldu') return { text: 'Süresi Doldu', cls: 'badge badge-err' };
+  if (st === 'yapilmadi') return { text: 'Yapılmadı', cls: 'badge badge-err' };
+  return { text: 'Geçerli', cls: 'badge badge-ok' };
+}
+
+function loadKalibrasyonData() {
+  try {
+    var stored = sessionStorage.getItem(KALIBRASYON_STORAGE_KEY);
+    if (stored) {
+      kalibrasyonCihazlari = JSON.parse(stored);
+    } else {
+      stored = localStorage.getItem(KALIBRASYON_STORAGE_KEY);
+      if (stored) {
+        kalibrasyonCihazlari = JSON.parse(stored);
+        try { sessionStorage.setItem(KALIBRASYON_STORAGE_KEY, stored); } catch (_) {}
+        try { localStorage.removeItem(KALIBRASYON_STORAGE_KEY); } catch (_) {}
+      } else {
+        kalibrasyonCihazlari = [];
+      }
+    }
+  } catch (_) { kalibrasyonCihazlari = []; }
+  kalibrasyonCihazlari.forEach(function(r) {
+    if (r.sonKalibrasyon) r.sonKalibrasyon = normalizeDate(r.sonKalibrasyon);
+    if (r.sonrakiKalibrasyon) r.sonrakiKalibrasyon = normalizeDate(r.sonrakiKalibrasyon);
+  });
+}
+
+function saveKalibrasyonData() {
+  try { sessionStorage.setItem(KALIBRASYON_STORAGE_KEY, JSON.stringify(kalibrasyonCihazlari)); } catch (_) {}
+}
+
+function renderKalibrasyonOzet(list) {
+  const grid = document.getElementById('kalibrasyonOzetGrid');
+  if (!grid) return;
+  const toplam = list.length;
+  var gecerli = 0, yakin = 0, doldu = 0, yapilmadi = 0, yapilmis = 0;
+  var bolumler = new Set();
+  list.forEach(function(r) {
+    var st = getKalibrasyonDurum(r);
+    if (st === 'gecerli') gecerli++;
+    else if (st === 'yakinlasiyor') yakin++;
+    else if (st === 'suresi_doldu') doldu++;
+    else yapilmadi++;
+    if (r.yapildi) yapilmis++;
+    if (r.konum) bolumler.add(r.konum);
+  });
+  var fmtN = function(v) { return v.toLocaleString('tr-TR'); };
+  var html = `
+    <div class="report-item">
+      <span class="report-label">Toplam Cihaz</span>
+      <span class="report-value">${fmtN(toplam)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Geçerli</span>
+      <span class="report-value" style="color:#10b981">${fmtN(gecerli)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Yaklaşıyor (30 gün)</span>
+      <span class="report-value" style="color:#f59e0b">${fmtN(yakin)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Süresi Doldu</span>
+      <span class="report-value" style="color:#ef4444">${fmtN(doldu)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Yapılmadı</span>
+      <span class="report-value" style="color:#ef4444">${fmtN(yapilmadi)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Kalibrasyonu Yapılmış</span>
+      <span class="report-value" style="color:var(--accent)">${fmtN(yapilmis)}</span>
+    </div>
+    <div class="report-item">
+      <span class="report-label">Farklı Bölüm</span>
+      <span class="report-value">${fmtN(bolumler.size)}</span>
+    </div>
+  `;
+  grid.innerHTML = html;
+}
+
+function renderKalibrasyon() {
+  const tbody = document.getElementById('kalibrasyonTbody');
+  const table = document.getElementById('kalibrasyonTable');
+  const empty = document.getElementById('kalibrasyonEmpty');
+  const badge = document.getElementById('kalibrasyonBadge');
+  if (!tbody || !table || !empty) return;
+
+  badge.textContent = kalibrasyonCihazlari.length + ' cihaz';
+
+  if (kalibrasyonCihazlari.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    renderKalibrasyonOzet([]);
+    return;
+  }
+
+  let filtered = [...kalibrasyonCihazlari];
+  var durumFilter = document.getElementById('kalibrasyonDurumFilter');
+  if (durumFilter && durumFilter.value) {
+    filtered = filtered.filter(function(r) { return getKalibrasyonDurum(r) === durumFilter.value; });
+  }
+  var konumFilter = document.getElementById('kalibrasyonKonumFilter');
+  if (konumFilter && konumFilter.value.trim()) {
+    var kw = konumFilter.value.trim().toLowerCase();
+    filtered = filtered.filter(function(r) { return (r.konum || '').toLowerCase().indexOf(kw) !== -1; });
+  }
+
+  if (filtered.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'flex';
+    empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun cihaz bulunamadı.';
+    renderKalibrasyonOzet([]);
+    return;
+  }
+  empty.querySelector('p').textContent = 'Henüz kalibrasyona tabi cihaz kaydı girilmemiş.';
+
+  renderKalibrasyonOzet(filtered);
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  const sorted = filtered.sort(function(a, b) { return (a.cihazAdi || '').localeCompare(b.cihazAdi || ''); });
+  const totalPages = Math.ceil(sorted.length / KALIBRASYON_PAGE_SIZE);
+  if (kalibrasyonPage >= totalPages) kalibrasyonPage = Math.max(0, totalPages - 1);
+  const start = kalibrasyonPage * KALIBRASYON_PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + KALIBRASYON_PAGE_SIZE);
+  var canEditK = canEditKalibrasyonRecords();
+
+  tbody.innerHTML = pageItems.map(r => {
+    var durumB = getKalibrasyonDurumBilgi(r);
+    var actionCell = canEditK
+      ? '<td>' +
+        '<button class="btn-icon" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="deleteKalibrasyonRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+        '</button>' +
+        '</td>'
+      : '<td></td>';
+    return `<tr>
+      <td>${escapeHtml(r.cihazAdi || '—')}</td>
+      <td>${escapeHtml(r.markaModel || '—')}</td>
+      <td>${escapeHtml(r.sicilNo || '—')}</td>
+      <td><span class="${durumB.cls}">${durumB.text}</span></td>
+      <td>${displayDate(r.sonKalibrasyon)}</td>
+      <td>${displayDate(r.sonrakiKalibrasyon)}</td>
+      <td>${escapeHtml(r.konum || '—')}</td>
+      <td>${escapeHtml(r.sorumlu || '—')}</td>
+      ${actionCell}
+    </tr>`;
+  }).join('');
+
+  const pagination = document.getElementById('kalibrasyonPagination');
+  if (pagination) {
+    if (totalPages > 1) {
+      pagination.innerHTML =
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (kalibrasyonPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        Array.from({length: totalPages}, function(_, i) {
+          return '<button class="btn-icon" data-kalibrasyon-page="' + i + '"' + (i === kalibrasyonPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
+        }).join('') +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (kalibrasyonPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+    } else {
+      pagination.innerHTML = '';
+    }
+  }
+}
+
+function openKalibrasyonModal(id) {
+  if (id) {
+    if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
+  editingKalibrasyonId = id || null;
+  const overlay = document.getElementById('kalibrasyonModal');
+  const title = document.getElementById('kalibrasyonModalTitle');
+  const form = document.getElementById('kalibrasyonForm');
+
+  form.reset();
+  document.getElementById('kfYapildi').value = 'hayir';
+
+  if (id) {
+    const rec = kalibrasyonCihazlari.find(r => r.id === id);
+    if (!rec) return;
+    title.textContent = 'Kalibrasyona Tabi Cihazı Düzenle';
+    document.getElementById('kfCihazAdi').value = rec.cihazAdi || '';
+    document.getElementById('kfMarkaModel').value = rec.markaModel || '';
+    document.getElementById('kfSicilNo').value = rec.sicilNo || '';
+    document.getElementById('kfYapildi').value = rec.yapildi ? 'evet' : 'hayir';
+    document.getElementById('kfDogrulama').value = rec.dogrulama || '';
+    document.getElementById('kfSonKalibrasyon').value = rec.sonKalibrasyon || '';
+    document.getElementById('kfSonrakiKalibrasyon').value = rec.sonrakiKalibrasyon || '';
+    document.getElementById('kfKonum').value = rec.konum || '';
+    document.getElementById('kfSorumlu').value = rec.sorumlu || '';
+    document.getElementById('kfNot').value = rec.not || '';
+  } else {
+    title.textContent = 'Yeni Kalibrasyona Tabi Cihaz';
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeKalibrasyonModal() {
+  document.getElementById('kalibrasyonModal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingKalibrasyonId = null;
+}
+
+function saveKalibrasyonRecord(e) {
+  e.preventDefault();
+  if (editingKalibrasyonId) {
+    if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
+
+  var cihazAdi = document.getElementById('kfCihazAdi').value.trim();
+  if (!cihazAdi) { showToast('Cihaz adı gerekli.', 'error'); return; }
+
+  var rec = {
+    id: editingKalibrasyonId || Date.now(),
+    cihazAdi: cihazAdi,
+    markaModel: document.getElementById('kfMarkaModel').value.trim(),
+    sicilNo: document.getElementById('kfSicilNo').value.trim(),
+    yapildi: document.getElementById('kfYapildi').value === 'evet',
+    dogrulama: document.getElementById('kfDogrulama').value.trim(),
+    sonKalibrasyon: document.getElementById('kfSonKalibrasyon').value,
+    sonrakiKalibrasyon: document.getElementById('kfSonrakiKalibrasyon').value,
+    konum: document.getElementById('kfKonum').value.trim(),
+    sorumlu: document.getElementById('kfSorumlu').value.trim(),
+    not: document.getElementById('kfNot').value.trim()
+  };
+
+  if (editingKalibrasyonId) {
+    const idx = kalibrasyonCihazlari.findIndex(r => r.id === editingKalibrasyonId);
+    if (idx !== -1) kalibrasyonCihazlari[idx] = rec;
+    showToast('Cihaz bilgisi güncellendi.', 'success');
+    logIslem('kayit_duzenle', 'kalibrasyon #' + editingKalibrasyonId + ' güncellendi');
+  } else {
+    kalibrasyonCihazlari.push(rec);
+    showToast('Cihaz kaydı eklendi.', 'success');
+    logIslem('yeni_kayit', 'kalibrasyon ' + (rec.cihazAdi || ''));
+  }
+
+  saveKalibrasyonData();
+  renderKalibrasyon();
+  renderKPIs();
+  syncKalibrasyonSilent();
+  closeKalibrasyonModal();
+}
+
+function editKalibrasyonRecord(id) { openKalibrasyonModal(id); }
+
+async function deleteKalibrasyonRecord(id) {
+  if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu cihaz kaydını silmek istediğinize emin misiniz?')) return;
+  kalibrasyonCihazlari = kalibrasyonCihazlari.filter(r => r.id !== id);
+  saveKalibrasyonData();
+  if (supabaseClient) {
+    try { await supabaseClient.from('kalibrasyon_cihazlari').delete().eq('id', id); } catch (_) {}
+  }
+  renderKalibrasyon();
+  renderKPIs();
+  syncKalibrasyonSilent();
+  showToast('Cihaz kaydı silindi.', 'success');
+  logIslem('kayit_sil', 'kalibrasyon #' + id + ' silindi');
+}
+
+function exportKalibrasyonCSV() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (kalibrasyonCihazlari.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
+  var headers = ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Kalibrasyon Yapıldı', 'Doğrulama', 'Son Kalibrasyon', 'Bir Sonraki Kalibrasyon', 'Bölüm', 'Sorumlu', 'Not', 'id'];
+  var rows = [headers.join(',')];
+  kalibrasyonCihazlari.forEach(function(r) {
+    var durumB = getKalibrasyonDurumBilgi(r);
+    var vals = [
+      r.cihazAdi || '', r.markaModel || '', r.sicilNo || '', durumB.text,
+      r.yapildi ? 'Evet' : 'Hayır', r.dogrulama || '', r.sonKalibrasyon || '', r.sonrakiKalibrasyon || '',
+      r.konum || '', r.sorumlu || '', r.not || '', r.id
+    ];
+    vals = vals.map(function(v) {
+      v = String(v).replace(/"/g, '""');
+      return v.indexOf(',') > -1 ? '"' + v + '"' : v;
+    });
+    rows.push(vals.join(','));
+  });
+  var blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Kalibrasyon_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(kalibrasyonCihazlari.length + ' kayıt CSV olarak indirildi.', 'success');
+}
+
+function printKalibrasyonList() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  var list = [...kalibrasyonCihazlari].sort(function(a, b) { return (a.cihazAdi || '').localeCompare(b.cihazAdi || ''); });
+  if (!list.length) { showToast('Listelenecek cihaz bulunamadı.', 'error'); return; }
+  var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
+  html += '<h1 style="font-size:14px;margin:0 0 4px">Kalibrasyona Tabi Cihazlar</h1>';
+  html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
+  html += '<thead><tr>';
+  ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Son Kal.', 'Bir Sonraki', 'Bölüm', 'Sorumlu'].forEach(function(h) {
+    html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  list.forEach(function(r) {
+    var durumB = getKalibrasyonDurumBilgi(r);
+    var renk = durumB.cls.indexOf('err') !== -1 ? '#ef4444' : durumB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
+    html += '<tr>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.cihazAdi || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.markaModel || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sicilNo || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renk + '">' + durumB.text + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonKalibrasyon) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonrakiKalibrasyon) + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.konum || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sorumlu || '—') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + list.length + ' cihaz</div>';
+  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Kalibrasyona Tabi Cihaz Listesi</div>';
+  html += '</div>';
+  var win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.open();
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kalibrasyona Tabi Cihazlar</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(function() { win.print(); }, 600);
 }
 
 

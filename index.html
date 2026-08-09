@@ -171,6 +171,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           <span>Ambalaj Atıkları</span>
         </button>
+        <button class="tab-btn" id="tab-kalibrasyon" onclick="switchTab('kalibrasyon')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <span>Kalibrasyon</span>
+        </button>
         <button class="tab-btn" id="tab-charts" onclick="switchTab('charts')">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           <span>Grafikler</span>
@@ -269,6 +273,16 @@
             <span class="kpi-label">Soğuk Hava Depo Sıcaklık Alarmı</span>
             <span class="kpi-value" id="kpiHaccpAlarm">0</span>
             <span class="kpi-trend" id="kpiHaccpAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
+          </div>
+        </div>
+        <div class="kpi-card" id="kpi-kalibrasyon-alarm">
+          <div class="kpi-icon kpi-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Kalibrasyon Alarmı</span>
+            <span class="kpi-value" id="kpiKalibrasyonAlarm">0</span>
+            <span class="kpi-trend" id="kpiKalibrasyonAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
           </div>
         </div>
         <div class="kpi-card" id="kpi-ort-atik">
@@ -982,6 +996,90 @@
       </div>
     </div>
 
+    <!-- ===== KALİBRASYON TAB ===== -->
+    <div class="tab-content" id="content-kalibrasyon">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="openKalibrasyonModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Yeni Cihaz
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="printKalibrasyonList()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              Liste
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="syncKalibrasyonToSupabase()" title="Kalibrasyon verilerini Supabase'e yedekle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Supabase'e Kaydet
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="syncKalibrasyonFromSupabase().then(function(r){if(r){showToast('Supabase\'ten '+kalibrasyonCihazlari.length+' cihaz alındı.','success');saveKalibrasyonData();renderKalibrasyon();}else{showToast('Supabase\'ten veri alınamadı.','error');}})" title="Supabase'ten veri çek">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
+              Supabase'ten Çek
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportKalibrasyonCSV()" title="CSV olarak indir (ID dahil)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV İndir
+            </button>
+          </div>
+        </div>
+        <div class="section-card" style="margin-top:0">
+          <div class="section-header">
+            <h2>Kalibrasyon Özeti</h2>
+          </div>
+          <div class="report-grid" id="kalibrasyonOzetGrid"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-header">
+            <h2>Kalibrasyona Tabi Cihazlar</h2>
+          <span class="badge" id="kalibrasyonBadge">0 cihaz</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted);background:rgba(139,92,246,0.06);padding:0.5rem 0.75rem;border-radius:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <span>Kalibrasyon süresi dolan cihazlar <strong>kırmızı</strong>, 30 gün içinde dolacaklar <strong>sarı</strong> rozetle işaretlenir.</span>
+        </div>
+        <div class="filter-bar">
+          <span class="filter-label">Durum:</span>
+          <select id="kalibrasyonDurumFilter" onchange="kalibrasyonPage=0;renderKalibrasyon()">
+            <option value="">Tümü</option>
+            <option value="gecerli">Geçerli</option>
+            <option value="yakinlasiyor">Yaklaşıyor</option>
+            <option value="suresi_doldu">Süresi Doldu</option>
+            <option value="yapilmadi">Kalibrasyon Yapılmadı</option>
+          </select>
+          <span class="filter-label">Bölüm:</span>
+          <input type="text" id="kalibrasyonKonumFilter" placeholder="Bölüm ara..." style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem;width:150px" oninput="kalibrasyonPage=0;renderKalibrasyon()">
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="kalibrasyonEmpty">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <circle cx="40" cy="40" r="24" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-dasharray="4 4"/>
+              <path d="M40 24v16l10 10" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Henüz kalibrasyona tabi cihaz kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="kalibrasyonTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Cihaz Adı</th>
+                <th>Marka-Model</th>
+                <th>Sicil No</th>
+                <th>Durum</th>
+                <th>Son Kalibrasyon</th>
+                <th>Bir Sonraki</th>
+                <th>Bölüm</th>
+                <th>Sorumlu</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="kalibrasyonTbody"></tbody>
+          </table>
+          <div id="kalibrasyonPagination" class="pagination" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.85rem"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== CHARTS TAB ===== -->
     <div class="tab-content" id="content-charts">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
@@ -1665,6 +1763,71 @@
     </div>
   </div>
 
+  <!-- ===== KALİBRASYON MODAL ===== -->
+  <div class="modal-overlay" id="kalibrasyonModal" onclick="if(event.target===this)closeKalibrasyonModal()">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <h2 id="kalibrasyonModalTitle">Kalibrasyona Tabi Cihaz</h2>
+        <button class="modal-close" onclick="closeKalibrasyonModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="kalibrasyonForm" onsubmit="saveKalibrasyonRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid">
+            <div class="form-group" style="grid-column:span 2">
+              <label for="kfCihazAdi">Cihaz Adı <span class="required">*</span></label>
+              <input type="text" id="kfCihazAdi" required placeholder="Örn: Dijital Gıda Termometresi" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfMarkaModel">Marka-Model</label>
+              <input type="text" id="kfMarkaModel" placeholder="Örn: Testo 106" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSicilNo">Sicil No</label>
+              <input type="text" id="kfSicilNo" placeholder="Örn: SN-2026-001" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfYapildi">Kalibrasyon Yapıldı mı? <span class="required">*</span></label>
+              <select id="kfYapildi" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="hayir">Hayır</option>
+                <option value="evet">Evet</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="kfDogrulama">Doğrulama</label>
+              <input type="text" id="kfDogrulama" placeholder="Örn: Sertifika ile doğrulandı" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSonKalibrasyon">Son Kalibrasyon</label>
+              <input type="date" id="kfSonKalibrasyon" />
+            </div>
+            <div class="form-group">
+              <label for="kfSonrakiKalibrasyon">Bir Sonraki Kalibrasyon</label>
+              <input type="date" id="kfSonrakiKalibrasyon" />
+            </div>
+            <div class="form-group">
+              <label for="kfKonum">Bulunduğu Yer/Bölüm</label>
+              <input type="text" id="kfKonum" placeholder="Örn: Soğuk Hava Deposu 5" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSorumlu">Sorumlu Kişi</label>
+              <input type="text" id="kfSorumlu" placeholder="Örn: Adı Soyadı" style="width:100%" />
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="kfNot">Not</label>
+              <input type="text" id="kfNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeKalibrasyonModal()">İptal</button>
+          <button type="submit" class="btn btn-primary" id="kalibrasyonFormSubmitBtn">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ADMIN PANEL MODAL -->
   <div class="modal-overlay" id="adminPanelModal" onclick="if(event.target===this)closeAdminPanel()">
     <div class="modal" style="max-width:520px">
@@ -1851,12 +2014,13 @@
             <a href="#man-giris-form">7. Üretim Tüketim Atık Gir</a>
             <a href="#man-yag">8. Atık Yağ</a>
             <a href="#man-ambalaj">9. Ambalaj Atıkları</a>
-            <a href="#man-grafik">10. Grafikler</a>
-            <a href="#man-harcama">11. Harcama</a>
-            <a href="#man-yedek">12. Veri Yedekleme ve Senkronizasyon</a>
-            <a href="#man-sistem">13. Tema ve Görünüm</a>
-            <a href="#man-yonetim">14. Yönetim ve Log Kayıtları</a>
-            <a href="#man-ipucu">15. İpuçları</a>
+            <a href="#man-kalibrasyon">10. Kalibrasyona Tabi Cihazlar</a>
+            <a href="#man-grafik">11. Grafikler</a>
+            <a href="#man-harcama">12. Harcama</a>
+            <a href="#man-yedek">13. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem">14. Tema ve Görünüm</a>
+            <a href="#man-yonetim">15. Yönetim ve Log Kayıtları</a>
+            <a href="#man-ipucu">16. İpuçları</a>
           </div>
         </div>
 
@@ -1956,8 +2120,19 @@
           </ul>
         </div>
 
+        <div class="manual-section" id="man-kalibrasyon">
+          <h3>10. Kalibrasyona Tabi Cihazlar</h3>
+          <ul>
+            <li>Gıda güvenliği denetimlerinde kullanılan ölçüm cihazlarının (dijital termometre, baskül, fırın termometresi vb.) kalibrasyon takibi yapılır.</li>
+            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, kalibrasyon durumu, doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm ve sorumlu kişi girilir.</li>
+            <li>Durum otomatik hesaplanır: <strong>Geçerli</strong> (yeşil), <strong>Yaklaşıyor</strong> (sarı - sonraki kalibrasyona 30 günden az), <strong>Süresi Doldu</strong> (kırmızı) ve <strong>Kalibrasyon Yapılmadı</strong> (kırmızı).</li>
+            <li>Üstteki özet kartları geçerli, süresi dolan ve yapılmayan cihaz sayılarını gösterir. Paneldeki kalibrasyon alarmı da aynı bilgiyi özetler.</li>
+            <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır.</li>
+          </ul>
+        </div>
+
         <div class="manual-section" id="man-grafik">
-          <h3>10. Grafikler</h3>
+          <h3>11. Grafikler</h3>
           <ul>
             <li>Üretim, tüketim, atık, depo sıcaklıkları, atık yağ ve ambalaj atıkları grafikleri burada toplanır.</li>
             <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
@@ -1967,7 +2142,7 @@
         </div>
 
         <div class="manual-section" id="man-harcama">
-          <h3>11. Harcama</h3>
+          <h3>12. Harcama</h3>
           <ul>
             <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
             <li><strong>"Öğrenci Başı Harcama Hesaplama"</strong> kutusuna öğrenci sayısını girip hesaplatabilirsiniz.</li>
@@ -1978,7 +2153,7 @@
         </div>
 
         <div class="manual-section" id="man-yedek">
-          <h3>12. Veri Yedekleme ve Senkronizasyon</h3>
+          <h3>13. Veri Yedekleme ve Senkronizasyon</h3>
           <ul>
             <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
             <li><strong>Supabase'e Yedekle:</strong> Tüm verileri bulut veritabanına (Supabase) yükler; farklı cihazlar arasında senkronizasyon sağlar.</li>
@@ -1990,7 +2165,7 @@
         </div>
 
         <div class="manual-section" id="man-sistem">
-          <h3>13. Tema ve Görünüm</h3>
+          <h3>14. Tema ve Görünüm</h3>
           <ul>
             <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
             <li>Tema tercihi otomatik olarak hatırlanır.</li>
@@ -1999,7 +2174,7 @@
         </div>
 
         <div class="manual-section" id="man-yonetim">
-          <h3>14. Yönetim ve Log Kayıtları</h3>
+          <h3>15. Yönetim ve Log Kayıtları</h3>
           <ul>
             <li><strong>Yönetim</strong> (yalnızca Admin): Kullanıcı ekleme, rol değiştirme, şifre sıfırlama ve kullanıcı silme işlemleri yapılır.</li>
             <li><strong>Log Kayıtları</strong> (yalnızca Admin): Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi tutulur.</li>
@@ -2008,7 +2183,7 @@
         </div>
 
         <div class="manual-section" id="man-ipucu">
-          <h3>15. İpuçları</h3>
+          <h3>16. İpuçları</h3>
           <ul>
             <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
             <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
@@ -2025,7 +2200,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

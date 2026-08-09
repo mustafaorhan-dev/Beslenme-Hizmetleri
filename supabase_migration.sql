@@ -26,3 +26,25 @@ DROP POLICY IF EXISTS "anon_role_permissions" ON config;
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
   USING (key = 'role_permissions')
   WITH CHECK (key = 'role_permissions');
+
+-- 4) KALİBRASYONA TABİ CİHAZLAR tablosu + erişim politikası
+CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
+  id BIGINT PRIMARY KEY,
+  cihaz_adi TEXT NOT NULL DEFAULT '',
+  marka_model TEXT DEFAULT '',
+  sicil_no TEXT DEFAULT '',
+  yapildi BOOLEAN DEFAULT false,
+  dogrulama TEXT DEFAULT '',
+  son_kalibrasyon TEXT DEFAULT '',
+  sonraki_kalibrasyon TEXT DEFAULT '',
+  konum TEXT DEFAULT '',
+  sorumlu TEXT DEFAULT '',
+  not_ TEXT DEFAULT '',
+  last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
+);
+
+ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari;
+CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
+  USING (true) WITH CHECK (true);

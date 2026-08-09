@@ -9,6 +9,7 @@ DROP POLICY IF EXISTS "anon_all_haccp" ON haccp_records;
 DROP POLICY IF EXISTS "anon_all_haccp_depo" ON haccp_depo_adlari;
 DROP POLICY IF EXISTS "anon_all_yag" ON yag_records;
 DROP POLICY IF EXISTS "anon_all_ambalaj" ON ambalaj_records;
+DROP POLICY IF EXISTS "anon_all_kalibrasyon" ON kalibrasyon_cihazlari;
 DROP POLICY IF EXISTS "anon_all_dishes" ON dishes;
 DROP POLICY IF EXISTS "anon_all_weekly_menu" ON weekly_menu;
 DROP POLICY IF EXISTS "anon_all_config" ON config;
@@ -101,6 +102,27 @@ CREATE TABLE IF NOT EXISTS ambalaj_records (
 ALTER TABLE ambalaj_records ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "ambalaj_records_all" ON ambalaj_records FOR ALL
+  USING (true) WITH CHECK (true);
+
+-- 6b. KALİBRASYONA TABİ CİHAZLAR
+CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
+  id BIGINT PRIMARY KEY,
+  cihaz_adi TEXT NOT NULL DEFAULT '',
+  marka_model TEXT DEFAULT '',
+  sicil_no TEXT DEFAULT '',
+  yapildi BOOLEAN DEFAULT false,
+  dogrulama TEXT DEFAULT '',
+  son_kalibrasyon TEXT DEFAULT '',
+  sonraki_kalibrasyon TEXT DEFAULT '',
+  konum TEXT DEFAULT '',
+  sorumlu TEXT DEFAULT '',
+  not_ TEXT DEFAULT '',
+  last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
+);
+
+ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
   USING (true) WITH CHECK (true);
 
 -- 7. YEMEK LİSTESİ (Dish Pool)
