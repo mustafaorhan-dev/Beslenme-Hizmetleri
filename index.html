@@ -424,7 +424,13 @@
       <div class="section-card">
         <div class="section-header">
           <h2>Son Kayıtlar</h2>
-          <span class="badge" id="lastRecordsBadge">0 kayıt</span>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span class="badge" id="lastRecordsBadge">0 kayıt</span>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('records')" title="Tüm kayıtları görüntüle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              Kayıtlara Git
+            </button>
+          </div>
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateDashboard">
