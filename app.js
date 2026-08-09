@@ -8610,12 +8610,15 @@ function renderKalibrasyon() {
   const pagination = document.getElementById('kalibrasyonPagination');
   if (pagination) {
     if (totalPages > 1) {
+      var fp = kalibrasyonPage === 0;
+      var lp = kalibrasyonPage >= totalPages - 1;
       pagination.innerHTML =
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (kalibrasyonPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
-        Array.from({length: totalPages}, function(_, i) {
-          return '<button class="btn-icon" data-kalibrasyon-page="' + i + '"' + (i === kalibrasyonPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
-        }).join('') +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (kalibrasyonPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+        '<button class="btn-icon" data-kalibrasyon-page="0"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>«</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        '<span style="font-weight:600;margin:0 4px">' + (kalibrasyonPage + 1) + ' / ' + totalPages + '</span>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>›</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>»</button>' +
+        '<span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">' + filtered.length + ' cihaz</span>';
     } else {
       pagination.innerHTML = '';
     }
