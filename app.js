@@ -3718,6 +3718,7 @@ async function exportEverything() {
   if (records.length > 0) tasks.push(exportDataCSV);
   if (haccpRecords.length > 0) tasks.push(exportHaccpCSV);
   if (yemekler.length > 0) tasks.push(exportYemekCSV);
+  if (kalibrasyonCihazlari.length > 0) tasks.push(exportKalibrasyonCSV);
   if (records.length > 0) tasks.push(exportDataSettings);
   if (tasks.length > 0) {
     tasks[0]();
