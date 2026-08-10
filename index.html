@@ -1355,29 +1355,47 @@
       <div class="hc-controls" id="hcControls"></div>
       <div class="section-card">
         <div class="section-header">
-          <h2>Öğrenci Başı Harcama Hesaplama</h2>
+          <h2>Başı Harcama Oranları (Öğrenci &amp; Personel)</h2>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:0.5rem">
           <div>
             <label for="hcOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Öğr. Başı Harcama Oranı (₺)</label>
             <input type="number" id="hcOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
           </div>
-          <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()">Oranı Kaydet</button>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()">Öğr. Oranı Kaydet</button>
           <span id="hcOranStatus" style="font-size:0.85rem"></span>
+          <div>
+            <label for="hcPersonelOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Pers. Başı Harcama Oranı (₺)</label>
+            <input type="number" id="hcPersonelOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetPersonelOran()">Pers. Oranı Kaydet</button>
+          <span id="hcPersonelOranStatus" style="font-size:0.85rem"></span>
         </div>
-        <div style="font-size:0.78rem;color:var(--text-muted)">Harcama Tutarı = Öğrenci Sayısı × Öğr. Başı Harcama Oranı. Oran değiştiğinde tablo ve grafik anında yeniden hesaplanır.</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">Öğrenci Harcama = Öğrenci Sayısı × Öğr. Başı Oran; Personel Harcama = Personel Sayısı × Pers. Başı Oran. Oran değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem">
         <div class="section-header">
-          <h2>Aylık Harcama Tutarı (₺)</h2>
+          <h2>Öğrenci Harcama Tutarı (₺)</h2>
           <span class="badge" id="hcChartBadge" style="display:none"></span>
         </div>
         <div class="chart-area" id="hcChartArea">
           <canvas id="canvasHarcamaMenu"></canvas>
           <div class="chart-empty" id="hcChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
         </div>
-        <div class="chart-note">Harcama Tutarı (₺) = Öğrenci Sayısı × Öğr. Başı Harcama Oranı</div>
+        <div class="chart-note">Öğrenci Harcama (₺) = Öğrenci Sayısı × Öğr. Başı Harcama Oranı</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2>Personel Harcama Tutarı (₺)</h2>
+          <span class="badge" id="hcPersonelChartBadge" style="display:none"></span>
+        </div>
+        <div class="chart-area" id="hcPersonelChartArea">
+          <canvas id="canvasHarcamaPersonel"></canvas>
+          <div class="chart-empty" id="hcPersonelChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note">Personel Harcama (₺) = Personel Sayısı × Pers. Başı Harcama Oranı</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem" id="hcTableArea">
@@ -1385,13 +1403,16 @@
           <h2>Harcama Hesaplama Tablosu</h2>
         </div>
         <div class="table-wrapper">
-          <table class="data-table" style="min-width:600px">
+          <table class="data-table" style="min-width:900px">
             <thead>
               <tr>
                 <th>Tarih</th>
                 <th>Öğrenci Sayısı</th>
-                <th>Oran (₺)</th>
-                <th>Harcama (₺)</th>
+                <th>Öğr. Oranı (₺)</th>
+                <th>Öğrenci Harcama (₺)</th>
+                <th>Personel Sayısı</th>
+                <th>Pers. Oranı (₺)</th>
+                <th>Personel Harcama (₺)</th>
               </tr>
             </thead>
             <tbody id="hcTbody"></tbody>
@@ -2147,9 +2168,10 @@
           <h3>12. Harcama</h3>
           <ul>
             <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
-            <li><strong>"Öğrenci Başı Harcama Hesaplama"</strong> kutusuna öğrenci sayısını girip hesaplatabilirsiniz.</li>
-            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafiği filtrelenir.</li>
-            <li>En üstteki kartlar: Toplam Maliyet, Öğrenci Sayısı, Öğrenci Başı Harcama ve En Yüksek Ay bilgisini gösterir.</li>
+            <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafikleri filtrelenir.</li>
+            <li><strong>Öğrenci Harcama Tutarı</strong> grafiği öğrenci sayısından, <strong>Personel Harcama Tutarı</strong> grafiği personel sayısından ayrı ayrı hesaplanır.</li>
+            <li>En üstteki kartlar: Toplam Öğrenci/Personel Harcama, Ortalama Aylık Harcama, Toplam Öğrenci/Personel ve En Yüksek Ay bilgisini gösterir.</li>
             <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
           </ul>
         </div>

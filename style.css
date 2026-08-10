@@ -1693,26 +1693,41 @@ td.porsiyon-warn {
   justify-content: flex-start;
   align-items: flex-start;
 }
-#hcChartArea canvas {
+#hcChartArea canvas,
+#hcPersonelChartArea canvas {
   max-width: none;
   max-height: none;
   margin: auto;
 }
-#hcChartArea::-webkit-scrollbar { width: 10px; height: 10px; }
-#hcChartArea::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; }
-#hcChartArea::-webkit-scrollbar-thumb {
+#hcChartArea::-webkit-scrollbar,
+#hcPersonelChartArea::-webkit-scrollbar { width: 10px; height: 10px; }
+#hcChartArea::-webkit-scrollbar-track,
+#hcPersonelChartArea::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; }
+#hcChartArea::-webkit-scrollbar-thumb,
+#hcPersonelChartArea::-webkit-scrollbar-thumb {
   background: var(--accent);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
-#hcChartArea::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-#hcChartArea::-webkit-scrollbar-corner { background: transparent; }
-#hcChartArea { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(0,0,0,0.05); }
+#hcChartArea::-webkit-scrollbar-thumb:hover,
+#hcPersonelChartArea::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+#hcChartArea::-webkit-scrollbar-corner,
+#hcPersonelChartArea::-webkit-scrollbar-corner { background: transparent; }
+#hcChartArea,
+#hcPersonelChartArea { scrollbar-width: thin; scrollbar-color: var(--accent) rgba(0,0,0,0.05); }
+
+#hcPersonelChartArea {
+  overflow: auto;
+  height: 360px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
 
 /* Harcama: KPI kartları (Panel'deki kpi-card yapısıyla aynı) */
 .hc-kpis .kpi-value { font-size: 1.5rem; }
-.hc-kpis .kpi-card:nth-child(4) .kpi-value { font-size: 1.2rem; }
+.hc-kpis .kpi-card:nth-child(7) .kpi-value,
+.hc-kpis .kpi-card:nth-child(8) .kpi-value { font-size: 1.2rem; }
 
 /* Harcama: tablo sayfalama (Kayıtlar sekmesindeki ile aynı) */
 .hc-pagination {

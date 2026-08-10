@@ -721,7 +721,7 @@ function doLogout() {
     supabaseClient.auth.signOut();
   }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -1625,6 +1625,15 @@ function getOgrenciBasiHarcamaOrani() {
 }
 function setOgrenciBasiHarcamaOrani(val) {
   localStorage.setItem('ogrenci_basi_harcama_orani', String(val));
+}
+
+// ─── PERSONEL BAŞINA HARCAMA ORANI ───────────────────────────────────────────
+function getPersonelBasiHarcamaOrani() {
+  var val = localStorage.getItem('personel_basi_harcama_orani');
+  return val !== null ? parseFloat(val) : 50.00;
+}
+function setPersonelBasiHarcamaOrani(val) {
+  localStorage.setItem('personel_basi_harcama_orani', String(val));
 }
 
 function haccpRecordToDB(r) {
@@ -6147,6 +6156,7 @@ function drawAllCharts() {
 
 // ─── HARCAMA MENÜSÜ ────────────────────────────────────────────────────────────
 let harcamaMenuChart = null;
+let harcamaPersonelChart = null;
 
 function renderHarcamaMenu() {
   hcUpdateNav();
@@ -6161,33 +6171,59 @@ function renderHarcamaMenu() {
     status.textContent = 'Kayıtlı oran: ' + saved.toFixed(2) + ' ₺' + (oran !== saved ? ' (kaydedilmemiş değişiklik)' : '');
     status.style.color = oran !== saved ? '#f59e0b' : '#22c55e';
   }
-  renderHarcamaMenuKpis(oran);
+  const persOranInput = document.getElementById('hcPersonelOran');
+  if (persOranInput && document.activeElement !== persOranInput) {
+    persOranInput.value = getPersonelBasiHarcamaOrani().toFixed(2);
+  }
+  const persOran = parseFloat(persOranInput && persOranInput.value) || 0;
+  const persStatus = document.getElementById('hcPersonelOranStatus');
+  if (persStatus) {
+    const persSaved = getPersonelBasiHarcamaOrani();
+    persStatus.textContent = 'Kayıtlı oran: ' + persSaved.toFixed(2) + ' ₺' + (persOran !== persSaved ? ' (kaydedilmemiş değişiklik)' : '');
+    persStatus.style.color = persOran !== persSaved ? '#f59e0b' : '#22c55e';
+  }
+  renderHarcamaMenuKpis(oran, persOran);
   renderHarcamaMenuChart(oran);
-  renderHarcamaMenuTable(oran);
+  renderHarcamaMenuPersonelChart(persOran);
+  renderHarcamaMenuTable(oran, persOran);
 }
 
-function renderHarcamaMenuKpis(oran) {
+function renderHarcamaMenuKpis(oran, persOran) {
   const el = document.getElementById('hcKpis');
   if (!el) return;
   const withOgrenci = hcActiveRecords().filter(r => (r.ogrenci || 0) > 0);
-  const totalHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
+  const withPersonel = hcActiveRecords().filter(r => (r.personel || 0) > 0);
+  const totalOgrenciHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
+  const totalPersonelHarcama = withPersonel.reduce((s, r) => s + (r.personel || 0) * persOran, 0);
   const totalOgrenci = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0), 0);
-  const monthly = {};
+  const totalPersonel = withPersonel.reduce((s, r) => s + (r.personel || 0), 0);
+  const monthlyOgrenci = {};
+  const monthlyPersonel = {};
   withOgrenci.forEach(r => {
     const d = new Date(r.tarih + 'T12:00:00');
     if (isNaN(d)) return;
     const key = (d.getMonth() + 1) + '/' + d.getFullYear();
-    if (!monthly[key]) monthly[key] = 0;
-    monthly[key] += (r.ogrenci || 0) * oran;
+    if (!monthlyOgrenci[key]) monthlyOgrenci[key] = 0;
+    monthlyOgrenci[key] += (r.ogrenci || 0) * oran;
   });
-  const vals = Object.values(monthly);
-  const avgMonthly = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-  const maxKey = vals.length ? Object.keys(monthly).reduce((a, b) => monthly[a] >= monthly[b] ? a : b) : null;
-  let maxLabel = '—';
-  if (maxKey) {
-    const parts = maxKey.split('/');
-    maxLabel = HC_MONTHS_TR[Number(parts[0]) - 1] + ' ' + parts[1];
-  }
+  withPersonel.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const key = (d.getMonth() + 1) + '/' + d.getFullYear();
+    if (!monthlyPersonel[key]) monthlyPersonel[key] = 0;
+    monthlyPersonel[key] += (r.personel || 0) * persOran;
+  });
+  const valsO = Object.values(monthlyOgrenci);
+  const valsP = Object.values(monthlyPersonel);
+  const avgMonthlyO = valsO.length ? valsO.reduce((a, b) => a + b, 0) / valsO.length : 0;
+  const avgMonthlyP = valsP.length ? valsP.reduce((a, b) => a + b, 0) / valsP.length : 0;
+  const maxKeyO = valsO.length ? Object.keys(monthlyOgrenci).reduce((a, b) => monthlyOgrenci[a] >= monthlyOgrenci[b] ? a : b) : null;
+  const maxKeyP = valsP.length ? Object.keys(monthlyPersonel).reduce((a, b) => monthlyPersonel[a] >= monthlyPersonel[b] ? a : b) : null;
+  const monthLabel = key => {
+    if (!key) return '—';
+    const parts = key.split('/');
+    return HC_MONTHS_TR[Number(parts[0]) - 1] + ' ' + parts[1];
+  };
   const fmtTL = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
   el.innerHTML = `
     <div class="kpi-card">
@@ -6195,21 +6231,39 @@ function renderHarcamaMenuKpis(oran) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
       </div>
       <div class="kpi-body">
-        <span class="kpi-label">Toplam Harcama</span>
-        <span class="kpi-value" id="hcTotal">${fmtTL(totalHarcama)}</span>
+        <span class="kpi-label">Toplam Öğrenci Harcama</span>
+        <span class="kpi-value" id="hcTotal">${fmtTL(totalOgrenciHarcama)}</span>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon kpi-blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
       </div>
       <div class="kpi-body">
-        <span class="kpi-label">Ort. Aylık Harcama</span>
-        <span class="kpi-value" id="hcAvg">${fmtTL(avgMonthly)}</span>
+        <span class="kpi-label">Toplam Personel Harcama</span>
+        <span class="kpi-value" id="hcPersonelTotal">${fmtTL(totalPersonelHarcama)}</span>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Ort. Aylık Öğr. Harcama</span>
+        <span class="kpi-value" id="hcAvg">${fmtTL(avgMonthlyO)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Ort. Aylık Pers. Harcama</span>
+        <span class="kpi-value" id="hcPersonelAvg">${fmtTL(avgMonthlyP)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       </div>
       <div class="kpi-body">
@@ -6218,12 +6272,30 @@ function renderHarcamaMenuKpis(oran) {
       </div>
     </div>
     <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Toplam Personel</span>
+        <span class="kpi-value" id="hcPersonel">${totalPersonel.toLocaleString('tr-TR')}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
       <div class="kpi-icon kpi-orange">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       </div>
       <div class="kpi-body">
-        <span class="kpi-label">En Yüksek Ay</span>
-        <span class="kpi-value" id="hcMaxMonth" style="font-size:1.25rem">${maxLabel}</span>
+        <span class="kpi-label">En Yüksek Öğr. Ay</span>
+        <span class="kpi-value" id="hcMaxMonth" style="font-size:1.25rem">${monthLabel(maxKeyO)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">En Yüksek Pers. Ay</span>
+        <span class="kpi-value" id="hcPersonelMaxMonth" style="font-size:1.25rem">${monthLabel(maxKeyP)}</span>
       </div>
     </div>
   `;
@@ -6298,7 +6370,7 @@ function renderHarcamaMenuChart(oran) {
     data: {
       labels,
       datasets: [{
-        label: 'Aylık Harcama (₺)',
+        label: 'Öğrenci Harcama (₺)',
         data,
         backgroundColor: barColors,
         borderColor: barColors,
@@ -6343,13 +6415,123 @@ function renderHarcamaMenuChart(oran) {
   });
 }
 
-function renderHarcamaMenuTable(oran) {
+function renderHarcamaMenuPersonelChart(persOran) {
+  const canvas = document.getElementById('canvasHarcamaPersonel');
+  const empty = document.getElementById('hcPersonelChartEmpty');
+  if (!canvas || !empty) return;
+  if (harcamaPersonelChart) { harcamaPersonelChart.destroy(); harcamaPersonelChart = null; }
+
+  const hasAnyDate = records.some(r => { const d = new Date(r.tarih + 'T12:00:00'); return !isNaN(d); });
+  if (!hasAnyDate) {
+    empty.style.display = 'block';
+    canvas.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  const active = hcActiveRecords();
+  const monthly = {};
+  active.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const m = d.getMonth();
+    monthly[m] = (monthly[m] || 0) + (r.personel || 0) * persOran;
+  });
+
+  let labels, data;
+  if (hcSelectedMonth === null) {
+    labels = HC_MONTHS_TR.map((m, i) => m.slice(0, 3) + ' ' + String(hcSelectedYear).slice(2));
+    data = HC_MONTHS_TR.map((_, i) => monthly[i] || 0);
+  } else {
+    labels = [HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear];
+    data = [monthly[hcSelectedMonth] || 0];
+  }
+
+  const chartMax = Math.max.apply(null, data.length ? data : [0]);
+  const suggestedMax = chartMax > 0 ? chartMax * 1.18 : 10;
+
+  const area = canvas.parentElement;
+  const areaW = Math.max(area.clientWidth || 400, 320);
+  const barW = 88;
+  const targetW = Math.max(areaW, labels.length * barW + 70);
+  const canvasH = 340;
+  canvas.style.width = targetW + 'px';
+  canvas.style.height = canvasH + 'px';
+  canvas.width = targetW;
+  canvas.height = canvasH;
+  area.style.width = '100%';
+
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const colors = {
+    text: isDark ? '#e2e8f0' : '#1e293b',
+    grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+  };
+  const baseColor = '#6366f1';
+  const selColor = '#f59e0b';
+  const barColors = data.map((v, i) =>
+    hcSelectedMonth !== null && i === 0 ? selColor :
+    hcSelectedMonth === null && monthly[i] === 0 ? 'rgba(148,163,184,0.25)' : baseColor
+  );
+
+  harcamaPersonelChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Personel Harcama (₺)',
+        data,
+        backgroundColor: barColors,
+        borderColor: barColors,
+        borderRadius: 6,
+        barPercentage: 0.8,
+        categoryPercentage: 0.75,
+        maxBarThickness: 72,
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      plugins: {
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        tooltip: {
+          backgroundColor: '#000000',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          bodyFont: { size: 11, family: 'Inter' },
+          titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+        },
+        valueLabels: true,
+      },
+      scales: {
+        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            suggestedMax: suggestedMax,
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            grid: { color: colors.grid }
+          }
+      }
+    },
+    plugins: [chartValueLabelPlugin]
+  });
+}
+
+function renderHarcamaMenuTable(oran, persOran) {
   const tbody = document.getElementById('hcTbody');
   const pag = document.getElementById('hcPagination');
   if (!tbody) return;
   const sorted = hcActiveRecords().sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
     if (pag) pag.innerHTML = '';
     return;
   }
@@ -6359,12 +6541,17 @@ function renderHarcamaMenuTable(oran) {
   const start = hcTablePage * perPage;
   const pageRows = sorted.slice(start, start + perPage);
   tbody.innerHTML = pageRows.map(r => {
-    const tutar = (r.ogrenci || 0) * oran;
+    const ogrTutar = (r.ogrenci || 0) * oran;
+    const persTutar = (r.personel || 0) * persOran;
+    const tl = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
     return `<tr>
       <td>${displayDate(r.tarih)}</td>
       <td>${(r.ogrenci || 0).toLocaleString('tr-TR')}</td>
-      <td>${oran.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
-      <td>${tutar.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
+      <td>${tl(oran)}</td>
+      <td>${tl(ogrTutar)}</td>
+      <td>${(r.personel || 0).toLocaleString('tr-TR')}</td>
+      <td>${tl(persOran)}</td>
+      <td>${tl(persTutar)}</td>
     </tr>`;
   }).join('');
   if (pag) {
@@ -6448,9 +6635,11 @@ function hcGoToPage(p) {
   if (p < 1 || p > total) return;
   if (p - 1 !== hcTablePage) {
     hcTablePage = p - 1;
-    var oranInput = document.getElementById('hcOran');
-    var oran = parseFloat(oranInput && oranInput.value) || 0;
-    renderHarcamaMenuTable(oran);
+    const oranInput = document.getElementById('hcOran');
+    const oran = parseFloat(oranInput && oranInput.value) || 0;
+    const persOranInput = document.getElementById('hcPersonelOran');
+    const persOran = parseFloat(persOranInput && persOranInput.value) || 0;
+    renderHarcamaMenuTable(oran, persOran);
   }
 }
 
@@ -6476,6 +6665,15 @@ function hcUpdateNav() {
       badge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
     }
   }
+  var persBadge = document.getElementById('hcPersonelChartBadge');
+  if (persBadge) {
+    if (hcSelectedMonth === null) {
+      persBadge.style.display = 'none';
+    } else {
+      persBadge.style.display = 'inline-flex';
+      persBadge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
+    }
+  }
 }
 
 function canEditHarcamaOran() {
@@ -6497,6 +6695,23 @@ function hcKaydetOran() {
     return;
   }
   setOgrenciBasiHarcamaOrani(val);
+  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.style.color = '#22c55e';
+  renderHarcamaMenu();
+}
+
+function hcKaydetPersonelOran() {
+  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const input = document.getElementById('hcPersonelOran');
+  const val = parseFloat(input && input.value);
+  const status = document.getElementById('hcPersonelOranStatus');
+  if (!status) return;
+  if (!val || isNaN(val) || val <= 0) {
+    status.textContent = 'Geçerli bir oran girin!';
+    status.style.color = '#ef4444';
+    return;
+  }
+  setPersonelBasiHarcamaOrani(val);
   status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
