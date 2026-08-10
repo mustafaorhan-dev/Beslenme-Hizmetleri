@@ -3046,9 +3046,23 @@ function exportYillikPDF() {
   const replacements = [];
   canvases.forEach(c => {
     const img = document.createElement('img');
-    img.src = c.toDataURL();
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
+    const pieArea = c.closest ? c.closest('.chart-area-pie') : null;
+    if (pieArea) {
+      const w = c.width, h = c.height;
+      const side = Math.max(20, Math.floor(Math.min(w, h) * 0.96));
+      const sx = Math.floor((w - side) / 2);
+      const sy = Math.floor((h - side) / 2);
+      const tmp = document.createElement('canvas');
+      tmp.width = side; tmp.height = side;
+      tmp.getContext('2d').drawImage(c, sx, sy, side, side, 0, 0, side, side);
+      img.src = tmp.toDataURL();
+      img.style.width = '110px';
+      img.style.height = '110px';
+    } else {
+      img.src = c.toDataURL();
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+    }
     replacements.push({ old: c.outerHTML, new: img.outerHTML });
   });
   let html = document.getElementById('content-yillik').innerHTML;
@@ -3062,6 +3076,16 @@ function exportYillikPDF() {
       .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; page-break-inside: avoid; }
       .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
       canvas { max-width: 100%; height: auto !important; }
+      .donut-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+      .donut-grid .chart-card { padding: 0.6rem 0.75rem; text-align: center; }
+      .donut-grid .chart-area-pie { height: 110px; display: flex; align-items: center; justify-content: center; }
+      .donut-grid .chart-area-pie img { width: 110px; height: 110px; object-fit: contain; margin: 0 auto; }
+      .donut-grid .section-header h2 { font-size: 0.8rem; margin: 0 0 0.4rem; }
+      .donut-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.6rem 1rem; font-size: 0.7rem; margin-top: 0.4rem; }
+      .donut-legend-item { display: flex; align-items: center; gap: 0.25rem; color: #333; }
+      .donut-legend-item .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+      .donut-legend-item .val { font-weight: 700; }
+      .chart-note { font-size: 0.68rem; color: #666; margin-top: 0.35rem; }
       .chart-empty { font-size: 0.8rem; color: #999; text-align: center; padding: 2rem; }
       .chart-year-filter { display: none; }
       .toolbar-actions { display: none; }
