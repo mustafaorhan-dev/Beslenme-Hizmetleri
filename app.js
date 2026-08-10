@@ -7899,9 +7899,11 @@ function drawYagChart(list) {
   canvas.style.display = 'block';
 
   var parent = canvas.parentElement;
-  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  var w = Math.max(parent.clientWidth || 400, 320);
   canvas.style.width = w + 'px';
   canvas.style.height = '250px';
+  canvas.width = w;
+  canvas.height = 250;
   var ctx = canvas.getContext('2d');
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -8008,9 +8010,11 @@ function drawYagTurChart(list) {
   canvas.style.display = 'block';
 
   var parent = canvas.parentElement;
-  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  var w = Math.max(parent.clientWidth || 400, 320);
   canvas.style.width = w + 'px';
   canvas.style.height = '230px';
+  canvas.width = w;
+  canvas.height = 230;
   var ctx = canvas.getContext('2d');
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -8504,9 +8508,11 @@ function drawAmbalajChart(list) {
   canvas.style.display = 'block';
 
   var parent = canvas.parentElement;
-  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  var w = Math.max(parent.clientWidth || 400, 320);
   canvas.style.width = w + 'px';
   canvas.style.height = '250px';
+  canvas.width = w;
+  canvas.height = 250;
   var ctx = canvas.getContext('2d');
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -8616,9 +8622,11 @@ function drawAmbalajTurChart(list) {
   canvas.style.display = 'block';
 
   var parent = canvas.parentElement;
-  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  var w = Math.max(parent.clientWidth || 400, 320);
   canvas.style.width = w + 'px';
   canvas.style.height = '230px';
+  canvas.width = w;
+  canvas.height = 230;
   var ctx = canvas.getContext('2d');
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
