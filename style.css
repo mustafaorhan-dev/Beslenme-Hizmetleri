@@ -1490,7 +1490,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .donut-grid .chart-card { padding: 1rem; margin-bottom: 0; }
 .donut-grid .chart-card .section-header { padding: 0; margin-bottom: 0.75rem; }
 .donut-grid .chart-card .section-header h2 { font-size: 0.85rem; line-height: 1.3; }
-.chart-area-pie { height: 46px; }
+.chart-area-pie { height: 40px; }
 .donut-legend {
   display: flex;
   justify-content: center;
