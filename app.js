@@ -5567,6 +5567,12 @@ function renderYearlyCharts() {
     } else if (thisTotal > 0) {
       center = { arrow: '●', arrowColor: cUp, text: 'Yeni', color: cUp, fontSize: 10 };
     }
+    var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
+    if (legendEl) {
+      legendEl.innerHTML =
+        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + ' (Bu Yıl)<span class="val" style="color:' + color + '">' + curTxt + '</span></div>' +
+        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '66"></span>' + prev + ' (Geçen Yıl)<span class="val" style="color:' + color + '">' + prevTxt + '</span></div>';
+    }
     var chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -5586,12 +5592,8 @@ function renderYearlyCharts() {
         cutout: '58%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
-          legend: {
-            position: 'bottom',
-            align: 'center',
-            labels: { color: textColor, font: { size: 9 }, boxWidth: 8, boxHeight: 8, padding: 6, usePointStyle: true }
-          },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 13, center: center },
+          legend: { display: false },
+          donutLabels: { enabled: false, values: [], colors: [], center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -5736,14 +5738,15 @@ const donutLabelsPlugin = {
   id: 'donutLabels',
   afterDatasetsDraw(chart) {
     var opts = chart.options.plugins && chart.options.plugins.donutLabels;
-    if (!opts || !opts.enabled) return;
+    if (!opts) return;
     var meta = chart.getDatasetMeta(0);
     if (!meta.data.length) return;
     var ctx = chart.ctx;
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    meta.data.forEach(function(arc, i) {
+    if (opts.enabled) {
+      meta.data.forEach(function(arc, i) {
       var value = opts.values && opts.values[i];
       if (value === undefined || value === null) return;
       var mid = (arc.startAngle + arc.endAngle) / 2;
@@ -5758,6 +5761,7 @@ const donutLabelsPlugin = {
       ctx.fillStyle = (opts.colors && opts.colors[i]) || '#334155';
       ctx.fillText(value, x, y);
     });
+    }
     var ctr = opts.center;
     if (ctr && ctr.text) {
       var cArc = meta.data[0];
