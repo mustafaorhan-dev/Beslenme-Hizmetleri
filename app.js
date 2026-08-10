@@ -5589,11 +5589,11 @@ function renderYearlyCharts() {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
-        cutout: '58%',
+        cutout: '60%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: { display: false },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 8, center: center },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 10, center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -5753,7 +5753,7 @@ const donutLabelsPlugin = {
       var radius = (arc.innerRadius + arc.outerRadius) / 2;
       var x = arc.x + Math.cos(mid) * radius;
       var y = arc.y + Math.sin(mid) * radius;
-      var fs = value.length <= 5 ? (opts.fontSize || 10) : Math.max(7, (opts.fontSize || 10) - 2);
+      var fs = value.length <= 6 ? (opts.fontSize || 10) : Math.max(8, (opts.fontSize || 10) - 2);
       ctx.font = 'bold ' + fs + 'px Inter, sans-serif';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
