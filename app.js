@@ -5553,7 +5553,7 @@ function renderYearlyCharts() {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
-        cutout: '62%',
+        cutout: '58%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: {
@@ -5561,7 +5561,7 @@ function renderYearlyCharts() {
             align: 'center',
             labels: { color: textColor, font: { size: 9 }, boxWidth: 8, boxHeight: 8, padding: 6, usePointStyle: true }
           },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 10 },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 13 },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
