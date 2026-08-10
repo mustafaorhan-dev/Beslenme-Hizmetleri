@@ -5553,7 +5553,7 @@ function renderYearlyCharts() {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
-        cutout: '68%',
+        cutout: '62%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: {
@@ -5561,7 +5561,7 @@ function renderYearlyCharts() {
             align: 'center',
             labels: { color: textColor, font: { size: 9 }, boxWidth: 8, boxHeight: 8, padding: 6, usePointStyle: true }
           },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#ffffff', color], fontSize: 11 },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 10 },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -5721,8 +5721,11 @@ const donutLabelsPlugin = {
       var x = arc.x + Math.cos(mid) * radius;
       var y = arc.y + Math.sin(mid) * radius;
       var fs = value.length <= 5 ? (opts.fontSize || 10) : Math.max(7, (opts.fontSize || 10) - 2);
-      ctx.fillStyle = (opts.colors && opts.colors[i]) || '#334155';
       ctx.font = 'bold ' + fs + 'px Inter, sans-serif';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.strokeText(value, x, y);
+      ctx.fillStyle = (opts.colors && opts.colors[i]) || '#334155';
       ctx.fillText(value, x, y);
     });
     ctx.restore();
