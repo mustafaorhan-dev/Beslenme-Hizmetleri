@@ -834,39 +834,22 @@
     <div class="tab-content" id="content-yag">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
         <div style="flex:1"></div>
-          <div class="toolbar-actions">
-            <button class="btn btn-primary btn-sm" onclick="openYagModal()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              Yeni Kayıt
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="printYagList()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-              Liste
-            </button>
-          </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openYagModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printYagList()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            Liste
+          </button>
         </div>
-        <div class="section-card" style="margin-top:0">
-          <div class="section-header">
-            <h2>Atık Yağ Özeti</h2>
-          </div>
-          <div class="report-grid" id="yagOzetGrid"></div>
-        </div>
-        <div class="section-card">
-          <div class="section-header">
-            <h2>Atık Yağ Kayıtları</h2>
-          <span class="badge" id="yagBadge">0 kayıt</span>
-        </div>
-        <!-- Yag Chart -->
-        <div style="margin-bottom:0.75rem">
-          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
-            <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Atık Yağ Grafiği — yıl seçin, aya tıklayın</span>
-            <div id="yagChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
-          </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);padding:0.1rem 0 0.3rem">Yıl filtresi bu grafiği, tarih filtresi aşağıdaki tabloyu filtreler.</div>
-          <div class="chart-area" id="chartYag" style="height:170px">
-            <canvas id="canvasYag"></canvas>
-            <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
-          </div>
+      </div>
+
+      <div class="section-card" style="margin-top:0">
+        <div class="section-header">
+          <h2>Atık Yağ Filtreleri</h2>
+          <span class="badge" id="yagFiltreBadge" style="display:none">Filtreli</span>
         </div>
         <div class="filter-bar">
           <span class="filter-label">Tarih:</span>
@@ -886,6 +869,47 @@
             <option value="Kızartma Atık Yağı">Kızartma Atık Yağı</option>
             <option value="Diğer">Diğer</option>
           </select>
+          <span class="filter-label">Yıl:</span>
+          <select id="yagYilFilter" onchange="yagPage=0;yagYilDegistir(this.value)"></select>
+          <button class="btn btn-ghost btn-sm" onclick="yagSifirla()">Sıfırla</button>
+        </div>
+        <div id="yagFiltreOzet" style="font-size:0.75rem;color:var(--text-muted);padding-top:0.25rem"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Atık Yağ Özeti</h2>
+        </div>
+        <div class="report-grid" id="yagOzetGrid"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Atık Yağ Grafikleri</h2>
+        </div>
+        <div class="chart-subheader">
+          <h3>Aylık Atık Yağ Miktarı (lt)</h3>
+          <span class="chart-subhint">Yıl seçilince bir önceki yılla karşılaştırılır · Çubuğa tıklayınca o ayın detayı açılır</span>
+        </div>
+        <div class="chart-area" id="chartYag" style="height:270px">
+          <canvas id="canvasYag"></canvas>
+          <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note">Tarih, yağ türü ve yıl filtrelerine göre aylık atık yağ toplamları</div>
+        <div class="chart-subheader" style="margin-top:1.25rem">
+          <h3>Yağ Türü Dağılımı</h3>
+          <span class="chart-subhint">Seçilen filtrelere göre yağ türlerinin oransal dağılımı</span>
+        </div>
+        <div class="chart-area" id="chartYagTur" style="height:250px">
+          <canvas id="canvasYagTur"></canvas>
+          <div class="chart-empty" id="chartYagTurEmpty" style="font-size:0.8rem;padding:20px">Veri olduğunda tür dağılımı gösterilecek</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Atık Yağ Kayıtları</h2>
+          <span class="badge" id="yagBadge">0 kayıt</span>
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateYag">
@@ -917,39 +941,22 @@
     <div class="tab-content" id="content-ambalaj">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
         <div style="flex:1"></div>
-          <div class="toolbar-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              Yeni Kayıt
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="printAmbalajList()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-              Liste
-            </button>
-          </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printAmbalajList()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            Liste
+          </button>
         </div>
-        <div class="section-card" style="margin-top:0">
-          <div class="section-header">
-            <h2>Ambalaj Atığı Özeti</h2>
-          </div>
-          <div class="report-grid" id="ambalajOzetGrid"></div>
-        </div>
-        <div class="section-card">
-          <div class="section-header">
-            <h2>Ambalaj Atıkları Kayıtları</h2>
-          <span class="badge" id="ambalajBadge">0 kayıt</span>
-        </div>
-        <!-- Ambalaj Chart -->
-        <div style="margin-bottom:0.75rem">
-          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
-            <span style="font-size:0.8rem;color:var(--text-muted)">Aylık Ambalaj Atığı Grafiği — yıl seçin, aya tıklayın</span>
-            <div id="ambalajChartYears" style="display:flex;gap:4px;margin-left:auto"></div>
-          </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);padding:0.1rem 0 0.3rem">Yıl filtresi bu grafiği, tarih filtresi aşağıdaki tabloyu filtreler.</div>
-          <div class="chart-area" id="chartAmbalaj" style="height:170px">
-            <canvas id="canvasAmbalaj"></canvas>
-            <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
-          </div>
+      </div>
+
+      <div class="section-card" style="margin-top:0">
+        <div class="section-header">
+          <h2>Ambalaj Atığı Filtreleri</h2>
+          <span class="badge" id="ambalajFiltreBadge" style="display:none">Filtreli</span>
         </div>
         <div class="filter-bar">
           <span class="filter-label">Tarih:</span>
@@ -966,6 +973,47 @@
             <option value="Karışık">Karışık</option>
             <option value="Diğer">Diğer</option>
           </select>
+          <span class="filter-label">Yıl:</span>
+          <select id="ambalajYilFilter" onchange="ambalajPage=0;ambalajYilDegistir(this.value)"></select>
+          <button class="btn btn-ghost btn-sm" onclick="ambalajSifirla()">Sıfırla</button>
+        </div>
+        <div id="ambalajFiltreOzet" style="font-size:0.75rem;color:var(--text-muted);padding-top:0.25rem"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Ambalaj Atığı Özeti</h2>
+        </div>
+        <div class="report-grid" id="ambalajOzetGrid"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Ambalaj Atığı Grafikleri</h2>
+        </div>
+        <div class="chart-subheader">
+          <h3>Aylık Ambalaj Atığı Miktarı (kg)</h3>
+          <span class="chart-subhint">Yıl seçilince bir önceki yılla karşılaştırılır · Çubuğa tıklayınca o ayın detayı açılır</span>
+        </div>
+        <div class="chart-area" id="chartAmbalaj" style="height:270px">
+          <canvas id="canvasAmbalaj"></canvas>
+          <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note">Tarih, atık türü ve yıl filtrelerine göre aylık ambalaj atığı toplamları (kg)</div>
+        <div class="chart-subheader" style="margin-top:1.25rem">
+          <h3>Atık Türü Dağılımı</h3>
+          <span class="chart-subhint">Seçilen filtrelere göre ambalaj türlerinin oransal dağılımı</span>
+        </div>
+        <div class="chart-area" id="chartAmbalajTur" style="height:250px">
+          <canvas id="canvasAmbalajTur"></canvas>
+          <div class="chart-empty" id="chartAmbalajTurEmpty" style="font-size:0.8rem;padding:20px">Veri olduğunda tür dağılımı gösterilecek</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2>Ambalaj Atıkları Kayıtları</h2>
+          <span class="badge" id="ambalajBadge">0 kayıt</span>
         </div>
         <div class="table-wrapper">
           <div class="empty-state" id="emptyStateAmbalaj">
@@ -2127,8 +2175,10 @@
           <h3>8. Atık Yağ</h3>
           <ul>
             <li>Bitkisel atık yağ toplama ve tahliye kayıtlarının tutulduğu bölümdür.</li>
-            <li>Biriktirilen yağ miktarı ve teslim edilen miktar ayrı ayrı izlenir.</li>
-            <li>Kayıtlar aylık bazda özetlenir ve Grafikler bölümünde gösterilir.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, yağ türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır; <strong>Yağ Türü Dağılımı</strong> pastası türlerin oransal payını gösterir.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
           </ul>
         </div>
 
@@ -2136,8 +2186,10 @@
           <h3>9. Ambalaj Atıkları</h3>
           <ul>
             <li>Plastik, kağıt, cam ve metal ambalaj atıklarının kayıtlarının tutulduğu bölümdür.</li>
-            <li>Her tür için ayrı ayrı miktar girilir ve aylık özet görüntülenir.</li>
-            <li>Veriler geri dönüşüm raporlaması için Grafikler bölümünde kullanılır.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, atık türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır; <strong>Atık Türü Dağılımı</strong> pastası türlerin oransal payını gösterir.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
           </ul>
         </div>
 

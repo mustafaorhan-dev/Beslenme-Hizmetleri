@@ -7600,6 +7600,76 @@ function renderYagOzet(list) {
   grid.innerHTML = html;
 }
 
+function getYagBaseFiltered() {
+  let f = [...yagRecords];
+  var bas = document.getElementById('yagTarihBas');
+  var bit = document.getElementById('yagTarihBit');
+  var tur = document.getElementById('yagTurFilter');
+  if (bas && bas.value) f = f.filter(function(r) { return r.tarih >= bas.value; });
+  if (bit && bit.value) f = f.filter(function(r) { return r.tarih <= bit.value; });
+  if (tur && tur.value) f = f.filter(function(r) { return r.tur === tur.value; });
+  return f;
+}
+
+function getYagFiltered() {
+  let f = getYagBaseFiltered();
+  if (yagSelectedYear) f = f.filter(function(r) { return (r.tarih || '').slice(0, 4) === yagSelectedYear; });
+  return f;
+}
+
+function yagYilDegistir(v) {
+  yagSelectedYear = v || '';
+  renderYagTable();
+}
+
+function yagSifirla() {
+  ['yagTarihBas', 'yagTarihBit'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var tur = document.getElementById('yagTurFilter');
+  if (tur) tur.value = '';
+  yagSelectedYear = '';
+  yagPage = 0;
+  renderYagTable();
+}
+
+function renderYagFilterBar() {
+  var sel = document.getElementById('yagYilFilter');
+  var set = {};
+  getYagBaseFiltered().forEach(function(r) {
+    if (r.tarih) set[r.tarih.slice(0, 4)] = true;
+  });
+  var years = Object.keys(set).sort();
+  if (sel) {
+    if (yagSelectedYear && years.indexOf(yagSelectedYear) === -1) {
+      yagSelectedYear = years.length ? years[years.length - 1] : '';
+    }
+    var html = '<option value="">Tümü</option>' + years.map(function(y) {
+      return '<option value="' + y + '"' + (yagSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
+    }).join('');
+    sel.innerHTML = html;
+  }
+  var bas = document.getElementById('yagTarihBas');
+  var bit = document.getElementById('yagTarihBit');
+  var tur = document.getElementById('yagTurFilter');
+  var active = !!((bas && bas.value) || (bit && bit.value) || (tur && tur.value) || yagSelectedYear);
+  var badge = document.getElementById('yagFiltreBadge');
+  if (badge) badge.style.display = active ? 'inline-flex' : 'none';
+  var ozet = document.getElementById('yagFiltreOzet');
+  if (ozet) {
+    var parts = [];
+    if ((bas && bas.value) || (bit && bit.value)) {
+      parts.push((bas && bas.value ? displayDate(bas.value) : 'Başlangıç') + ' – ' + (bit && bit.value ? displayDate(bit.value) : 'Bitiş'));
+    }
+    if (tur && tur.value) parts.push('Tür: ' + tur.value);
+    if (yagSelectedYear) parts.push('Yıl: ' + yagSelectedYear);
+    ozet.textContent = parts.length
+      ? 'Aktif filtre: ' + parts.join(' · ')
+      : 'Filtre yok — tüm atık yağ kayıtları gösteriliyor.';
+  }
+}
+
 function renderYagTable() {
   const tbody = document.getElementById('yagTbody');
   const table = document.getElementById('yagTable');
@@ -7608,28 +7678,27 @@ function renderYagTable() {
 
   badge.textContent = yagRecords.length + ' kayıt';
 
+  renderYagFilterBar();
+
+  const filtered = getYagFiltered();
+
   if (yagRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
     renderYagOzet([]);
-    drawYagChart();
+    drawYagChart([]);
+    drawYagTurChart([]);
     return;
   }
-
-  let filtered = [...yagRecords];
-  var yagTarihBas = document.getElementById('yagTarihBas');
-  var yagTarihBit = document.getElementById('yagTarihBit');
-  if (yagTarihBas && yagTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= yagTarihBas.value; });
-  if (yagTarihBit && yagTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= yagTarihBit.value; });
-  var yagTurFilter = document.getElementById('yagTurFilter');
-  if (yagTurFilter && yagTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === yagTurFilter.value; });
 
   if (filtered.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
     empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     renderYagOzet([]);
-    drawYagChart();
+    drawYagChart([]);
+    drawYagTurChart([]);
     return;
   }
   empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
@@ -7683,7 +7752,8 @@ function renderYagTable() {
     }
   }
 
-  drawYagChart();
+  drawYagChart(filtered);
+  drawYagTurChart(filtered);
 }
 
 function openYagModal(id) {
@@ -7774,87 +7844,112 @@ async function deleteYagRecord(id) {
 }
 
 let yagChartInstance = null;
-let yagChartYear = String(new Date().getFullYear());
+let yagTurChartInstance = null;
+let yagSelectedYear = '';
 
-function drawYagChart() {
+var AYLAR_KISA = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+function drawYagChart(list) {
   var canvas = document.getElementById('canvasYag');
   var empty = document.getElementById('chartYagEmpty');
-  var yearContainer = document.getElementById('yagChartYears');
   if (!canvas || !empty) return;
-
-  // build year filter
-  var years = {};
-  yagRecords.forEach(function(r) {
-    if (!r.tarih) return;
-    var y = r.tarih.slice(0, 4);
-    if (y) years[y] = true;
-  });
-  var yearList = Object.keys(years).sort();
-  if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
-  if (yearList.indexOf(yagChartYear) === -1 && yagChartYear !== '') {
-    yagChartYear = yearList[yearList.length - 1];
-  }
-  if (yearContainer) {
-    var html = '<select onchange="yagChartYear=this.value;drawYagChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
-    html += '<option value=""' + (yagChartYear === '' ? ' selected' : '') + '>Tümü</option>';
-    yearList.forEach(function(y) {
-      var sel = yagChartYear === y ? ' selected' : '';
-      html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
-    });
-    html += '</select>';
-    yearContainer.innerHTML = html;
-  }
+  if (yagChartInstance) { yagChartInstance.destroy(); yagChartInstance = null; }
 
   var monthly = {};
-  yagRecords.forEach(function(r) {
+  list.forEach(function(r) {
     if (!r.tarih) return;
-    if (yagChartYear !== '' && r.tarih.slice(0, 4) !== yagChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
     monthly[mk] = (monthly[mk] || 0) + (Number(r.miktar) || 0);
   });
-  var labels = Object.keys(monthly).sort(function(a, b) {
-    var pa = a.split('/'), pb = b.split('/');
-    return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
-  });
-  var values = labels.map(function(k) { return monthly[k]; });
 
-  if (labels.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  var labels = [], values = [], barKeys = [], prevValues = null, prevYear = null;
+  if (yagSelectedYear) {
+    var y = Number(yagSelectedYear);
+    for (var i = 0; i < 12; i++) {
+      var mk0 = (i < 9 ? '0' + (i + 1) : String(i + 1)) + '/' + y;
+      labels.push(AYLAR_KISA[i]);
+      values.push(monthly[mk0] || 0);
+      barKeys.push({ y: y, m: i });
+    }
+    prevYear = y - 1;
+    var prevMonthly = {};
+    getYagBaseFiltered().forEach(function(r) {
+      if (!r.tarih || r.tarih.slice(0, 4) !== String(prevYear)) return;
+      var m = parseInt(r.tarih.slice(5, 7), 10) - 1;
+      if (!isNaN(m)) prevMonthly[m] = (prevMonthly[m] || 0) + (Number(r.miktar) || 0);
+    });
+    prevValues = [];
+    for (var j = 0; j < 12; j++) prevValues.push(prevMonthly[j] || 0);
+  } else {
+    Object.keys(monthly).sort(function(a, b) {
+      var pa = a.split('/'), pb = b.split('/');
+      return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
+    }).forEach(function(k) {
+      var p = k.split('/');
+      labels.push(AYLAR_KISA[Number(p[0]) - 1] + ' \'' + String(Number(p[1])).slice(2));
+      values.push(monthly[k]);
+      barKeys.push({ y: Number(p[1]), m: Number(p[0]) - 1 });
+    });
+  }
+
+  var hasCurrent = values.some(function(v) { return v > 0; });
+  var hasPrev = prevValues !== null && prevValues.some(function(v) { return v > 0; });
+  if (!hasCurrent && !hasPrev) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
   empty.style.display = 'none';
   canvas.style.display = 'block';
 
-  // size canvas
   var parent = canvas.parentElement;
   var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
   canvas.style.width = w + 'px';
-  canvas.style.height = '160px';
+  canvas.style.height = '250px';
   var ctx = canvas.getContext('2d');
-
-  // destroy old
-  if (yagChartInstance) { yagChartInstance.destroy(); yagChartInstance = null; }
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var textColor = isDark ? '#e2e8f0' : '#1e293b';
   var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  var mainColor = '#f97316';
+
+  var barColors = values.map(function(v) { return v > 0 ? mainColor : 'rgba(148,163,184,0.25)'; });
+
+  var datasets = [{
+    label: yagSelectedYear ? 'Atık Yağ ' + yagSelectedYear + ' (lt)' : 'Atık Yağ (lt)',
+    data: values,
+    backgroundColor: barColors,
+    borderRadius: 4,
+    barPercentage: 0.6,
+    categoryPercentage: 0.75,
+    maxBarThickness: 52
+  }];
+  if (hasPrev) {
+    datasets.push({
+      label: 'Önceki Yıl ' + prevYear + ' (lt)',
+      data: prevValues,
+      type: 'line',
+      borderColor: 'rgba(37,99,235,0.55)',
+      backgroundColor: 'rgba(37,99,235,0.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: 'rgba(37,99,235,0.6)',
+      fill: false,
+      tension: 0.3
+    });
+  }
 
   yagChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Atık Yağ (lt)',
-        data: values,
-        backgroundColor: '#f97316',
-        borderRadius: 4,
-        barPercentage: 0.5
-      }]
-    },
+    data: { labels: labels, datasets: datasets },
     options: {
-      responsive: true,
+      responsive: false,
       maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+      animation: { duration: 500, easing: 'easeOutCubic' },
       plugins: {
-        legend: { display: false },
-        valueLabels: true,
-        valueLabelsPosition: 'inside',
+        legend: {
+          display: datasets.length > 1,
+          labels: { color: textColor, font: { size: 11 } }
+        },
+        valueLabels: !hasPrev,
+        valueLabelsPosition: 'above',
         tooltip: {
           backgroundColor: '#000',
           titleColor: '#fff',
@@ -7862,14 +7957,14 @@ function drawYagChart() {
           borderColor: 'rgba(255,255,255,0.2)',
           borderWidth: 1,
           callbacks: {
-            label: function(ctx) { return ctx.parsed.y.toFixed(1) + ' lt'; }
+            label: function(c) { return ' ' + c.dataset.label + ': ' + c.parsed.y.toFixed(1) + ' lt'; }
           }
         }
       },
       scales: {
         x: {
-          ticks: { color: textColor, font: { size: 10 } },
-          grid: { color: gridColor }
+          ticks: { color: textColor, font: { size: 10 }, autoSkip: false },
+          grid: { display: false }
         },
         y: {
           beginAtZero: true,
@@ -7880,19 +7975,14 @@ function drawYagChart() {
       onClick: function(e) {
         var active = yagChartInstance.getElementsAtEventForMode(e, 'index', { intersect: true }, false);
         if (active.length > 0) {
-          var idx = active[0].index;
-          var label = labels[idx];
-          var parts = label.split('/');
-          if (parts.length === 2) {
-            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
-            if (!isNaN(ay) && !isNaN(yil)) {
-              var filtered = yagRecords.filter(function(r) {
-                if (!r.tarih) return false;
-                var d = new Date(r.tarih + 'T12:00:00');
-                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
-              });
-              if (filtered.length > 0) showChartDetailModal(label + ' Atık Yağ', filtered);
-            }
+          var key = barKeys[active[0].index];
+          if (key) {
+            var detail = list.filter(function(r) {
+              if (!r.tarih) return false;
+              var d = new Date(r.tarih + 'T12:00:00');
+              return !isNaN(d) && d.getFullYear() === key.y && d.getMonth() === key.m;
+            });
+            if (detail.length > 0) showChartDetailModal(AYLAR_KISA[key.m] + ' ' + key.y + ' Atık Yağ', detail);
           }
         }
       }
@@ -7900,6 +7990,75 @@ function drawYagChart() {
     plugins: [chartValueLabelPlugin]
   });
 }
+
+function drawYagTurChart(list) {
+  var canvas = document.getElementById('canvasYagTur');
+  var empty = document.getElementById('chartYagTurEmpty');
+  if (!canvas || !empty) return;
+  if (yagTurChartInstance) { yagTurChartInstance.destroy(); yagTurChartInstance = null; }
+
+  var totals = {};
+  list.forEach(function(r) {
+    var t = r.tur || 'Belirtilmemiş';
+    totals[t] = (totals[t] || 0) + (Number(r.miktar) || 0);
+  });
+  var keys = Object.keys(totals).sort();
+  if (keys.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  var parent = canvas.parentElement;
+  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  canvas.style.width = w + 'px';
+  canvas.style.height = '230px';
+  var ctx = canvas.getContext('2d');
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1e293b';
+  var palette = ['#f97316', '#f59e0b', '#fb923c', '#eab308', '#fdba74', '#ea580c', '#d97706', '#fde047', '#c2410c'];
+  var data = keys.map(function(k) { return totals[k]; });
+  var grand = data.reduce(function(a, b) { return a + b; }, 0);
+
+  yagTurChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: keys,
+      datasets: [{
+        data: data,
+        backgroundColor: keys.map(function(_, i) { return palette[i % palette.length]; }),
+        borderColor: isDark ? '#1e293b' : '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      cutout: '58%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor, font: { size: 11 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#000',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          callbacks: {
+            label: function(c) {
+              var pct = grand > 0 ? (c.parsed / grand * 100).toFixed(1) : '0.0';
+              return ' ' + c.label + ': ' + c.parsed.toFixed(1) + ' lt (%' + pct + ')';
+            }
+          }
+        }
+      }
+    },
+    plugins: []
+  });
+}
+
 
 // ─── AMBALAJ ATIKLARI ────────────────────────────────────────────────────
 const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
@@ -8033,6 +8192,76 @@ function renderAmbalajOzet(list) {
   grid.innerHTML = html;
 }
 
+function getAmbalajBaseFiltered() {
+  let f = [...ambalajRecords];
+  var bas = document.getElementById('ambalajTarihBas');
+  var bit = document.getElementById('ambalajTarihBit');
+  var tur = document.getElementById('ambalajTurFilter');
+  if (bas && bas.value) f = f.filter(function(r) { return r.tarih >= bas.value; });
+  if (bit && bit.value) f = f.filter(function(r) { return r.tarih <= bit.value; });
+  if (tur && tur.value) f = f.filter(function(r) { return r.tur === tur.value; });
+  return f;
+}
+
+function getAmbalajFiltered() {
+  let f = getAmbalajBaseFiltered();
+  if (ambalajSelectedYear) f = f.filter(function(r) { return (r.tarih || '').slice(0, 4) === ambalajSelectedYear; });
+  return f;
+}
+
+function ambalajYilDegistir(v) {
+  ambalajSelectedYear = v || '';
+  renderAmbalajTable();
+}
+
+function ambalajSifirla() {
+  ['ambalajTarihBas', 'ambalajTarihBit'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var tur = document.getElementById('ambalajTurFilter');
+  if (tur) tur.value = '';
+  ambalajSelectedYear = '';
+  ambalajPage = 0;
+  renderAmbalajTable();
+}
+
+function renderAmbalajFilterBar() {
+  var sel = document.getElementById('ambalajYilFilter');
+  var set = {};
+  getAmbalajBaseFiltered().forEach(function(r) {
+    if (r.tarih) set[r.tarih.slice(0, 4)] = true;
+  });
+  var years = Object.keys(set).sort();
+  if (sel) {
+    if (ambalajSelectedYear && years.indexOf(ambalajSelectedYear) === -1) {
+      ambalajSelectedYear = years.length ? years[years.length - 1] : '';
+    }
+    var html = '<option value="">Tümü</option>' + years.map(function(y) {
+      return '<option value="' + y + '"' + (ambalajSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
+    }).join('');
+    sel.innerHTML = html;
+  }
+  var bas = document.getElementById('ambalajTarihBas');
+  var bit = document.getElementById('ambalajTarihBit');
+  var tur = document.getElementById('ambalajTurFilter');
+  var active = !!((bas && bas.value) || (bit && bit.value) || (tur && tur.value) || ambalajSelectedYear);
+  var badge = document.getElementById('ambalajFiltreBadge');
+  if (badge) badge.style.display = active ? 'inline-flex' : 'none';
+  var ozet = document.getElementById('ambalajFiltreOzet');
+  if (ozet) {
+    var parts = [];
+    if ((bas && bas.value) || (bit && bit.value)) {
+      parts.push((bas && bas.value ? displayDate(bas.value) : 'Başlangıç') + ' – ' + (bit && bit.value ? displayDate(bit.value) : 'Bitiş'));
+    }
+    if (tur && tur.value) parts.push('Tür: ' + tur.value);
+    if (ambalajSelectedYear) parts.push('Yıl: ' + ambalajSelectedYear);
+    ozet.textContent = parts.length
+      ? 'Aktif filtre: ' + parts.join(' · ')
+      : 'Filtre yok — tüm ambalaj atığı kayıtları gösteriliyor.';
+  }
+}
+
 function renderAmbalajTable() {
   const tbody = document.getElementById('ambalajTbody');
   const table = document.getElementById('ambalajTable');
@@ -8041,28 +8270,27 @@ function renderAmbalajTable() {
 
   badge.textContent = ambalajRecords.length + ' kayıt';
 
+  renderAmbalajFilterBar();
+
+  const filtered = getAmbalajFiltered();
+
   if (ambalajRecords.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
+    empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
     renderAmbalajOzet([]);
-    drawAmbalajChart();
+    drawAmbalajChart([]);
+    drawAmbalajTurChart([]);
     return;
   }
-
-  let filtered = [...ambalajRecords];
-  var ambalajTarihBas = document.getElementById('ambalajTarihBas');
-  var ambalajTarihBit = document.getElementById('ambalajTarihBit');
-  if (ambalajTarihBas && ambalajTarihBas.value) filtered = filtered.filter(function(r) { return r.tarih >= ambalajTarihBas.value; });
-  if (ambalajTarihBit && ambalajTarihBit.value) filtered = filtered.filter(function(r) { return r.tarih <= ambalajTarihBit.value; });
-  var ambalajTurFilter = document.getElementById('ambalajTurFilter');
-  if (ambalajTurFilter && ambalajTurFilter.value) filtered = filtered.filter(function(r) { return r.tur === ambalajTurFilter.value; });
 
   if (filtered.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
     empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     renderAmbalajOzet([]);
-    drawAmbalajChart();
+    drawAmbalajChart([]);
+    drawAmbalajTurChart([]);
     return;
   }
   empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
@@ -8116,7 +8344,8 @@ function renderAmbalajTable() {
     }
   }
 
-  drawAmbalajChart();
+  drawAmbalajChart(filtered);
+  drawAmbalajTurChart(filtered);
 }
 
 function openAmbalajModal(id) {
@@ -8222,85 +8451,110 @@ async function deleteAmbalajRecord(id) {
 }
 
 let ambalajChartInstance = null;
-let ambalajChartYear = String(new Date().getFullYear());
+let ambalajTurChartInstance = null;
+let ambalajSelectedYear = '';
 
-function drawAmbalajChart() {
+function drawAmbalajChart(list) {
   var canvas = document.getElementById('canvasAmbalaj');
   var empty = document.getElementById('chartAmbalajEmpty');
-  var yearContainer = document.getElementById('ambalajChartYears');
   if (!canvas || !empty) return;
-
-  var years = {};
-  ambalajRecords.forEach(function(r) {
-    if (!r.tarih) return;
-    var y = r.tarih.slice(0, 4);
-    if (y) years[y] = true;
-  });
-  var yearList = Object.keys(years).sort();
-  if (yearList.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
-  if (yearList.indexOf(ambalajChartYear) === -1 && ambalajChartYear !== '') {
-    ambalajChartYear = yearList[yearList.length - 1];
-  }
-  if (yearContainer) {
-    var html = '<select onchange="ambalajChartYear=this.value;drawAmbalajChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
-    html += '<option value=""' + (ambalajChartYear === '' ? ' selected' : '') + '>Tümü</option>';
-    yearList.forEach(function(y) {
-      var sel = ambalajChartYear === y ? ' selected' : '';
-      html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
-    });
-    html += '</select>';
-    yearContainer.innerHTML = html;
-  }
+  if (ambalajChartInstance) { ambalajChartInstance.destroy(); ambalajChartInstance = null; }
 
   var monthly = {};
-  ambalajRecords.forEach(function(r) {
+  list.forEach(function(r) {
     if (!r.tarih) return;
-    if (ambalajChartYear !== '' && r.tarih.slice(0, 4) !== ambalajChartYear) return;
     var mk = r.tarih.slice(5, 7) + '/' + r.tarih.slice(0, 4);
-    var kg = ambalajToKg(r);
-    monthly[mk] = (monthly[mk] || 0) + kg;
+    monthly[mk] = (monthly[mk] || 0) + ambalajToKg(r);
   });
-  var labels = Object.keys(monthly).sort(function(a, b) {
-    var pa = a.split('/'), pb = b.split('/');
-    return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
-  });
-  var values = labels.map(function(k) { return monthly[k]; });
 
-  if (labels.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  var labels = [], values = [], barKeys = [], prevValues = null, prevYear = null;
+  if (ambalajSelectedYear) {
+    var y = Number(ambalajSelectedYear);
+    for (var i = 0; i < 12; i++) {
+      var mk0 = (i < 9 ? '0' + (i + 1) : String(i + 1)) + '/' + y;
+      labels.push(AYLAR_KISA[i]);
+      values.push(monthly[mk0] || 0);
+      barKeys.push({ y: y, m: i });
+    }
+    prevYear = y - 1;
+    var prevMonthly = {};
+    getAmbalajBaseFiltered().forEach(function(r) {
+      if (!r.tarih || r.tarih.slice(0, 4) !== String(prevYear)) return;
+      var m = parseInt(r.tarih.slice(5, 7), 10) - 1;
+      if (!isNaN(m)) prevMonthly[m] = (prevMonthly[m] || 0) + ambalajToKg(r);
+    });
+    prevValues = [];
+    for (var j = 0; j < 12; j++) prevValues.push(prevMonthly[j] || 0);
+  } else {
+    Object.keys(monthly).sort(function(a, b) {
+      var pa = a.split('/'), pb = b.split('/');
+      return pa[1] !== pb[1] ? pa[1] - pb[1] : pa[0] - pb[0];
+    }).forEach(function(k) {
+      var p = k.split('/');
+      labels.push(AYLAR_KISA[Number(p[0]) - 1] + ' \'' + String(Number(p[1])).slice(2));
+      values.push(monthly[k]);
+      barKeys.push({ y: Number(p[1]), m: Number(p[0]) - 1 });
+    });
+  }
+
+  var hasCurrent = values.some(function(v) { return v > 0; });
+  var hasPrev = prevValues !== null && prevValues.some(function(v) { return v > 0; });
+  if (!hasCurrent && !hasPrev) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
   empty.style.display = 'none';
   canvas.style.display = 'block';
 
   var parent = canvas.parentElement;
   var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
   canvas.style.width = w + 'px';
-  canvas.style.height = '160px';
+  canvas.style.height = '250px';
   var ctx = canvas.getContext('2d');
-
-  if (ambalajChartInstance) { ambalajChartInstance.destroy(); ambalajChartInstance = null; }
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var textColor = isDark ? '#e2e8f0' : '#1e293b';
   var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  var mainColor = '#10b981';
+
+  var barColors = values.map(function(v) { return v > 0 ? mainColor : 'rgba(148,163,184,0.25)'; });
+
+  var datasets = [{
+    label: ambalajSelectedYear ? 'Ambalaj Atığı ' + ambalajSelectedYear + ' (kg)' : 'Ambalaj Atığı (kg)',
+    data: values,
+    backgroundColor: barColors,
+    borderRadius: 4,
+    barPercentage: 0.6,
+    categoryPercentage: 0.75,
+    maxBarThickness: 52
+  }];
+  if (hasPrev) {
+    datasets.push({
+      label: 'Önceki Yıl ' + prevYear + ' (kg)',
+      data: prevValues,
+      type: 'line',
+      borderColor: 'rgba(99,102,241,0.55)',
+      backgroundColor: 'rgba(99,102,241,0.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: 'rgba(99,102,241,0.6)',
+      fill: false,
+      tension: 0.3
+    });
+  }
 
   ambalajChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Ambalaj Atığı (kg)',
-        data: values,
-        backgroundColor: '#10b981',
-        borderRadius: 4,
-        barPercentage: 0.7
-      }]
-    },
+    data: { labels: labels, datasets: datasets },
     options: {
-      responsive: true,
+      responsive: false,
       maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+      animation: { duration: 500, easing: 'easeOutCubic' },
       plugins: {
-        legend: { display: false },
-        valueLabels: true,
-        valueLabelsPosition: 'inside',
+        legend: {
+          display: datasets.length > 1,
+          labels: { color: textColor, font: { size: 11 } }
+        },
+        valueLabels: !hasPrev,
+        valueLabelsPosition: 'above',
         tooltip: {
           backgroundColor: '#000',
           titleColor: '#fff',
@@ -8308,30 +8562,35 @@ function drawAmbalajChart() {
           borderColor: 'rgba(255,255,255,0.2)',
           borderWidth: 1,
           callbacks: {
-            label: function(ctx) { return ctx.parsed.y.toFixed(3) + ' kg'; }
+            label: function(c) {
+              var v = c.parsed.y;
+              return ' ' + c.dataset.label + ': ' + (v < 1 ? v.toFixed(3) : v.toFixed(1)) + ' kg';
+            }
           }
         }
       },
       scales: {
-        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
-        y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
+        x: {
+          ticks: { color: textColor, font: { size: 10 }, autoSkip: false },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: textColor, font: { size: 10 } },
+          grid: { color: gridColor }
+        }
       },
       onClick: function(e) {
         var active = ambalajChartInstance.getElementsAtEventForMode(e, 'index', { intersect: true }, false);
         if (active.length > 0) {
-          var idx = active[0].index;
-          var label = labels[idx];
-          var parts = label.split('/');
-          if (parts.length === 2) {
-            var ay = parseInt(parts[0]), yil = parseInt(parts[1]);
-            if (!isNaN(ay) && !isNaN(yil)) {
-              var filtered = ambalajRecords.filter(function(r) {
-                if (!r.tarih) return false;
-                var d = new Date(r.tarih + 'T12:00:00');
-                return !isNaN(d) && d.getMonth() + 1 === ay && d.getFullYear() === yil;
-              });
-              if (filtered.length > 0) showChartDetailModal(label + ' Ambalaj Atığı', filtered);
-            }
+          var key = barKeys[active[0].index];
+          if (key) {
+            var detail = list.filter(function(r) {
+              if (!r.tarih) return false;
+              var d = new Date(r.tarih + 'T12:00:00');
+              return !isNaN(d) && d.getFullYear() === key.y && d.getMonth() === key.m;
+            });
+            if (detail.length > 0) showChartDetailModal(AYLAR_KISA[key.m] + ' ' + key.y + ' Ambalaj Atığı', detail);
           }
         }
       }
@@ -8339,6 +8598,75 @@ function drawAmbalajChart() {
     plugins: [chartValueLabelPlugin]
   });
 }
+
+function drawAmbalajTurChart(list) {
+  var canvas = document.getElementById('canvasAmbalajTur');
+  var empty = document.getElementById('chartAmbalajTurEmpty');
+  if (!canvas || !empty) return;
+  if (ambalajTurChartInstance) { ambalajTurChartInstance.destroy(); ambalajTurChartInstance = null; }
+
+  var totals = {};
+  list.forEach(function(r) {
+    var t = r.tur || 'Belirtilmemiş';
+    totals[t] = (totals[t] || 0) + ambalajToKg(r);
+  });
+  var keys = Object.keys(totals).sort();
+  if (keys.length === 0) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  var parent = canvas.parentElement;
+  var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+  canvas.style.width = w + 'px';
+  canvas.style.height = '230px';
+  var ctx = canvas.getContext('2d');
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1e293b';
+  var palette = ['#10b981', '#14b8a6', '#34d399', '#0ea5e9', '#22d3ee', '#6366f1', '#a3e635', '#8b5cf6', '#06b6d4'];
+  var data = keys.map(function(k) { return totals[k]; });
+  var grand = data.reduce(function(a, b) { return a + b; }, 0);
+
+  ambalajTurChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: keys,
+      datasets: [{
+        data: data,
+        backgroundColor: keys.map(function(_, i) { return palette[i % palette.length]; }),
+        borderColor: isDark ? '#1e293b' : '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      cutout: '58%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor, font: { size: 11 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#000',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          callbacks: {
+            label: function(c) {
+              var pct = grand > 0 ? (c.parsed / grand * 100).toFixed(1) : '0.0';
+              return ' ' + c.label + ': ' + (c.parsed < 1 ? c.parsed.toFixed(3) : c.parsed.toFixed(1)) + ' kg (%' + pct + ')';
+            }
+          }
+        }
+      }
+    },
+    plugins: []
+  });
+}
+
 
 function buildExportHTML() {
   var gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
@@ -8530,8 +8858,11 @@ function printYagList() {
   var list = yagRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('yagTarihBas');
   var bit = document.getElementById('yagTarihBit');
+  var tur = document.getElementById('yagTurFilter');
   if (bas && bas.value) list = list.filter(function(r) { return r.tarih >= bas.value; });
   if (bit && bit.value) list = list.filter(function(r) { return r.tarih <= bit.value; });
+  if (tur && tur.value) list = list.filter(function(r) { return r.tur === tur.value; });
+  if (yagSelectedYear) list = list.filter(function(r) { return (r.tarih || '').slice(0, 4) === yagSelectedYear; });
   list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
   if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
   var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
@@ -8571,8 +8902,11 @@ function printAmbalajList() {
   var list = ambalajRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('ambalajTarihBas');
   var bit = document.getElementById('ambalajTarihBit');
+  var tur = document.getElementById('ambalajTurFilter');
   if (bas && bas.value) list = list.filter(function(r) { return r.tarih >= bas.value; });
   if (bit && bit.value) list = list.filter(function(r) { return r.tarih <= bit.value; });
+  if (tur && tur.value) list = list.filter(function(r) { return r.tur === tur.value; });
+  if (ambalajSelectedYear) list = list.filter(function(r) { return (r.tarih || '').slice(0, 4) === ambalajSelectedYear; });
   list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
   if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
   var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
