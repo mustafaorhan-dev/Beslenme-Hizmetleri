@@ -7688,7 +7688,6 @@ function renderYagTable() {
     empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
     renderYagOzet([]);
     drawYagChart([]);
-    drawYagTurChart([]);
     return;
   }
 
@@ -7698,7 +7697,6 @@ function renderYagTable() {
     empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     renderYagOzet([]);
     drawYagChart([]);
-    drawYagTurChart([]);
     return;
   }
   empty.querySelector('p').textContent = 'Henüz atık yağ kaydı girilmemiş.';
@@ -7753,7 +7751,6 @@ function renderYagTable() {
   }
 
   drawYagChart(filtered);
-  drawYagTurChart(filtered);
 }
 
 function openYagModal(id) {
@@ -8284,7 +8281,6 @@ function renderAmbalajTable() {
     empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
     renderAmbalajOzet([]);
     drawAmbalajChart([]);
-    drawAmbalajTurChart([]);
     return;
   }
 
@@ -8294,7 +8290,6 @@ function renderAmbalajTable() {
     empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun kayıt bulunamadı.';
     renderAmbalajOzet([]);
     drawAmbalajChart([]);
-    drawAmbalajTurChart([]);
     return;
   }
   empty.querySelector('p').textContent = 'Henüz ambalaj atığı kaydı girilmemiş.';
@@ -8349,7 +8344,6 @@ function renderAmbalajTable() {
   }
 
   drawAmbalajChart(filtered);
-  drawAmbalajTurChart(filtered);
 }
 
 function openAmbalajModal(id) {
