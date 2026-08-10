@@ -5534,8 +5534,8 @@ function renderYearlyCharts() {
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
     var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
-    var grand = thisTotal + prevTotal;
-    var pct = grand > 0 ? Math.round(thisTotal / grand * 100) : 0;
+    var centerTxt = (thisTotal > 0 ? fmt(thisTotal) : '0') + unitLabel;
+    var centerFs = centerTxt.length <= 4 ? 15 : centerTxt.length <= 8 ? 13 : 11;
     var chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -5552,7 +5552,7 @@ function renderYearlyCharts() {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
-        cutout: '68%',
+        cutout: '70%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: {
@@ -5560,7 +5560,7 @@ function renderYearlyCharts() {
             align: 'center',
             labels: { color: textColor, font: { size: 10 }, boxWidth: 10, boxHeight: 10, padding: 8, usePointStyle: true }
           },
-          centerText: { text: pct + '%', sub: String(sel), color: textColor },
+          centerText: { text: centerTxt, sub: String(sel), color: textColor, fontSize: centerFs },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -5714,10 +5714,10 @@ const centerTextPlugin = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = opts.color || '#334155';
-    ctx.font = 'bold 17px Inter, sans-serif';
+    ctx.font = 'bold ' + (opts.fontSize || 15) + 'px Inter, sans-serif';
     ctx.fillText(opts.text, arc.x, arc.y - 5);
     if (opts.sub) {
-      ctx.font = '9px Inter, sans-serif';
+      ctx.font = '8px Inter, sans-serif';
       ctx.fillStyle = 'rgba(100,116,139,0.85)';
       ctx.fillText(opts.sub, arc.x, arc.y + 11);
     }
