@@ -7554,8 +7554,6 @@ function renderYagOzet(list) {
   const adet = list.length;
   const toplam = list.reduce((s, r) => s + (Number(r.miktar) || 0), 0);
   const ort = adet ? toplam / adet : 0;
-  const maxR = adet ? Math.max(...list.map(r => Number(r.miktar) || 0)) : 0;
-  const minR = adet ? Math.min(...list.map(r => Number(r.miktar) || 0)) : 0;
   const turler = new Set(list.map(r => r.tur).filter(Boolean));
   const yilToplam = {};
   list.forEach(r => {
@@ -7576,14 +7574,6 @@ function renderYagOzet(list) {
     <div class="report-item">
       <span class="report-label">Ort. Miktar / Kayıt</span>
       <span class="report-value">${fmt(ort)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">En Yüksek Miktar</span>
-      <span class="report-value">${fmt(maxR)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">En Düşük Miktar</span>
-      <span class="report-value">${fmt(minR)}</span>
     </div>
     <div class="report-item">
       <span class="report-label">Yağ Türü Çeşidi</span>
@@ -8147,8 +8137,6 @@ function renderAmbalajOzet(list) {
   const adet = list.length;
   const toplam = list.reduce((s, r) => s + ambalajToKg(r), 0);
   const ort = adet ? toplam / adet : 0;
-  const maxR = adet ? Math.max(...list.map(r => ambalajToKg(r))) : 0;
-  const minR = adet ? Math.min(...list.map(r => ambalajToKg(r))) : 0;
   const turler = new Set(list.map(r => r.tur).filter(Boolean));
   const yilToplam = {};
   list.forEach(r => {
@@ -8169,14 +8157,6 @@ function renderAmbalajOzet(list) {
     <div class="report-item">
       <span class="report-label">Ort. Miktar / Kayıt</span>
       <span class="report-value">${fmt(ort)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">En Yüksek Miktar</span>
-      <span class="report-value">${fmt(maxR)}</span>
-    </div>
-    <div class="report-item">
-      <span class="report-label">En Düşük Miktar</span>
-      <span class="report-value">${fmt(minR)}</span>
     </div>
     <div class="report-item">
       <span class="report-label">Atık Türü Çeşidi</span>
