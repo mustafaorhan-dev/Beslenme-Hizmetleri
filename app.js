@@ -7580,7 +7580,9 @@ function renderYagOzet(list) {
       <span class="report-value">${turler.size.toLocaleString('tr-TR')}</span>
     </div>
   `;
+  const simdikiYil = String(new Date().getFullYear());
   yillar.forEach(y => {
+    if (y !== simdikiYil) return;
     html += `
     <div class="report-item">
       <span class="report-label">${y} Toplam</span>
@@ -8163,7 +8165,9 @@ function renderAmbalajOzet(list) {
       <span class="report-value">${turler.size.toLocaleString('tr-TR')}</span>
     </div>
   `;
+  const simdikiYil = String(new Date().getFullYear());
   yillar.forEach(y => {
+    if (y !== simdikiYil) return;
     html += `
     <div class="report-item">
       <span class="report-label">${y} Toplam</span>
