@@ -2363,7 +2363,8 @@ function exportPDF() {
     printWin.document.write(`<!DOCTYPE html><html><head>
       <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
+      @page { size: landscape; margin: 1cm; }
+      body { font-family: Arial, sans-serif; padding: 20px; }
         h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
         .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
         .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; page-break-inside: avoid; }
@@ -3049,15 +3050,15 @@ function exportYillikPDF() {
     const pieArea = c.closest ? c.closest('.chart-area-pie') : null;
     if (pieArea) {
       const w = c.width, h = c.height;
-      const side = Math.max(20, Math.floor(Math.min(w, h) * 0.96));
+      const side = Math.max(20, Math.min(w, h));
       const sx = Math.floor((w - side) / 2);
       const sy = Math.floor((h - side) / 2);
       const tmp = document.createElement('canvas');
       tmp.width = side; tmp.height = side;
       tmp.getContext('2d').drawImage(c, sx, sy, side, side, 0, 0, side, side);
       img.src = tmp.toDataURL();
-      img.style.width = '110px';
-      img.style.height = '110px';
+      img.style.width = '96px';
+      img.style.height = '96px';
     } else {
       img.src = c.toDataURL();
       img.style.maxWidth = '100%';
@@ -3078,8 +3079,8 @@ function exportYillikPDF() {
       canvas { max-width: 100%; height: auto !important; }
       .donut-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
       .donut-grid .chart-card { padding: 0.6rem 0.75rem; text-align: center; }
-      .donut-grid .chart-area-pie { height: 110px; display: flex; align-items: center; justify-content: center; }
-      .donut-grid .chart-area-pie img { width: 110px; height: 110px; object-fit: contain; margin: 0 auto; }
+      .donut-grid .chart-area-pie { height: 120px; display: flex; align-items: center; justify-content: center; }
+      .donut-grid .chart-area-pie img { width: 96px; height: 96px; object-fit: contain; margin: 0 auto; }
       .donut-grid .section-header h2 { font-size: 0.8rem; margin: 0 0 0.4rem; }
       .donut-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.6rem 1rem; font-size: 0.7rem; margin-top: 0.4rem; }
       .donut-legend-item { display: flex; align-items: center; gap: 0.25rem; color: #333; }
