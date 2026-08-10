@@ -5519,7 +5519,7 @@ function renderYearlyCharts() {
     if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) { c.destroy(); chartInstances.delete(id); }
   });
 
-  function makeYillikTotalBar(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
+  function makeYillikTotalDonut(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
     var empty = document.getElementById(emptyId);
@@ -5530,61 +5530,58 @@ function renderYearlyCharts() {
     }
     if (empty) empty.style.display = 'none';
     canvas.style.display = 'block';
-    var parent = canvas.parentElement;
-    var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
-    var h = Math.min(parent.offsetHeight || 180, parent.clientHeight || 180);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
     var ctx = canvas.getContext('2d');
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
-    var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
     var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
+    var grand = thisTotal + prevTotal;
+    var pct = grand > 0 ? Math.round(thisTotal / grand * 100) : 0;
     var chart = new Chart(ctx, {
-      type: 'bar',
+      type: 'doughnut',
       data: {
         labels: [sel + ' (Bu Yıl)', prev + ' (Geçen Yıl)'],
         datasets: [{
-          label: 'Toplam',
           data: [thisTotal, prevTotal],
           backgroundColor: [color, color + '55'],
-          borderColor: [color, color],
-          borderWidth: 0,
-          borderRadius: 6,
-          maxBarThickness: 72,
-          barPercentage: 0.62,
-          categoryPercentage: 0.66
+          borderColor: isDark ? '#1e293b' : '#ffffff',
+          borderWidth: 2,
+          hoverOffset: 5
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 900, easing: 'easeOutCubic' },
-        interaction: { mode: 'index', intersect: false },
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+        cutout: '68%',
+        animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(0,0,0,1)', titleColor: '#ffffff', bodyColor: '#ffffff',
-            borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1, padding: 8, cornerRadius: 8,
-            callbacks: { label: function(c) { return ' ' + fmt(c.parsed.y) + unitLabel; } }
+          legend: {
+            position: 'bottom',
+            align: 'center',
+            labels: { color: textColor, font: { size: 10 }, boxWidth: 10, boxHeight: 10, padding: 8, usePointStyle: true }
           },
-          valueLabels: true,
-          valueLabelsPosition: 'inside'
-        },
-        scales: {
-          x: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
+          centerText: { text: pct + '%', sub: String(sel), color: textColor },
+          tooltip: {
+            backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
+            callbacks: {
+              label: function(c) {
+                var p = grand > 0 ? (c.parsed / grand * 100).toFixed(1) : '0.0';
+                return ' ' + c.label + ': ' + fmt(c.parsed) + unitLabel + ' · %' + p;
+              }
+            }
+          }
         }
       },
-      plugins: [chartValueLabelPlugin]
+      plugins: [centerTextPlugin]
     });
     chartInstances.set(canvasId, chart);
   }
 
-  try { makeYillikTotalBar('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('toplam uretim:', e); }
-  try { makeYillikTotalBar('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('toplam turnike:', e); }
-  try { makeYillikTotalBar('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
-  try { makeYillikTotalBar('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('toplam atik:', e); }
+  try { makeYillikTotalDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('toplam uretim:', e); }
+  try { makeYillikTotalDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('toplam turnike:', e); }
+  try { makeYillikTotalDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
+  try { makeYillikTotalDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('toplam atik:', e); }
 
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
     var canvas = document.getElementById(canvasId);
@@ -5703,6 +5700,30 @@ function renderYearlyCharts() {
 }
 
 const chartInstances = new Map();
+
+const centerTextPlugin = {
+  id: 'centerText',
+  afterDraw(chart) {
+    var opts = chart.options.plugins && chart.options.plugins.centerText;
+    if (!opts || !opts.text) return;
+    var meta = chart.getDatasetMeta(0);
+    var arc = meta.data[0];
+    if (!arc || arc.x === undefined) return;
+    var ctx = chart.ctx;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = opts.color || '#334155';
+    ctx.font = 'bold 17px Inter, sans-serif';
+    ctx.fillText(opts.text, arc.x, arc.y - 5);
+    if (opts.sub) {
+      ctx.font = '9px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(100,116,139,0.85)';
+      ctx.fillText(opts.sub, arc.x, arc.y + 11);
+    }
+    ctx.restore();
+  }
+};
 const chartValueLabelPlugin = {
   id: 'valueLabels',
   afterDraw(chart) {
