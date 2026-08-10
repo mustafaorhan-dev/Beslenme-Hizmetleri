@@ -5593,7 +5593,7 @@ function renderYearlyCharts() {
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: { display: false },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 11, center: center },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 13, center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
