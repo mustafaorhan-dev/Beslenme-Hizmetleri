@@ -5534,6 +5534,7 @@ function renderYearlyCharts() {
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var textColor = isDark ? '#e2e8f0' : '#1e293b';
     var fmt = function(v) { return Math.round(v).toLocaleString('tr-TR'); };
+    var grand = thisTotal + prevTotal;
     var curTxt = fmt(thisTotal) + unitLabel;
     var prevTxt = fmt(prevTotal) + unitLabel;
     var chart = new Chart(ctx, {
@@ -5560,7 +5561,7 @@ function renderYearlyCharts() {
             align: 'center',
             labels: { color: textColor, font: { size: 9 }, boxWidth: 8, boxHeight: 8, padding: 6, usePointStyle: true }
           },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: [color, color], fontSize: 10 },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#ffffff', color], fontSize: 11 },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
