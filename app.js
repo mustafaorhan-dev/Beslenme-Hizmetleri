@@ -5559,13 +5559,13 @@ function renderYearlyCharts() {
       var up = ch >= 0;
       var abs = Math.abs(ch);
       if (abs < 0.5) {
-        center = { arrow: '', arrowColor: textColor, text: '%0', color: textColor, fontSize: 10 };
+        center = { arrow: '', arrowColor: textColor, text: '%0', color: textColor, fontSize: 14 };
       } else {
         var txt = (abs >= 10 ? Math.round(abs) : (Math.round(abs * 10) / 10)).toString().replace('.', ',') + '%';
-        center = { arrow: up ? '▲' : '▼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: txt.length <= 5 ? 10 : 9 };
+        center = { arrow: up ? '▲' : '▼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: 14 };
       }
     } else if (thisTotal > 0) {
-      center = { arrow: '●', arrowColor: cUp, text: 'Yeni', color: cUp, fontSize: 10 };
+      center = { arrow: '●', arrowColor: cUp, text: 'Yeni', color: cUp, fontSize: 14 };
     }
     var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
     if (legendEl) {
@@ -5593,7 +5593,7 @@ function renderYearlyCharts() {
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: { display: false },
-          donutLabels: { enabled: false, values: [], colors: [], center: center },
+          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 8, center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
