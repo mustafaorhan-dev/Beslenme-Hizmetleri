@@ -178,7 +178,21 @@ function toggleTheme() {
   const newTheme = isDark ? '' : 'dark';
   html.setAttribute('data-theme', newTheme);
   localStorage.setItem('atik_kontrol_theme', newTheme || 'light');
-  if (typeof drawAllCharts === 'function') drawAllCharts();
+  redrawActiveCharts();
+}
+
+function redrawActiveCharts() {
+  const active = document.querySelector('.tab-content.active');
+  if (!active) return;
+  switch (active.id) {
+    case 'content-charts': if (typeof drawAllCharts === 'function') drawAllCharts(); break;
+    case 'content-yillik': renderYearlyCharts(); break;
+    case 'content-harcama': renderHarcamaMenu(); break;
+    case 'content-yag': renderYagTable(); break;
+    case 'content-ambalaj': renderAmbalajTable(); break;
+    case 'content-report': renderReport(); break;
+    case 'content-records': renderRecordsTable(); break;
+  }
 }
 
 function loadAccent() {
@@ -195,7 +209,7 @@ function setAccent(name) {
   document.querySelectorAll('.accent-dot').forEach(b => {
     b.classList.toggle('active', b.dataset.accent === name);
   });
-  if (typeof drawAllCharts === 'function') drawAllCharts();
+  redrawActiveCharts();
 }
 
 // ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
@@ -5738,6 +5752,8 @@ const chartValueLabelPlugin = {
     const pos = chart.options.plugins.valueLabelsPosition || 'above';
     const ctx = chart.ctx;
     const top = chart.chartArea ? chart.chartArea.top : 0;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const insideColor = isDark ? '#ffffff' : '#000000';
     chart.data.datasets.forEach((ds, di) => {
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
@@ -5753,7 +5769,7 @@ const chartValueLabelPlugin = {
         let labelY;
         if (!inside && bar.y - 7 < top) inside = true;
         if (inside) {
-          ctx.fillStyle = '#000000';
+          ctx.fillStyle = insideColor;
           ctx.textBaseline = 'middle';
           labelY = bar.y + bar.height / 2;
           if (bar.y < top) labelY = Math.max(top + 12, labelY);
