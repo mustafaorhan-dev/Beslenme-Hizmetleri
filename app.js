@@ -2311,6 +2311,20 @@ function renderSparklines() {
 
 // ─── WASTE DETAIL ────────────────────────────────────────────────────────────
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function triggerPrint(win, ms) {
+  if (!win) return;
+  win.onafterprint = function () { try { win.close(); } catch (e) {} };
+  var doPrint = function () {
+    if (!win.closed) { try { win.focus(); win.print(); } catch (e) {} }
+  };
+  if (win.document.readyState === 'complete') {
+    setTimeout(doPrint, ms || 300);
+  } else {
+    win.onload = function () { setTimeout(doPrint, 100); };
+    setTimeout(doPrint, ms && ms > 1500 ? ms : 3500);
+  }
+}
+
 function exportPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
@@ -2355,7 +2369,7 @@ function exportPDF() {
     </body></html>`);
   printWin.document.close();
   printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
   });
 }
 
@@ -2395,7 +2409,7 @@ function printQr() {
     '</body></html>');
   printWin.document.close();
   printWin.focus();
-  setTimeout(function() { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 // ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
@@ -2786,7 +2800,7 @@ function haccpSicaklikPrint() {
   win.document.write('<table><thead><tr><th>Tarih</th><th>Saat</th><th>Depo</th><th>S\u0131cakl\u0131k</th><th>Nem</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('</body></html>');
   win.document.close();
-  setTimeout(function() { win.print(); }, 500);
+  triggerPrint(win);
 }
 
 function haccpSicaklikPagePrev() {
@@ -2998,7 +3012,7 @@ function exportChartsPDF() {
   </body></html>`);
   printWin.document.close();
   printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 function exportYillikPDF() {
@@ -3045,7 +3059,7 @@ function exportYillikPDF() {
   </body></html>`);
   printWin.document.close();
   printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 function exportDashboardPDF() {
@@ -3107,7 +3121,7 @@ function exportDashboardPDF() {
   </body></html>`);
   printWin.document.close();
   printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 function exportRecordsPDF() {
@@ -3136,7 +3150,7 @@ function exportRecordsPDF() {
   </body></html>`);
   printWin.document.close();
   printWin.focus();
-  setTimeout(() => { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 // ─── TABS ──────────────────────────────────────────────────────────────────────
@@ -5051,7 +5065,7 @@ function exportYemekListesiPDF() {
     '</body></html>');
   printWin.document.close();
   printWin.focus();
-  setTimeout(function() { try { printWin.print(); } catch(e) {} }, 500);
+  triggerPrint(printWin);
 }
 
 // -- Supabase dish sync --
@@ -6250,6 +6264,9 @@ function renderHarcamaMenuChart(oran) {
     labels = [HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear];
     data = [monthly[hcSelectedMonth] || 0];
   }
+
+  const chartMax = Math.max.apply(null, data.length ? data : [0]);
+  const suggestedMax = chartMax > 0 ? chartMax * 1.18 : 10;
 
   const area = canvas.parentElement;
   // Kaydırma için kanvas boyutu: 12 ay => geniş kanvas (yatay kaydırma çubuğu görünür)
@@ -8331,7 +8348,7 @@ function printYagList() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Atık Yağ Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
-  setTimeout(function() { win.print(); }, 600);
+  triggerPrint(win);
 }
 
 function printAmbalajList() {
@@ -8372,7 +8389,7 @@ function printAmbalajList() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ambalaj Atıkları Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
-  setTimeout(function() { win.print(); }, 600);
+  triggerPrint(win);
 }
 
 function printMenu() {
@@ -8384,7 +8401,7 @@ function printMenu() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
-  setTimeout(function() { win.print(); }, 800);
+  triggerPrint(win);
 }
 
 // ─── KALİBRASYONA TABİ CİHAZLAR ──────────────────────────────────────────────
@@ -8785,7 +8802,7 @@ function printKalibrasyonList() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kalibrasyona Tabi Cihazlar</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
-  setTimeout(function() { win.print(); }, 600);
+  triggerPrint(win);
 }
 
 
