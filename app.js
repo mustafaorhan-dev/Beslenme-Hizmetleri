@@ -4105,7 +4105,7 @@ function renderKPIs() {
   const elBugunYemekSub = document.getElementById('kpiBugunYemekSub');
   if (todayRec) {
     elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
-    elBugunYemekSub.textContent = 'Geçiş: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
+    elBugunYemekSub.textContent = 'Yararlanan: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
   } else {
     elBugunYemek.textContent = '—';
     elBugunYemekSub.textContent = 'Bugün kayıt yok';
