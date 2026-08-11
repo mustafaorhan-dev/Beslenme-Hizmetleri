@@ -1006,6 +1006,15 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: var(--text-primary);
 }
 
+#menuTitle, #menuWeekLabel {
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+[data-theme="dark"] #menuTitle,
+[data-theme="dark"] #menuWeekLabel { color: #f8fafc; }
+#menuWeekLabel { font-size: 0.8rem; font-weight: 700; }
+
 .badge {
   background: rgba(34,211,238,0.12);
   color: var(--accent-cyan);
