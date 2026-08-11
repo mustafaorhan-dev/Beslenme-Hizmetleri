@@ -1561,7 +1561,7 @@ td.porsiyon-warn {
   display: flex; flex-direction: column; gap: 0.5rem;
   margin: 1rem 0; padding: 0.85rem 1.25rem;
   background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid var(--border);
   border-radius: 12px;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
@@ -1600,7 +1600,7 @@ td.porsiyon-warn {
   display: flex; flex-direction: column; gap: 0.5rem;
   margin: 1rem 0; padding: 0.85rem 1.25rem;
   background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid var(--border);
   border-radius: 12px;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
