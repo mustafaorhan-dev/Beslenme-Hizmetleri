@@ -3126,9 +3126,18 @@ function exportDashboardPDF() {
       .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
       .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.5rem; }
       .kpi-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; display: flex; align-items: center; gap: 0.8rem; page-break-inside: avoid; }
-      .kpi-icon { width: 36px; height: 36px; flex-shrink: 0; }
+      .kpi-icon { width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+      .kpi-icon svg, .ws-card-icon svg { width: 20px; height: 20px; }
       .kpi-label { font-size: 0.7rem; color: #666; font-weight: 600; text-transform: uppercase; }
       .kpi-value { font-size: 1.3rem; font-weight: 700; }
+      .weekly-summary-body { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .weekly-summary-body .ws-card { display: flex; align-items: center; gap: 0.5rem; border: 1px solid #ddd; border-radius: 8px; padding: 0.5rem 0.7rem; flex: 1 1 160px; min-width: 0; }
+      .weekly-summary-body .ws-card-icon { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+      .weekly-summary-body .ws-card-content { display: flex; flex-direction: column; min-width: 0; }
+      .weekly-summary-body .ws-label { font-size: 0.62rem; color: #666; font-weight: 600; }
+      .weekly-summary-body .ws-value { font-size: 0.95rem; font-weight: 700; color: #000; }
+      .weekly-summary-body .ws-sub { font-size: 0.58rem; color: #888; }
+      .weekly-summary-body .ts-item { display: flex; align-items: center; gap: 0.15rem; padding: 0.5rem 0.8rem; border: 1px solid #ddd; border-radius: 8px; min-width: 110px; flex: 1; }
       .section-card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; page-break-inside: avoid; }
       .section-header h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
       .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
