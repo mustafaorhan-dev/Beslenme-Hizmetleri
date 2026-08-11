@@ -4521,8 +4521,6 @@ function buildRow(r, showActions) {
     <td>${safe(r.yemek).toLocaleString('tr-TR')}</td>
     <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
     <td class="td-gecis">${safe(r.turnike).toLocaleString('tr-TR')}</td>
-    <td>${safe(r.personel).toLocaleString('tr-TR')}</td>
-    <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
     <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
