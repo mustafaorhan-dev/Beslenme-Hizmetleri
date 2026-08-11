@@ -5438,7 +5438,7 @@ function renderReport() {
   if (avgPorEl) avgPorEl.innerHTML = '400 gr' + (porsiyonFarklari.length > 0 ? `<span style="display:block;font-size:0.7rem;color:#ef4444;font-weight:600">${porsiyonFarklari.length} kayıt 400 değil</span>` : '');
   document.getElementById('rTotalPorsiyon').textContent = totalPorsiyon.toLocaleString('tr-TR') + ' gr';
   document.getElementById('rCopPorsiyon').textContent = copPorsiyon.toFixed(0).toLocaleString('tr-TR') + ' porsiyon';
-  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Geçiş)</span>` : '—';
+  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} Kişi)</span>` : '—';
   document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
