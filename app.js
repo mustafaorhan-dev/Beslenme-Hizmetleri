@@ -3032,11 +3032,6 @@ async function deleteHaccpRecord(type, id) {
 
 
 
-function printReport() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  exportPDF();
-}
-
 function exportChartsPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
