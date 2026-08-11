@@ -735,7 +735,7 @@ function doLogout() {
     supabaseClient.auth.signOut();
   }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'atik_kontrol_son_personel'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -3273,6 +3273,13 @@ function openModal(id = null) {
     title.textContent = 'Yeni Kayıt Ekle';
     submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
     document.getElementById('fTarih').value = formatLocalDate(new Date());
+    // Yemekhanede Çalışan Personel Sayısı: son kayıtta kullanılan değer otomatik dolar, elle değiştirilebilir
+    const fPersonelEl = document.getElementById('fPersonel');
+    if (fPersonelEl) {
+      const sonPersonel = localStorage.getItem('atik_kontrol_son_personel');
+      if (sonPersonel !== null) fPersonelEl.value = sonPersonel;
+      autoCalcGecis();
+    }
   }
 
   // Porsiyon: yeni kayıtta sabit (400), düzenlemede değiştirilebilir (eski hataları düzeltmek için)
@@ -3406,6 +3413,8 @@ function saveRecord(e) {
     const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
     const atik = Math.max(0, (fire - toplam) * porsiyon / 1000);
     const harcama_tutari = ogrenci * getOgrenciBasiHarcamaOrani();
+    // Yemekhanede çalışan personel sayısını sonraki kayıtlar için otomatik doldurmak üzere sakla
+    try { localStorage.setItem('atik_kontrol_son_personel', String(personel)); } catch (_) {}
 
     const rec = {
       tarih: document.getElementById('fTarih').value,
@@ -4511,18 +4520,39 @@ function buildRow(r, showActions) {
     <td>${dateStr}</td>
     <td>${safe(r.yemek).toLocaleString('tr-TR')}</td>
     <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
-    <td>${safe(r.turnike).toLocaleString('tr-TR')}</td>
-    <td>${safe(r.personel).toLocaleString('tr-TR')}</td>
-    <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
+    <td class="td-gecis">${safe(r.turnike).toLocaleString('tr-TR')}</td>
     <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
     <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
-    <td>${safe(r.ogrenci).toLocaleString('tr-TR')}</td>
     ${showActions ? `
     <td>${mealBadge}</td>` : ''}
     ${actions}
   </tr>`;
 
+}
+
+function buildReportRow(r) {
+  const dateStr = displayDate(r.tarih);
+  const mealBadge = r.yemek_adi ? `<span class="meal-badge">${escapeHtml(r.yemek_adi)}</span>` : '';
+  const safe = (v) => (v ?? 0);
+  const turnike = safe(r.turnike);
+  const ogrenci = safe(r.ogrenci);
+  const personel = safe(r.personel);
+  // Turnike = İdari/Akademik Personel + Öğrenci → İdari Akademik = Turnike − Öğrenci
+  const idariAkademik = Math.max(0, turnike - ogrenci);
+  return `<tr>
+    <td>${dateStr}</td>
+    <td>${safe(r.yemek).toLocaleString('tr-TR')}</td>
+    <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
+    <td class="td-gecis">${turnike.toLocaleString('tr-TR')}</td>
+    <td>${idariAkademik.toLocaleString('tr-TR')}</td>
+    <td>${ogrenci.toLocaleString('tr-TR')}</td>
+    <td>${personel.toLocaleString('tr-TR')}</td>
+    <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
+    <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
+    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+    <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
+  </tr>`;
 }
 
 function renderProduction(_weekKey, _weekData, days) {
@@ -5430,7 +5460,7 @@ function renderReport() {
   }
 
   const reportTbody = document.getElementById('reportTbody');
-  reportTbody.innerHTML = records.map(r => buildRow(r, false)).join('');
+  reportTbody.innerHTML = records.map(r => buildReportRow(r)).join('');
 
   renderWasteByFoodType();
 }
