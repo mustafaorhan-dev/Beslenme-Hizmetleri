@@ -9164,16 +9164,12 @@ function renderKalibrasyonOzet(list) {
   const grid = document.getElementById('kalibrasyonOzetGrid');
   if (!grid) return;
   const toplam = list.length;
-  var gecerli = 0, doldu = 0, yapilmadi = 0, calisir = 0, arizali = 0, bakim = 0, hurda = 0, yaklasan3 = 0;
+  var gecerli = 0, doldu = 0, yapilmadi = 0, calisir = 0, arizali = 0, bakim = 0, hurda = 0, yaklasan = 0;
   var bolumler = new Set();
   list.forEach(function(r) {
     var st = getKalibrasyonDurum(r);
     if (st === 'gecerli') gecerli++;
-    else if (st === 'yakinlasiyor') {
-      var d3 = new Date();
-      d3.setDate(d3.getDate() + 3);
-      if (r.sonrakiKalibrasyon && r.sonrakiKalibrasyon <= formatLocalDate(d3)) yaklasan3++;
-    }
+    else if (st === 'yakinlasiyor') yaklasan++;
     else if (st === 'suresi_doldu') doldu++;
     else yapilmadi++;
     var d = r.durum;
@@ -9210,8 +9206,8 @@ function renderKalibrasyonOzet(list) {
       <span class="report-value" style="color:#10b981">${fmtN(gecerli)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Kalibrasyonu Yaklaşan (3 Gün)</span>
-      <span class="report-value" style="color:#f59e0b">${fmtN(yaklasan3)}</span>
+      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Kalibrasyonu Yaklaşan (30 Gün)</span>
+      <span class="report-value" style="color:#f59e0b">${fmtN(yaklasan)}</span>
     </div>
     <div class="report-item">
       <span class="report-label"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Farklı Bölüm</span>

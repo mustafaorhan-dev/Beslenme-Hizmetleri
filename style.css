@@ -45,7 +45,7 @@
 }
 .login-box {
   position: relative;
-  background: var(--bg-card);
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: 22px;
   padding: 3.2rem 2.6rem;
