@@ -914,7 +914,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .kpi-card {
   background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
-  border: 1px solid rgba(255,255,255,0.20);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.4rem;
   display: flex;
@@ -982,7 +982,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 /* ---- SECTION CARD ---- */
 .section-card {
   background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -1120,7 +1120,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .data-table td:first-child { color: var(--text-primary); font-weight: 500; }
 .td-atik { color: var(--accent-orange) !important; font-weight: 600; }
-.td-gecis { color: var(--accent-green) !important; font-weight: 600; }
+.td-gecis { color: var(--accent-green) !important; font-weight: 600; text-align: center; }
 .td-personel { color: var(--accent-purple) !important; font-weight: 600; }
 
 /* ---- SEKTÖR BAŞLIKLARI ---- */
@@ -1654,7 +1654,7 @@ td.porsiyon-warn {
   display: flex; align-items: center; gap: 0.75rem;
   padding: 0.7rem 1rem;
   background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03));
-  border: 1px solid rgba(255,255,255,0.16);
+  border: 1px solid var(--border);
   border-radius: 12px;
   flex: 1; min-width: 150px;
   transition: all 0.2s;

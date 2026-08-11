@@ -3165,6 +3165,15 @@ function exportDashboardPDF() {
       .prod-sep { width: 1.2rem; text-align: center; flex-shrink: 0; color: #999; }
       .prod-qty { width: 4.5rem; text-align: right; flex-shrink: 0; font-weight: 600; }
       .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.5rem 0; color: #333; }
+      .comparison-grid { display: flex; flex-direction: column; gap: 0; }
+      .comparison-header-row, .comparison-item { border: none; border-radius: 0; background: transparent; padding: 0.4rem 0.5rem; border-bottom: 1px solid #ddd; box-shadow: none; }
+      .comparison-header-row { background: #f5f5f5; }
+      .comparison-label { width: 140px; flex-basis: 140px; font-weight: 600; flex-shrink: 0; font-size: 0.75rem; }
+      .comparison-old { width: 110px; flex-shrink: 0; text-align: right; font-size: 0.75rem; }
+      .comparison-arrow { flex-shrink: 0; font-size: 0.85rem; width: 16px; text-align: center; }
+      .comparison-new { width: 110px; flex-shrink: 0; text-align: right; font-weight: 700; font-size: 0.8rem; }
+      .comparison-diff { width: 130px; flex-shrink: 0; text-align: center; font-size: 0.75rem; }
+      .comparison-badge { font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 999px; white-space: nowrap; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       ${harcamaHiddenCss()}
     </style>
