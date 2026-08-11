@@ -58,14 +58,18 @@
       <div style="margin-bottom:1.75rem"></div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="position:relative">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <select id="loginUsername" style="width:100%;padding:14px 16px 14px 42px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''">
+          <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,0.15);color:#6366f1;display:flex;align-items:center;justify-content:center;pointer-events:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <select id="loginUsername" style="width:100%;padding:14px 16px 14px 56px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''">
             <option value="">Kullanıcı Seçin</option>
           </select>
         </div>
         <div style="position:relative">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="loginPassword" placeholder="Şifre" style="width:100%;padding:14px 16px 14px 42px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''" onkeydown="if(event.key==='Enter')doLogin()" />
+          <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:8px;background:rgba(34,211,238,0.15);color:#22d3ee;display:flex;align-items:center;justify-content:center;pointer-events:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" id="loginPassword" placeholder="Şifre" style="width:100%;padding:14px 16px 14px 56px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-primary);font-size:0.95rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)'" onblur="this.style.borderColor='';this.style.boxShadow=''" onkeydown="if(event.key==='Enter')doLogin()" />
         </div>
         <button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:14px;font-size:0.95rem;font-weight:700;justify-content:center;text-transform:uppercase;letter-spacing:0.5px">Giriş Yap</button>
         <div id="loginError" style="color:#ef4444;font-size:0.85rem;margin:0;text-align:center;display:none"></div>
