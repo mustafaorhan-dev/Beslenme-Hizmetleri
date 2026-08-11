@@ -4600,7 +4600,8 @@ function buildReportRow(r) {
   const personel = safe(r.personel);
   // Turnike = İdari/Akademik Personel + Öğrenci → İdari Akademik = Turnike − Öğrenci
   const idariAkademik = Math.max(0, turnike - ogrenci);
-  return `<tr>
+  const fazlalik = ogrenci > turnike ? ' style="background:rgba(250,204,21,0.18);outline:1px solid rgba(250,204,21,0.5)"' : '';
+  return `<tr${fazlalik}>
     <td>${dateStr}</td>
     <td>${safe(r.yemek).toLocaleString('tr-TR')}</td>
     <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
@@ -6027,6 +6028,27 @@ function drawAllCharts() {
     for (let m = 1; m <= 12; m++) allMonthLabels.push(m + '/' + y);
   });
   const getMonthVal = (label, field) => (monthlyData[label] ? monthlyData[label][field] : 0);
+
+  const uyari = [];
+  allMonthLabels.forEach(m => {
+    const top = getMonthVal(m, 'toplam');
+    const sum = getMonthVal(m, 'ogrenci') + getMonthVal(m, 'idari') + getMonthVal(m, 'personel');
+    if (Math.abs(top - sum) > 0.5) uyari.push(m + ': Geçiş=' + top + ' | Öğr+İdari+Pers=' + sum + ' (fark ' + (top - sum) + ')');
+  });
+  const fazlaOgrenci = chartRecords.filter(r => (Number(r.ogrenci) || 0) > (Number(r.turnike) || 0))
+    .map(r => r.tarih + ' (Turnike:' + r.turnike + ' / Öğr:' + r.ogrenci + ')');
+  const uyariEl = document.getElementById('chartAylikUyari');
+  if (uyariEl) {
+    const lines = [];
+    if (uyari.length) lines.push('Aylık uyumsuzluk: ' + uyari.join(' | '));
+    if (fazlaOgrenci.length) lines.push('Öğrenci > Turnike olan günler: ' + fazlaOgrenci.join(', '));
+    if (lines.length) {
+      uyariEl.style.display = 'block';
+      uyariEl.textContent = lines.join(' — ');
+    } else {
+      uyariEl.style.display = 'none';
+    }
+  }
 
   // Destroy old Chart.js instances
   chartInstances.forEach(c => c.destroy());
