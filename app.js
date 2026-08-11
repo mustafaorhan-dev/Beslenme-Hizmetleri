@@ -4547,7 +4547,7 @@ function buildReportRow(r) {
     <td class="td-gecis">${turnike.toLocaleString('tr-TR')}</td>
     <td>${idariAkademik.toLocaleString('tr-TR')}</td>
     <td>${ogrenci.toLocaleString('tr-TR')}</td>
-    <td>${personel.toLocaleString('tr-TR')}</td>
+    <td class="td-personel">${personel.toLocaleString('tr-TR')}</td>
     <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
     <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
     <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>

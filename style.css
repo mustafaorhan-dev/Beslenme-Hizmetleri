@@ -1126,6 +1126,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .data-table td:first-child { color: var(--text-primary); font-weight: 500; }
 .td-atik { color: var(--accent-orange) !important; font-weight: 600; }
 .td-gecis { color: var(--accent-green) !important; font-weight: 600; }
+.td-personel { color: var(--accent-purple) !important; font-weight: 600; }
 
 /* ---- SEKTÖR BAŞLIKLARI ---- */
 .section-title {
