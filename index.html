@@ -1111,6 +1111,47 @@
       <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">Yıl ve ay filtresi, aşağıdaki tüm grafikleri (Üretim, Turnike, Atık, Harcama vb.) birlikte filtreler.</div>
       <div class="charts-grid">
 
+        <!-- ÜRETİM - GEÇİŞ - ATIK KARŞILAŞTIRMASI -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Üretim - Geçiş - Atık Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartAylik">
+            <canvas id="canvasAylik"></canvas>
+            <div class="chart-empty" id="chartAylikEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Üretim, turnike geçişi ve çöpe giden porsiyonun aylık karşılaştırması</div>
+          <div class="formula-box">
+            <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ 400 gr
+          </div>
+        </div>
+
+        <!-- ÖĞRENCİ -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı</h2>
+            <span class="chart-total" id="chartTotalOgrenci">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartOgrenci">
+            <canvas id="canvasOgrenci"></canvas>
+            <div class="chart-empty" id="chartOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">Günlük öğrenci geçişlerinin aylık toplamı</div>
+        </div>
+
+        <!-- İDARİ AKADEMİK + SKS PERSONELİ -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2>İdari Akademik ve SKS Personeli Toplamı</h2>
+            <span class="chart-total" id="chartTotalIdariPersonel">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartIdariPersonel">
+            <canvas id="canvasIdariPersonel"></canvas>
+            <div class="chart-empty" id="chartIdariPersonelEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note">İdari-Akademik (Turnike − Öğrenci) ve SKS Yemek Hizmeti Personeli toplamı</div>
+        </div>
+
         <!-- ÜRETİM & GEÇİŞ -->
         <div class="section-card chart-card">
           <div class="section-header">
@@ -1133,17 +1174,6 @@
             <div class="chart-empty" id="chartTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
           <div class="chart-note">Öğrenci + personel + dış geçiş toplamı</div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı</h2>
-            <span class="chart-total" id="chartTotalOgrenci">0<small>Yıl Toplamı</small></span>
-          </div>
-          <div class="chart-area" id="chartOgrenci">
-            <canvas id="canvasOgrenci"></canvas>
-            <div class="chart-empty" id="chartOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Günlük öğrenci geçişlerinin aylık toplamı</div>
         </div>
 
         <!-- ATIK -->
@@ -1170,19 +1200,6 @@
           <div class="chart-note">Günlük çöpe giden porsiyonların aylık toplamı (Atık kg × 1000 ÷ Porsiyon gr)</div>
           <div class="formula-box">
             <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ Porsiyon gr
-          </div>
-        </div>
-        <div class="section-card chart-card chart-card-full">
-          <div class="section-header">
-            <h2>Üretim - Geçiş - Atık Karşılaştırması</h2>
-          </div>
-          <div class="chart-area" id="chartAylik">
-            <canvas id="canvasAylik"></canvas>
-            <div class="chart-empty" id="chartAylikEmpty">Veri girildiğinde grafik gösterilecek</div>
-          </div>
-          <div class="chart-note">Üretim, turnike geçişi ve çöpe giden porsiyonun aylık karşılaştırması</div>
-          <div class="formula-box">
-            <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ 400 gr
           </div>
         </div>
         <div class="section-card chart-card chart-card-full">
@@ -1599,7 +1616,7 @@
             </div>
             <div class="form-group">
               <label for="fToplam">
-                Toplam Geçiş
+                Yemek Hiz. Yararlanan Toplam Kişi
                 <span class="auto-badge">Otomatik</span>
               </label>
               <input type="number" id="fToplam" min="0" step="1" placeholder="0" readonly class="readonly-input" />
@@ -2094,10 +2111,13 @@
           <h3>2. Panel</h3>
           <p>Açılış ekranıdır. Sistemin genel durumunu özet kartlar halinde gösterir:</p>
           <ul>
-            <li><strong>Toplam Kayıt:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
-            <li><strong>Bugünkü Kayıt:</strong> Bugün eklenen kayıt sayısı ve üretim miktarı.</li>
-            <li><strong>Son 7 Gün Atık:</strong> Haftalık toplam atık miktarı ve değişim yüzdesi.</li>
-            <li><strong>Haftalık Menü Durumu:</strong> Aktif menünün onay durumu.</li>
+            <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
+            <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
+            <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
+            <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
+            <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
+            <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
+            <li><strong>Toplam Atık (kg):</strong> Toplam atık miktarı ve değişim yüzdesi.</li>
           </ul>
           <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz. "PDF Yazdır" butonu ile paneli yazdırabilir veya PDF kaydedebilirsiniz.</p>
         </div>
@@ -2117,6 +2137,7 @@
           <h3>4. Kayıtlar</h3>
           <ul>
             <li>Tüm üretim, tüketim ve atık kayıtlarının listelendiği bölümdür.</li>
+            <li>Her kayıt <strong>Üretilen Yemek</strong>, <strong>%10 Fire</strong>, <strong>Turnike Geçişi</strong>, <strong>SKS Yemek Hiz. Personeli</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + personel) ve <strong>Atık</strong> bilgilerini içerir; Toplam değeri otomatik hesaplanır.</li>
             <li>Üstteki arama kutusu ve tarih filtresiyle kayıtları daraltabilirsiniz.</li>
             <li>Her kayıt için <strong>Düzenle</strong> (kalem) ve <strong>Sil</strong> (çöp kutusu) butonları bulunur.</li>
             <li>Sayfalama alttadır: <strong>« ‹ 1/2 › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; "N kayıt" bilgisi toplam kayıt sayısını gösterir.</li>
@@ -2129,6 +2150,7 @@
           <ul>
             <li>Belirli bir tarih aralığında üretim, tüketim ve atık miktarlarını gösterir.</li>
             <li>Rapor, <strong>günlük</strong> ve <strong>aylık</strong> bazda derlenir.</li>
+            <li>Üstteki özet kartları: <strong>Toplam Turnike Geçişi</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + SKS personeli), <strong>SKS Yemek Hiz. Personeli</strong>, <strong>En Yüksek Haftalık Yararlanan Kişi</strong> ve <strong>Yemek Hiz. Yararlanan Trendi (son 7 gün)</strong>.</li>
             <li>Üstteki butonlarla raporu <strong>yazdırabilir</strong> veya <strong>Excel</strong> olarak dışa aktarabilirsiniz.</li>
             <li>Rapor sonuçları otomatik olarak <strong>atık oranı</strong> hesaplar ve çeşit kırılımını gösterir.</li>
           </ul>
@@ -2148,8 +2170,9 @@
           <h3>7. Üretim Tüketim Atık Gir</h3>
           <ul>
             <li>Sol menüdeki <strong>"Üretim Tüketim Atık Gir"</strong> butonu ile günlük veri girişi yapılır.</li>
-            <li>Tarih, öğün, yemek adı, üretim miktarı, tüketim miktarı ve atık miktarı alanları doldurulur.</li>
-            <li>Atık oranı otomatik hesaplanır: <em>Atık / Üretim × 100</em>.</li>
+            <li>Tarih, yemek adı, üretilen yemek sayısı, turnike geçiş sayısı, öğrenci sayısı ve personel sayısı girilir.</li>
+            <li><strong>%10 Fire</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + personel) ve <strong>Atık Miktarı (kg)</strong> alanları <strong>otomatik</strong> hesaplanır; personel sayısı elle düzenlenebilir.</li>
+            <li>Atık formülü: <em>(Üretilen Yemek − Fire − Yemek Hiz. Yararlanan Toplam Kişi) × Porsiyon ÷ 1000</em>.</li>
             <li>Kayıt kaydedildikten sonra Panel, Grafikler ve Harcama bölümleri anında güncellenir.</li>
             <li>Hatalı kayıtlar <strong>Kayıtlar</strong> bölümünden düzenlenebilir veya silinebilir.</li>
           </ul>
@@ -2185,7 +2208,7 @@
             <li>Tablo iki rozet gösterir: <strong>Cihaz Durumu</strong> (elle seçilir) ve <strong>Kalibrasyon</strong> (tarihlere göre otomatik hesaplanır: <strong>Geçerli</strong> yeşil, <strong>Yaklaşıyor</strong> sarı - sonraki kalibrasyona 30 günden az, <strong>Süresi Doldu</strong> kırmızı, <strong>Yapılmadı</strong> kırmızı). Girdiğiniz <strong>Not</strong> bilgisi listenin <strong>Not</strong> sütununda gösterilir.</li>
             <li>Liste <strong>cihaz adına göre alfabetik</strong> sıralanır; üstteki <strong>Durum</strong> filtresi ve <strong>Bölüm</strong> arama kutusu ile kayıtlar daraltılabilir.</li>
             <li>Sayfalama alttadır: <strong>« ‹ 1/N › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; liste uzunsa kaydırma çubuğuyla aşağı inilebilir.</li>
-            <li>Üstteki özet kartları cihaz durumu (çalışır/arızalı/bakım/hurda) ile kalibrasyon durumunu ayrı ayrı özetler. Paneldeki kalibrasyon alarmı süresi dolan ve yapılmayan cihazları sayar.</li>
+            <li>Üstteki özet kartları cihaz durumunu (çalışır/arızalı/bakım/hurda) ve kalibrasyon durumunu (<strong>Kalibrasyonu Geçerli</strong>, <strong>Kalibrasyonu Yaklaşan (30 Gün)</strong>, <strong>Farklı Bölüm</strong>) ayrı ayrı özetler. Paneldeki <strong>Kalibrasyon Alarmı</strong> süresi dolan ve yapılmayan cihazları sayar.</li>
             <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır (Not bilgisi dahil).</li>
           </ul>
         </div>

@@ -5952,6 +5952,7 @@ function drawAllCharts() {
   const totYemek = chartRecords.reduce((s, r) => s + (Number(r.yemek) || 0), 0);
   const totTurnike = chartRecords.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
   const totOgrenci = chartRecords.reduce((s, r) => s + (Number(r.ogrenci) || 0), 0);
+  const totIdariPersonel = chartRecords.reduce((s, r) => s + Math.max(0, (Number(r.turnike) || 0) - (Number(r.ogrenci) || 0)) + (Number(r.personel) || 0), 0);
   const totAtik = chartRecords.reduce((s, r) => s + (Number(r.atik) || 0), 0);
   const totAtikPorsiyon = chartRecords.reduce((s, r) => s + ((Number(r.porsiyon) || 0) > 0 ? (Number(r.atik) || 0) * 1000 / (Number(r.porsiyon) || 400) : 0), 0);
   const totFark = totYemek - totTurnike;
@@ -5965,14 +5966,15 @@ function drawAllCharts() {
   setChartTotal('chartTotalYemek', totYemek, v => Math.round(v).toLocaleString('tr-TR'));
   setChartTotal('chartTotalTurnike', totTurnike, v => Math.round(v).toLocaleString('tr-TR'));
   setChartTotal('chartTotalOgrenci', totOgrenci, v => Math.round(v).toLocaleString('tr-TR'));
+  setChartTotal('chartTotalIdariPersonel', totIdariPersonel, v => Math.round(v).toLocaleString('tr-TR'));
   setChartTotal('chartTotalAtik', totAtik, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }));
   setChartTotal('chartTotalFark', totFark, v => (Math.round(v)).toLocaleString('tr-TR'));
   setChartTotal('chartTotalAtikOran', totAtikOran, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' %', 'Yıl Ortalaması');
   setChartTotal('chartTotalAtikPerKisi', totAtikPerKisi, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 2 }), 'Yıl Ortalaması');
   setChartTotal('chartTotalAtikPorsiyon', totAtikPorsiyon, v => Math.round(v).toLocaleString('tr-TR'));
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartIdariPersonelEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasIdariPersonel','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -6002,13 +6004,15 @@ function drawAllCharts() {
     const date = new Date(r.tarih + 'T12:00:00');
     const monthKey = (date.getMonth() + 1) + '/' + date.getFullYear();
     if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0, harcama: 0, porsiyon: 0, atikPorsiyon: 0 };
+      monthlyData[monthKey] = { yemek: 0, toplam: 0, atik: 0, turnike: 0, ogrenci: 0, idari: 0, personel: 0, harcama: 0, porsiyon: 0, atikPorsiyon: 0 };
     }
     monthlyData[monthKey].yemek += r.yemek;
     monthlyData[monthKey].toplam += r.toplam;
     monthlyData[monthKey].atik += r.atik;
     monthlyData[monthKey].turnike += r.turnike;
     monthlyData[monthKey].ogrenci += r.ogrenci;
+    monthlyData[monthKey].idari += Math.max(0, (r.turnike || 0) - (r.ogrenci || 0));
+    monthlyData[monthKey].personel += r.personel;
     monthlyData[monthKey].harcama += (r.harcama_tutari || 0);
     monthlyData[monthKey].porsiyon += r.porsiyon;
     // Çöpe giden porsiyon = atık kg × 1000 / porsiyon gr
@@ -6184,6 +6188,7 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
+  try { makeChart('canvasIdariPersonel', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'idari') + getMonthVal(m, 'personel')), color: '#0ea5e9', label: 'İdari-Akademik + SKS Personeli' }], { onClick: clickHandler }); } catch(e) { console.warn('chartIdariPersonel error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
