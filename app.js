@@ -1149,6 +1149,46 @@ function closeManualModal() {
   document.body.style.overflow = '';
 }
 
+function exportManualPDF() {
+  var body = document.querySelector('#manualModal .manual-body');
+  if (!body) { showToast('Kılavuz içeriği bulunamadı.', 'error'); return; }
+  var printWin = window.open('', '_blank', 'width=900,height=800');
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  var manualHtml = body.outerHTML;
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>Kullanım Kılavuzu - Atık Kontrol</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; color: #222; font-size: 13px; line-height: 1.6; }
+      h1 { font-size: 1.4rem; margin: 0 0 0.2rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 1.5rem; }
+      .manual-hero { text-align: center; border-bottom: 2px solid #444; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+      .manual-hero-badge { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 0.2rem 0.8rem; font-size: 0.75rem; margin-bottom: 0.5rem; color: #555; }
+      .manual-hero h3 { margin: 0.2rem 0; font-size: 1.1rem; }
+      .manual-hero p { margin: 0; color: #555; font-size: 0.85rem; }
+      .manual-toc { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; page-break-inside: avoid; }
+      .manual-toc > strong { display: block; margin-bottom: 0.5rem; }
+      .manual-toc-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; font-size: 0.8rem; }
+      .manual-toc-links a { color: inherit; text-decoration: none; width: calc(50% - 0.75rem); box-sizing: border-box; }
+      .manual-section { border: 1px solid #ddd; border-radius: 8px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; page-break-inside: avoid; }
+      .manual-section h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #333; }
+      .manual-section h3::before { content: '\\25B8 '; color: #666; }
+      .manual-section p { margin: 0.4rem 0; font-size: 0.85rem; color: #444; }
+      .manual-section ul { margin: 0.4rem 0; padding-left: 1.2rem; font-size: 0.85rem; color: #444; }
+      .manual-section li { margin: 0.2rem 0; }
+      .manual-section li strong, .manual-section p strong { color: #111; }
+      .manual-section li em, .manual-section p em { color: #333; }
+      @media print { a { color: inherit !important; } }
+    </style>
+  </head><body>
+    <h1>Kırşehir Ahi Evran Üniversitesi - Beslenme ve Atık Yönetim Sistemi</h1>
+    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    ${manualHtml}
+  </body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  triggerPrint(printWin);
+}
+
 function applyViewerRestrictions() {
   if (getRole() === ROLE_ADMIN) return;
   var perm = getRolePermissions(getRole());
