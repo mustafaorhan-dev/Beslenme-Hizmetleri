@@ -5969,8 +5969,8 @@ function drawAllCharts() {
   setChartTotal('chartTotalAtikPerKisi', totAtikPerKisi, v => v.toLocaleString('tr-TR', { maximumFractionDigits: 2 }), 'Yıl Ortalaması');
   setChartTotal('chartTotalAtikPorsiyon', totAtikPorsiyon, v => Math.round(v).toLocaleString('tr-TR'));
 
-  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartIdariPersonelEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaftalikGecisEmpty','chartHaccpAylikEmpty'];
-  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasIdariPersonel','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaftalikGecis','canvasHaccpAylik'];
+  const emptyIds = ['chartAtikEmpty','chartYemekEmpty','chartTurnikeEmpty','chartAylikEmpty','chartFarkEmpty','chartAtikOranEmpty','chartOgrenciEmpty','chartIdariPersonelEmpty','chartAtikPerKisiEmpty','chartAtikPorsiyonEmpty','chartHaccpAylikEmpty'];
+  const canvasIds = ['canvasAtik','canvasYemek','canvasTurnike','canvasAylik','canvasFark','canvasAtikOran','canvasOgrenci','canvasIdariPersonel','canvasAtikPerKisi','canvasAtikPorsiyon','canvasHaccpAylik'];
 
   if (chartRecords.length === 0) {
   emptyIds.forEach(id => {
@@ -6212,25 +6212,6 @@ function drawAllCharts() {
     return t > 0 ? a / t : 0;
   });
   try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kişi Başı Atık (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
-
-  // Weekly
-  const weeklyData = {};
-  sorted.forEach(r => {
-    const d = new Date(r.tarih + 'T12:00:00');
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(d); monday.setDate(diff);
-    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-    const fmt = (date) => date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-    const label = fmt(monday) + ' - ' + fmt(sunday);
-    if (!weeklyData[label]) weeklyData[label] = 0;
-    weeklyData[label] += r.toplam;
-  });
-  const weekLabels = Object.keys(weeklyData);
-  const weekValues = weekLabels.map(l => weeklyData[l]);
-  if (weekLabels.length > 0) {
-    try { makeChart('canvasHaftalikGecis', weekLabels, [{ data: weekValues, color: '#0ea5e9', label: 'Haftalik Gecis' }], { onClick: clickHandler }); } catch(e) { console.warn('chartHaftalikGecis error:', e); }
-  }
 
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
