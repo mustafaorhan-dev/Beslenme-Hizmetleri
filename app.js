@@ -5688,7 +5688,7 @@ function renderYearlyCharts() {
   }
 
   try { makeYillikTotalDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('toplam uretim:', e); }
-  try { makeYillikTotalDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.turnike, pastTot.turnike, ''); } catch (e) { console.warn('toplam turnike:', e); }
+  try { makeYillikTotalDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.toplam, pastTot.toplam, ''); } catch (e) { console.warn('toplam yararlanan:', e); }
   try { makeYillikTotalDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
   try { makeYillikTotalDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('toplam atik:', e); }
 

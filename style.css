@@ -2769,4 +2769,26 @@ input.production-input:focus {
   -webkit-backdrop-filter: none !important;
 }
 
+/* ---- CARD HOVER LIFT ---- */
+.kpi-card,
+.section-card,
+.ws-card,
+.today-summary,
+.weekly-summary,
+.comparison-item,
+.report-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.kpi-card:hover,
+.section-card:hover,
+.ws-card:hover,
+.today-summary:hover,
+.weekly-summary:hover,
+.comparison-item:hover,
+.report-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.16);
+  border-color: var(--border-hover);
+}
+
 
