@@ -7307,7 +7307,7 @@ async function renderMenu() {
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
     <th style="width:100px">Çeşit</th>
-    ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="font-size:0.65rem;font-weight:400;opacity:0.7">${formatDateStrTR(d.tarih)}</span></th>`).join('')}
+    ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="display:inline-block;margin-top:0.3rem;font-size:0.74rem;font-weight:800;background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:#fff;padding:0.18rem 0.65rem;border-radius:999px;box-shadow:0 2px 6px rgba(99,102,241,0.3)">${formatDateStrTR(d.tarih)}</span></th>`).join('')}
   </tr>`;
 
   // Cache henüz dolmamışsa 500ms sonra tekrar dene
