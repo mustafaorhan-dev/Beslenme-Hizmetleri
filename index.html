@@ -749,24 +749,10 @@
           <h2 style="font-size:1rem">Gıda Güvenliği Yönetimi</h2>
         </div>
         <div class="toolbar-actions">
-          <button class="btn btn-outline btn-sm" onclick="syncHaccpToSupabase()" title="HACCP verilerini Supabase'e yedekle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Supabase'e Kaydet
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="syncHaccpFromSupabase().then(function(r){if(r){showToast('Supabase\'ten '+haccpRecords.length+' HACCP kaydı alındı.','success');saveHaccpData();renderHaccp();}else{showToast('Supabase\'ten veri alınamadı.','error');}})" title="Supabase'ten veri çek">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 14.9A7 7 0 0115.9 8h.1a4.5 4.5 0 010 9H6a6 6 0 01-2-11.6"/><polyline points="8 16 12 20 16 16"/><line x1="12" y1="8" x2="12" y2="20"/></svg>
-            Supabase'ten Çek
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('haccpFileInput').click()" title="CSV/JSON dosyasından toplu yükle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Dosya Yükle
-          </button>
           <button class="btn btn-outline btn-sm" onclick="exportHaccpCSV()" title="CSV olarak indir (ID dahil)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             CSV İndir
           </button>
-          <input type="file" id="haccpFileInput" accept=".csv,.json" style="display:none" onchange="importHaccpFile(event)" />
-
         </div>
       </div>
 

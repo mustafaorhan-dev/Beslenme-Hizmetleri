@@ -11,12 +11,7 @@
 /* Login Overlay */
 .login-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background:
-    radial-gradient(ellipse at 12% 18%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%),
-    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--accent-orange) 20%, transparent), transparent 55%),
-    radial-gradient(ellipse at 85% 90%, color-mix(in srgb, var(--accent-cyan) 20%, transparent), transparent 55%),
-    radial-gradient(ellipse at 16% 88%, color-mix(in srgb, var(--accent-green) 18%, transparent), transparent 50%),
-    linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: var(--bg-primary);
   display: flex; align-items: center; justify-content: center;
   z-index: 999999;
   transition: opacity 0.5s ease;
@@ -24,14 +19,14 @@
 }
 .login-overlay::before {
   content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent), transparent 65%);
+  background: transparent;
   top: -140px; left: -140px;
   animation: loginFloat 16s ease-in-out infinite alternate;
   pointer-events: none;
 }
 .login-overlay::after {
   content: ''; position: absolute; width: 560px; height: 560px; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent-orange) 20%, transparent), transparent 65%);
+  background: transparent;
   bottom: -160px; right: -140px;
   animation: loginFloat 20s ease-in-out infinite alternate-reverse;
   pointer-events: none;
@@ -45,7 +40,7 @@
 }
 .login-box {
   position: relative;
-  background: transparent;
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 22px;
   padding: 3.2rem 2.6rem;
