@@ -1568,7 +1568,6 @@ td.porsiyon-warn {
   box-shadow: 0 6px 24px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.14);
   transition: all var(--transition);
 }
-.today-summary:hover { border-color: var(--border-hover); }
 .today-summary-header {
   display: flex; align-items: center; gap: 0.5rem;
   font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
@@ -1586,7 +1585,6 @@ td.porsiyon-warn {
   border-radius: 8px;
   transition: background var(--transition);
 }
-.today-summary-body .ts-item:hover { background: rgba(99,102,241,0.04); }
 .today-summary-body .ts-label { opacity: 0.7; font-size: 0.72rem; }
 .today-summary-body .ts-value { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
 .today-summary-body .ts-value.good { color: #10b981; }
@@ -1616,7 +1614,6 @@ td.porsiyon-warn {
   background: linear-gradient(180deg, #22d3ee, #6366f1);
   border-radius: 3px 0 0 3px;
 }
-.weekly-summary:hover { border-color: var(--border-hover); }
 .weekly-summary-header {
   display: flex; align-items: center; gap: 0.5rem;
   font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
@@ -1662,7 +1659,6 @@ td.porsiyon-warn {
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 20px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.ws-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: var(--border-hover); }
 .ws-card-icon {
   width: 38px; height: 38px;
   border-radius: 10px;
@@ -2782,8 +2778,6 @@ input.production-input:focus {
 .kpi-card:hover,
 .section-card:hover,
 .ws-card:hover,
-.today-summary:hover,
-.weekly-summary:hover,
 .comparison-item:hover,
 .report-item:hover {
   transform: translateY(-4px);
