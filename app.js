@@ -3165,6 +3165,8 @@ function exportDashboardPDF() {
       .prod-sep { width: 1.2rem; text-align: center; flex-shrink: 0; color: #999; }
       .prod-qty { width: 4.5rem; text-align: right; flex-shrink: 0; font-weight: 600; }
       .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.5rem 0; color: #333; }
+      .section-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem; }
+      .section-header .badge { display: inline-block; font-size: 0.7rem; color: #555; background: #f5f5f5; border: 1px solid #ddd; border-radius: 999px; padding: 0.15rem 0.6rem; }
       .comparison-grid { display: flex; flex-direction: column; gap: 0; }
       .comparison-header-row, .comparison-item { border: none; border-radius: 0; background: transparent; padding: 0.4rem 0.5rem; border-bottom: 1px solid #ddd; box-shadow: none; }
       .comparison-header-row { background: #f5f5f5; }
