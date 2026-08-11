@@ -5359,7 +5359,7 @@ function renderReport() {
 
   if (n === 0) {
     ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
-     'rTotalGecis','rAvgPorsiyon','rTotalPorsiyon','rCopPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
+     'rTotalGecis','rTotalPersonel','rAvgPorsiyon','rTotalPorsiyon','rCopPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
      'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis'].forEach(id => {
       document.getElementById(id).textContent = '—';
     });
@@ -5429,6 +5429,7 @@ function renderReport() {
   document.getElementById('rTotalFireKar').textContent = (totalYemek * 0.1).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   document.getElementById('rTotalYemekSonrasi').textContent = (totalYemek * 0.9).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   document.getElementById('rTotalTurnike').textContent = totalTurnike.toLocaleString('tr-TR');
+  document.getElementById('rTotalPersonel').textContent = totalPersonel.toLocaleString('tr-TR');
   document.getElementById('rTotalGecis').textContent = totalGecis.toLocaleString('tr-TR');
   const totalPorsiyon = records.reduce((s,r) => s+(r.porsiyon||0), 0);
   const copPorsiyon = records.reduce((s,r) => s + ((r.porsiyon||0) > 0 ? (r.atik||0) * 1000 / (r.porsiyon||400) : 0), 0);
