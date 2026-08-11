@@ -1107,6 +1107,11 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   white-space: normal;
 }
 
+.print-table td {
+  text-align: center;
+  white-space: nowrap;
+}
+
 .data-table td {
   padding: 0.8rem 1rem;
   border-bottom: 1px solid rgba(99,102,241,0.18);
