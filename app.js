@@ -4593,7 +4593,7 @@ function buildReportRow(r) {
   const turnike = safe(r.turnike);
   const ogrenci = safe(r.ogrenci);
   const personel = safe(r.personel);
-  // Turnike = İdari/Akademik Personel + Öğrenci → İdari Akademik = Turnike − Öğrenci
+  // Turnike = Akademik/İdari Personel + Öğrenci → Akademik ve İdari = Turnike − Öğrenci
   const idariAkademik = Math.max(0, turnike - ogrenci);
   const fazlalik = ogrenci > turnike ? ' style="background:rgba(250,204,21,0.18);outline:1px solid rgba(250,204,21,0.5)"' : '';
   return `<tr${fazlalik}>
@@ -6028,7 +6028,7 @@ function drawAllCharts() {
   allMonthLabels.forEach(m => {
     const top = getMonthVal(m, 'toplam');
     const sum = getMonthVal(m, 'ogrenci') + getMonthVal(m, 'idari') + getMonthVal(m, 'personel');
-    if (Math.abs(top - sum) > 0.5) uyari.push(m + ': Geçiş=' + top + ' | Öğr+İdari+Pers=' + sum + ' (fark ' + (top - sum) + ')');
+    if (Math.abs(top - sum) > 0.5) uyari.push(m + ': Geçiş=' + top + ' | Öğr+Akd+İdr+Pers=' + sum + ' (fark ' + (top - sum) + ')');
   });
   const fazlaOgrenci = chartRecords.filter(r => (Number(r.ogrenci) || 0) > (Number(r.turnike) || 0))
     .map(r => r.tarih + ' (Turnike:' + r.turnike + ' / Öğr:' + r.ogrenci + ')');
@@ -6205,7 +6205,7 @@ function drawAllCharts() {
   });
   try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
   try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
-  try { makeChart('canvasIdariPersonel', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'idari') + getMonthVal(m, 'personel')), color: '#0ea5e9', label: 'İdari-Akademik + SKS Personeli' }], { onClick: clickHandler }); } catch(e) { console.warn('chartIdariPersonel error:', e); }
+  try { makeChart('canvasIdariPersonel', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'idari') + getMonthVal(m, 'personel')), color: '#0ea5e9', label: 'Akademik ve İdari + SKS Personeli' }], { onClick: clickHandler }); } catch(e) { console.warn('chartIdariPersonel error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
