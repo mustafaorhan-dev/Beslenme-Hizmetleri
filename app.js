@@ -4629,6 +4629,7 @@ function renderProduction(_weekKey, _weekData, days) {
     const kisi = d.data.kisi || 0;
     html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
 
+    const dayAgg = {};
     for (let ci = 0; ci < 5; ci++) {
       const raw = d.data.yemekler[ci] || '';
       const name = parseDishName(raw);
@@ -4644,11 +4645,33 @@ function renderProduction(_weekKey, _weekData, days) {
           const birim = normBirim(ing.birim);
           const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
           html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+
+          const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
+          if (!dayAgg[key]) {
+            dayAgg[key] = { ad: ing.malzeme.trim(), birim, total: 0, miktarKisi, birimLabel, cesitler: 0, cesitSet: {} };
+          }
+          dayAgg[key].total += miktarKisi * kisi;
+          if (!dayAgg[key].cesitSet[ci]) {
+            dayAgg[key].cesitSet[ci] = true;
+            dayAgg[key].cesitler++;
+          }
         });
       }
       html += '</div>';
     }
-    html += '</div></div></div>';
+    html += '</div>';
+
+    const dayEntries = Object.values(dayAgg).filter(e => e.total > 0);
+    if (dayEntries.length) {
+      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${d.gun} Günlük Toplam</div><div class="prod-day-total-body">`;
+      dayEntries.forEach(e => {
+        const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
+        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}</span></div>`;
+      });
+      html += '</div></div>';
+    }
+
+    html += '</div></div>';
   });
 
   wrapper.innerHTML = html;
