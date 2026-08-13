@@ -4636,7 +4636,7 @@ function renderProduction(_weekKey, _weekData, days) {
       if (!name) continue;
       const dish = findDish(name);
 
-      html += `<div class="prod-cesit-col"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
+      html += `<div class="prod-cesit-col prod-cesit-col-c${ci + 1}"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
 
       if (dish && dish.tarif && dish.tarif.length) {
         dish.tarif.forEach((ing, idx) => {
