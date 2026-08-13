@@ -3913,7 +3913,6 @@ function handleFullBackupImport(e) {
 function renderAll() {
   renderKPIs();
   renderWeeklySummary();
-  renderTodaySummary();
   renderDailySummary();
   renderDataInfo();
   renderLastRecordsTable();
@@ -3930,34 +3929,6 @@ function renderAll() {
   renderYagTable();
   renderAmbalajTable();
   renderKalibrasyon();
-}
-
-function renderTodaySummary() {
-  const el = document.getElementById('todaySummary');
-  const body = document.getElementById('todaySummaryBody');
-  if (!el || !body) return;
-  if (records.length === 0) {
-    body.innerHTML = `<div class="ts-item"><span class="ts-label">Henüz kayıt girilmedi</span></div>`;
-    return;
-  }
-  const today = new Date();
-  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-  const todayRec = records.find(r => r.tarih === todayStr);
-  if (!todayRec) {
-    body.innerHTML = `<div class="ts-item"><span class="ts-label">Bugün henüz kayıt girilmedi</span></div>`;
-    return;
-  }
-  const pct = records.length >= 2 ? ((todayRec.atik||0) / records.reduce((s,r) => s+(r.atik||0),0) * 100).toFixed(1) : '—';
-  const avgAtik = records.length > 0 ? (records.reduce((s,r) => s+(r.atik||0),0) / records.length).toFixed(2) : '—';
-  const atikStatus = (todayRec.atik||0) > parseFloat(avgAtik) * 1.2 ? 'bad' : (todayRec.atik||0) < parseFloat(avgAtik) * 0.8 ? 'good' : 'warn';
-  body.innerHTML = `
-    <div class="ts-item"><span class="ts-label">Üretim</span><span class="ts-value">${(todayRec.yemek||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Geçiş</span><span class="ts-value">${(todayRec.toplam||0).toLocaleString('tr-TR')}</span></div>
-    <div class="ts-item"><span class="ts-label">Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
-    <div class="ts-item"><span class="ts-label">Porsiyon</span><span class="ts-value">${(todayRec.porsiyon||0)} gr</span></div>
-    <div class="ts-item"><span class="ts-label">Atık Oranı</span><span class="ts-value warn">%${pct}</span></div>
-    <div class="ts-item"><span class="ts-label">Bugünkü Atık</span><span class="ts-value ${atikStatus}">${(todayRec.atik||0).toFixed(1)} kg</span></div>
-  `;
 }
 
 // ─── DAILY DETAIL PANEL ─────────────────────────────────────────────────────
