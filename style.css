@@ -1788,9 +1788,9 @@ td.porsiyon-warn {
 }
 
 /* Harcama: KPI kartları (Panel'deki kpi-card yapısıyla aynı) */
-.hc-kpis .kpi-value { font-size: 1.5rem; }
+.hc-kpis .kpi-value { font-size: 1.15rem; }
 .hc-kpis .kpi-card:nth-child(7) .kpi-value,
-.hc-kpis .kpi-card:nth-child(8) .kpi-value { font-size: 1.2rem; }
+.hc-kpis .kpi-card:nth-child(8) .kpi-value { font-size: 1rem; }
 
 /* Harcama: tablo sayfalama (Kayıtlar sekmesindeki ile aynı) */
 .hc-pagination {
