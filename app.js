@@ -9010,9 +9010,9 @@ function buildExportHTML() {
     '.pbd{padding:3px 5px}' +
     '.prow{display:flex;gap:5px;flex-wrap:wrap}' +
     '.pcol{flex:1;min-width:90px;padding:3px 4px;border:1px solid #eee;border-radius:2px}' +
-    '.pcol-c1{background:#eef2ff;border-color:#c7d2fe}.pcol-c2{background:#ecfeff;border-color:#a5f3fc}' +
-    '.pcol-c3{background:#f0fdf4;border-color:#bbf7d0}.pcol-c4{background:#fff7ed;border-color:#fed7aa}' +
-    '.pcol-c5{background:#fdf2f8;border-color:#fbcfe8}' +
+    '.pcol-c1{background:#f6f7fe;border-color:#d9dcf2}.pcol-c2{background:#f4fbfd;border-color:#d5eaf0}' +
+    '.pcol-c3{background:#f5fbf7;border-color:#d8ecdf}.pcol-c4{background:#fdf9f4;border-color:#f2e3d0}' +
+    '.pcol-c5{background:#fcf5f9;border-color:#efdbe7}' +
     '.pces{font-weight:700;font-size:10px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
     '.ping{font-size:9px;line-height:1.4;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
