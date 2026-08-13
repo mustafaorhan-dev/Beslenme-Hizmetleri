@@ -1217,22 +1217,22 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   padding: 0.6rem 0.7rem 0.5rem 0.7rem;
   border-radius: 10px;
   --cesit-accent: var(--accent);
-  --cesit-bg: rgba(99,102,241,0.04);
-  --cesit-border: rgba(99,102,241,0.20);
+  --cesit-bg: rgba(99,102,241,0.025);
+  --cesit-border: rgba(99,102,241,0.14);
   background: var(--cesit-bg);
   border: 1px solid var(--cesit-border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
-.prod-cesit-col-c1 { --cesit-accent: #6366f1; --cesit-bg: rgba(99,102,241,0.08); --cesit-border: rgba(99,102,241,0.35); }
-.prod-cesit-col-c2 { --cesit-accent: #06b6d4; --cesit-bg: rgba(6,182,212,0.08); --cesit-border: rgba(6,182,212,0.35); }
-.prod-cesit-col-c3 { --cesit-accent: #22c55e; --cesit-bg: rgba(34,197,94,0.08); --cesit-border: rgba(34,197,94,0.35); }
-.prod-cesit-col-c4 { --cesit-accent: #f59e0b; --cesit-bg: rgba(245,158,11,0.08); --cesit-border: rgba(245,158,11,0.35); }
-.prod-cesit-col-c5 { --cesit-accent: #ec4899; --cesit-bg: rgba(236,72,153,0.08); --cesit-border: rgba(236,72,153,0.35); }
+.prod-cesit-col-c1 { --cesit-accent: #6366f1; --cesit-bg: rgba(99,102,241,0.05); --cesit-border: rgba(99,102,241,0.20); }
+.prod-cesit-col-c2 { --cesit-accent: #06b6d4; --cesit-bg: rgba(6,182,212,0.05); --cesit-border: rgba(6,182,212,0.20); }
+.prod-cesit-col-c3 { --cesit-accent: #22c55e; --cesit-bg: rgba(34,197,94,0.05); --cesit-border: rgba(34,197,94,0.20); }
+.prod-cesit-col-c4 { --cesit-accent: #f59e0b; --cesit-bg: rgba(245,158,11,0.05); --cesit-border: rgba(245,158,11,0.20); }
+.prod-cesit-col-c5 { --cesit-accent: #ec4899; --cesit-bg: rgba(236,72,153,0.05); --cesit-border: rgba(236,72,153,0.20); }
 .prod-cesit-col:hover {
   transform: translateY(-1px);
   border-color: var(--cesit-border);
-  box-shadow: 0 4px 14px rgba(99,102,241,0.12);
+  box-shadow: 0 4px 14px rgba(99,102,241,0.08);
 }
 .prod-cesit {
   grid-column: 1 / -1;
