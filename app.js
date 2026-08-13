@@ -8935,6 +8935,7 @@ function buildExportHTML() {
     var kisi = kisiVals[di];
     var dayCesitler = '';
     var dayHasAny = false;
+    var dayAgg = {};
     for (var ci = 0; ci < 5; ci++) {
       var el = document.getElementById('m' + ci + '_' + di);
       var raw = el ? el.textContent : '';
@@ -8954,11 +8955,28 @@ function buildExportHTML() {
         var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
         if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel };
         weekAgg[key].total += total;
+        // accumulate for daily total
+        if (!dayAgg[key]) dayAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel, cesitler: 0, cesitSet: {} };
+        dayAgg[key].total += total;
+        if (!dayAgg[key].cesitSet[ci]) {
+          dayAgg[key].cesitSet[ci] = true;
+          dayAgg[key].cesitler++;
+        }
       });
-      dayCesitler += '<div class="pcol"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
+      dayCesitler += '<div class="pcol pcol-c' + (ci + 1) + '"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
     }
     if (dayHasAny) {
-      prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div></div></div>';
+      var dayTotalHtml = '';
+      var dayEntries = Object.values(dayAgg).filter(function(e) { return e.total > 0; });
+      if (dayEntries.length) {
+        dayTotalHtml = '<div class="pdt"><div class="pdth">' + gunler[di] + ' Günlük Toplam</div>';
+        dayEntries.forEach(function(e) {
+          var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' çeşitte)</small>' : '';
+          dayTotalHtml += '<div class="pdting"><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span></div>';
+        });
+        dayTotalHtml += '</div>';
+      }
+      prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div>' + dayTotalHtml + '</div></div>';
     }
   }
 
@@ -8992,9 +9010,16 @@ function buildExportHTML() {
     '.pbd{padding:3px 5px}' +
     '.prow{display:flex;gap:5px;flex-wrap:wrap}' +
     '.pcol{flex:1;min-width:90px;padding:3px 4px;border:1px solid #eee;border-radius:2px}' +
+    '.pcol-c1{background:#eef2ff;border-color:#c7d2fe}.pcol-c2{background:#ecfeff;border-color:#a5f3fc}' +
+    '.pcol-c3{background:#f0fdf4;border-color:#bbf7d0}.pcol-c4{background:#fff7ed;border-color:#fed7aa}' +
+    '.pcol-c5{background:#fdf2f8;border-color:#fbcfe8}' +
     '.pces{font-weight:700;font-size:10px;margin-bottom:1px;padding-bottom:1px;border-bottom:1px solid #ddd;color:#333}' +
     '.ping{font-size:9px;line-height:1.4;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
+    '.pdt{margin-top:4px;border-top:1px dashed #bbb;padding-top:3px}' +
+    '.pdth{font-size:10px;font-weight:700;color:#333;margin-bottom:2px}' +
+    '.pdting{display:flex;gap:4px;font-size:9px;line-height:1.4}' +
+    '.pdtn{flex:1;color:#333}.pdtq{font-weight:600;color:#333;white-space:nowrap}' +
     '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
     '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;color:#333}' +
     '.wbd{padding:3px 6px}' +
