@@ -43,11 +43,11 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 22px;
-  padding: 4.2rem 2.6rem 3.8rem 2.6rem;
+  padding: 5rem 2.6rem 4.4rem 2.6rem;
   width: 460px;
   max-width: 92vw;
   text-align: center;
-  box-shadow: 0 22px 55px rgba(0,0,0,0.16), 0 0 45px color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 0 35px color-mix(in srgb, var(--accent) 8%, transparent);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   animation: loginCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
