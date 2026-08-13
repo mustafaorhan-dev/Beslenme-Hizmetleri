@@ -4548,8 +4548,8 @@ function buildRow(r, showActions) {
     <td>${safe(r.fire).toLocaleString('tr-TR')}</td>
     <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
     <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
-    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-    <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
+    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg</td>
+    <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)} prs.</td>
     ${showActions ? `
     <td>${mealBadge}</td>` : ''}
     ${actions}
@@ -4577,8 +4577,8 @@ function buildReportRow(r) {
     <td class="td-personel">${personel.toLocaleString('tr-TR')}</td>
     <td class="td-gecis">${safe(r.toplam).toLocaleString('tr-TR')}</td>
     <td class="${(r.porsiyon||0) !== 400 ? 'porsiyon-warn' : ''}">${safe(r.porsiyon).toLocaleString('tr-TR')}</td>
-    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-    <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)}</td>
+    <td class="td-atik">${safe(r.atik).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg</td>
+    <td style="color:var(--accent-orange);font-weight:600">${(r.porsiyon > 0 ? (r.atik * 1000 / r.porsiyon) : 0).toFixed(0)} prs.</td>
   </tr>`;
 }
 
