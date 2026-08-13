@@ -975,8 +975,10 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.1;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* ---- SECTION CARD ---- */
@@ -1487,8 +1489,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--accent);
-  line-height: 1.05;
-  white-space: nowrap;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -1675,9 +1678,9 @@ td.porsiyon-warn {
   flex-shrink: 0;
 }
 .ws-card-icon svg { width: 20px; height: 20px; }
-.ws-card-content { display: flex; flex-direction: column; gap: 0.1rem; }
+.ws-card-content { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 .ws-label { font-size: 0.68rem; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.3px; }
-.ws-value { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+.ws-value { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; word-break: break-word; }
 .ws-sub { font-size: 0.62rem; color: var(--text-muted); font-weight: 400; opacity: 0.8; }
 
 .ws-cyan .ws-card-icon { background: rgba(34,211,238,0.12); color: #22d3ee; }
