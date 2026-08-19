@@ -4663,7 +4663,7 @@ function renderProduction(_weekKey, _weekData, days) {
 
     const dayEntries = Object.values(dayAgg).filter(e => e.total > 0);
     if (dayEntries.length) {
-      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${d.gun} Günlük Toplam</div><div class="prod-day-total-body">`;
+      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}</div><div class="prod-day-total-body">`;
       dayEntries.forEach(e => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
         html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}</span></div>`;
@@ -8969,7 +8969,7 @@ function buildExportHTML() {
       var dayTotalHtml = '';
       var dayEntries = Object.values(dayAgg).filter(function(e) { return e.total > 0; });
       if (dayEntries.length) {
-        dayTotalHtml = '<div class="pdt"><div class="pdth">' + gunler[di] + ' Günlük Toplam</div>';
+        dayTotalHtml = '<div class="pdt"><div class="pdth">Stok Düşüm Listesi – ' + gunler[di] + '</div>';
         dayEntries.forEach(function(e) {
           var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' çeşitte)</small>' : '';
           dayTotalHtml += '<div class="pdting"><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span></div>';
