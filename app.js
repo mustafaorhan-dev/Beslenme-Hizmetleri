@@ -1884,6 +1884,13 @@ function renderBirimFiyatlar() {
   var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
   filtered.sort(function(a, b) { return a.urun_adi.localeCompare(b.urun_adi, 'tr'); });
 
+  var BF_PAGE_SIZE = 50;
+  if (!window._bfPage) window._bfPage = 1;
+  var bfToplamSayfa = Math.max(1, Math.ceil(filtered.length / BF_PAGE_SIZE));
+  if (window._bfPage > bfToplamSayfa) window._bfPage = bfToplamSayfa;
+  var bfStart = (window._bfPage - 1) * BF_PAGE_SIZE;
+  var bfSlice = filtered.slice(bfStart, bfStart + BF_PAGE_SIZE);
+
   var toplamTutar = filtered.reduce(function(s, p) { return s + p.birim_fiyat; }, 0);
   var ortalama = filtered.length > 0 ? toplamTutar / filtered.length : 0;
   var bfPerms = canEditBirimFiyat();
@@ -1927,8 +1934,8 @@ function renderBirimFiyatlar() {
             </tr>
           </thead>
           <tbody>
-            ${filtered.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
-            ${filtered.map(function(p) {
+            ${bfSlice.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
+            ${bfSlice.map(function(p) {
               return '<tr data-id="' + p.id + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
@@ -1944,13 +1951,21 @@ function renderBirimFiyatlar() {
           </tbody>
         </table>
       </div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Toplam ${filtered.length} ürün | Fiyatlar yıl bazlıdır. Eşleşme: Malzeme adı normalize edilerek otomatik eşleştirilir.</div>
+      ${bfToplamSayfa > 1 ? '<div style="display:flex;justify-content:center;align-items:center;gap:0.4rem;margin-top:0.75rem;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" onclick="window._bfPage=1;renderBirimFiyatlar()" ' + (window._bfPage === 1 ? 'disabled' : '') + '>&laquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="window._bfPage--;renderBirimFiyatlar()" ' + (window._bfPage === 1 ? 'disabled' : '') + '>&lsaquo;</button>' +
+        '<span style="font-size:0.85rem;color:var(--text-dim);padding:0 8px">Sayfa ' + window._bfPage + ' / ' + bfToplamSayfa + '</span>' +
+        '<button class="btn btn-ghost btn-sm" onclick="window._bfPage++;renderBirimFiyatlar()" ' + (window._bfPage >= bfToplamSayfa ? 'disabled' : '') + '>&rsaquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="window._bfPage=' + bfToplamSayfa + ';renderBirimFiyatlar()" ' + (window._bfPage >= bfToplamSayfa ? 'disabled' : '') + '>&raquo;</button>' +
+      '</div>' : ''}
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Toplam ${filtered.length} ürün${bfToplamSayfa > 1 ? ' | Sayfa ' + window._bfPage + '/' + bfToplamSayfa : ''} | Fiyatlar yıl bazlıdır. Eşleşme: Malzeme adı normalize edilerek otomatik eşleştirilir.</div>
     </div>
   `;
 }
 
 function bfYilDegistir(delta) {
   birimFiyatSeciliYil += delta;
+  window._bfPage = 1;
   renderBirimFiyatlar();
 }
 
@@ -1964,7 +1979,7 @@ function bfYilSeciciAc() {
     var bg = y === mevcut ? 'var(--accent-cyan)' : 'transparent';
     var fg = y === mevcut ? '#fff' : 'var(--text-primary)';
     var fw = y === mevcut ? '700' : '400';
-    return '<div class="bf-ypick-yil" style="cursor:pointer;padding:0.45rem 0;text-align:center;border-radius:6px;font-weight:' + fw + ';font-size:0.88rem;color:' + fg + ';background:' + bg + ';transition:all 0.15s" onmouseover="this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="birimFiyatSeciliYil=' + y + ';renderBirimFiyatlar()">' + y + '</div>';
+    return '<div class="bf-ypick-yil" style="cursor:pointer;padding:0.45rem 0;text-align:center;border-radius:6px;font-weight:' + fw + ';font-size:0.88rem;color:' + fg + ';background:' + bg + ';transition:all 0.15s" onmouseover="this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="birimFiyatSeciliYil=' + y + ';window._bfPage=1;renderBirimFiyatlar()">' + y + '</div>';
   }).join('');
 
   var overlay = document.createElement('div');
