@@ -9,6 +9,7 @@ let records = [];
 let editingId = null;
 let filteredRecords = [];
 let yemeklerCache = [];
+let unitPricesCache = [];
 let weeklySummaryOffset = 0;
 let dailySummaryOffset = 0;
 let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıtlardan türetilir)
@@ -188,6 +189,7 @@ function redrawActiveCharts() {
     case 'content-charts': if (typeof drawAllCharts === 'function') drawAllCharts(); break;
     case 'content-yillik': renderYearlyCharts(); break;
     case 'content-harcama': renderHarcamaMenu(); break;
+    case 'content-birimfiyat': renderBirimFiyatlar(); break;
     case 'content-yag': renderYagTable(); break;
     case 'content-ambalaj': renderAmbalajTable(); break;
     case 'content-report': renderReport(); break;
@@ -281,7 +283,7 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, birimfiyat: false },
     canEditMenu: true,
     canSaveMenu: true,
     canSeeProduction: true,
@@ -299,12 +301,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: false,
     canEditAmbalaj: false,
     canEditKalibrasyon: false,
+    canEditBirimFiyat: false,
     canMenuOnayaGonder: true,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -322,12 +325,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: true,
     canEditAmbalaj: true,
     canEditKalibrasyon: true,
+    canEditBirimFiyat: true,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, birimfiyat: false },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -345,12 +349,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: false,
     canEditAmbalaj: false,
     canEditKalibrasyon: false,
+    canEditBirimFiyat: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -368,12 +373,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: false,
     canEditAmbalaj: false,
     canEditKalibrasyon: true,
+    canEditBirimFiyat: true,
     canMenuOnayaGonder: false,
     canMenuOnayla: true,
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -391,12 +397,13 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: false,
     canEditAmbalaj: false,
     canEditKalibrasyon: false,
+    canEditBirimFiyat: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -414,6 +421,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canEditYag: false,
     canEditAmbalaj: false,
     canEditKalibrasyon: false,
+    canEditBirimFiyat: false,
     canMenuOnayaGonder: false,
     canMenuOnayla: false,
     canMenuReddet: false
@@ -789,7 +797,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canAddKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditYag', 'canEditAmbalaj', 'canEditKalibrasyon', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canAddKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditBirimFiyat', 'canEditYag', 'canEditAmbalaj', 'canEditKalibrasyon', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -821,7 +829,8 @@ function apRenderRolePermissions() {
     canSeeAdminPanel: 'Yönetim panelini görebilir',
     canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
     canEditDepo: 'Depo adlarını düzenleyebilir',
-    canEditHarcamaOran: 'Harcama oranını değiştirebilir',
+    canEditHarcamaOran: 'Harcama oranını/tutarını değiştirebilir',
+    canEditBirimFiyat: 'Birim fiyat listesini düzenleyebilir',
     canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
     canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
     canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
@@ -829,7 +838,7 @@ function apRenderRolePermissions() {
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', birimfiyat: 'Birim Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -1742,6 +1751,361 @@ async function syncHarcamaOranlariFromSupabase() {
     }
     return false;
   } catch (_) { return false; }
+}
+
+// ─── BİRİM FİYAT LİSTESİ ────────────────────────────────────────────────────
+const UNIT_PRICES_SUPABASE_KEY = 'unit_prices';
+
+function loadUnitPrices() { return unitPricesCache; }
+
+function saveUnitPrices(list) {
+  unitPricesCache = list;
+  syncUnitPricesToSupabase();
+}
+
+function addUnitPrice(urun_adi, birim, birim_fiyat, yil) {
+  var list = loadUnitPrices();
+  list.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    urun_adi: urun_adi.trim(),
+    birim: birim || 'kg',
+    birim_fiyat: parseFloat(birim_fiyat) || 0,
+    yil: parseInt(yil) || new Date().getFullYear()
+  });
+  saveUnitPrices(list);
+}
+
+function editUnitPrice(id, alanlar) {
+  var list = loadUnitPrices();
+  var item = list.find(function(p) { return p.id === id; });
+  if (!item) return;
+  if (alanlar.urun_adi !== undefined) item.urun_adi = alanlar.urun_adi.trim();
+  if (alanlar.birim !== undefined) item.birim = alanlar.birim;
+  if (alanlar.birim_fiyat !== undefined) item.birim_fiyat = parseFloat(alanlar.birim_fiyat) || 0;
+  if (alanlar.yil !== undefined) item.yil = parseInt(alanlar.yil) || item.yil;
+  saveUnitPrices(list);
+}
+
+function deleteUnitPrice(id) {
+  var list = loadUnitPrices().filter(function(p) { return p.id !== id; });
+  saveUnitPrices(list);
+}
+
+async function syncUnitPricesToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
+      unitPricesCache.map(function(p) {
+        return { id: p.id, urun_adi: p.urun_adi, birim: p.birim, birim_fiyat: p.birim_fiyat, yil: p.yil };
+      }),
+      { onConflict: 'id' }
+    );
+  } catch (_) {}
+}
+
+async function syncUnitPricesFromSupabase() {
+  if (!supabaseClient) return false;
+  try {
+    var { data, error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).select('*');
+    if (error || !data) return false;
+    if (data.length > 0) {
+      unitPricesCache = data.map(function(p) {
+        return {
+          id: String(p.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+          urun_adi: String(p.urun_adi || '').trim(),
+          birim: String(p.birim || 'kg').trim(),
+          birim_fiyat: parseFloat(p.birim_fiyat) || 0,
+          yil: parseInt(p.yil) || new Date().getFullYear()
+        };
+      });
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
+}
+
+function findBirimFiyat(malzemeAdi, birim) {
+  var currentYear = new Date().getFullYear();
+  var normalized = malzemeAdi.trim().toLowerCase()
+    .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  var matches = unitPricesCache.filter(function(p) {
+    var pNorm = p.urun_adi.trim().toLowerCase()
+      .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return pNorm === normalized && p.yil === currentYear;
+  });
+  if (matches.length === 0) {
+    matches = unitPricesCache.filter(function(p) {
+      var pNorm = p.urun_adi.trim().toLowerCase()
+        .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return pNorm === normalized;
+    });
+  }
+  if (matches.length === 0) return null;
+  var birimNorm = (birim || 'gr').toLowerCase();
+  var exact = matches.find(function(p) { return p.birim.toLowerCase() === birimNorm; });
+  if (exact) return exact;
+  var target = birimNorm === 'gr' ? 'kg' : birimNorm === 'ml' ? 'lt' : birimNorm;
+  return matches.find(function(p) { return p.birim.toLowerCase() === target; }) || matches[0];
+}
+
+function birimFiyatTutar(malzemeAdi, birim, miktar) {
+  var fp = findBirimFiyat(malzemeAdi, birim);
+  if (!fp) return null;
+  var birimNorm = (birim || 'gr').toLowerCase();
+  var fiyatBirim = fp.birim.toLowerCase();
+  var carpim = miktar;
+  if (birimNorm === 'gr' && fiyatBirim === 'kg') carpim = miktar / 1000;
+  else if (birimNorm === 'ml' && fiyatBirim === 'lt') carpim = miktar / 1000;
+  else if (birimNorm === 'kg' && fiyatBirim === 'gr') carpim = miktar * 1000;
+  else if (birimNorm === 'lt' && fiyatBirim === 'ml') carpim = miktar * 1000;
+  return carpim * fp.birim_fiyat;
+}
+
+let birimFiyatSeciliYil = new Date().getFullYear();
+
+function renderBirimFiyatlar() {
+  var container = document.getElementById('content-birimfiyat');
+  if (!container) return;
+
+  var currentYear = new Date().getFullYear();
+  var years = [];
+  for (var y = currentYear + 1; y >= currentYear - 5; y--) years.push(y);
+
+  var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
+  filtered.sort(function(a, b) { return a.urun_adi.localeCompare(b.urun_adi, 'tr'); });
+
+  var toplamTutar = filtered.reduce(function(s, p) { return s + p.birim_fiyat; }, 0);
+  var ortalama = filtered.length > 0 ? toplamTutar / filtered.length : 0;
+  var bfPerms = canEditBirimFiyat();
+
+  container.innerHTML = `
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Birim Fiyat Listesi</h2>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+          <select id="bfYilSecici" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" onchange="birimFiyatSeciliYil=parseInt(this.value);renderBirimFiyatlar()">
+            ${years.map(function(y) { return '<option value="' + y + '"' + (y === birimFiyatSeciliYil ? ' selected' : '') + '>' + y + '</option>'; }).join('')}
+          </select>
+          ${bfPerms ? '<button class="btn btn-primary btn-sm" onclick="bfYeniUrun()">+ Yeni Ürün</button>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="bfExportCSV()">CSV İndir</button>
+          <button class="btn btn-ghost btn-sm" onclick="printBirimFiyatlar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Yazdır
+          </button>
+          ${bfPerms ? '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bfCSVUpload\').click()">CSV Yükle</button>' : ''}
+          <input type="file" id="bfCSVUpload" accept=".csv,.txt" style="display:none" onchange="bfImportCSV(event)" />
+        </div>
+      </div>
+      <div class="bf-kpi-grid">
+        <div class="bf-kpi kayitli"><div class="bf-kpi-value">${filtered.length}</div><div class="bf-kpi-label">Kayıtlı Ürün</div></div>
+        <div class="bf-kpi toplam"><div class="bf-kpi-value">${formatTRY(toplamTutar)}</div><div class="bf-kpi-label">Toplam Tutar</div></div>
+        <div class="bf-kpi ortalama"><div class="bf-kpi-value">${formatTRY(ortalama)}</div><div class="bf-kpi-label">Ortalama Birim Fiyat</div></div>
+        <div class="bf-kpi fiyat"><div class="bf-kpi-value">${birimFiyatSeciliYil}</div><div class="bf-kpi-label">Seçili Yıl</div></div>
+      </div>
+      <div id="bfFormContainer" style="display:none;margin-bottom:1rem"></div>
+      <div class="table-wrapper">
+        <table class="data-table" style="width:100%">
+          <thead>
+            <tr>
+              <th style="text-align:left;width:35%">Ürün Adı</th>
+              <th style="text-align:center;width:15%">Birim</th>
+              <th style="text-align:center;width:20%">Birim Fiyat (₺)</th>
+              <th style="text-align:center;width:15%">Yıl</th>
+              ${bfPerms ? '<th style="text-align:center;width:15%">İşlem</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
+            ${filtered.map(function(p) {
+              return '<tr data-id="' + p.id + '">' +
+                '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
+                '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
+                '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺</td>' +
+                '<td style="text-align:center">' + p.yil + '</td>' +
+                (bfPerms ?
+                  '<td style="text-align:center;white-space:nowrap">' +
+                    '<button class="btn-icon btn-sm" onclick="bfDuzenle(\'' + p.id + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                    '<button class="btn-icon btn-sm" onclick="bfSil(\'' + p.id + '\')" title="Sil" style="color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
+                  '</td>' : '') +
+                '</td>';
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Toplam ${filtered.length} ürün | Fiyatlar yıl bazlıdır. Eşleşme: Malzeme adı normalize edilerek otomatik eşleştirilir.</div>
+    </div>
+  `;
+}
+
+let bfDuzenlemeId = null;
+
+function bfYeniUrun() {
+  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  bfDuzenlemeId = null;
+  var form = document.getElementById('bfFormContainer');
+  if (!form) return;
+  form.style.display = 'block';
+  form.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
+      <div style="flex:2;min-width:140px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Ürün Adı</label>
+        <input type="text" id="bf_ad" placeholder="Örn: Domates" style="width:100%" />
+      </div>
+      <div style="flex:0.5;min-width:80px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
+        <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+          <option value="kg">kg</option>
+          <option value="lt">lt</option>
+          <option value="adet">adet</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:100px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
+        <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" style="width:100%" />
+      </div>
+      <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
+        <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Kaydet</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bfFormContainer').style.display='none'">İptal</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('bf_ad').focus();
+}
+
+function bfDuzenle(id) {
+  var item = unitPricesCache.find(function(p) { return p.id === id; });
+  if (!item) return;
+  bfDuzenlemeId = id;
+  var form = document.getElementById('bfFormContainer');
+  if (!form) return;
+  form.style.display = 'block';
+  form.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
+      <div style="flex:2;min-width:140px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Ürün Adı</label>
+        <input type="text" id="bf_ad" value="${escapeHtml(item.urun_adi)}" style="width:100%" />
+      </div>
+      <div style="flex:0.5;min-width:80px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
+        <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+          <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>kg</option>
+          <option value="lt"${item.birim === 'lt' ? ' selected' : ''}>lt</option>
+          <option value="adet"${item.birim === 'adet' ? ' selected' : ''}>adet</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:100px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
+        <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" style="width:100%" />
+      </div>
+      <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
+        <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Güncelle</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bfFormContainer').style.display='none'">İptal</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('bf_ad').focus();
+}
+
+function bfKaydet() {
+  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  var ad = (document.getElementById('bf_ad').value || '').trim();
+  var birim = document.getElementById('bf_birim').value;
+  var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
+  if (!ad) { showToast('Ürün adı zorunludur.', 'error'); return; }
+  if (fiyat <= 0) { showToast('Geçerli bir fiyat girin.', 'error'); return; }
+  if (bfDuzenlemeId) {
+    editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat });
+    showToast('Ürün güncellendi.', 'success');
+  } else {
+    addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil);
+    showToast('Ürün eklendi.', 'success');
+  }
+  document.getElementById('bfFormContainer').style.display = 'none';
+  bfDuzenlemeId = null;
+  renderBirimFiyatlar();
+}
+
+function bfSil(id) {
+  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+  deleteUnitPrice(id);
+  showToast('Ürün silindi.', 'success');
+  renderBirimFiyatlar();
+}
+
+function bfExportCSV() {
+  var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
+  if (!filtered.length) { showToast('Dışa aktarılacak ürün yok.', 'error'); return; }
+  var rows = [['Ürün Adı', 'Birim', 'Birim Fiyat (₺)', 'Yıl']];
+  filtered.forEach(function(p) { rows.push([p.urun_adi, p.birim, p.birim_fiyat, p.yil]); });
+  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'birim_fiyatlar_' + birimFiyatSeciliYil + '.csv';
+  link.click();
+  showToast('CSV indirildi.', 'success');
+}
+
+function bfImportCSV(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var lines = e.target.result.split(/\r?\n/).filter(function(l) { return l.trim(); });
+    if (lines.length < 2) { showToast('CSV boş veya geçersiz.', 'error'); return; }
+    var imported = 0;
+    for (var i = 1; i < lines.length; i++) {
+      var cols = lines[i].split(/[;,]/).map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
+      if (cols.length < 3) continue;
+      var ad = cols[0];
+      var birim = cols[1] || 'kg';
+      var fiyat = parseFloat(cols[2].replace(/\./g, '').replace(',', '.')) || 0;
+      var yil = parseInt(cols[3]) || birimFiyatSeciliYil;
+      if (ad && fiyat > 0) {
+        addUnitPrice(ad, birim, fiyat, yil);
+        imported++;
+      }
+    }
+    showToast(imported + ' ürün içe aktarıldı.', 'success');
+    renderBirimFiyatlar();
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function printBirimFiyatlar() {
+  var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
+  filtered.sort(function(a, b) { return a.urun_adi.localeCompare(b.urun_adi, 'tr'); });
+  var tl = function(v) { return v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20BA'; };
+
+  var rows = filtered.map(function(p, i) {
+    return '<tr><td>' + (i + 1) + '</td><td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td><td>' + escapeHtml(p.birim) + '</td><td style="text-align:right">' + tl(p.birim_fiyat) + '</td><td>' + p.yil + '</td></tr>';
+  }).join('');
+
+  var win = window.open('', '_blank', 'width=800,height=600');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Birim Fiyat Listesi - ' + birimFiyatSeciliYil + '</title><style>');
+  win.document.write('@page{size:portrait;margin:1.5cm}');
+  win.document.write('body{font-family:Arial,sans-serif;padding:20px;margin:0;color:#1e293b}');
+  win.document.write('h1{font-size:1.3rem;margin:0 0 2px}');
+  win.document.write('.sub{font-size:0.8rem;color:#64748b;margin-bottom:1rem}');
+  win.document.write('table{width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:10px}');
+  win.document.write('th{background:#f1f5f9;font-weight:600;padding:0.5rem;text-align:center;border:1px solid #ddd}');
+  win.document.write('td{padding:0.4rem 0.5rem;border:1px solid #ddd;text-align:center}');
+  win.document.write('tr:nth-child(even){background:#f8fafc}');
+  win.document.write('.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}');
+  win.document.write('</style></head><body>');
+  win.document.write('<h1>Birim Fiyat Listesi</h1>');
+  win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
+  win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">\u00dcr\u00fcn Ad\u0131</th><th>Birim</th><th>Birim Fiyat (\u20BA)</th><th>Y\u0131l</th></tr></thead><tbody>' + rows + '</tbody></table>');
+  win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
+  win.document.write('</body></html>');
+  win.document.close();
+  triggerPrint(win);
 }
 
 function haccpRecordToDB(r) {
@@ -3329,6 +3693,7 @@ async function switchTab(name) {
   if (name === 'charts') drawAllCharts();
   if (name === 'yillik') renderYearlyCharts();
   if (name === 'harcama') renderHarcamaMenu();
+  if (name === 'birimfiyat') { renderBirimFiyatlar(); if (unitPricesCache.length === 0 && supabaseClient) syncUnitPricesFromSupabase().then(function() { renderBirimFiyatlar(); }); }
   if (name === 'report') renderReport();
   if (name === 'records') {
     if (filteredRecords.length === 0) {
@@ -3346,7 +3711,7 @@ async function switchTab(name) {
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
-  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon' };
+  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -4723,7 +5088,10 @@ function renderProduction(_weekKey, _weekData, days) {
       html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}</div><div class="prod-day-total-body">`;
       dayEntries.forEach(e => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
-        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}</span></div>`;
+        const found = findBirimFiyat(e.ad, e.birim);
+        const tutar = birimFiyatTutar(e.ad, e.birim, e.total);
+        const fiyatGoster = found && tutar > 0 ? ` <span style="font-size:0.78rem;color:var(--text-dim)">${formatTRY(tutar)}</span>` : '';
+        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}${fiyatGoster}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}</span></div>`;
       });
       html += '</div></div>';
     }
@@ -4850,16 +5218,28 @@ function renderWeeklyTotal(dishEntries, days) {
   siraliKategoriler.forEach(function(kategori) {
     var items = kategoriler[kategori];
     var renk = kategoriRenkleri[kategori] || kategoriRenkleri['Diğer'];
+    var kategoriToplam = 0;
+    items.forEach(function(e) {
+      if (e.total <= 0) return;
+      var birimAd = normBirim(e.birim);
+      var found = findBirimFiyat(e.ad, birimAd);
+      if (found) kategoriToplam += birimFiyatTutar(e.ad, birimAd, e.total);
+    });
     html += `<div class="wt-kategori">
       <div class="wt-kategori-header" style="background:${renk.bg};border-left:4px solid ${renk.border};color:${renk.renk}">
         <span>${renk.icon}</span> ${kategori} <span style="font-weight:400;font-size:0.75rem;opacity:0.7;margin-left:4px">(${items.length})</span>
+        ${kategoriToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.85rem;color:${renk.renk}">${formatTRY(kategoriToplam)}</span>` : ''}
       </div>
       <div class="weekly-total-grid">`;
     items.forEach(function(e) {
       var total = e.total;
       if (total <= 0) return;
       globalIdx++;
-      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      var birimAd = normBirim(e.birim);
+      var found = findBirimFiyat(e.ad, birimAd);
+      var tutar = birimFiyatTutar(e.ad, birimAd, total);
+      var fiyatGoster = found && tutar > 0 ? `<span style="font-size:0.78rem;color:var(--text-dim);margin-left:6px">${formatTRY(tutar)}</span>` : '';
+      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span>${fiyatGoster}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
     });
     html += '</div></div>';
   });
@@ -5458,6 +5838,11 @@ function hideDishDropdown() {
 function escapeHtml(s) {
   if (typeof s !== 'string') return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function formatTRY(val) {
+  if (typeof val !== 'number' || isNaN(val)) return '0,00 ₺';
+  return val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
 }
 
 // ─── REPORT ────────────────────────────────────────────────────────────────────
@@ -7119,6 +7504,13 @@ function canEditHarcamaOran() {
   if (role === ROLE_ADMIN) return true;
   var perm = getRolePermissions(role);
   return !!(perm && perm.canEditHarcamaOran);
+}
+
+function canEditBirimFiyat() {
+  var role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(role);
+  return !!(perm && perm.canEditBirimFiyat);
 }
 
 function hcKaydetOran() {

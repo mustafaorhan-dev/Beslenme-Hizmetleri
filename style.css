@@ -2853,4 +2853,80 @@ input.production-input:focus {
   border-color: var(--border-hover);
 }
 
+/* Birim Fiyatlar Sekmesi */
+.bf-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+.bf-controls label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 0.25rem;
+}
+.bf-controls input,
+.bf-controls select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+.bf-controls input[type="number"] {
+  min-width: 100px;
+}
+.bf-controls input[type="text"] {
+  min-width: 180px;
+}
+.bf-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.bf-kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  text-align: center;
+}
+.bf-kpi-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.bf-kpi-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 0.2rem;
+}
+.bf-kpi.fiyat {
+  border-left: 3px solid #f97316;
+}
+.bf-kpi.toplam {
+  border-left: 3px solid #10b981;
+}
+.bf-kpi.kayitli {
+  border-left: 3px solid #6366f1;
+}
+.bf-kpi.ortalama {
+  border-left: 3px solid #8b5cf6;
+}
+.bf-status {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+.bf-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
 

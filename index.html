@@ -197,6 +197,10 @@
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-size="16" font-weight="700" fill="#14b8a6" font-family="Inter,sans-serif">₺</text></svg>
           <span>Harcama</span>
         </button>
+        <button class="tab-btn" id="tab-birimfiyat" onclick="switchTab('birimfiyat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Birim Fiyatlar</span>
+        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="exportEverything()" title="Tüm verileri tek seferde indir (kayıt CSV, HACCP CSV, yemek listesi CSV, kalibrasyon CSV, menü ve yedek JSON)">
@@ -1462,6 +1466,8 @@
         <div class="hc-pagination" id="hcPagination"></div>
       </div>
     </div>
+
+    <div class="tab-content" id="content-birimfiyat"></div>
 
   </main>
 

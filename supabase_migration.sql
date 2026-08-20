@@ -53,3 +53,21 @@ ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari;
 CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
   USING (true) WITH CHECK (true);
+
+-- 5) BİRİM FİYAT LİSTESİ tablosu + erişim politikası
+--    Yemeklerde kullanılan malzemelerin kg/lt birim fiyatlarını tutar
+--    Yıl bazlı: her yıl için ayrı birim fiyat girilir
+CREATE TABLE IF NOT EXISTS unit_prices (
+  id SERIAL PRIMARY KEY,
+  urun_adi TEXT NOT NULL,
+  birim TEXT NOT NULL DEFAULT 'kg',
+  birim_fiyat NUMERIC(10,2) NOT NULL DEFAULT 0,
+  yil INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM now()),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE unit_prices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "unit_prices_all" ON unit_prices;
+CREATE POLICY "unit_prices_all" ON unit_prices FOR ALL
+  USING (true) WITH CHECK (true);
