@@ -1376,7 +1376,7 @@
       <div class="hc-controls" id="hcControls"></div>
       <div class="section-card">
         <div class="section-header">
-          <h2>Başı Harcama Oranları (Öğrenci &amp; Personel)</h2>
+          <h2>Başı Harcama Oranları (Öğrenci, Personel &amp; Yemek)</h2>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:0.5rem">
           <div>
@@ -1391,8 +1391,14 @@
           </div>
           <button class="btn btn-primary btn-sm" onclick="hcKaydetPersonelOran()">Pers. Oranı Kaydet</button>
           <span id="hcPersonelOranStatus" style="font-size:0.85rem"></span>
+          <div>
+            <label for="hcYemekOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Yemek Başı Harcama Oranı (₺)</label>
+            <input type="number" id="hcYemekOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetYemekOran()">Yemek Oranı Kaydet</button>
+          <span id="hcYemekOranStatus" style="font-size:0.85rem"></span>
         </div>
-        <div style="font-size:0.78rem;color:var(--text-muted)">Öğrenci Harcama = Öğrenci Sayısı × Öğr. Başı Oran; Personel Harcama = Personel Sayısı × Pers. Başı Oran. Oran değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">Öğrenci Harcama = Öğrenci Sayısı × Öğr. Başı Oran; Personel Harcama = Personel Sayısı × Pers. Başı Oran; Yemek Harcama = Üretilen Yemek × Yemek Başı Oran. Oran değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem">
@@ -1424,7 +1430,7 @@
           <h2>Harcama Hesaplama Tablosu</h2>
         </div>
         <div class="table-wrapper">
-          <table class="data-table" style="min-width:900px;text-align:center">
+          <table class="data-table" style="min-width:1100px;text-align:center">
             <thead>
               <tr>
                 <th style="text-align:center">Tarih</th>
@@ -1434,6 +1440,8 @@
                 <th style="text-align:center">Personel Sayısı</th>
                 <th style="text-align:center">Pers. Oranı (₺)</th>
                 <th style="text-align:center">Personel Harcama (₺)</th>
+                <th style="text-align:center">Üretilen Yemek</th>
+                <th style="text-align:center">Yemek Harcama (₺)</th>
               </tr>
             </thead>
             <tbody id="hcTbody"></tbody>

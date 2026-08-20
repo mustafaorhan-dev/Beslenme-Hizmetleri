@@ -735,7 +735,7 @@ function doLogout() {
     supabaseClient.auth.signOut();
   }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'atik_kontrol_son_personel'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -1251,6 +1251,14 @@ function applyViewerRestrictions() {
     if (hcOran) { hcOran.readOnly = true; hcOran.title = 'Oranı değiştirme yetkiniz yok.'; }
     var hcOranBtn = document.querySelector('button[onclick*="hcKaydetOran"]');
     if (hcOranBtn) hcOranBtn.style.display = 'none';
+    var hcPersOran = document.getElementById('hcPersonelOran');
+    if (hcPersOran) { hcPersOran.readOnly = true; hcPersOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    var hcPersOranBtn = document.querySelector('button[onclick*="hcKaydetPersonelOran"]');
+    if (hcPersOranBtn) hcPersOranBtn.style.display = 'none';
+    var hcYemekOran = document.getElementById('hcYemekOran');
+    if (hcYemekOran) { hcYemekOran.readOnly = true; hcYemekOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    var hcYemekOranBtn = document.querySelector('button[onclick*="hcKaydetYemekOran"]');
+    if (hcYemekOranBtn) hcYemekOranBtn.style.display = 'none';
   }
   if (!perm.canExport) {
     var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF|KalibrasyonCSV)|print(Menu|Report|Qr|YagList|AmbalajList|KalibrasyonList)|triggerImport|importBackupInput|importFullBackup|haccpFileInput|yemekCSVUpload/;
@@ -1694,13 +1702,24 @@ function setPersonelBasiHarcamaOrani(val) {
   syncHarcamaOranlariToSupabase();
 }
 
+// ─── ÜRETİLEN YEMEK BAŞINA HARCAMA ORANI ─────────────────────────────────────
+function getUretilenYemekBasiHarcamaOrani() {
+  var val = localStorage.getItem('uretilen_yemek_basi_harcama_orani');
+  return val !== null ? parseFloat(val) : 12.00;
+}
+function setUretilenYemekBasiHarcamaOrani(val) {
+  localStorage.setItem('uretilen_yemek_basi_harcama_orani', String(val));
+  syncHarcamaOranlariToSupabase();
+}
+
 // ─── SUPABASE HARCAMA ORAN SENKRONİZASYONU ───────────────────────────────────
 async function syncHarcamaOranlariToSupabase() {
   if (!supabaseClient) return;
   try {
     var payload = {
       ogrenci: getOgrenciBasiHarcamaOrani(),
-      personel: getPersonelBasiHarcamaOrani()
+      personel: getPersonelBasiHarcamaOrani(),
+      uretilenYemek: getUretilenYemekBasiHarcamaOrani()
     };
     var { error } = await supabaseClient.from('config').upsert(
       { key: HARCAMA_ORAN_SUPABASE_KEY, value: JSON.stringify(payload), last_modified: new Date().toISOString() },
@@ -1718,6 +1737,7 @@ async function syncHarcamaOranlariFromSupabase() {
     if (parsed && typeof parsed === 'object') {
       if (parsed.ogrenci != null) localStorage.setItem('ogrenci_basi_harcama_orani', String(parsed.ogrenci));
       if (parsed.personel != null) localStorage.setItem('personel_basi_harcama_orani', String(parsed.personel));
+      if (parsed.uretilenYemek != null) localStorage.setItem('uretilen_yemek_basi_harcama_orani', String(parsed.uretilenYemek));
       return true;
     }
     return false;
@@ -6409,23 +6429,38 @@ function renderHarcamaMenu() {
     persStatus.textContent = 'Kayıtlı oran: ' + persSaved.toFixed(2) + ' ₺' + (persOran !== persSaved ? ' (kaydedilmemiş değişiklik)' : '');
     persStatus.style.color = persOran !== persSaved ? '#f59e0b' : '#22c55e';
   }
-  renderHarcamaMenuKpis(oran, persOran);
+  const yemekOranInput = document.getElementById('hcYemekOran');
+  if (yemekOranInput && document.activeElement !== yemekOranInput) {
+    yemekOranInput.value = getUretilenYemekBasiHarcamaOrani().toFixed(2);
+  }
+  const yemekOran = parseFloat(yemekOranInput && yemekOranInput.value) || 0;
+  const yemekStatus = document.getElementById('hcYemekOranStatus');
+  if (yemekStatus) {
+    const yemekSaved = getUretilenYemekBasiHarcamaOrani();
+    yemekStatus.textContent = 'Kayıtlı oran: ' + yemekSaved.toFixed(2) + ' ₺' + (yemekOran !== yemekSaved ? ' (kaydedilmemiş değişiklik)' : '');
+    yemekStatus.style.color = yemekOran !== yemekSaved ? '#f59e0b' : '#22c55e';
+  }
+  renderHarcamaMenuKpis(oran, persOran, yemekOran);
   renderHarcamaMenuChart(oran);
   renderHarcamaMenuPersonelChart(persOran);
-  renderHarcamaMenuTable(oran, persOran);
+  renderHarcamaMenuTable(oran, persOran, yemekOran);
 }
 
-function renderHarcamaMenuKpis(oran, persOran) {
+function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
   const el = document.getElementById('hcKpis');
   if (!el) return;
   const withOgrenci = hcActiveRecords().filter(r => (r.ogrenci || 0) > 0);
   const withPersonel = hcActiveRecords().filter(r => hcToplamPersonel(r) > 0);
+  const withYemek = hcActiveRecords().filter(r => (r.yemek || 0) > 0);
   const totalOgrenciHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
   const totalPersonelHarcama = withPersonel.reduce((s, r) => s + hcToplamPersonel(r) * persOran, 0);
+  const totalYemekHarcama = withYemek.reduce((s, r) => s + (r.yemek || 0) * (yemekOran || 0), 0);
   const totalOgrenci = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0), 0);
   const totalPersonel = withPersonel.reduce((s, r) => s + hcToplamPersonel(r), 0);
+  const totalYemek = withYemek.reduce((s, r) => s + (r.yemek || 0), 0);
   const monthlyOgrenci = {};
   const monthlyPersonel = {};
+  const monthlyYemek = {};
   withOgrenci.forEach(r => {
     const d = new Date(r.tarih + 'T12:00:00');
     if (isNaN(d)) return;
@@ -6440,12 +6475,22 @@ function renderHarcamaMenuKpis(oran, persOran) {
     if (!monthlyPersonel[key]) monthlyPersonel[key] = 0;
     monthlyPersonel[key] += hcToplamPersonel(r) * persOran;
   });
+  withYemek.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const key = (d.getMonth() + 1) + '/' + d.getFullYear();
+    if (!monthlyYemek[key]) monthlyYemek[key] = 0;
+    monthlyYemek[key] += (r.yemek || 0) * (yemekOran || 0);
+  });
   const valsO = Object.values(monthlyOgrenci);
   const valsP = Object.values(monthlyPersonel);
+  const valsY = Object.values(monthlyYemek);
   const avgMonthlyO = valsO.length ? valsO.reduce((a, b) => a + b, 0) / valsO.length : 0;
   const avgMonthlyP = valsP.length ? valsP.reduce((a, b) => a + b, 0) / valsP.length : 0;
+  const avgMonthlyY = valsY.length ? valsY.reduce((a, b) => a + b, 0) / valsY.length : 0;
   const maxKeyO = valsO.length ? Object.keys(monthlyOgrenci).reduce((a, b) => monthlyOgrenci[a] >= monthlyOgrenci[b] ? a : b) : null;
   const maxKeyP = valsP.length ? Object.keys(monthlyPersonel).reduce((a, b) => monthlyPersonel[a] >= monthlyPersonel[b] ? a : b) : null;
+  const maxYKey = valsY.length ? Object.keys(monthlyYemek).reduce((a, b) => monthlyYemek[a] >= monthlyYemek[b] ? a : b) : null;
   const monthLabel = key => {
     if (!key) return '—';
     const parts = key.split('/');
@@ -6523,6 +6568,42 @@ function renderHarcamaMenuKpis(oran, persOran) {
       <div class="kpi-body">
         <span class="kpi-label">En Yüksek Pers. Ay</span>
         <span class="kpi-value" id="hcPersonelMaxMonth" style="font-size:1.25rem">${monthLabel(maxKeyP)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Toplam Yemek Harcama</span>
+        <span class="kpi-value" id="hcYemekTotal">${fmtTL(totalYemekHarcama)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Ort. Aylık Yemek Harcama</span>
+        <span class="kpi-value" id="hcYemekAvg">${fmtTL(avgMonthlyY)}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Toplam Üretilen Yemek</span>
+        <span class="kpi-value" id="hcYemekAdet">${totalYemek.toLocaleString('tr-TR')}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">En Yüksek Yemek Ay</span>
+        <span class="kpi-value" id="hcYemekMaxMonth" style="font-size:1.25rem">${monthLabel(maxYKey)}</span>
       </div>
     </div>
   `;
@@ -6752,13 +6833,13 @@ function renderHarcamaMenuPersonelChart(persOran) {
   });
 }
 
-function renderHarcamaMenuTable(oran, persOran) {
+function renderHarcamaMenuTable(oran, persOran, yemekOran) {
   const tbody = document.getElementById('hcTbody');
   const pag = document.getElementById('hcPagination');
   if (!tbody) return;
   const sorted = hcActiveRecords().sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:1rem">Henüz kayıt yok.</td></tr>';
     if (pag) pag.innerHTML = '';
     return;
   }
@@ -6771,6 +6852,8 @@ function renderHarcamaMenuTable(oran, persOran) {
     const ogrTutar = (r.ogrenci || 0) * oran;
     const toplamPersonel = hcToplamPersonel(r);
     const persTutar = toplamPersonel * persOran;
+    const uretilenYemek = (r.yemek || 0);
+    const yemekTutar = uretilenYemek * (yemekOran || 0);
     const tl = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
     return `<tr>
       <td>${displayDate(r.tarih)}</td>
@@ -6780,6 +6863,8 @@ function renderHarcamaMenuTable(oran, persOran) {
       <td>${toplamPersonel.toLocaleString('tr-TR')}</td>
       <td>${tl(persOran)}</td>
       <td>${tl(persTutar)}</td>
+      <td>${uretilenYemek.toLocaleString('tr-TR')}</td>
+      <td>${tl(yemekTutar)}</td>
     </tr>`;
   }).join('');
   if (pag) {
@@ -6949,9 +7034,27 @@ function hcKaydetPersonelOran() {
   renderHarcamaMenu();
 }
 
+function hcKaydetYemekOran() {
+  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const input = document.getElementById('hcYemekOran');
+  const val = parseFloat(input && input.value);
+  const status = document.getElementById('hcYemekOranStatus');
+  if (!status) return;
+  if (!val || isNaN(val) || val <= 0) {
+    status.textContent = 'Geçerli bir oran girin!';
+    status.style.color = '#ef4444';
+    return;
+  }
+  setUretilenYemekBasiHarcamaOrani(val);
+  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.style.color = '#22c55e';
+  renderHarcamaMenu();
+}
+
 function printHarcama() {
   var oran = getOgrenciBasiHarcamaOrani();
   var persOran = getPersonelBasiHarcamaOrani();
+  var yemekOran = getUretilenYemekBasiHarcamaOrani();
 
   var kpisHtml = document.getElementById('hcKpis') ? document.getElementById('hcKpis').innerHTML : '';
 
@@ -6972,7 +7075,9 @@ function printHarcama() {
     var ogrTutar = (r.ogrenci || 0) * oran;
     var toplamP = hcToplamPersonel(r);
     var persTutar = toplamP * persOran;
-    return '<tr><td>' + displayDate(r.tarih) + '</td><td>' + (r.ogrenci || 0).toLocaleString('tr-TR') + '</td><td>' + tl(oran) + '</td><td>' + tl(ogrTutar) + '</td><td>' + toplamP.toLocaleString('tr-TR') + '</td><td>' + tl(persOran) + '</td><td>' + tl(persTutar) + '</td></tr>';
+    var uretilenYemek = (r.yemek || 0);
+    var yemekTutar = uretilenYemek * yemekOran;
+    return '<tr><td>' + displayDate(r.tarih) + '</td><td>' + (r.ogrenci || 0).toLocaleString('tr-TR') + '</td><td>' + tl(oran) + '</td><td>' + tl(ogrTutar) + '</td><td>' + toplamP.toLocaleString('tr-TR') + '</td><td>' + tl(persOran) + '</td><td>' + tl(persTutar) + '</td><td>' + uretilenYemek.toLocaleString('tr-TR') + '</td><td>' + tl(yemekTutar) + '</td></tr>';
   }).join('');
 
   var yearLabel = hcSelectedYear || new Date().getFullYear();
@@ -7001,7 +7106,7 @@ function printHarcama() {
   win.document.write(harcamaHiddenCss());
   win.document.write('</style></head><body>');
   win.document.write('<h1>Harcama Hesaplama Raporu</h1>');
-  win.document.write('<div class="sub">' + monthLabel + ' &mdash; \u00d6\u011fr. Ba\u015f\u0131: ' + tl(oran) + ' | Pers. Ba\u015f\u0131: ' + tl(persOran) + ' &mdash; ' + sorted.length + ' kay\u0131t</div>');
+  win.document.write('<div class="sub">' + monthLabel + ' &mdash; \u00d6\u011fr. Ba\u015f\u0131: ' + tl(oran) + ' | Pers. Ba\u015f\u0131: ' + tl(persOran) + ' | Yemek Ba\u015f\u0131: ' + tl(yemekOran) + ' &mdash; ' + sorted.length + ' kay\u0131t</div>');
   win.document.write('<div class="kpi-grid">' + kpisHtml + '</div>');
   if (ogrImg) {
     win.document.write('<div class="chart-title">\u00d6\u011frenci Harcama Tutar\u0131 (\u20BA)</div>');
@@ -7014,7 +7119,7 @@ function printHarcama() {
     win.document.write(persImg);
   }
   win.document.write('<div class="chart-title" style="margin-top:16px">Harcama Hesaplama Tablosu</div>');
-  win.document.write('<table><thead><tr><th>Tarih</th><th>\u00d6\u011frenci Say\u0131s\u0131</th><th>\u00d6\u011fr. Oran\u0131 (\u20BA)</th><th>\u00d6\u011frenci Harcama (\u20BA)</th><th>Personel Say\u0131s\u0131</th><th>Pers. Oran\u0131 (\u20BA)</th><th>Personel Harcama (\u20BA)</th></tr></thead><tbody>' + rows + '</tbody></table>');
+  win.document.write('<table><thead><tr><th>Tarih</th><th>\u00d6\u011frenci Say\u0131s\u0131</th><th>\u00d6\u011fr. Oran\u0131 (\u20BA)</th><th>\u00d6\u011frenci Harcama (\u20BA)</th><th>Personel Say\u0131s\u0131</th><th>Pers. Oran\u0131 (\u20BA)</th><th>Personel Harcama (\u20BA)</th><th>\u00dcret. Yemek</th><th>Yemek Harcama (\u20BA)</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
   win.document.write('</body></html>');
   win.document.close();
