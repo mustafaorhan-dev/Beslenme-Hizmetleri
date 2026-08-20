@@ -1810,6 +1810,49 @@ async function deleteUnitPrice(id) {
   }
 }
 
+function bfBulDuplike() {
+  var groups = {};
+  unitPricesCache.forEach(function(p) {
+    var key = normIsim(p.urun_adi) + '|' + p.yil;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+  var duplar = [];
+  Object.keys(groups).forEach(function(k) {
+    if (groups[k].length > 1) duplar.push(groups[k]);
+  });
+  return duplar;
+}
+
+async function bfTemizleDuplike(grup) {
+  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  var enIyi = grup.reduce(function(a, b) { return a.birim_fiyat > b.birim_fiyat ? a : b; });
+  for (var i = 0; i < grup.length; i++) {
+    if (grup[i].id !== enIyi.id) {
+      await deleteUnitPrice(grup[i].id);
+    }
+  }
+  renderBirimFiyatlar();
+  showToast('Duplike kayıtlar temizlendi. En yüksek fiyat korundu.', 'success');
+}
+
+async function bfTumDuplariTemizle() {
+  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  var duplar = bfBulDuplike();
+  if (duplar.length === 0) { showToast('Duplike kayıt bulunamadı.', 'info'); return; }
+  for (var d = 0; d < duplar.length; d++) {
+    var grup = duplar[d];
+    var enIyi = grup.reduce(function(a, b) { return a.birim_fiyat > b.birim_fiyat ? a : b; });
+    for (var i = 0; i < grup.length; i++) {
+      if (grup[i].id !== enIyi.id) {
+        await deleteUnitPrice(grup[i].id);
+      }
+    }
+  }
+  renderBirimFiyatlar();
+  showToast(duplar.length + ' grupta toplam ' + duplar.reduce(function(s, g) { return s + g.length - 1; }, 0) + ' duplike kayıt silindi.', 'success');
+}
+
 async function syncUnitPricesFromSupabase() {
   if (!supabaseClient) return false;
   try {
@@ -1831,38 +1874,60 @@ async function syncUnitPricesFromSupabase() {
   } catch (_) { return false; }
 }
 
+function normBirimGlobal(b) {
+  var s = (b || 'gr').toString().trim().toLowerCase().replace(/\s/g, '');
+  if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
+  if (/^l(itre|itr|t)?$/.test(s)) return 'litre';
+  if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+  if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
+  if (/^kol(i)?$/.test(s)) return 'koli';
+  if (/^adet$/.test(s)) return 'adet';
+  return s;
+}
+
+function normIsim(s) {
+  return s.trim().toLowerCase()
+    .replace(/İ/g, 'i').replace(/ı/g, 'i').replace(/I/g, 'i')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+}
+
 function findBirimFiyat(malzemeAdi, birim) {
   var currentYear = new Date().getFullYear();
-  var normalized = malzemeAdi.trim().toLowerCase()
-    .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  var matches = unitPricesCache.filter(function(p) {
-    var pNorm = p.urun_adi.trim().toLowerCase()
-      .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return pNorm === normalized && p.yil === currentYear;
+  var normalized = normIsim(malzemeAdi);
+  var birimN = normBirimGlobal(birim);
+
+  var exactYearBirim = unitPricesCache.filter(function(p) {
+    return normIsim(p.urun_adi) === normalized && p.yil === currentYear && normBirimGlobal(p.birim) === birimN;
   });
-  if (matches.length === 0) {
-    matches = unitPricesCache.filter(function(p) {
-      var pNorm = p.urun_adi.trim().toLowerCase()
-        .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return pNorm === normalized;
-    });
+  if (exactYearBirim.length > 0) return exactYearBirim[exactYearBirim.length - 1];
+
+  var exactYear = unitPricesCache.filter(function(p) {
+    return normIsim(p.urun_adi) === normalized && p.yil === currentYear;
+  });
+  if (exactYear.length > 0) {
+    var target = birimN === 'gr' ? 'kg' : birimN === 'ml' ? 'litre' : birimN;
+    var fb = exactYear.find(function(p) { return normBirimGlobal(p.birim) === target; });
+    if (fb) return fb;
+    return exactYear[exactYear.length - 1];
   }
+
+  var matches = unitPricesCache.filter(function(p) {
+    return normIsim(p.urun_adi) === normalized;
+  });
   if (matches.length === 0) return null;
-  var birimNorm = (birim || 'gr').toLowerCase();
-  var exact = matches.find(function(p) { return p.birim.toLowerCase() === birimNorm; });
+  var exact = matches.find(function(p) { return normBirimGlobal(p.birim) === birimN; });
   if (exact) return exact;
-  var target = birimNorm === 'gr' ? 'kg' : birimNorm === 'ml' ? 'litre' : birimNorm;
-  return matches.find(function(p) { return p.birim.toLowerCase() === target; }) || matches[0];
+  var target2 = birimN === 'gr' ? 'kg' : birimN === 'ml' ? 'litre' : birimN;
+  var fallback = matches.find(function(p) { return normBirimGlobal(p.birim) === target2; });
+  if (fallback) return fallback;
+  return matches[matches.length - 1];
 }
 
 function birimFiyatTutar(malzemeAdi, birim, miktar) {
   var fp = findBirimFiyat(malzemeAdi, birim);
   if (!fp) return null;
-  var birimNorm = (birim || 'gr').toLowerCase();
-  var fiyatBirim = fp.birim.toLowerCase();
+  var birimNorm = normBirimGlobal(birim);
+  var fiyatBirim = normBirimGlobal(fp.birim);
   var carpim = miktar;
   if (birimNorm === 'gr' && fiyatBirim === 'kg') carpim = miktar / 1000;
   else if (birimNorm === 'ml' && fiyatBirim === 'litre') carpim = miktar / 1000;
@@ -1921,6 +1986,7 @@ function renderBirimFiyatlar() {
         <div class="bf-kpi ortalama"><div class="bf-kpi-value">${formatTRY(ortalama)}</div><div class="bf-kpi-label">Ortalama Birim Fiyat</div></div>
         <div class="bf-kpi fiyat"><div class="bf-kpi-value">${birimFiyatSeciliYil}</div><div class="bf-kpi-label">Seçili Yıl</div></div>
       </div>
+      ${bfBulDuplike().length > 0 ? '<div style="padding:0.6rem 0.8rem;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.4);border-radius:8px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem"><span style="font-size:0.82rem;color:#ca8a04;font-weight:600">⚠️ ' + bfBulDuplike().length + ' üründe tekrar eden kayıt bulundu. Fiyat hesaplamalarında hata olabilir.</span>' + (bfPerms ? '<button class="btn btn-ghost btn-sm" style="color:#ca8a04;border:1px solid rgba(250,204,21,0.4)" onclick="bfTumDuplariTemizle()">Tek Tek Temizle</button>' : '') + '</div>' : ''}
       <div id="bfFormContainer" style="display:none;margin-bottom:1rem"></div>
       <div class="table-wrapper">
         <table class="data-table" style="width:100%">
@@ -5071,15 +5137,7 @@ function renderProduction(_weekKey, _weekData, days) {
       return yLower.startsWith(lower) || lower.startsWith(yLower);
     });
   };
-  const normBirim = (b) => {
-    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
-    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'litre';
-    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
-    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
-    if (/^kol(i)?$/.test(s)) return 'koli';
-    return s;
-  };
+  const normBirim = normBirimGlobal;
   const fmt = (total, birim) => {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
@@ -5213,15 +5271,7 @@ function renderWeeklyTotal(dishEntries, days) {
     return Math.round(total) + ' ' + birim;
   };
 
-  const normBirim = (b) => {
-    let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
-    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'litre';
-    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
-    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
-    if (/^kol(i)?$/.test(s)) return 'koli';
-    return s;
-  };
+  const normBirim = normBirimGlobal;
 
   // Aggregate across all dishes, per ingredient
   const agg = {};
@@ -9728,15 +9778,7 @@ function buildExportHTML() {
     }
     return null;
   };
-  var normBirim = function(b) {
-    var s = (b || 'gr').toLowerCase().replace(/\s/g, '');
-    if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'litre';
-    if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
-    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
-    if (/^kol(i)?$/.test(s)) return 'koli';
-    return s;
-  };
+  var normBirim = normBirimGlobal;
   var fmt = function(total, birim) {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
