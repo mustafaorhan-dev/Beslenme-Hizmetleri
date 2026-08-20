@@ -5119,13 +5119,18 @@ function renderProduction(_weekKey, _weekData, days) {
 
     const dayEntries = Object.values(dayAgg).filter(e => e.total > 0);
     if (dayEntries.length) {
-      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}</div><div class="prod-day-total-body">`;
+      var gunlukToplam = 0;
+      dayEntries.forEach(e => {
+        var tut = birimFiyatTutar(e.ad, e.birim, e.total);
+        if (tut > 0) gunlukToplam += tut;
+      });
+      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">Toplam: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
       dayEntries.forEach(e => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
         const found = findBirimFiyat(e.ad, e.birim);
         const tutar = birimFiyatTutar(e.ad, e.birim, e.total);
         const fiyatGoster = found && tutar > 0 ? ` <span style="font-size:0.78rem;color:var(--text-dim)">${formatTRY(tutar)}</span>` : '';
-        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}${fiyatGoster}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}</span></div>`;
+        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}${fiyatGoster}</span></div>`;
       });
       html += '</div></div>';
     }
@@ -5245,8 +5250,19 @@ function renderWeeklyTotal(dishEntries, days) {
   };
 
   var globalIdx = 0;
+  var haftalikGenelToplam = 0;
+  siraliKategoriler.forEach(function(kategori) {
+    var items = kategoriler[kategori];
+    items.forEach(function(e) {
+      if (e.total <= 0) return;
+      var birimAd = normBirim(e.birim);
+      var tut = birimFiyatTutar(e.ad, birimAd, e.total);
+      if (tut > 0) haftalikGenelToplam += tut;
+    });
+  });
+
   var html = `<div class="weekly-total-card">
-    <div class="weekly-total-header">Haftalık Toplam İhtiyaç Listesi</div>
+    <div class="weekly-total-header">Haftalık Toplam İhtiyaç Listesi${haftalikGenelToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.9rem;color:var(--accent-cyan)">Toplam Maliyet: ${formatTRY(haftalikGenelToplam)}</span>` : ''}</div>
     <div class="weekly-total-body">`;
 
   siraliKategoriler.forEach(function(kategori) {
@@ -5273,7 +5289,7 @@ function renderWeeklyTotal(dishEntries, days) {
       var found = findBirimFiyat(e.ad, birimAd);
       var tutar = birimFiyatTutar(e.ad, birimAd, total);
       var fiyatGoster = found && tutar > 0 ? `<span style="font-size:0.78rem;color:var(--text-dim);margin-left:6px">${formatTRY(tutar)}</span>` : '';
-      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span>${fiyatGoster}</span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}</span></div>`;
+      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}${fiyatGoster}</span></div>`;
     });
     html += '</div></div>';
   });
