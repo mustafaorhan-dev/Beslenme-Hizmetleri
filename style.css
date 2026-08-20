@@ -2929,4 +2929,17 @@ input.production-input:focus {
   flex-wrap: wrap;
 }
 
+/* Birim fiyat tablosunda hover efekti kaldır */
+#content-birimfiyat .data-table tbody tr {
+  transition: none;
+  transform: none;
+  box-shadow: none;
+}
+#content-birimfiyat .data-table tbody tr:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+  background: transparent;
+}
+
 
