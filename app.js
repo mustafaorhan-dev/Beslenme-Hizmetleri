@@ -1390,6 +1390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (supabaseClient) {
     await syncRolePermissionsFromSupabase().catch(function(){});
+    await syncHarcamaOranlariFromSupabase().catch(function(){});
   }
 
   // Yag ve ambalaj her sayfada Supabase'ten çekilir
@@ -1673,12 +1674,14 @@ function parseNumComma(v) {
 }
 
 // ─── ÖĞRENCİ BAŞINA HARCAMA ORANI ────────────────────────────────────────────
+const HARCAMA_ORAN_SUPABASE_KEY = 'harcama_oranlari';
 function getOgrenciBasiHarcamaOrani() {
   var val = localStorage.getItem('ogrenci_basi_harcama_orani');
   return val !== null ? parseFloat(val) : 70.37;
 }
 function setOgrenciBasiHarcamaOrani(val) {
   localStorage.setItem('ogrenci_basi_harcama_orani', String(val));
+  syncHarcamaOranlariToSupabase();
 }
 
 // ─── PERSONEL BAŞINA HARCAMA ORANI ───────────────────────────────────────────
@@ -1688,6 +1691,37 @@ function getPersonelBasiHarcamaOrani() {
 }
 function setPersonelBasiHarcamaOrani(val) {
   localStorage.setItem('personel_basi_harcama_orani', String(val));
+  syncHarcamaOranlariToSupabase();
+}
+
+// ─── SUPABASE HARCAMA ORAN SENKRONİZASYONU ───────────────────────────────────
+async function syncHarcamaOranlariToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    var payload = {
+      ogrenci: getOgrenciBasiHarcamaOrani(),
+      personel: getPersonelBasiHarcamaOrani()
+    };
+    var { error } = await supabaseClient.from('config').upsert(
+      { key: HARCAMA_ORAN_SUPABASE_KEY, value: JSON.stringify(payload), last_modified: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+  } catch (_) {}
+}
+
+async function syncHarcamaOranlariFromSupabase() {
+  if (!supabaseClient) return false;
+  try {
+    var { data, error } = await supabaseClient.from('config').select('value').eq('key', HARCAMA_ORAN_SUPABASE_KEY).single();
+    if (error || !data || !data.value) return false;
+    var parsed = JSON.parse(data.value);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.ogrenci != null) localStorage.setItem('ogrenci_basi_harcama_orani', String(parsed.ogrenci));
+      if (parsed.personel != null) localStorage.setItem('personel_basi_harcama_orani', String(parsed.personel));
+      return true;
+    }
+    return false;
+  } catch (_) { return false; }
 }
 
 function haccpRecordToDB(r) {
@@ -2275,6 +2309,7 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
       await supabaseClient.from('kalibrasyon_cihazlari').upsert(kalibrasyonCihazlari.map(kalibrasyonRecordToDB), { onConflict: 'id' });
       toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
     }
+    await syncHarcamaOranlariToSupabase();
     showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
   } catch (err) {
     showToast('Supabase hatası: ' + err.message, 'error');
@@ -2314,6 +2349,8 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
     await syncAmbalajFromSupabase();
     var kPulled = await syncKalibrasyonFromSupabase();
     if (kPulled) toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
+    var hOranPulled = await syncHarcamaOranlariFromSupabase();
+    if (hOranPulled) toastMsg.push('Harcama Oranları');
     showToast('Supabase\'ten alındı: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
   } catch (err) {
     showToast('Supabase hatası: ' + err.message, 'error');

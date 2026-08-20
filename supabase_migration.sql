@@ -20,12 +20,12 @@ ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
 -- 2) user_roles rol kısıtını kaldır
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
 
--- 3) config tablosunda yalnızca 'role_permissions' satırına anon erişim
---    (rol izin kutucuklarının tüm cihazlara senkronu için)
+-- 3) config tablosunda yalnızca 'role_permissions' ve 'harcama_oranlari' satırlarına anon erişim
+--    (rol izin kutucuklarının ve harcama oranlarının tüm cihazlara senkronu için)
 DROP POLICY IF EXISTS "anon_role_permissions" ON config;
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key = 'role_permissions')
-  WITH CHECK (key = 'role_permissions');
+  USING (key IN ('role_permissions', 'harcama_oranlari'))
+  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari'));
 
 -- 4) KALİBRASYONA TABİ CİHAZLAR tablosu + erişim politikası
 --    durum değerleri: calisir, arizali, bakim, hurda
