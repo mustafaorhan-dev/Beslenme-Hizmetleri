@@ -6949,6 +6949,76 @@ function hcKaydetPersonelOran() {
   renderHarcamaMenu();
 }
 
+function printHarcama() {
+  var oran = getOgrenciBasiHarcamaOrani();
+  var persOran = getPersonelBasiHarcamaOrani();
+
+  var kpisHtml = document.getElementById('hcKpis') ? document.getElementById('hcKpis').innerHTML : '';
+
+  var ogrImg = '';
+  if (harcamaMenuChart) {
+    var c1 = document.getElementById('canvasHarcamaMenu');
+    if (c1) ogrImg = '<img src="' + c1.toDataURL('image/png') + '" style="max-width:100%;height:auto;margin:8px 0" />';
+  }
+  var persImg = '';
+  if (harcamaPersonelChart) {
+    var c2 = document.getElementById('canvasHarcamaPersonel');
+    if (c2) persImg = '<img src="' + c2.toDataURL('image/png') + '" style="max-width:100%;height:auto;margin:8px 0" />';
+  }
+
+  var sorted = hcActiveRecords().sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
+  var tl = function(v) { return v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20BA'; };
+  var rows = sorted.map(function(r) {
+    var ogrTutar = (r.ogrenci || 0) * oran;
+    var toplamP = hcToplamPersonel(r);
+    var persTutar = toplamP * persOran;
+    return '<tr><td>' + displayDate(r.tarih) + '</td><td>' + (r.ogrenci || 0).toLocaleString('tr-TR') + '</td><td>' + tl(oran) + '</td><td>' + tl(ogrTutar) + '</td><td>' + toplamP.toLocaleString('tr-TR') + '</td><td>' + tl(persOran) + '</td><td>' + tl(persTutar) + '</td></tr>';
+  }).join('');
+
+  var yearLabel = hcSelectedYear || new Date().getFullYear();
+  var monthLabel = hcSelectedMonth !== null ? HC_MONTHS_TR[hcSelectedMonth] + ' ' + yearLabel : 'T\u00fcm Y\u0131l ' + yearLabel;
+
+  var win = window.open('', '_blank', 'width=1100,height=800');
+  if (!win) { showToast('Pop-up engelleyiciyi kapat\u0131n.', 'error'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Harcama Raporu - ' + monthLabel + '</title><style>');
+  win.document.write('@page{size:landscape;margin:1cm}');
+  win.document.write('body{font-family:Arial,sans-serif;padding:20px;margin:0;color:#1e293b}');
+  win.document.write('h1{font-size:1.3rem;margin:0 0 2px}');
+  win.document.write('.sub{font-size:0.8rem;color:#64748b;margin-bottom:1rem}');
+  win.document.write('.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:10px 0 16px}');
+  win.document.write('.kpi-card{border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px}');
+  win.document.write('.kpi-label{font-size:10px;color:#64748b;text-transform:uppercase;display:block}');
+  win.document.write('.kpi-value{font-size:16px;font-weight:700;display:block;margin-top:2px}');
+  win.document.write('.chart-title{font-size:0.9rem;font-weight:600;margin:16px 0 4px;color:#334155}');
+  win.document.write('table{width:100%;border-collapse:collapse;font-size:0.75rem;margin-top:10px}');
+  win.document.write('th{background:#f1f5f9;font-weight:600;padding:0.45rem 0.6rem;text-align:center;border:1px solid #ddd;font-size:0.7rem;text-transform:uppercase}');
+  win.document.write('td{padding:0.35rem 0.6rem;border:1px solid #ddd;text-align:center}');
+  win.document.write('tr:nth-child(even){background:#f8fafc}');
+  win.document.write('.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}');
+  win.document.write('.chart-note{font-size:0.75rem;color:#64748b;margin:2px 0 6px}');
+  win.document.write(harcamaHiddenCss());
+  win.document.write('</style></head><body>');
+  win.document.write('<h1>Harcama Hesaplama Raporu</h1>');
+  win.document.write('<div class="sub">' + monthLabel + ' &mdash; \u00d6\u011fr. Ba\u015f\u0131: ' + tl(oran) + ' | Pers. Ba\u015f\u0131: ' + tl(persOran) + ' &mdash; ' + sorted.length + ' kay\u0131t</div>');
+  win.document.write('<div class="kpi-grid">' + kpisHtml + '</div>');
+  if (ogrImg) {
+    win.document.write('<div class="chart-title">\u00d6\u011frenci Harcama Tutar\u0131 (\u20BA)</div>');
+    win.document.write('<div class="chart-note">\u00d6\u011frenci Harcama = \u00d6\u011frenci Say\u0131s\u0131 \u00d7 \u00d6\u011fr. Ba\u015f\u0131 Harcama Oran\u0131</div>');
+    win.document.write(ogrImg);
+  }
+  if (persImg) {
+    win.document.write('<div class="chart-title">Personel Harcama Tutar\u0131 (\u20BA)</div>');
+    win.document.write('<div class="chart-note">Personel Harcama = Toplam Personel \u00d7 Pers. Ba\u015f\u0131 Harcama Oran\u0131</div>');
+    win.document.write(persImg);
+  }
+  win.document.write('<div class="chart-title" style="margin-top:16px">Harcama Hesaplama Tablosu</div>');
+  win.document.write('<table><thead><tr><th>Tarih</th><th>\u00d6\u011frenci Say\u0131s\u0131</th><th>\u00d6\u011fr. Oran\u0131 (\u20BA)</th><th>\u00d6\u011frenci Harcama (\u20BA)</th><th>Personel Say\u0131s\u0131</th><th>Pers. Oran\u0131 (\u20BA)</th><th>Personel Harcama (\u20BA)</th></tr></thead><tbody>' + rows + '</tbody></table>');
+  win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
+  win.document.write('</body></html>');
+  win.document.close();
+  triggerPrint(win);
+}
+
 
 function getGridColor() {
   return getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || 'rgba(255,255,255,0.05)';

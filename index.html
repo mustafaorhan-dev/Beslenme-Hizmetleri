@@ -1366,6 +1366,12 @@
 
     <!-- ===== HARCAMA TAB ===== -->
     <div class="tab-content" id="content-harcama">
+      <div class="toolbar" style="margin-bottom:0.5rem;display:flex;justify-content:flex-end;gap:0.5rem">
+        <button class="btn btn-outline btn-sm" onclick="printHarcama()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Yazdır
+        </button>
+      </div>
       <div class="kpi-grid hc-kpis" id="hcKpis"></div>
       <div class="hc-controls" id="hcControls"></div>
       <div class="section-card">
@@ -1418,16 +1424,16 @@
           <h2>Harcama Hesaplama Tablosu</h2>
         </div>
         <div class="table-wrapper">
-          <table class="data-table" style="min-width:900px">
+          <table class="data-table" style="min-width:900px;text-align:center">
             <thead>
               <tr>
-                <th>Tarih</th>
-                <th>Öğrenci Sayısı</th>
-                <th>Öğr. Oranı (₺)</th>
-                <th>Öğrenci Harcama (₺)</th>
-                <th>Personel Sayısı</th>
-                <th>Pers. Oranı (₺)</th>
-                <th>Personel Harcama (₺)</th>
+                <th style="text-align:center">Tarih</th>
+                <th style="text-align:center">Öğrenci Sayısı</th>
+                <th style="text-align:center">Öğr. Oranı (₺)</th>
+                <th style="text-align:center">Öğrenci Harcama (₺)</th>
+                <th style="text-align:center">Personel Sayısı</th>
+                <th style="text-align:center">Pers. Oranı (₺)</th>
+                <th style="text-align:center">Personel Harcama (₺)</th>
               </tr>
             </thead>
             <tbody id="hcTbody"></tbody>
