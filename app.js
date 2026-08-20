@@ -1854,7 +1854,7 @@ function findBirimFiyat(malzemeAdi, birim) {
   var birimNorm = (birim || 'gr').toLowerCase();
   var exact = matches.find(function(p) { return p.birim.toLowerCase() === birimNorm; });
   if (exact) return exact;
-  var target = birimNorm === 'gr' ? 'kg' : birimNorm === 'ml' ? 'lt' : birimNorm;
+  var target = birimNorm === 'gr' ? 'kg' : birimNorm === 'ml' ? 'litre' : birimNorm;
   return matches.find(function(p) { return p.birim.toLowerCase() === target; }) || matches[0];
 }
 
@@ -1865,9 +1865,9 @@ function birimFiyatTutar(malzemeAdi, birim, miktar) {
   var fiyatBirim = fp.birim.toLowerCase();
   var carpim = miktar;
   if (birimNorm === 'gr' && fiyatBirim === 'kg') carpim = miktar / 1000;
-  else if (birimNorm === 'ml' && fiyatBirim === 'lt') carpim = miktar / 1000;
+  else if (birimNorm === 'ml' && fiyatBirim === 'litre') carpim = miktar / 1000;
   else if (birimNorm === 'kg' && fiyatBirim === 'gr') carpim = miktar * 1000;
-  else if (birimNorm === 'lt' && fiyatBirim === 'ml') carpim = miktar * 1000;
+  else if (birimNorm === 'litre' && fiyatBirim === 'ml') carpim = miktar * 1000;
   return carpim * fp.birim_fiyat;
 }
 
@@ -2006,9 +2006,11 @@ function bfYeniUrun() {
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
         <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
-          <option value="kg">kg</option>
-          <option value="lt">lt</option>
-          <option value="adet">adet</option>
+          <option value="kg">KG</option>
+          <option value="koli">KOLİ</option>
+          <option value="litre">LİTRE</option>
+          <option value="adet">ADET</option>
+          <option value="teneke">TENEKE</option>
         </select>
       </div>
       <div style="flex:1;min-width:100px">
@@ -2040,9 +2042,11 @@ function bfDuzenle(id) {
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
         <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
-          <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>kg</option>
-          <option value="lt"${item.birim === 'lt' ? ' selected' : ''}>lt</option>
-          <option value="adet"${item.birim === 'adet' ? ' selected' : ''}>adet</option>
+          <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>KG</option>
+          <option value="koli"${item.birim === 'koli' ? ' selected' : ''}>KOLİ</option>
+          <option value="litre"${item.birim === 'litre' ? ' selected' : ''}>LİTRE</option>
+          <option value="adet"${item.birim === 'adet' ? ' selected' : ''}>ADET</option>
+          <option value="teneke"${item.birim === 'teneke' ? ' selected' : ''}>TENEKE</option>
         </select>
       </div>
       <div style="flex:1;min-width:100px">
@@ -5070,15 +5074,17 @@ function renderProduction(_weekKey, _weekData, days) {
   const normBirim = (b) => {
     let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
     if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^l(itre|itr)?$/.test(s)) return 'litre';
     if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
+    if (/^kol(i)?$/.test(s)) return 'koli';
     return s;
   };
   const fmt = (total, birim) => {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
-    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
     return Math.round(total) + ' ' + birim;
   };
 
@@ -5114,7 +5120,7 @@ function renderProduction(_weekKey, _weekData, days) {
           const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
-          const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
+          const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' || birim === 'litre' ? ' lt' : ' ' + birim;
           html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
 
           const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
@@ -5203,15 +5209,17 @@ function renderWeeklyTotal(dishEntries, days) {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
-    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
     return Math.round(total) + ' ' + birim;
   };
 
   const normBirim = (b) => {
     let s = (b || 'gr').toLowerCase().replace(/\s/g, '');
     if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^l(itre|itr)?$/.test(s)) return 'litre';
     if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
+    if (/^kol(i)?$/.test(s)) return 'koli';
     return s;
   };
 
@@ -5223,7 +5231,7 @@ function renderWeeklyTotal(dishEntries, days) {
       const miktarKisi = ing.miktar_kisi || ing.miktar || 0;
       const birim = normBirim(ing.birim);
       const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-      if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, total: 0, miktarKisi: miktarKisi, birimLabel: birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim };
+      if (!agg[key]) agg[key] = { ad: ing.malzeme.trim(), birim, total: 0, miktarKisi: miktarKisi, birimLabel: birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' || birim === 'litre' ? ' lt' : ' ' + birim };
       days.forEach((d, i) => {
         const kisi = d.data.kisi || 0;
         const adMatch = d.data.yemekler.find(y => {
@@ -9723,15 +9731,17 @@ function buildExportHTML() {
   var normBirim = function(b) {
     var s = (b || 'gr').toLowerCase().replace(/\s/g, '');
     if (/^g(ram|rams|ramaj)?$/.test(s)) return 'gr';
-    if (/^l(itre|itr)?$/.test(s)) return 'lt';
+    if (/^l(itre|itr)?$/.test(s)) return 'litre';
     if (/^m(l|ili(litre)?)?$/.test(s)) return 'ml';
+    if (/^t(enek(e)?)?$/.test(s)) return 'teneke';
+    if (/^kol(i)?$/.test(s)) return 'koli';
     return s;
   };
   var fmt = function(total, birim) {
     if (total <= 0) return '—';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
-    if (birim === 'lt') return (Math.round(total * 100) / 100) + ' lt';
+    if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
     return Math.round(total) + ' ' + birim;
   };
 
@@ -9756,7 +9766,7 @@ function buildExportHTML() {
         var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
         var total = miktarKisi * kisi;
         var birim = normBirim(ing.birim);
-        var birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' ? ' lt' : ' ' + birim;
+        var birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' || birim === 'litre' ? ' lt' : ' ' + birim;
         ingHtml += '<div class="ping"><span class="pn">' + escapeHtml(ing.malzeme.trim()) + ' <small style="color:#999">(' + miktarKisi + birimLabel + ')</small></span><span class="pq">' + fmt(total, birim) + '</span></div>';
         // accumulate for weekly total
         var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
