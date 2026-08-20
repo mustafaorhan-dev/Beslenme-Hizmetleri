@@ -1986,7 +1986,7 @@ function bfYeniUrun() {
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
       <div style="flex:4;min-width:200px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Ürün Adı</label>
-        <input type="text" id="bf_ad" placeholder="Örn: Domates" style="width:100%" />
+        <input type="text" id="bf_ad" placeholder="Örn: Domates" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
@@ -1998,7 +1998,7 @@ function bfYeniUrun() {
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
-        <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" style="width:100%" />
+        <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Kaydet</button>
@@ -2020,7 +2020,7 @@ function bfDuzenle(id) {
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
       <div style="flex:2;min-width:140px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Ürün Adı</label>
-        <input type="text" id="bf_ad" value="${escapeHtml(item.urun_adi)}" style="width:100%" />
+        <input type="text" id="bf_ad" value="${escapeHtml(item.urun_adi)}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
@@ -2032,7 +2032,7 @@ function bfDuzenle(id) {
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
-        <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" style="width:100%" />
+        <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Güncelle</button>
