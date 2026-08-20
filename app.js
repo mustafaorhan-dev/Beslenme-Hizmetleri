@@ -1763,19 +1763,20 @@ function saveUnitPrices(list) {
   unitPricesCache = list;
 }
 
-async function addUnitPrice(urun_adi, birim, birim_fiyat, yil) {
+async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan) {
   var item = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     urun_adi: urun_adi.trim(),
     birim: birim || 'kg',
     birim_fiyat: parseFloat(birim_fiyat) || 0,
-    yil: parseInt(yil) || new Date().getFullYear()
+    yil: parseInt(yil) || new Date().getFullYear(),
+    birim_carpan: parseFloat(birim_carpan) || 0
   };
   unitPricesCache.push(item);
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
-        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil },
+        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan },
         { onConflict: 'id' }
       );
       if (error) throw error;
@@ -1790,10 +1791,11 @@ async function editUnitPrice(id, alanlar) {
   if (alanlar.birim !== undefined) item.birim = alanlar.birim;
   if (alanlar.birim_fiyat !== undefined) item.birim_fiyat = parseFloat(alanlar.birim_fiyat) || 0;
   if (alanlar.yil !== undefined) item.yil = parseInt(alanlar.yil) || item.yil;
+  if (alanlar.birim_carpan !== undefined) item.birim_carpan = parseFloat(alanlar.birim_carpan) || 0;
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
-        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil },
+        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan || 0 },
         { onConflict: 'id' }
       );
       if (error) throw error;
@@ -1866,7 +1868,8 @@ async function syncUnitPricesFromSupabase() {
           urun_adi: String(p.urun_adi || '').trim(),
           birim: String(p.birim || 'kg').trim(),
           birim_fiyat: parseFloat(p.birim_fiyat) || 0,
-          yil: parseInt(p.yil) || new Date().getFullYear()
+          yil: parseInt(p.yil) || new Date().getFullYear(),
+          birim_carpan: parseFloat(p.birim_carpan) || 0
         };
       });
       return true;
@@ -1897,6 +1900,15 @@ function findBirimFiyat(malzemeAdi, birim) {
   var normalized = normIsim(malzemeAdi);
   var birimN = normBirimGlobal(birim);
 
+  function birimTarget(bn) {
+    if (bn === 'gr') return ['kg', 'teneke'];
+    if (bn === 'ml') return ['litre', 'teneke'];
+    if (bn === 'litre') return ['teneke', 'ml'];
+    if (bn === 'kg') return ['teneke', 'gr'];
+    if (bn === 'teneke') return ['litre', 'kg'];
+    return [];
+  }
+
   var exactYearBirim = unitPricesCache.filter(function(p) {
     return normIsim(p.urun_adi) === normalized && p.yil === currentYear && normBirimGlobal(p.birim) === birimN;
   });
@@ -1906,9 +1918,11 @@ function findBirimFiyat(malzemeAdi, birim) {
     return normIsim(p.urun_adi) === normalized && p.yil === currentYear;
   });
   if (exactYear.length > 0) {
-    var target = birimN === 'gr' ? 'kg' : birimN === 'ml' ? 'litre' : birimN;
-    var fb = exactYear.find(function(p) { return normBirimGlobal(p.birim) === target; });
-    if (fb) return fb;
+    var targets = birimTarget(birimN);
+    for (var t = 0; t < targets.length; t++) {
+      var fb = exactYear.find(function(p) { return normBirimGlobal(p.birim) === targets[t]; });
+      if (fb) return fb;
+    }
     return exactYear[exactYear.length - 1];
   }
 
@@ -1918,10 +1932,66 @@ function findBirimFiyat(malzemeAdi, birim) {
   if (matches.length === 0) return null;
   var exact = matches.find(function(p) { return normBirimGlobal(p.birim) === birimN; });
   if (exact) return exact;
-  var target2 = birimN === 'gr' ? 'kg' : birimN === 'ml' ? 'litre' : birimN;
-  var fallback = matches.find(function(p) { return normBirimGlobal(p.birim) === target2; });
-  if (fallback) return fallback;
+  var targets2 = birimTarget(birimN);
+  for (var t2 = 0; t2 < targets2.length; t2++) {
+    var fb2 = matches.find(function(p) { return normBirimGlobal(p.birim) === targets2[t2]; });
+    if (fb2) return fb2;
+  }
   return matches[matches.length - 1];
+}
+
+var BIRIM_CARPAN = {
+  'kg|gr': 1000,
+  'gr|kg': 0.001,
+  'litre|ml': 1000,
+  'ml|litre': 0.001,
+  'teneke|lt': 18,
+  'lt|teneke': 1/18,
+  'teneke|litre': 18,
+  'litre|teneke': 1/18,
+  'koli|kg': 10,
+  'kg|koli': 0.1,
+  'koli|gr': 10000,
+  'gr|koli': 0.0001
+};
+
+function birimDonusum(miktar, fromBirim, toBirim, urunCarpan) {
+  var from = normBirimGlobal(fromBirim);
+  var to = normBirimGlobal(toBirim);
+  if (from === to) return miktar;
+
+  var pair = from + '|' + to;
+  if (urunCarpan && urunCarpan > 0) {
+    var fromPair = from + '|' + normBirimGlobal('lt');
+    var toPair = to + '|' + normBirimGlobal('lt');
+    if (from === 'teneke' && to === 'lt') return miktar * urunCarpan;
+    if (from === 'lt' && to === 'teneke') return miktar / urunCarpan;
+    if (from === 'teneke' && to === 'ml') return miktar * urunCarpan * 1000;
+    if (from === 'ml' && to === 'teneke') return miktar / (urunCarpan * 1000);
+    if (from === 'teneke' && to === 'gr') return miktar * urunCarpan * 1000;
+    if (from === 'gr' && to === 'teneke') return miktar / (urunCarpan * 1000);
+    if (from === 'teneke' && to === 'kg') return miktar * urunCarpan;
+    if (from === 'kg' && to === 'teneke') return miktar / urunCarpan;
+    if (from === 'koli' && to === 'kg') return miktar * urunCarpan;
+    if (from === 'kg' && to === 'koli') return miktar / urunCarpan;
+    if (from === 'koli' && to === 'gr') return miktar * urunCarpan * 1000;
+    if (from === 'gr' && to === 'koli') return miktar / (urunCarpan * 1000);
+  }
+
+  if (BIRIM_CARPAN[pair]) return miktar * BIRIM_CARPAN[pair];
+  var rPair = to + '|' + from;
+  if (BIRIM_CARPAN[rPair]) return miktar / BIRIM_CARPAN[rPair];
+
+  if (from === 'gr' && to === 'kg') return miktar / 1000;
+  if (from === 'kg' && to === 'gr') return miktar * 1000;
+  if (from === 'ml' && to === 'litre') return miktar / 1000;
+  if (from === 'litre' && to === 'ml') return miktar * 1000;
+  if (from === 'lt' && to === 'ml') return miktar * 1000;
+  if (from === 'ml' && to === 'lt') return miktar / 1000;
+  if (from === 'lt' && to === 'litre') return miktar;
+  if (from === 'litre' && to === 'lt') return miktar;
+
+  return miktar;
 }
 
 function birimFiyatTutar(malzemeAdi, birim, miktar) {
@@ -1929,12 +1999,10 @@ function birimFiyatTutar(malzemeAdi, birim, miktar) {
   if (!fp) return null;
   var birimNorm = normBirimGlobal(birim);
   var fiyatBirim = normBirimGlobal(fp.birim);
-  var carpim = miktar;
-  if (birimNorm === 'gr' && fiyatBirim === 'kg') carpim = miktar / 1000;
-  else if (birimNorm === 'ml' && fiyatBirim === 'litre') carpim = miktar / 1000;
-  else if (birimNorm === 'kg' && fiyatBirim === 'gr') carpim = miktar * 1000;
-  else if (birimNorm === 'litre' && fiyatBirim === 'ml') carpim = miktar * 1000;
-  return carpim * fp.birim_fiyat;
+  if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
+  var carpan = fp.birim_carpan || 0;
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null);
+  return donusumMiktari * fp.birim_fiyat;
 }
 
 let birimFiyatSeciliYil = new Date().getFullYear();
@@ -1993,20 +2061,23 @@ function renderBirimFiyatlar() {
         <table class="data-table" style="width:100%">
           <thead>
             <tr>
-              <th style="text-align:left;width:35%">Ürün Adı</th>
-              <th style="text-align:center;width:15%">Birim</th>
-              <th style="text-align:center;width:20%">Birim Fiyat (₺)</th>
-              <th style="text-align:center;width:15%">Yıl</th>
-              ${bfPerms ? '<th style="text-align:center;width:15%">İşlem</th>' : ''}
+              <th style="text-align:left;width:30%">Ürün Adı</th>
+              <th style="text-align:center;width:12%">Birim</th>
+              <th style="text-align:center;width:18%">Birim Fiyat (₺)</th>
+              <th style="text-align:center;width:18%">1 Birim =</th>
+              <th style="text-align:center;width:10%">Yıl</th>
+              ${bfPerms ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
             </tr>
           </thead>
           <tbody>
-            ${bfSlice.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
+            ${bfSlice.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
             ${bfSlice.map(function(p) {
+              var carpanGoster = p.birim_carpan > 0 ? p.birim_carpan + ' ' + (p.birim === 'teneke' ? 'lt' : p.birim === 'koli' ? 'kg' : p.birim === 'kg' ? 'gr' : p.birim === 'litre' ? 'ml' : '') : '—';
               return '<tr data-id="' + p.id + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
                 '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺</td>' +
+                '<td style="text-align:center;font-size:0.8rem;color:var(--text-dim)">' + carpanGoster + '</td>' +
                 '<td style="text-align:center">' + p.yil + '</td>' +
                 (bfPerms ?
                   '<td style="text-align:center;white-space:nowrap">' +
@@ -2084,6 +2155,11 @@ function bfYeniUrun() {
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
         <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
+      <div style="flex:0.8;min-width:90px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
+        <input type="number" id="bf_carpan" step="any" min="0" placeholder="Örn: 18" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">teneke=18, koli=10</div>
+      </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Kaydet</button>
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bfFormContainer').style.display='none'">İptal</button>
@@ -2120,6 +2196,11 @@ function bfDuzenle(id) {
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
         <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
+      <div style="flex:0.8;min-width:90px">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
+        <input type="number" id="bf_carpan" step="any" min="0" value="${item.birim_carpan || ''}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">teneke=18, koli=10</div>
+      </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Güncelle</button>
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bfFormContainer').style.display='none'">İptal</button>
@@ -2134,13 +2215,14 @@ function bfKaydet() {
   var ad = (document.getElementById('bf_ad').value || '').trim();
   var birim = document.getElementById('bf_birim').value;
   var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
+  var carpan = parseFloat(document.getElementById('bf_carpan').value) || 0;
   if (!ad) { showToast('Ürün adı zorunludur.', 'error'); return; }
   if (fiyat <= 0) { showToast('Geçerli bir fiyat girin.', 'error'); return; }
   if (bfDuzenlemeId) {
-    editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat });
+    editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan });
     showToast('Ürün güncellendi.', 'success');
   } else {
-    addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil);
+    addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil, carpan);
     showToast('Ürün eklendi.', 'success');
   }
   document.getElementById('bfFormContainer').style.display = 'none';

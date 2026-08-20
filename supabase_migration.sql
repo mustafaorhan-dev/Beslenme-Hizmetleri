@@ -71,3 +71,7 @@ ALTER TABLE unit_prices ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "unit_prices_all" ON unit_prices;
 CREATE POLICY "unit_prices_all" ON unit_prices FOR ALL
   USING (true) WITH CHECK (true);
+
+-- 6) BİRİM ÇARPANI - her ürünün kendi birim dönüşüm oranı
+--    1 teneke = 18 lt, 1 koli = 10 kg vb.
+ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS birim_carpan NUMERIC(10,4) DEFAULT 0;
