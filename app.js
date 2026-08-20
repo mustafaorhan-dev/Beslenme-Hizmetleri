@@ -1950,7 +1950,7 @@ function bfYeniUrun() {
   form.style.display = 'block';
   form.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
-      <div style="flex:2;min-width:140px">
+      <div style="flex:4;min-width:200px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Ürün Adı</label>
         <input type="text" id="bf_ad" placeholder="Örn: Domates" style="width:100%" />
       </div>
