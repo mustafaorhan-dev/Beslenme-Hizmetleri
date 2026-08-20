@@ -1760,47 +1760,54 @@ function loadUnitPrices() { return unitPricesCache; }
 
 function saveUnitPrices(list) {
   unitPricesCache = list;
-  syncUnitPricesToSupabase();
 }
 
-function addUnitPrice(urun_adi, birim, birim_fiyat, yil) {
-  var list = loadUnitPrices();
-  list.push({
+async function addUnitPrice(urun_adi, birim, birim_fiyat, yil) {
+  var item = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     urun_adi: urun_adi.trim(),
     birim: birim || 'kg',
     birim_fiyat: parseFloat(birim_fiyat) || 0,
     yil: parseInt(yil) || new Date().getFullYear()
-  });
-  saveUnitPrices(list);
+  };
+  unitPricesCache.push(item);
+  if (supabaseClient) {
+    try {
+      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
+        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil },
+        { onConflict: 'id' }
+      );
+      if (error) throw error;
+    } catch (e) { console.error('Supabase addUnitPrice error:', e); }
+  }
 }
 
-function editUnitPrice(id, alanlar) {
-  var list = loadUnitPrices();
-  var item = list.find(function(p) { return p.id === id; });
+async function editUnitPrice(id, alanlar) {
+  var item = unitPricesCache.find(function(p) { return p.id === id; });
   if (!item) return;
   if (alanlar.urun_adi !== undefined) item.urun_adi = alanlar.urun_adi.trim();
   if (alanlar.birim !== undefined) item.birim = alanlar.birim;
   if (alanlar.birim_fiyat !== undefined) item.birim_fiyat = parseFloat(alanlar.birim_fiyat) || 0;
   if (alanlar.yil !== undefined) item.yil = parseInt(alanlar.yil) || item.yil;
-  saveUnitPrices(list);
+  if (supabaseClient) {
+    try {
+      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
+        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil },
+        { onConflict: 'id' }
+      );
+      if (error) throw error;
+    } catch (e) { console.error('Supabase editUnitPrice error:', e); }
+  }
 }
 
-function deleteUnitPrice(id) {
-  var list = loadUnitPrices().filter(function(p) { return p.id !== id; });
-  saveUnitPrices(list);
-}
-
-async function syncUnitPricesToSupabase() {
-  if (!supabaseClient) return;
-  try {
-    var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
-      unitPricesCache.map(function(p) {
-        return { id: p.id, urun_adi: p.urun_adi, birim: p.birim, birim_fiyat: p.birim_fiyat, yil: p.yil };
-      }),
-      { onConflict: 'id' }
-    );
-  } catch (_) {}
+async function deleteUnitPrice(id) {
+  unitPricesCache = unitPricesCache.filter(function(p) { return p.id !== id; });
+  if (supabaseClient) {
+    try {
+      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).delete().eq('id', id);
+      if (error) throw error;
+    } catch (e) { console.error('Supabase deleteUnitPrice error:', e); }
+  }
 }
 
 async function syncUnitPricesFromSupabase() {
