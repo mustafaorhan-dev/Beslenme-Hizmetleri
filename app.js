@@ -5332,7 +5332,8 @@ function renderWeeklyTotal(dishEntries, days) {
     items.forEach(function(e) {
       if (e.total <= 0) return;
       var birimAd = normBirim(e.birim);
-      var tut = birimFiyatTutar(e.ad, birimAd, e.total);
+      var hesapMiktari = (birimAd === 'adet') ? Math.ceil(e.total) : e.total;
+      var tut = birimFiyatTutar(e.ad, birimAd, hesapMiktari);
       if (tut > 0) haftalikGenelToplam += tut;
     });
   });
