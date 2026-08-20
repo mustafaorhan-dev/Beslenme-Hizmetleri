@@ -284,9 +284,6 @@
   border-bottom: 1px solid rgba(99,102,241,0.25);
   color: #cbd5e1;
 }
-[data-theme="dark"] .data-table tr:hover td {
-  background: rgba(99,102,241,0.10);
-}
 [data-theme="dark"] .tab-btn:hover {
   background: rgba(255,255,255,0.04);
 }
@@ -1135,7 +1132,6 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   transition: background var(--transition);
 }
 
-.data-table tr:hover td { background: rgba(99,102,241,0.06); }
 .data-table tr:last-child td { border-bottom: none; }
 
 .data-table td:first-child { color: var(--text-primary); font-weight: 500; }
