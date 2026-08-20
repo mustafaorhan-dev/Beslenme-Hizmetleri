@@ -1376,29 +1376,29 @@
       <div class="hc-controls" id="hcControls"></div>
       <div class="section-card">
         <div class="section-header">
-          <h2>Başı Harcama Oranları (Öğrenci, Personel &amp; Yemek)</h2>
+          <h2>Kişi Başı Harcama Oranları (Öğrenci, Personel &amp; Yemek)</h2>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:0.5rem">
           <div>
-            <label for="hcOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Öğr. Başı Harcama Oranı (₺)</label>
+            <label for="hcOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Öğrenci Başı Harcama Tutarı (₺)</label>
             <input type="number" id="hcOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
           </div>
-          <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()">Öğr. Oranı Kaydet</button>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()">Öğr. Tutar Kaydet</button>
           <span id="hcOranStatus" style="font-size:0.85rem"></span>
           <div>
-            <label for="hcPersonelOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Pers. Başı Harcama Oranı (₺)</label>
+            <label for="hcPersonelOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Personel Başı Harcama Tutarı (₺)</label>
             <input type="number" id="hcPersonelOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
           </div>
-          <button class="btn btn-primary btn-sm" onclick="hcKaydetPersonelOran()">Pers. Oranı Kaydet</button>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetPersonelOran()">Pers. Tutar Kaydet</button>
           <span id="hcPersonelOranStatus" style="font-size:0.85rem"></span>
           <div>
-            <label for="hcYemekOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Yemek Başı Harcama Oranı (₺)</label>
+            <label for="hcYemekOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem">Yemek Başı Harcama Tutarı (₺)</label>
             <input type="number" id="hcYemekOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
           </div>
-          <button class="btn btn-primary btn-sm" onclick="hcKaydetYemekOran()">Yemek Oranı Kaydet</button>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetYemekOran()">Yemek Tutar Kaydet</button>
           <span id="hcYemekOranStatus" style="font-size:0.85rem"></span>
         </div>
-        <div style="font-size:0.78rem;color:var(--text-muted)">Öğrenci Harcama = Öğrenci Sayısı × Öğr. Başı Oran; Personel Harcama = Personel Sayısı × Pers. Başı Oran; Yemek Harcama = Üretilen Yemek × Yemek Başı Oran. Oran değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">Öğrenci Harcama = Öğrenci Sayısı × Öğrenci Başı Tutar; Personel Harcama = Personel Sayısı × Personel Başı Tutar; Yemek Harcama = Üretilen Yemek × Yemek Başı Tutar. Tutar değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem">
@@ -1410,7 +1410,7 @@
           <canvas id="canvasHarcamaMenu"></canvas>
           <div class="chart-empty" id="hcChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
         </div>
-        <div class="chart-note">Öğrenci Harcama (₺) = Öğrenci Sayısı × Öğr. Başı Harcama Oranı</div>
+        <div class="chart-note">Öğrenci Harcama (₺) = Öğrenci Sayısı × Öğrenci Başı Harcama Tutarı</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem">
@@ -1422,7 +1422,19 @@
           <canvas id="canvasHarcamaPersonel"></canvas>
           <div class="chart-empty" id="hcPersonelChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
         </div>
-        <div class="chart-note">Personel Harcama (₺) = Personel Sayısı × Pers. Başı Harcama Oranı</div>
+        <div class="chart-note">Personel Harcama (₺) = Personel Sayısı × Personel Başı Harcama Tutarı</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2>Yemek Harcama Tutarı (₺)</h2>
+          <span class="badge" id="hcYemekChartBadge" style="display:none"></span>
+        </div>
+        <div class="chart-area" id="hcYemekChartArea">
+          <canvas id="canvasHarcamaYemek"></canvas>
+          <div class="chart-empty" id="hcYemekChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note">Yemek Harcama (₺) = Üretilen Yemek Sayısı × Yemek Başı Harcama Tutarı</div>
       </div>
 
       <div class="section-card" style="margin-top:1rem" id="hcTableArea">

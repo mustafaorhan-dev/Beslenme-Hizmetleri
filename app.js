@@ -6404,6 +6404,7 @@ function drawAllCharts() {
 // ─── HARCAMA MENÜSÜ ────────────────────────────────────────────────────────────
 let harcamaMenuChart = null;
 let harcamaPersonelChart = null;
+let harcamaYemekChart = null;
 
 function renderHarcamaMenu() {
   hcUpdateNav();
@@ -6443,6 +6444,7 @@ function renderHarcamaMenu() {
   renderHarcamaMenuKpis(oran, persOran, yemekOran);
   renderHarcamaMenuChart(oran);
   renderHarcamaMenuPersonelChart(persOran);
+  renderHarcamaMenuYemekChart(yemekOran);
   renderHarcamaMenuTable(oran, persOran, yemekOran);
 }
 
@@ -6833,6 +6835,116 @@ function renderHarcamaMenuPersonelChart(persOran) {
   });
 }
 
+function renderHarcamaMenuYemekChart(yemekOran) {
+  const canvas = document.getElementById('canvasHarcamaYemek');
+  const empty = document.getElementById('hcYemekChartEmpty');
+  if (!canvas || !empty) return;
+  if (harcamaYemekChart) { harcamaYemekChart.destroy(); harcamaYemekChart = null; }
+
+  const hasAnyDate = records.some(r => { const d = new Date(r.tarih + 'T12:00:00'); return !isNaN(d); });
+  if (!hasAnyDate) {
+    empty.style.display = 'block';
+    canvas.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  const active = hcActiveRecords();
+  const monthly = {};
+  active.forEach(r => {
+    const d = new Date(r.tarih + 'T12:00:00');
+    if (isNaN(d)) return;
+    const m = d.getMonth();
+    monthly[m] = (monthly[m] || 0) + (r.yemek || 0) * (yemekOran || 0);
+  });
+
+  let labels, data;
+  if (hcSelectedMonth === null) {
+    labels = HC_MONTHS_TR.map((m, i) => m.slice(0, 3) + ' ' + String(hcSelectedYear).slice(2));
+    data = HC_MONTHS_TR.map((_, i) => monthly[i] || 0);
+  } else {
+    labels = [HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear];
+    data = [monthly[hcSelectedMonth] || 0];
+  }
+
+  const chartMax = Math.max.apply(null, data.length ? data : [0]);
+  const suggestedMax = chartMax > 0 ? chartMax * 1.18 : 10;
+
+  const area = canvas.parentElement;
+  const areaW = Math.max(area.clientWidth || 400, 320);
+  const barW = 88;
+  const targetW = Math.max(areaW, labels.length * barW + 70);
+  const canvasH = 340;
+  canvas.style.width = targetW + 'px';
+  canvas.style.height = canvasH + 'px';
+  canvas.width = targetW;
+  canvas.height = canvasH;
+  area.style.width = '100%';
+
+  const ctx = canvas.getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const colors = {
+    text: isDark ? '#e2e8f0' : '#1e293b',
+    grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+  };
+  const baseColor = '#e8793a';
+  const selColor = '#f59e0b';
+  const barColors = data.map((v, i) =>
+    hcSelectedMonth !== null && i === 0 ? selColor :
+    hcSelectedMonth === null && monthly[i] === 0 ? 'rgba(148,163,184,0.25)' : baseColor
+  );
+
+  harcamaYemekChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Yemek Harcama (₺)',
+        data,
+        backgroundColor: barColors,
+        borderColor: barColors,
+        borderRadius: 6,
+        barPercentage: 0.8,
+        categoryPercentage: 0.75,
+        maxBarThickness: 72,
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      plugins: {
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        tooltip: {
+          backgroundColor: '#000000',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          bodyFont: { size: 11, family: 'Inter' },
+          titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+        },
+        valueLabels: true,
+      },
+      scales: {
+        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            suggestedMax: suggestedMax,
+            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            grid: { color: colors.grid }
+          }
+      }
+    },
+    plugins: [chartValueLabelPlugin]
+  });
+}
+
 function renderHarcamaMenuTable(oran, persOran, yemekOran) {
   const tbody = document.getElementById('hcTbody');
   const pag = document.getElementById('hcPagination');
@@ -6991,6 +7103,15 @@ function hcUpdateNav() {
       persBadge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
     }
   }
+  var yemekBadge = document.getElementById('hcYemekChartBadge');
+  if (yemekBadge) {
+    if (hcSelectedMonth === null) {
+      yemekBadge.style.display = 'none';
+    } else {
+      yemekBadge.style.display = 'inline-flex';
+      yemekBadge.textContent = HC_MONTHS_TR[hcSelectedMonth] + ' ' + hcSelectedYear;
+    }
+  }
 }
 
 function canEditHarcamaOran() {
@@ -7068,6 +7189,11 @@ function printHarcama() {
     var c2 = document.getElementById('canvasHarcamaPersonel');
     if (c2) persImg = '<img src="' + c2.toDataURL('image/png') + '" style="max-width:100%;height:auto;margin:8px 0" />';
   }
+  var yemekImg = '';
+  if (harcamaYemekChart) {
+    var c3 = document.getElementById('canvasHarcamaYemek');
+    if (c3) yemekImg = '<img src="' + c3.toDataURL('image/png') + '" style="max-width:100%;height:auto;margin:8px 0" />';
+  }
 
   var sorted = hcActiveRecords().sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
   var tl = function(v) { return v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20BA'; };
@@ -7110,13 +7236,18 @@ function printHarcama() {
   win.document.write('<div class="kpi-grid">' + kpisHtml + '</div>');
   if (ogrImg) {
     win.document.write('<div class="chart-title">\u00d6\u011frenci Harcama Tutar\u0131 (\u20BA)</div>');
-    win.document.write('<div class="chart-note">\u00d6\u011frenci Harcama = \u00d6\u011frenci Say\u0131s\u0131 \u00d7 \u00d6\u011fr. Ba\u015f\u0131 Harcama Oran\u0131</div>');
+    win.document.write('<div class="chart-note">\u00d6\u011frenci Harcama = \u00d6\u011frenci Say\u0131s\u0131 \u00d7 \u00d6\u011frenci Ba\u015f\u0131 Harcama Tutar\u0131</div>');
     win.document.write(ogrImg);
   }
   if (persImg) {
     win.document.write('<div class="chart-title">Personel Harcama Tutar\u0131 (\u20BA)</div>');
-    win.document.write('<div class="chart-note">Personel Harcama = Toplam Personel \u00d7 Pers. Ba\u015f\u0131 Harcama Oran\u0131</div>');
+    win.document.write('<div class="chart-note">Personel Harcama = Toplam Personel \u00d7 Personel Ba\u015f\u0131 Harcama Tutar\u0131</div>');
     win.document.write(persImg);
+  }
+  if (yemekImg) {
+    win.document.write('<div class="chart-title">Yemek Harcama Tutar\u0131 (\u20BA)</div>');
+    win.document.write('<div class="chart-note">Yemek Harcama = \u00dcret. Yemek Say\u0131s\u0131 \u00d7 Yemek Ba\u015f\u0131 Harcama Tutar\u0131</div>');
+    win.document.write(yemekImg);
   }
   win.document.write('<div class="chart-title" style="margin-top:16px">Harcama Hesaplama Tablosu</div>');
   win.document.write('<table><thead><tr><th>Tarih</th><th>\u00d6\u011frenci Say\u0131s\u0131</th><th>\u00d6\u011fr. Oran\u0131 (\u20BA)</th><th>\u00d6\u011frenci Harcama (\u20BA)</th><th>Personel Say\u0131s\u0131</th><th>Pers. Oran\u0131 (\u20BA)</th><th>Personel Harcama (\u20BA)</th><th>\u00dcret. Yemek</th><th>Yemek Harcama (\u20BA)</th></tr></thead><tbody>' + rows + '</tbody></table>');
