@@ -1879,7 +1879,7 @@ function renderBirimFiyatlar() {
 
   var currentYear = new Date().getFullYear();
   var years = [];
-  for (var y = currentYear + 1; y >= currentYear - 5; y--) years.push(y);
+  for (var y = currentYear + 5; y >= currentYear - 5; y--) years.push(y);
 
   var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
   filtered.sort(function(a, b) { return a.urun_adi.localeCompare(b.urun_adi, 'tr'); });
@@ -1893,9 +1893,11 @@ function renderBirimFiyatlar() {
       <div class="section-header">
         <h2>Birim Fiyat Listesi</h2>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-          <select id="bfYilSecici" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" onchange="birimFiyatSeciliYil=parseInt(this.value);renderBirimFiyatlar()">
-            ${years.map(function(y) { return '<option value="' + y + '"' + (y === birimFiyatSeciliYil ? ' selected' : '') + '>' + y + '</option>'; }).join('')}
-          </select>
+          <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <button class="btn btn-ghost btn-sm" onclick="bfYilDegistir(-1)" style="border:none;border-radius:0;padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <span id="bfYilGoster" style="padding:6px 14px;font-weight:700;font-size:0.95rem;color:var(--text-primary);min-width:50px;text-align:center;cursor:pointer;user-select:none" title="Tıkla, yıl seç" onclick="bfYilSeciciAc()">${birimFiyatSeciliYil}</span>
+            <button class="btn btn-ghost btn-sm" onclick="bfYilDegistir(1)" style="border:none;border-radius:0;padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
           ${bfPerms ? '<button class="btn btn-primary btn-sm" onclick="bfYeniUrun()">+ Yeni Ürün</button>' : ''}
           <button class="btn btn-ghost btn-sm" onclick="bfExportCSV()">CSV İndir</button>
           <button class="btn btn-ghost btn-sm" onclick="printBirimFiyatlar()">
@@ -1945,6 +1947,31 @@ function renderBirimFiyatlar() {
       <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Toplam ${filtered.length} ürün | Fiyatlar yıl bazlıdır. Eşleşme: Malzeme adı normalize edilerek otomatik eşleştirilir.</div>
     </div>
   `;
+}
+
+function bfYilDegistir(delta) {
+  birimFiyatSeciliYil += delta;
+  renderBirimFiyatlar();
+}
+
+function bfYilSeciciAc() {
+  var mevcut = birimFiyatSeciliYil;
+  var sonYil = mevcut + 10;
+  var ilkYil = mevcut - 10;
+  var yillar = [];
+  for (var y = sonYil; y >= ilkYil; y--) yillar.push(y);
+  var yillarHtml = yillar.map(function(y) {
+    var bg = y === mevcut ? 'var(--accent-cyan)' : 'transparent';
+    var fg = y === mevcut ? '#fff' : 'var(--text-primary)';
+    var fw = y === mevcut ? '700' : '400';
+    return '<div class="bf-ypick-yil" style="cursor:pointer;padding:0.45rem 0;text-align:center;border-radius:6px;font-weight:' + fw + ';font-size:0.88rem;color:' + fg + ';background:' + bg + ';transition:all 0.15s" onmouseover="this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="birimFiyatSeciliYil=' + y + ';renderBirimFiyatlar()">' + y + '</div>';
+  }).join('');
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = '<div class="modal sync-panel" style="max-width:340px"><div class="modal-header"><h2 style="font-size:1rem">Yıl Seç</h2><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div class="modal-body" style="padding:0.75rem"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.35rem">' + yillarHtml + '</div></div></div>';
+  document.body.appendChild(overlay);
 }
 
 let bfDuzenlemeId = null;
