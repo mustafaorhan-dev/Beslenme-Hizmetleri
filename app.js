@@ -6987,6 +6987,8 @@ function printHarcama() {
   win.document.write('.sub{font-size:0.8rem;color:#64748b;margin-bottom:1rem}');
   win.document.write('.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:10px 0 16px}');
   win.document.write('.kpi-card{border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px}');
+  win.document.write('.kpi-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0}');
+  win.document.write('.kpi-icon svg{width:14px;height:14px}');
   win.document.write('.kpi-label{font-size:10px;color:#64748b;text-transform:uppercase;display:block}');
   win.document.write('.kpi-value{font-size:16px;font-weight:700;display:block;margin-top:2px}');
   win.document.write('.chart-title{font-size:0.9rem;font-weight:600;margin:16px 0 4px;color:#334155}');
