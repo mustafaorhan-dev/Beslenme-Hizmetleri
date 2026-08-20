@@ -798,7 +798,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   flex: 1;
   min-width: 0;
   padding: 1rem;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 
