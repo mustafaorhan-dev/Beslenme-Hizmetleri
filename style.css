@@ -668,7 +668,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 /* ---- APP LAYOUT ---- */
 .app-layout {
   display: flex;
-  min-height: calc(100vh - 70px);
+  height: calc(100vh - 70px);
   margin-left: 60px;
 }
 
