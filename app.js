@@ -6419,11 +6419,11 @@ function renderHarcamaMenuKpis(oran, persOran) {
   const el = document.getElementById('hcKpis');
   if (!el) return;
   const withOgrenci = hcActiveRecords().filter(r => (r.ogrenci || 0) > 0);
-  const withPersonel = hcActiveRecords().filter(r => (r.personel || 0) > 0);
+  const withPersonel = hcActiveRecords().filter(r => hcToplamPersonel(r) > 0);
   const totalOgrenciHarcama = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0) * oran, 0);
-  const totalPersonelHarcama = withPersonel.reduce((s, r) => s + (r.personel || 0) * persOran, 0);
+  const totalPersonelHarcama = withPersonel.reduce((s, r) => s + hcToplamPersonel(r) * persOran, 0);
   const totalOgrenci = withOgrenci.reduce((s, r) => s + (r.ogrenci || 0), 0);
-  const totalPersonel = withPersonel.reduce((s, r) => s + (r.personel || 0), 0);
+  const totalPersonel = withPersonel.reduce((s, r) => s + hcToplamPersonel(r), 0);
   const monthlyOgrenci = {};
   const monthlyPersonel = {};
   withOgrenci.forEach(r => {
@@ -6438,7 +6438,7 @@ function renderHarcamaMenuKpis(oran, persOran) {
     if (isNaN(d)) return;
     const key = (d.getMonth() + 1) + '/' + d.getFullYear();
     if (!monthlyPersonel[key]) monthlyPersonel[key] = 0;
-    monthlyPersonel[key] += (r.personel || 0) * persOran;
+    monthlyPersonel[key] += hcToplamPersonel(r) * persOran;
   });
   const valsO = Object.values(monthlyOgrenci);
   const valsP = Object.values(monthlyPersonel);
@@ -6663,7 +6663,7 @@ function renderHarcamaMenuPersonelChart(persOran) {
     const d = new Date(r.tarih + 'T12:00:00');
     if (isNaN(d)) return;
     const m = d.getMonth();
-    monthly[m] = (monthly[m] || 0) + (r.personel || 0) * persOran;
+    monthly[m] = (monthly[m] || 0) + hcToplamPersonel(r) * persOran;
   });
 
   let labels, data;
@@ -6769,14 +6769,15 @@ function renderHarcamaMenuTable(oran, persOran) {
   const pageRows = sorted.slice(start, start + perPage);
   tbody.innerHTML = pageRows.map(r => {
     const ogrTutar = (r.ogrenci || 0) * oran;
-    const persTutar = (r.personel || 0) * persOran;
+    const toplamPersonel = hcToplamPersonel(r);
+    const persTutar = toplamPersonel * persOran;
     const tl = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
     return `<tr>
       <td>${displayDate(r.tarih)}</td>
       <td>${(r.ogrenci || 0).toLocaleString('tr-TR')}</td>
       <td>${tl(oran)}</td>
       <td>${tl(ogrTutar)}</td>
-      <td>${(r.personel || 0).toLocaleString('tr-TR')}</td>
+      <td>${toplamPersonel.toLocaleString('tr-TR')}</td>
       <td>${tl(persOran)}</td>
       <td>${tl(persTutar)}</td>
     </tr>`;
@@ -6879,6 +6880,10 @@ function hcActiveRecords() {
     if (hcSelectedMonth !== null && d.getMonth() !== hcSelectedMonth) return false;
     return true;
   });
+}
+
+function hcToplamPersonel(r) {
+  return ((r.turnike || 0) - (r.ogrenci || 0)) + (r.personel || 0);
 }
 
 function hcUpdateNav() {
