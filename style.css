@@ -156,7 +156,7 @@
 }
 .login-form {
   display: flex; flex-direction: column; gap: 0.55rem;
-  margin-top: 1.15rem;
+  margin-top: 2.2rem;
 }
 .login-label {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.7px;
