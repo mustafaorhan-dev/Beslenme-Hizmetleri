@@ -290,7 +290,7 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, yillik: true, harcama: false, birimfiyat: false },
     canEditMenu: true,
     canSaveMenu: true,
     canSeeProduction: true,
@@ -314,7 +314,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -338,7 +338,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, yillik: false, harcama: false, birimfiyat: false },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -362,7 +362,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -386,7 +386,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -410,7 +410,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -477,7 +477,11 @@ function loadRolePermissions() {
       var payload = parsePermsPayload(JSON.parse(saved));
       if (payload.roles && typeof payload.roles === 'object') {
         Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-          rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), payload.roles[role] || {});
+          var def = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
+          var savedRole = payload.roles[role] || {};
+          var merged = Object.assign({}, def, savedRole);
+          merged.tabs = Object.assign({}, def.tabs, savedRole.tabs || {});
+          rolePermissions[role] = merged;
         });
       }
       if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
@@ -507,7 +511,11 @@ async function syncRolePermissionsFromSupabase() {
     var payload = parsePermsPayload(JSON.parse(data.value));
     if (payload.roles && typeof payload.roles === 'object') {
       Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-        rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), payload.roles[role] || {});
+        var def = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
+        var savedRole = payload.roles[role] || {};
+        var merged = Object.assign({}, def, savedRole);
+        merged.tabs = Object.assign({}, def.tabs, savedRole.tabs || {});
+        rolePermissions[role] = merged;
       });
       if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
       saveRolePermissions();
@@ -824,7 +832,7 @@ async function saveAdminSettings() {
     var perm = rolePermissions[role];
     if (!perm) return;
     var prefix = 'apRole_' + role + '_';
-    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts'];
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts', 'yillik', 'harcama', 'birimfiyat'];
     tabs.forEach(function(tab) {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
@@ -870,7 +878,7 @@ function apRenderRolePermissions() {
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', birimfiyat: 'Birim Fiyatlar' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
