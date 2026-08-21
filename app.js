@@ -5288,13 +5288,13 @@ function renderProduction(_weekKey, _weekData, days) {
         if (tut > 0) gunlukToplam += Math.round(tut * 100) / 100;
       });
       html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">Toplam: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
-      dayEntries.forEach(e => {
+      dayEntries.forEach((e, idx) => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
         var hesapMiktari = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
         const found = findBirimFiyat(e.ad, e.birim);
         const tutar = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
         const fiyatGoster = found && tutar > 0 ? `<span class="fiyat-badge">${formatTRY(tutar)}</span>` : '';
-        html += `<div class="prod-ing"><span class="prod-num"></span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}${fiyatGoster}</span></div>`;
+        html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}${fiyatGoster}</span></div>`;
       });
       html += '</div></div>';
     }
