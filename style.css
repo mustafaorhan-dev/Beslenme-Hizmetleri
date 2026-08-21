@@ -23,7 +23,7 @@
 }
 .login-shell {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 1fr 1fr;
   width: min(960px, 96vw);
   min-height: 580px;
   border-radius: 26px;
