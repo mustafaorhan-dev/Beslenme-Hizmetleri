@@ -29,7 +29,6 @@
   border-radius: 26px;
   overflow: hidden;
   border: 1px solid var(--border);
-  box-shadow: 0 40px 110px rgba(0,0,0,0.35), 0 0 80px color-mix(in srgb, var(--accent) 12%, transparent);
   animation: loginCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes loginCardIn {
