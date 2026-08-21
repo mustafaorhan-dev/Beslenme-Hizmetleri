@@ -234,7 +234,11 @@
   .login-features, .login-brand-foot { display: none; }
   .login-title { font-size: 1.15rem; }
   .login-title .login-sub { font-size: 0.78rem; }
-  .login-cutlery { top: 40%; }
+  .login-cutlery {
+    position: static;
+    transform: none;
+    margin: 1.3rem auto 0;
+  }
   .login-cutlery svg { width: 150px; }
   .login-form-panel { padding: 1.9rem 1.8rem 1.2rem; }
 }
