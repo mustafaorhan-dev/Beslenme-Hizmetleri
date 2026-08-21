@@ -107,6 +107,8 @@
 }
 .login-features li {
   display: flex; align-items: center; gap: 0.65rem;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
   font-size: 0.76rem; font-weight: 600;
   letter-spacing: 0.25px;
   color: #f8fafc;
