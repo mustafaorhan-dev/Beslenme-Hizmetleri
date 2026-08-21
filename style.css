@@ -1337,12 +1337,14 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .prod-day-total-body .prod-ing {
   font-size: 0.7rem;
   line-height: 1.6;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 0.15rem;
 }
 .prod-day-total-body .prod-num {
   font-size: 0.66rem;
 }
 .prod-day-total-body .prod-sep {
-  font-size: 0.66rem;
+  display: none;
 }
 .prod-day-total-body .prod-kisi-birim {
   font-size: 0.64rem;
@@ -1350,6 +1352,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .prod-day-total-body .prod-qty {
   font-size: 0.68rem;
   white-space: nowrap;
+  margin-left: auto;
 }
 .prod-day-total-body .fiyat-badge {
   font-size: 0.64rem;
@@ -1414,10 +1417,24 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: var(--text-muted);
   font-size: 0.74rem;
 }
+.weekly-total-item .weekly-total-sep {
+  display: none;
+}
 .weekly-total-qty {
   flex-shrink: 0;
   font-weight: 600;
   color: var(--accent);
+}
+.weekly-total-item .weekly-total-qty {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.weekly-total-item {
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 0.15rem;
+}
+.weekly-total-item:last-child {
+  border-bottom: none;
 }
 .wt-kategori {
   margin-bottom: 0.6rem;
