@@ -1229,8 +1229,8 @@ function exportManualPDF() {
       @media print { a { color: inherit !important; } }
     </style>
   </head><body>
-    <h1>Kırşehir Ahi Evran Üniversitesi - Beslenme Hizmetleri Yönetim Sistemi</h1>
-    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
+    <h1>Beslenme Hizmetleri Yönetim Sistemi</h1>
+    <div class="date">Kırşehir Ahi Evran Üniversitesi &mdash; ${new Date().toLocaleDateString('tr-TR')}</div>
     ${manualHtml}
   </body></html>`);
   printWin.document.close();
