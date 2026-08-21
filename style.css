@@ -1290,11 +1290,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 0.8rem;
 }
 .fiyat-badge {
+  display: inline-block;
   flex-shrink: 0;
   font-size: 0.74rem;
   font-weight: 700;
   color: var(--accent-cyan);
-  margin-left: 0.35rem;
+  margin-left: 0.45rem;
   white-space: nowrap;
 }
 .prod-day-total {
@@ -1326,14 +1327,21 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .prod-day-total-body {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
-  column-gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+  column-gap: 0.75rem;
 }
 .prod-day-total-body .prod-ing {
   font-size: 0.7rem;
   line-height: 1.6;
   border-bottom: 1px dashed var(--border);
   padding-bottom: 0.15rem;
+  flex-wrap: nowrap;
+}
+.prod-day-total-body .prod-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .prod-day-total-body .prod-num {
   font-size: 0.66rem;
@@ -1426,9 +1434,16 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .weekly-total-item {
   border-bottom: 1px dashed var(--border);
   padding-bottom: 0.15rem;
+  flex-wrap: nowrap;
 }
 .weekly-total-item:last-child {
   border-bottom: none;
+}
+.weekly-total-item .weekly-total-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .wt-kategori {
   margin-bottom: 0.6rem;
