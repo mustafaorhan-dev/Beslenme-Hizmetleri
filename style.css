@@ -1331,8 +1331,29 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .prod-day-total-body {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  column-gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+  column-gap: 1rem;
+}
+.prod-day-total-body .prod-ing {
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+.prod-day-total-body .prod-num {
+  font-size: 0.66rem;
+}
+.prod-day-total-body .prod-sep {
+  font-size: 0.66rem;
+}
+.prod-day-total-body .prod-kisi-birim {
+  font-size: 0.64rem;
+}
+.prod-day-total-body .prod-qty {
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+.prod-day-total-body .fiyat-badge {
+  font-size: 0.64rem;
+  padding: 0.02rem 0.4rem;
 }
 
 /* ===== HAFTALIK TOPLAM LİSTESİ ===== */
