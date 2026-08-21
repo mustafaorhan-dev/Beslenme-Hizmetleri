@@ -100,8 +100,11 @@
 }
 .login-features li {
   display: flex; align-items: center; gap: 0.65rem;
-  font-size: 0.86rem; font-weight: 500;
-  color: rgba(241,245,249,0.88);
+  font-size: 0.76rem; font-weight: 600;
+  letter-spacing: 0.25px;
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 .login-check {
   width: 19px; height: 19px; border-radius: 50%; flex-shrink: 0;
