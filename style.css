@@ -183,6 +183,9 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .login-field.has-icon { padding-left: 56px; }
+.login-field::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+}
 .login-field:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
