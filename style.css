@@ -1289,6 +1289,19 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: var(--cesit-accent);
   font-size: 0.8rem;
 }
+.fiyat-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  margin-left: 0.35rem;
+  white-space: nowrap;
+}
 .prod-day-total {
   margin-top: 0.9rem;
   border-top: 1px dashed var(--border);
@@ -2530,6 +2543,7 @@ input.production-input:focus {
   .prod-name { min-width: 0; color: #333; }
   .prod-sep { flex-shrink: 0; color: #bbb; }
   .prod-qty { flex-shrink: 0; font-weight: 600; color: #333; }
+  .fiyat-badge { color: #333; background: #f0f0f0; border-color: #ccc; }
   .prod-day-total { margin-top: 0.6rem; border-top: 1px dashed #ccc; padding-top: 0.4rem; }
   .prod-day-total-header { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; color: #333; }
   .prod-day-total-icon { display: none; }
