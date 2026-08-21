@@ -2089,7 +2089,7 @@
       </div>
       <div class="manual-body">
         <div class="manual-hero">
-          <div class="manual-hero-badge" id="manualVersion">v1.1.0</div>
+          <div class="manual-hero-badge" id="manualVersion">v1.2.0</div>
           <h3>Kırşehir Ahi Evran Üniversitesi</h3>
           <p>Yemekhane Beslenme Hizmetleri - Üretim, Tüketim ve Atık Kontrol Sistemi</p>
         </div>
@@ -2109,10 +2109,11 @@
             <a href="#man-kalibrasyon">10. Kalibrasyona Tabi Cihazlar</a>
             <a href="#man-grafik">11. Grafikler</a>
             <a href="#man-harcama">12. Harcama</a>
-            <a href="#man-yedek">13. Veri Yedekleme ve Senkronizasyon</a>
-            <a href="#man-sistem">14. Tema ve Görünüm</a>
-            <a href="#man-yonetim">15. Yönetim ve Log Kayıtları</a>
-            <a href="#man-ipucu">16. İpuçları</a>
+            <a href="#man-birimfiyat">13. Birim Fiyatlar ve Maliyet Hesabı</a>
+            <a href="#man-yedek">14. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem">15. Tema ve Görünüm</a>
+            <a href="#man-yonetim">16. Yönetim, İzinler ve Log Kayıtları</a>
+            <a href="#man-ipucu">17. İpuçları</a>
           </div>
         </div>
 
@@ -2152,6 +2153,7 @@
             <li>Menü <strong>Diyetisyen</strong> tarafından hazırlanıp <em>Onaya Gönder</em> ile gönderilir; onaylanmadan kayıt aşamasına geçilmez.</li>
             <li>Onay bekleyen menüler "Reddet" butonu ile diyetisyene geri gönderilebilir; gerekçe yazılması zorunludur.</li>
             <li>Kaydedilen menü daha sonra <strong>Düzenle</strong> butonuyla değiştirilebilir.</li>
+            <li><strong>Üretim Görünümü:</strong> Onaylı menü, her gün için kişi sayısıyla birlikte malzeme miktarlarını gösterir. Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> yer alır: her malzemenin toplam miktarı ve (birim fiyat girilmişse) para tutarı yazar; listenin başında günün <strong>Toplam</strong> maliyeti görünür. Ayrıntı için <em>13. Birim Fiyatlar ve Maliyet Hesabı</em> bölümüne bakın.</li>
           </ul>
         </div>
 
@@ -2257,8 +2259,42 @@
           </ul>
         </div>
 
+        <div class="manual-section" id="man-birimfiyat">
+          <h3>13. Birim Fiyatlar ve Maliyet Hesabı</h3>
+          <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
+          <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
+          <ul>
+            <li><strong>Ürün Adı:</strong> Tarifteki malzeme adıyla <em>birebir aynı</em> yazılmalıdır (örn. tarifte "Ayçiçek Yağı" yazıyorsa fiyatta da "Ayçiçek Yağı" yazmalı). Ad eşleşmezse fiyat hesaba katılmaz.</li>
+            <li><strong>Birim:</strong> Fiyatı hangi pakette/büyüklükte aldığınızı gösterir: KG, KOLİ, LİTRE, ADET veya TENEKE.</li>
+            <li><strong>Birim Fiyat (₺):</strong> O birim için ödediğiniz para.</li>
+            <li><strong>1 Birim = X (alt birim) / Çarpan:</strong> Paketin alt birim karşılığı. Sistem bunu kullanarak tarifteki gr/ml/lt miktarını otomatik çevirir.</li>
+          </ul>
+          <p><strong>Birimler ve Anlamları:</strong></p>
+          <ul>
+            <li><strong>KG:</strong> Kilogram başı fiyat. Tarifte <em>gr</em> kullanılıyorsa otomatik dönüşür (1 kg = 1000 gr).</li>
+            <li><strong>LİTRE:</strong> Litre başı fiyat. Tarifte <em>ml</em> kullanılıyorsa otomatik dönüşür (1 lt = 1000 ml).</li>
+            <li><strong>ADET:</strong> Tane başı fiyat (yumurta, ekmek, limon gibi). Tarifteki adetle doğrudan çarpılır; dönüşüm gerekmez, çarpan boş kalır.</li>
+            <li><strong>TENEKE:</strong> Sıvı yağ gibi ürünlerin teneke ambalajı. Varsayılan <strong>18 litredir</strong>; farklı boy ise çarpan alanına gerçek litre değerini yazın (örn. 5'lik teneke için 5).</li>
+            <li><strong>KOLİ:</strong> Ağırlıkla satılan ürünlerin kolisi. Varsayılan <strong>10 kg'dır</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
+          </ul>
+          <p><strong>Örnek Girişler:</strong></p>
+          <ul>
+            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em> (195 ÷ 30), Çarpan: boş. DİKKAT: Yumurtayı KOLİ olarak girmeyin! Sistemde koli <em>ağırlık</em> birimidir (10 kg); yumurta gibi adetle kullanılan ürünlerde koli girilmesi hesabı tamamen bozar.</li>
+            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Ayçiçek Yağı – 18 lt teneke 1.950 ₺:</strong> Birim: <em>TENEKE</em>, Fiyat: <em>1950</em>, Çarpan: <em>18</em>. Tarifte ml/lt kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Pirinç – kilosu 42 ₺:</strong> Birim: <em>KG</em>, Fiyat: <em>42</em>, Çarpan: boş.</li>
+          </ul>
+          <p><strong>Fiyatlar Nerede Görünür?</strong></p>
+          <ul>
+            <li><strong>Haftalık Menü → Üretim görünümü:</strong> Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> açılır (örn. <em>1. Yeşil Mercimek — 2,3 kg — 148,35 ₺</em>). Miktarın yanında o kalemin tutarı, listenin başında günün <strong>Toplam</strong> tutarı görünür.</li>
+            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; her kategorinin toplamı ve haftanın <strong>Genel Toplam Maliyeti</strong> gösterilir.</li>
+            <li>Fiyatı girilmemiş malzemeler listede fiyat olmadan yalnızca miktar olarak görünür ve toplama katılmaz.</li>
+          </ul>
+          <p><strong>Hesap Kuralları:</strong> Her malzemenin tutarı <em>miktar × birim fiyat</em> ile bulunur, kuruş bazında iki haneye yuvarlanır ve toplanır. Böylece ekranda gördüğünüz kalem fiyatlarını elle topladığınızda günün toplamıyla birebir aynı çıkar. "Adet" birimli malzemelerde kırık hesap olmaması için miktar üst tam sayıya yuvarlanır (örn. 40,2 yumurta → 41).</p>
+        </div>
+
         <div class="manual-section" id="man-yedek">
-          <h3>13. Veri Yedekleme ve Senkronizasyon</h3>
+          <h3>14. Veri Yedekleme ve Senkronizasyon</h3>
           <ul>
             <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
             <li><strong>Supabase'e Yedekle:</strong> Tüm verileri bulut veritabanına (Supabase) yükler; farklı cihazlar arasında senkronizasyon sağlar.</li>
@@ -2270,7 +2306,7 @@
         </div>
 
         <div class="manual-section" id="man-sistem">
-          <h3>14. Tema ve Görünüm</h3>
+          <h3>15. Tema ve Görünüm</h3>
           <ul>
             <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
             <li>Tema tercihi otomatik olarak hatırlanır.</li>
@@ -2279,20 +2315,29 @@
         </div>
 
         <div class="manual-section" id="man-yonetim">
-          <h3>15. Yönetim ve Log Kayıtları</h3>
+          <h3>16. Yönetim, İzinler ve Log Kayıtları</h3>
+          <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
           <ul>
-            <li><strong>Yönetim</strong> (yalnızca Admin): Kullanıcı ekleme, rol değiştirme, şifre sıfırlama ve kullanıcı silme işlemleri yapılır.</li>
-            <li><strong>Log Kayıtları</strong> (yalnızca Admin): Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi tutulur.</li>
-            <li>Loglar işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
+            <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
+            <li><strong>Rol Bazlı İzin Ayarları:</strong> Her rol için iki grup tik alanı vardır:
+              <ul>
+                <li><em>Görünen Sekmeler:</em> Panel, Menü, Kayıtlar, Rapor, Gıda Güvenliği, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler, Yıllık, Harcama ve Birim Fiyatlar sekmelerinin o role görünür olup olmayacağı buradan tiklenir. Tikli olmayan sekme o rolün ekranında hiç gösterilmez.</li>
+                <li><em>İzinler:</em> Menü düzenleyebilir, kayıt ekleyebilir, dışa aktarabilir, birim fiyat listesini düzenleyebilir, menüyü onaylayabilir/reddedebilir gibi yetkiler.</li>
+              </ul>
+              Roller için "Sıfırla" varsayılana döndürür; özel roller silinebilir ve yenisi eklenebilir. Değişiklikler "Ayarları Kaydet" ile buluta gönderilir ve tüm cihazlara otomatik yansır.</li>
+            <li><strong>Oturum Güvenliği:</strong> "Hareketsizlik Kapanma Süresi" seçilir: 2 / 5 / 10 / 15 / 30 dakika veya Kapalı. Belirtilen süre boyunca ekranda hiçbir işlem yapılmazsa oturum otomatik kapanır ve giriş ekranı gelir. Bu ayarı yalnızca Admin değiştirebilir; seçim tüm cihazlarda geçerli olur. Fare/klavye hareketi olduğunda süre sayacı kendiliğinden yenilenir.</li>
+            <li><strong>Log Kayıtları:</strong> Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi; işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
           </ul>
         </div>
 
         <div class="manual-section" id="man-ipucu">
-          <h3>16. İpuçları</h3>
+          <h3>17. İpuçları</h3>
           <ul>
             <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
             <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
             <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
+            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem her zaman <strong>güncel yılın</strong> fiyatını arar, bulamazsa diğer kayıtları kullanır.</li>
+            <li>Tarif malzeme adları ile birim fiyat ürün adlarını aynı şekilde yazın; en güvenlisi tariften kopyalayıp fiyata yapıştırmaktır.</li>
             <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
             <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
           </ul>
@@ -2305,7 +2350,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
