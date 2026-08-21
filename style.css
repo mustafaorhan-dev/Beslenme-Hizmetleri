@@ -93,8 +93,10 @@
 }
 .login-cutlery {
   display: flex; justify-content: center;
-  margin-top: 1.6rem;
-  position: relative; z-index: 1;
+  position: absolute;
+  top: 47%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
 }
 .login-cutlery svg {
   width: 190px; height: auto;
@@ -234,6 +236,7 @@
   .login-features, .login-brand-foot { display: none; }
   .login-title { font-size: 1.15rem; }
   .login-title .login-sub { font-size: 0.78rem; }
+  .login-cutlery { top: 40%; }
   .login-cutlery svg { width: 150px; }
   .login-form-panel { padding: 1.9rem 1.8rem 1.2rem; }
 }
