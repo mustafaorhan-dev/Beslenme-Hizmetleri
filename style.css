@@ -98,8 +98,8 @@
   position: relative; z-index: 1;
 }
 .login-cutlery svg {
-  width: 200px; height: auto;
-  filter: drop-shadow(0 0 16px rgba(59,130,246,0.35));
+  width: 190px; height: auto;
+  filter: drop-shadow(0 6px 22px rgba(37,99,235,0.4));
 }
 .login-features {
   list-style: none;

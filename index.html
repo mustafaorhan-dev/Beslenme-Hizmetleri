@@ -58,35 +58,39 @@
         </div>
         <h2 class="login-title">KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<span class="login-sub">BESLENME HİZMETLERİ YÖNETİM SİSTEMİ</span></h2>
         <div class="login-cutlery" aria-hidden="true">
-          <svg viewBox="0 0 220 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 220 112" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="cutleryGrad" x1="0" y1="0" x2="220" y2="100" gradientUnits="userSpaceOnUse">
+              <linearGradient id="cutleryGrad" x1="0" y1="0" x2="220" y2="112" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#60a5fa"/>
-                <stop offset="50%" stop-color="#3b82f6"/>
+                <stop offset="45%" stop-color="#3b82f6"/>
                 <stop offset="100%" stop-color="#22d3ee"/>
               </linearGradient>
+              <radialGradient id="plateGlow" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="65%" stop-color="#3b82f6" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.3"/>
+              </radialGradient>
             </defs>
+            <circle cx="110" cy="60" r="58" fill="url(#plateGlow)"/>
             <!-- Çatal -->
-            <g stroke="url(#cutleryGrad)" stroke-width="4.5" stroke-linecap="round">
-              <path d="M34 14v22q0 8 8 12"/>
-              <path d="M50 14v22q0 8-8 12"/>
-              <path d="M42 14v32"/>
-              <path d="M42 48v46"/>
+            <g fill="url(#cutleryGrad)">
+              <rect x="34" y="8" width="4.5" height="28" rx="2.25"/>
+              <rect x="41.75" y="8" width="4.5" height="30" rx="2.25"/>
+              <rect x="49.5" y="8" width="4.5" height="28" rx="2.25"/>
+              <path d="M34 32h20c0 7-3 11-7 13v49a3 3 0 0 1-6 0V45c-4-2-7-6-7-13z"/>
             </g>
             <!-- Tabak -->
-            <circle cx="110" cy="50" r="33" stroke="url(#cutleryGrad)" stroke-width="4"/>
-            <circle cx="110" cy="50" r="21" stroke="url(#cutleryGrad)" stroke-width="2.5" opacity="0.55"/>
-            <circle cx="110" cy="50" r="3" fill="url(#cutleryGrad)" opacity="0.8"/>
+            <circle cx="110" cy="60" r="42" stroke="url(#cutleryGrad)" stroke-width="6"/>
+            <circle cx="110" cy="60" r="27" stroke="url(#cutleryGrad)" stroke-width="4" opacity="0.45"/>
+            <circle cx="110" cy="60" r="5" fill="url(#cutleryGrad)"/>
             <!-- Bıçak -->
-            <g stroke="url(#cutleryGrad)" stroke-width="4.5" stroke-linecap="round">
-              <path d="M176 12c-8 10-10 26-5 40"/>
-              <path d="M171 52V12"/>
-              <path d="M174 52v40"/>
+            <g fill="url(#cutleryGrad)">
+              <path d="M166 8c-9 13-11 31-4 46h9c2-16 0-33-5-46z"/>
+              <rect x="162" y="54" width="9" height="48" rx="4.5"/>
             </g>
             <!-- Kaşık -->
-            <g stroke="url(#cutleryGrad)" stroke-width="4.5" stroke-linecap="round">
-              <ellipse cx="202" cy="28" rx="9" ry="14"/>
-              <path d="M202 42v50"/>
+            <g fill="url(#cutleryGrad)">
+              <ellipse cx="196" cy="26" rx="10.5" ry="16"/>
+              <rect x="191.5" y="40" width="9" height="62" rx="4.5"/>
             </g>
           </svg>
         </div>
