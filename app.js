@@ -278,6 +278,13 @@ const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Soru
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
+let inactivityTimeoutMs = (function() {
+  try {
+    var v = parseInt(localStorage.getItem('atik_kontrol_inactivity_timeout'), 10);
+    if (!isNaN(v) && v >= 0) return v;
+  } catch (_) {}
+  return 300000;
+})();
 
 const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
@@ -451,29 +458,42 @@ function canEditAmbalajRecords() { return hasPerm('canEditAmbalaj'); }
 function canEditKalibrasyonRecords() { return hasPerm('canEditKalibrasyon'); }
 function canEditMenuRecords() { return hasPerm('canEditMenu'); }
 
+function serializePermsPayload() {
+  return JSON.stringify({ ver: 2, roles: rolePermissions, inactivity_timeout: inactivityTimeoutMs });
+}
+
+function parsePermsPayload(parsed) {
+  if (parsed && typeof parsed === 'object' && parsed.ver === 2 && parsed.roles && typeof parsed.roles === 'object') {
+    var t = (typeof parsed.inactivity_timeout === 'number' && parsed.inactivity_timeout >= 0) ? parsed.inactivity_timeout : null;
+    return { roles: parsed.roles, inactivityTimeout: t };
+  }
+  return { roles: parsed, inactivityTimeout: null };
+}
+
 function loadRolePermissions() {
   try {
     var saved = localStorage.getItem(ROLE_PERMISSIONS_KEY);
     if (saved) {
-      var parsed = JSON.parse(saved);
-      if (parsed && typeof parsed === 'object') {
+      var payload = parsePermsPayload(JSON.parse(saved));
+      if (payload.roles && typeof payload.roles === 'object') {
         Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-          rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), parsed[role] || {});
+          rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), payload.roles[role] || {});
         });
       }
+      if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
     }
   } catch (_) {}
 }
 
 function saveRolePermissions() {
-  try { localStorage.setItem(ROLE_PERMISSIONS_KEY, JSON.stringify(rolePermissions)); } catch (_) {}
+  try { localStorage.setItem(ROLE_PERMISSIONS_KEY, serializePermsPayload()); } catch (_) {}
 }
 
 async function syncRolePermissionsToSupabase() {
   if (!supabaseClient) return;
   try {
     var { error } = await supabaseClient.from('config').upsert(
-      { key: ROLE_PERMISSIONS_SUPABASE_KEY, value: JSON.stringify(rolePermissions), last_modified: new Date().toISOString() },
+      { key: ROLE_PERMISSIONS_SUPABASE_KEY, value: serializePermsPayload(), last_modified: new Date().toISOString() },
       { onConflict: 'key' }
     );
   } catch (_) {}
@@ -484,12 +504,14 @@ async function syncRolePermissionsFromSupabase() {
   try {
     var { data, error } = await supabaseClient.from('config').select('value').eq('key', ROLE_PERMISSIONS_SUPABASE_KEY).single();
     if (error || !data || !data.value) return false;
-    var parsed = JSON.parse(data.value);
-    if (parsed && typeof parsed === 'object') {
+    var payload = parsePermsPayload(JSON.parse(data.value));
+    if (payload.roles && typeof payload.roles === 'object') {
       Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-        rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), parsed[role] || {});
+        rolePermissions[role] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role])), payload.roles[role] || {});
       });
+      if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
       saveRolePermissions();
+      resetInactivityTimer();
       return true;
     }
     return false;
@@ -704,6 +726,7 @@ async function apReAuth() {
         errorEl.style.display = 'none';
         apRenderUserList();
         apRenderRolePermissions();
+        apRenderInactivityTimeout();
         return;
       }
     } catch (_) {}
@@ -723,6 +746,7 @@ async function apReAuth() {
     errorEl.style.display = 'none';
     apRenderUserList();
     apRenderRolePermissions();
+    apRenderInactivityTimeout();
   } else {
     errorEl.textContent = 'Admin şifresi yanlış!';
     errorEl.style.display = 'block';
@@ -743,7 +767,7 @@ function doLogout() {
     supabaseClient.auth.signOut();
   }
   // Tüm veriyi temizle (sekme bazlı sessionStorage)
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel', 'atik_kontrol_inactivity_timeout'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -787,6 +811,14 @@ async function saveAdminSettings() {
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
+  var inactSel = document.getElementById('apInactivityTimeout');
+  if (inactSel) {
+    var inactVal = parseInt(inactSel.value, 10);
+    if (isNaN(inactVal) || inactVal < 0) inactVal = 300000;
+    inactivityTimeoutMs = inactVal;
+    try { localStorage.setItem('atik_kontrol_inactivity_timeout', String(inactVal)); } catch (_) {}
+    resetInactivityTimer();
+  }
   var roles = Object.keys(rolePermissions);
   roles.forEach(function(role) {
     var perm = rolePermissions[role];
@@ -1483,11 +1515,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   resetInactivityTimer();
 });
 
-// ─── AUTO POLL (3 dk) & INACTIVITY LOCK (10 dk) ──────────────────────────────
+// ─── AUTO POLL & INACTIVITY LOCK ─────────────────────────────────────────────
 let pollInterval = null;
 let inactivityTimer = null;
 const POLL_INTERVAL = 180000;
-const INACTIVITY_TIMEOUT = 300000;
 
 function startPolling() {
   stopPolling();
@@ -1525,9 +1556,17 @@ function stopPolling() {
 
 function resetInactivityTimer() {
   if (inactivityTimer) clearTimeout(inactivityTimer);
+  if (!inactivityTimeoutMs) return;
   if (getRole()) {
-    inactivityTimer = setTimeout(lockScreen, INACTIVITY_TIMEOUT);
+    inactivityTimer = setTimeout(lockScreen, inactivityTimeoutMs);
   }
+}
+
+function apRenderInactivityTimeout() {
+  var sel = document.getElementById('apInactivityTimeout');
+  if (!sel) return;
+  sel.value = String(inactivityTimeoutMs);
+  if (sel.selectedIndex < 0) sel.value = '300000';
 }
 
 function lockScreen() {

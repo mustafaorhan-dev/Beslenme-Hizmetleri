@@ -2000,6 +2000,21 @@
           <div id="apRolePermissions"></div>
         </div>
 
+        <!-- Oturum Güvenliği -->
+        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
+          <h3 style="font-size:0.95rem;margin:0 0 0.25rem;color:var(--text-primary)">Oturum Güvenliği</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem">Belirtilen süre boyunca hiçbir işlem yapılmazsa oturum otomatik olarak kapanır.</p>
+          <label for="apInactivityTimeout" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem">Hareketsizlik Kapanma Süresi</label>
+          <select id="apInactivityTimeout" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">
+            <option value="120000">2 dakika</option>
+            <option value="300000">5 dakika (varsayılan)</option>
+            <option value="600000">10 dakika</option>
+            <option value="900000">15 dakika</option>
+            <option value="1800000">30 dakika</option>
+            <option value="0">Kapalı (oturum kapanmaz)</option>
+          </select>
+        </div>
+
         <!-- Log Kayıtları -->
         <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
