@@ -92,6 +92,15 @@
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.login-cutlery {
+  display: flex; justify-content: center;
+  margin-top: 1.6rem;
+  position: relative; z-index: 1;
+}
+.login-cutlery svg {
+  width: 200px; height: auto;
+  filter: drop-shadow(0 0 16px rgba(59,130,246,0.35));
+}
 .login-features {
   list-style: none;
   margin: auto 0 0; padding: 2rem 0 0;
@@ -226,6 +235,7 @@
   .login-features, .login-brand-foot { display: none; }
   .login-title { font-size: 1.15rem; }
   .login-title .login-sub { font-size: 0.78rem; }
+  .login-cutlery svg { width: 150px; }
   .login-form-panel { padding: 1.9rem 1.8rem 1.2rem; }
 }
 
