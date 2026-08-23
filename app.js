@@ -4510,6 +4510,64 @@ function deleteSelected() {
 }
 
 // ─── IMPORT ────────────────────────────────────────────────────────────────────
+// ─── CSV YARDIMCILARI (Türkçe format: tırnaklı alan, binlik nokta, ondalık virgül) ──
+function parseCsvText(text) {
+  const rows = [];
+  let row = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQ = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === ';') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(cell => String(cell).trim() !== ''));
+}
+
+function _csvNormKey(s) {
+  return String(s).toLocaleLowerCase('tr').replace(/[^a-zçğıöşü0-9]/g, '');
+}
+
+function mapCsvHeader(h) {
+  const k = _csvNormKey(h);
+  if (!k) return '';
+  if (/tarih|tarıh/.test(k)) return 'tarih';
+  if (/öğr|ogrenci|öğrenci/.test(k)) return 'ogrenci';
+  if (/tür[üu]|ad[ıi]$/.test(k)) return 'yemek_adi';
+  if (/fire/.test(k)) return 'fire';
+  if (/turnike/.test(k)) return 'turnike';
+  if (/porsiyon/.test(k)) return 'porsiyon';
+  if (/atık|atik/.test(k)) return 'atik';
+  if (/harcama/.test(k)) return 'harcama_tutari';
+  if (/personel|pers/.test(k)) return 'personel';
+  if (/toplam/.test(k)) return 'toplam';
+  if (/üretilen|uretilen|üretim|uretim/.test(k)) return 'yemek';
+  return '';
+}
+
+function parseTrNum(v) {
+  if (v === undefined || v === null) return 0;
+  let s = String(v).trim();
+  if (!s || s === '-') return 0;
+  const neg = /^-/.test(s);
+  s = s.replace(/^-/, '').replace(/[^\d.,]/g, '');
+  // 1.283 veya 1.283,50 -> binlik ayraç noktalarını kaldır
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '');
+  s = s.replace(',', '.');
+  const n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return neg ? -n : n;
+}
+
 function triggerImport() {
   document.getElementById('importInput').click();
 }
@@ -4526,77 +4584,69 @@ function handleImport(e) {
         imported = JSON.parse(content);
         if (!Array.isArray(imported)) imported = [imported];
       } else if (file.name.endsWith('.csv')) {
-        const lines = content.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
-        // Delimiter detection: comma or semicolon
-        const firstLine = lines[0];
-        const delim = firstLine.includes(';') ? ';' : ',';
-        const headers = firstLine.split(delim).map(h => h.replace(/^"|"$/g, '').trim());
-        const fieldMap = {
-          'Tarih': 'tarih', 'Üretilen Yemek Sayısı': 'yemek', 'Üretilen Yemek': 'yemek',
-          '%10 Fire': 'fire', '%10 fire': 'fire', 'Fire': 'fire',
-          'Turnike Geçiş Sayısı': 'turnike', 'Turnike Geçiş': 'turnike', 'Turnike': 'turnike',
-          'Yemekhanede Çalışan Personel Sayısı': 'personel', 'Pers. Sayısı': 'personel',
-          'Toplam Geçiş': 'toplam', 'Toplam Geçiş Sayısı': 'toplam', 'Toplam': 'toplam',
-          'Porsiyon Miktarı (gr)': 'porsiyon', 'Porsiyon (gr)': 'porsiyon', 'Porsiyon': 'porsiyon',
-          'Atık Miktarı (kg)': 'atik', 'Atık (kg)': 'atik', 'Atık': 'atik',
-          'Yemek Hiz. Yar. Öğr. Sayısı': 'ogrenci', 'Öğrenci Sayısı': 'ogrenci',
-          'Yemek Türü': 'yemek_adi', 'Yemek Adı': 'yemek_adi',
-          'Harcama Tutarı (₺)': 'harcama_tutari', 'Harcama Tutarı': 'harcama_tutari',
-          'tarih': 'tarih', 'yemek': 'yemek', 'fire': 'fire', 'turnike': 'turnike',
-          'personel': 'personel', 'toplam': 'toplam', 'porsiyon': 'porsiyon',
-          'atik': 'atik', 'ogrenci': 'ogrenci', 'harcama_tutari': 'harcama_tutari', 'yemek_adi': 'yemek_adi'
-        };
-        function parseNum(v) {
-          if (!v) return 0;
-          v = String(v).trim().replace(/"/g, '');
-          return Number(v.replace(',', '.')) || 0;
-        }
-        for (let i = 1; i < lines.length; i++) {
-          const vals = lines[i].split(delim).map(v => v.replace(/^"|"$/g, '').trim());
+        const rows = parseCsvText(content);
+        if (rows.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
+        const headers = rows[0].map(mapCsvHeader);
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i];
           const row = {};
-          headers.forEach((h, idx) => {
-            const field = fieldMap[h] || h;
-            row[field] = vals[idx] || '';
+          headers.forEach((field, idx) => {
+            if (!field) return;
+            row[field] = (cells[idx] !== undefined ? String(cells[idx]) : '').trim();
           });
-          if (row.tarih) {
-            row.tarih = normalizeDate(row.tarih);
-            row.id = Date.now() + i;
-            row.yemek = parseNum(row.yemek);
-            row.fire = parseNum(row.fire);
-            row.turnike = parseNum(row.turnike);
-            row.personel = parseNum(row.personel);
-            row.toplam = parseNum(row.toplam);
-            row.porsiyon = parseNum(row.porsiyon);
-            row.atik = parseNum(row.atik);
-            row.ogrenci = parseNum(row.ogrenci);
-            row.harcama_tutari = parseNum(row.harcama_tutari);
-            imported.push(row);
-          }
+          const tarih = normalizeDate(row.tarih || '');
+          if (!tarih) continue;
+          const rec = {
+            yemek: parseTrNum(row.yemek),
+            fire: parseTrNum(row.fire),
+            turnike: parseTrNum(row.turnike),
+            personel: parseTrNum(row.personel),
+            toplam: parseTrNum(row.toplam),
+            porsiyon: parseTrNum(row.porsiyon),
+            ogrenci: parseTrNum(row.ogrenci)
+          };
+          rec.tarih = tarih;
+          // Atik: dosyada varsa aynen al (kaynak sadakati), yoksa formulle hesapla
+          rec.atik = (row.atik !== undefined && row.atik !== '')
+            ? parseTrNum(row.atik)
+            : Math.round((rec.fire - rec.toplam) * rec.porsiyon) / 1000;
+          rec.harcama_tutari = (row.harcama_tutari !== undefined && row.harcama_tutari !== '')
+            ? parseTrNum(row.harcama_tutari)
+            : rec.ogrenci * getOgrenciBasiHarcamaOrani();
+          rec.yemek_adi = row.yemek_adi || '';
+          rec.id = Date.now() + i;
+          imported.push(rec);
         }
       } else {
         throw new Error('Desteklenen dosya türleri: .csv, .json');
       }
       if (imported.length === 0) {
-        showToast('İçe aktarılacak kayıt bulunamadı.', 'error');
+        showToast('İçe aktarılacak geçerli kayıt bulunamadı.', 'error');
         return;
       }
-      // Mevcut kayıtlara ekle (çakışma kontrolü yapmadan)
-      const existingIds = new Set(records.map(r => r.id));
-      const newRecords = [];
-      imported.forEach(r => {
-        if (r.id && existingIds.has(r.id)) {
-          r.id = Date.now() + Math.floor(Math.random() * 10000);
-        }
-        newRecords.push(r);
+      // Cift kayit korumasi: ayni tarih + uretim + turnike + yemek adi varsa atla
+      const mevcutAnahtarlar = new Set(records.map(r => (r.tarih || '') + '|' + r.yemek + '|' + r.turnike + '|' + (r.yemek_adi || '')));
+      const yeniKayitlar = [];
+      let atlanan = 0, nextId = Date.now();
+      imported.forEach(function(r) {
+        const anahtar = (r.tarih || '') + '|' + r.yemek + '|' + r.turnike + '|' + (r.yemek_adi || '');
+        if (mevcutAnahtarlar.has(anahtar)) { atlanan++; return; }
+        while (records.some(x => x.id === nextId)) nextId++;
+        r.id = nextId++;
+        mevcutAnahtarlar.add(anahtar);
+        yeniKayitlar.push(r);
       });
-      records.push(...newRecords);
+      records.push(...yeniKayitlar);
       records.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
       saveData();
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+      if (yeniKayitlar.length > 0) {
+        showToast(yeniKayitlar.length + ' kayıt eklendi' + (atlanan > 0 ? ' (' + atlanan + ' kayıt zaten mevcut, atlandı)' : '') + '.', 'success');
+      } else {
+        showToast('Tüm kayıtlar zaten mevcut, hiçbir şey eklenmedi.', 'error');
+      }
     } catch (err) {
       showToast('İçe aktarma hatası: ' + err.message, 'error');
     }
