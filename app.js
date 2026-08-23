@@ -3857,8 +3857,18 @@ function exportChartsWord() {
       if (!chart) return;
       idx++;
       const name = 'grafik_' + idx + '.png';
+      // Word CSS'i güvenilir uygulamadigi icin resimlere acik width/height veriyoruz (A4 yatay sayfaya sigacak)
+      const w0 = canvas.width || 800, h0 = canvas.height || 400;
+      const oran = w0 / h0;
+      let dispW;
+      if (oran > 0.85 && oran < 1.2 && w0 <= 600) {
+        dispW = Math.min(360, w0); // kucuk kare/donut grafikler buyutulmez
+      } else {
+        dispW = Math.round(w0 * Math.min(1000 / w0, 580 / h0));
+      }
+      const dispH = Math.round(dispW * h0 / w0);
       images.push({ name: name, base64: _chartWhitePng(canvas).split(',')[1] });
-      cards.push('<div class="kart"><h2>' + escapeHtml(_chartTitle(canvas)) + '</h2><img src="' + name + '" alt="" /></div>');
+      cards.push('<div class="kart"><h2>' + escapeHtml(_chartTitle(canvas)) + '</h2><img src="' + name + '" width="' + dispW + '" height="' + dispH + '" alt="" /></div>');
       hadAny = true;
     });
     if (cards.length) blocks.push('<h1>' + escapeHtml(sec.label) + '</h1>' + cards.join(''));
@@ -3870,17 +3880,19 @@ function exportChartsWord() {
     '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">' +
     '<head><meta charset="utf-8"><title>Grafikler - Atik Kontrol</title>' +
     '<style>' +
+    '@page WordSection1{size:841.95pt 595.35pt;margin:36pt;mso-page-orientation:landscape}' +
+    'div.WordSection1{page:WordSection1}' +
     'body{font-family:Arial,sans-serif;font-size:11pt;color:#1e293b}' +
     'h1{font-size:14pt;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:3pt;margin:16pt 0 8pt}' +
     '.kart{page-break-inside:avoid;margin-bottom:14pt}' +
     '.kart h2{font-size:12pt;margin:0 0 6pt;color:#334155}' +
-    '.kart img{width:640px;height:auto;border:1px solid #e2e8f0}' +
+    '.kart img{border:1px solid #e2e8f0}' +
     '.tarih{font-size:9pt;color:#64748b;margin:4pt 0}' +
-    '</style></head><body>' +
+    '</style></head><body><div class="WordSection1">' +
     '<p class="tarih">Rapor Tarihi: ' + bugun + '</p>' +
     blocks.join('') +
     '<p class="tarih">Atık Kontrol Yönetim Sistemi &bull; ' + bugun + '</p>' +
-    '</body></html>';
+    '</div></body></html>';
 
   const boundary = '----=_NextPart_ATIK_' + Date.now();
   const locBase = 'file:///C:/ATIK_GRAFIKLER/';

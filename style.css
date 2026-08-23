@@ -3243,3 +3243,20 @@ input.production-input:focus {
 }
 .chart-dl-btn svg { width: 13px; height: 13px; }
 .chart-subheader .chart-dl-btn { margin-left: auto; }
+
+
+/* Ust bar BHYS logosu (giris ekranindaki ayni stil, koyu zemin icin parlak) */
+.bhys-badge {
+  font-family: 'Orbitron', 'Inter', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  line-height: 1;
+  background: linear-gradient(120deg, #93c5fd, #38bdf8 45%, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(56,189,248,0.45));
+  cursor: default;
+  user-select: none;
+}
