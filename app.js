@@ -10905,6 +10905,38 @@ function printKalibrasyonList() {
   triggerPrint(win);
 }
 
+// ─── YUKARI ÇIK BUTONU ──────────────────────────────────────────────────────
+(function() {
+  function getScroller() {
+    var active = document.querySelector('.tab-content.active');
+    if (active && active.scrollHeight > active.clientHeight) return active;
+    return document.querySelector('.main-content');
+  }
+  function getScrollTop() {
+    var sc = getScroller();
+    if (!sc) return window.pageYOffset || document.documentElement.scrollTop || 0;
+    return sc.scrollTop || 0;
+  }
+  function updateBtn() {
+    var btn = document.getElementById('scrollTopBtn');
+    if (!btn) return;
+    btn.classList.toggle('visible', getScrollTop() > 240);
+  }
+  window.scrollToTopApp = function() {
+    var sc = getScroller();
+    if (sc) sc.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    var btn = document.getElementById('scrollTopBtn');
+    if (btn) btn.classList.remove('visible');
+  };
+  // capture=true: iç konteynerlerin scroll olaylarını da yakalar
+  document.addEventListener('scroll', updateBtn, true);
+  window.addEventListener('scroll', updateBtn);
+  document.addEventListener('click', function() { setTimeout(updateBtn, 400); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateBtn);
+  else updateBtn();
+})();
+
 
 
 
