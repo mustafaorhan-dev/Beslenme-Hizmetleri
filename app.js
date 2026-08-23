@@ -6547,36 +6547,42 @@ function renderChartYearFilter() {
 }
 
 // ─── YILLIK KARŞILAŞTIRMA TAB ───────────────────────────────────────────────
+function getEffectiveYillikYears() {
+  const years = getAvailableYears();
+  const latest = years.length > 0 ? Number(years[years.length - 1]) : new Date().getFullYear();
+  const sel = Number(yillikYearFilter) > 0 ? Number(yillikYearFilter) : latest;
+  let prev = Number(yillikPrevYearFilter) > 0 ? Number(yillikPrevYearFilter) : sel - 1;
+  if (prev === sel) prev = sel - 1;
+  return { sel: sel, prev: prev };
+}
+
 function renderYillikYearFilter() {
   const container = document.getElementById('yillikYearFilter');
   if (!container) return;
   const years = getAvailableYears();
-  if (years.length > 0 && years.indexOf(Number(yillikYearFilter)) === -1) {
-    yillikYearFilter = String(years[years.length - 1]);
-  }
-  const selN = Number(yillikYearFilter);
-  // Karşılaştırılan yıl: kullanıcı seçmediyse otomatik olarak bir önceki yıl
-  const prevN = yillikPrevYearFilter === '' ? selN - 1 : Number(yillikPrevYearFilter);
-  function yearOptions(selectedVal) {
-    let h = '';
+  const eff = getEffectiveYillikYears();
+  function yearOptions(rawVal, disableVal) {
+    let h = '<option value=""' + (rawVal === '' ? ' selected' : '') + '>Seçiniz</option>';
     years.forEach(function(y) {
-      const s = Number(selectedVal) === Number(y) ? ' selected' : '';
-      h += '<option value="' + y + '"' + s + '>' + y + '</option>';
+      const s = rawVal !== '' && Number(rawVal) === Number(y) ? ' selected' : '';
+      const dis = disableVal !== undefined && disableVal !== null && Number(y) === Number(disableVal) ? ' disabled' : '';
+      h += '<option value="' + y + '"' + s + dis + '>' + y + '</option>';
     });
     return h;
   }
   const selectStyle = 'padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)';
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
   html += '<label style="font-size:0.8rem;color:var(--text-muted)">1. Yıl:</label>';
-  html += '<select onchange="setYillikYear(this.value)" style="' + selectStyle + '">' + yearOptions(selN) + '</select>';
+  html += '<select onchange="setYillikYear(this.value)" style="' + selectStyle + '">' + yearOptions(yillikYearFilter, null) + '</select>';
   html += '<span style="font-size:0.85rem;font-weight:700;color:var(--text-muted)">vs</span>';
   html += '<label style="font-size:0.8rem;color:var(--text-muted)">2. Yıl:</label>';
-  html += '<select onchange="setYillikPrevYear(this.value)" style="' + selectStyle + '">' + yearOptions(prevN) + '</select>';
+  html += '<select onchange="setYillikPrevYear(this.value)" style="' + selectStyle + '">' + yearOptions(yillikPrevYearFilter, eff.sel) + '</select>';
   html += '</div>';
   container.innerHTML = html;
 }
 
 function setYillikYear(year) {
+  if (year === '') return;
   yillikYearFilter = String(year);
   yillikPrevYearFilter = '';
   renderYillikYearFilter();
@@ -6584,6 +6590,13 @@ function setYillikYear(year) {
 }
 
 function setYillikPrevYear(year) {
+  if (year === '') return;
+  const eff = getEffectiveYillikYears();
+  if (Number(year) === eff.sel) {
+    showToast('1. ve 2. yıl aynı olamaz. Farklı bir yıl seçin.', 'error');
+    renderYillikYearFilter();
+    return;
+  }
   yillikPrevYearFilter = String(year);
   renderYillikYearFilter();
   renderYearlyCharts();
@@ -6591,8 +6604,9 @@ function setYillikPrevYear(year) {
 
 function renderYearlyCharts() {
   renderYillikYearFilter();
-  var sel = Number(yillikYearFilter);
-  var prev = yillikPrevYearFilter === '' ? sel - 1 : Number(yillikPrevYearFilter);
+  var eff = getEffectiveYillikYears();
+  var sel = eff.sel;
+  var prev = eff.prev;
   var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 
   function buildYear(year) {
