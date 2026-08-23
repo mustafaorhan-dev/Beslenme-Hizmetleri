@@ -3730,6 +3730,7 @@ function exportChartsPDF() {
       .chart-empty { font-size: 0.8rem; color: #999; text-align: center; padding: 2rem; }
       .chart-year-filter { display: none; }
       .toolbar-actions { display: none; }
+      .chart-dl-btn { display: none !important; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       ${harcamaHiddenCss()}
     </style>
@@ -3742,6 +3743,178 @@ function exportChartsPDF() {
   printWin.document.close();
   printWin.focus();
   triggerPrint(printWin);
+}
+
+// ─── GRAFİK PNG İNDİRME & WORD'E AKTARMA ─────────────────────────────────────
+const CHART_DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+function _chartHeaderEl(canvas) {
+  const area = canvas.closest('.chart-area') || canvas.parentElement;
+  if (!area) return null;
+  let el = area.previousElementSibling;
+  while (el) {
+    if (el.classList.contains('section-header') || el.classList.contains('chart-subheader')) return el;
+    el = el.previousElementSibling;
+  }
+  const card = canvas.closest('.chart-card') || canvas.closest('.section-card');
+  return card ? card.querySelector('.section-header, .chart-subheader') : null;
+}
+
+function _chartTitle(canvas) {
+  const header = _chartHeaderEl(canvas);
+  if (!header) return 'Grafik';
+  const clone = header.cloneNode(true);
+  clone.querySelectorAll('.chart-dl-btn, .badge, .chart-total, .chart-subhint').forEach(function(n) { n.remove(); });
+  return (clone.textContent || 'Grafik').replace(/\s+/g, ' ').trim() || 'Grafik';
+}
+
+function _chartWhitePng(canvas) {
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width || 600;
+  tmp.height = canvas.height || 400;
+  const ctx = tmp.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, tmp.width, tmp.height);
+  ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+  return tmp.toDataURL('image/png');
+}
+
+function downloadChartPNG(canvas) {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const chart = window.Chart && Chart.getChart ? Chart.getChart(canvas) : null;
+  if (!chart) { showToast('Bu grafikte henüz veri yok.', 'error'); return; }
+  const title = _chartTitle(canvas);
+  const safeName = title.replace(/[\\/:*?"<>|]/g, '_').substring(0, 60).trim() || 'grafik';
+  const a = document.createElement('a');
+  a.href = _chartWhitePng(canvas);
+  a.download = safeName + '_' + new Date().toISOString().slice(0, 10) + '.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('"' + title + '" PNG olarak indirildi.', 'success');
+}
+
+function injectChartDownloadButtons() {
+  document.querySelectorAll('canvas[id^="canvas"]').forEach(function(canvas) {
+    if (canvas.classList.contains('kpi-sparkline')) return;
+    const header = _chartHeaderEl(canvas);
+    if (!header || header.querySelector('.chart-dl-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-outline btn-sm chart-dl-btn';
+    btn.title = 'Grafiği PNG olarak indir';
+    btn.setAttribute('aria-label', 'Grafiği PNG olarak indir');
+    btn.innerHTML = CHART_DL_ICON + '<span>PNG İndir</span>';
+    btn.addEventListener('click', function(e) { e.stopPropagation(); downloadChartPNG(canvas); });
+    header.appendChild(btn);
+  });
+}
+
+function _qpEncodeAscii(str) {
+  let out = '', lineLen = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i], code = str.charCodeAt(i);
+    if (ch === '\r' || ch === '\n') { out += ch; lineLen = 0; continue; }
+    let tok;
+    if (code === 61) tok = '=3D';
+    else if (code < 32 || code > 126) tok = '=' + code.toString(16).toUpperCase().padStart(2, '0');
+    else tok = ch;
+    if (lineLen + tok.length > 74) { out += '=\r\n'; lineLen = 0; }
+    out += tok;
+    lineLen += tok.length;
+  }
+  return out;
+}
+
+function _wrapBase64(b64) {
+  return b64.replace(/(.{76})/g, '$1\r\n');
+}
+
+function _toAsciiHtml(html) {
+  return html.replace(/[\u0080-\uFFFF]/g, function(ch) { return '&#' + ch.codePointAt(0) + ';'; });
+}
+
+function exportChartsWord() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const sections = [
+    { sel: '#content-charts', label: 'Aylık Grafikler' },
+    { sel: '#content-yillik', label: 'Yıllık Grafikler' },
+    { sel: '#content-harcama', label: 'Harcama Grafikleri' },
+    { sel: '#content-yag', label: 'Atık Yağı Grafikleri' },
+    { sel: '#content-ambalaj', label: 'Ambalaj Atığı Grafikleri' }
+  ];
+  const images = [];
+  const blocks = [];
+  let idx = 0, hadAny = false;
+  sections.forEach(function(sec) {
+    const root = document.querySelector(sec.sel);
+    if (!root) return;
+    const cards = [];
+    root.querySelectorAll('canvas[id^="canvas"]').forEach(function(canvas) {
+      if (canvas.classList.contains('kpi-sparkline')) return;
+      if (canvas.style.display === 'none') return;
+      const chart = window.Chart && Chart.getChart ? Chart.getChart(canvas) : null;
+      if (!chart) return;
+      idx++;
+      const name = 'grafik_' + idx + '.png';
+      images.push({ name: name, base64: _chartWhitePng(canvas).split(',')[1] });
+      cards.push('<div class="kart"><h2>' + escapeHtml(_chartTitle(canvas)) + '</h2><img src="' + name + '" alt="" /></div>');
+      hadAny = true;
+    });
+    if (cards.length) blocks.push('<h1>' + escapeHtml(sec.label) + '</h1>' + cards.join(''));
+  });
+  if (!hadAny) { showToast('Dışa aktarılacak dolu grafik bulunamadı.', 'error'); return; }
+
+  const bugun = new Date().toLocaleDateString('tr-TR');
+  const html =
+    '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">' +
+    '<head><meta charset="utf-8"><title>Grafikler - Atik Kontrol</title>' +
+    '<style>' +
+    'body{font-family:Arial,sans-serif;font-size:11pt;color:#1e293b}' +
+    'h1{font-size:14pt;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:3pt;margin:16pt 0 8pt}' +
+    '.kart{page-break-inside:avoid;margin-bottom:14pt}' +
+    '.kart h2{font-size:12pt;margin:0 0 6pt;color:#334155}' +
+    '.kart img{width:640px;height:auto;border:1px solid #e2e8f0}' +
+    '.tarih{font-size:9pt;color:#64748b;margin:4pt 0}' +
+    '</style></head><body>' +
+    '<p class="tarih">Rapor Tarihi: ' + bugun + '</p>' +
+    blocks.join('') +
+    '<p class="tarih">Atık Kontrol Yönetim Sistemi &bull; ' + bugun + '</p>' +
+    '</body></html>';
+
+  const boundary = '----=_NextPart_ATIK_' + Date.now();
+  const locBase = 'file:///C:/ATIK_GRAFIKLER/';
+  let mht =
+    'From: "Atik Kontrol Yonetim Sistemi" <rapor@local>\r\n' +
+    'Subject: Grafikler - Atik Kontrol\r\n' +
+    'Date: ' + new Date().toUTCString() + '\r\n' +
+    'MIME-Version: 1.0\r\n' +
+    'Content-Type: multipart/related; type="text/html"; boundary="' + boundary + '"\r\n\r\n' +
+    'Bu bir MIME formatli birlesik belgedir.\r\n\r\n' +
+    '--' + boundary + '\r\n' +
+    'Content-Type: text/html; charset="utf-8"\r\n' +
+    'Content-Transfer-Encoding: quoted-printable\r\n' +
+    'Content-Location: ' + locBase + 'grafikler.html\r\n\r\n' +
+    _qpEncodeAscii(_toAsciiHtml(html)) + '\r\n';
+  images.forEach(function(img) {
+    mht += '--' + boundary + '\r\n' +
+      'Content-Type: image/png\r\n' +
+      'Content-Transfer-Encoding: base64\r\n' +
+      'Content-Location: ' + locBase + img.name + '\r\n\r\n' +
+      _wrapBase64(img.base64) + '\r\n';
+  });
+  mht += '--' + boundary + '--\r\n';
+
+  const blob = new Blob([mht], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Grafikler_' + new Date().toISOString().slice(0, 10) + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
+  showToast(idx + ' grafik Word belgesine aktarıldı.', 'success');
 }
 
 function exportYillikPDF() {
@@ -3795,6 +3968,7 @@ function exportYillikPDF() {
       .chart-empty { font-size: 0.8rem; color: #999; text-align: center; padding: 2rem; }
       .chart-year-filter { display: none; }
       .toolbar-actions { display: none; }
+      .chart-dl-btn { display: none !important; }
       .comparison-grid { font-size: 0.8rem; }
       .comparison-item { display: flex; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px solid #eee; }
       .comparison-label { flex: 1; font-weight: 600; }
@@ -7041,6 +7215,9 @@ function drawAllCharts() {
     if (aylikSicaklikEmpty) aylikSicaklikEmpty.style.display = 'block';
     if (aylikSicaklikCanvas) aylikSicaklikCanvas.style.display = 'none';
   }
+
+  // Her grafik kartına PNG indirme butonu ekle (yeni oluşturulan dinamik kartlar dahil)
+  try { injectChartDownloadButtons(); } catch(e) { console.warn('injectChartDownloadButtons error:', e); }
 
 }
 

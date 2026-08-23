@@ -1,4 +1,4 @@
-/* =============================================
+﻿/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - STYLESHEET
    ============================================= */
 
@@ -3229,3 +3229,17 @@ input.production-input:focus {
 }
 
 
+
+/* Grafik karti PNG indirme butonu */
+.chart-dl-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.chart-dl-btn svg { width: 13px; height: 13px; }
+.chart-subheader .chart-dl-btn { margin-left: auto; }
