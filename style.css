@@ -3247,6 +3247,10 @@ input.production-input:focus {
 
 /* Ust bar BHYS logosu (giris ekranindaki ayni stil, koyu zemin icin parlak) */
 .bhys-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-family: 'Orbitron', 'Inter', sans-serif;
   font-size: 1.05rem;
   font-weight: 900;
@@ -3259,4 +3263,9 @@ input.production-input:focus {
   filter: drop-shadow(0 0 10px rgba(56,189,248,0.45));
   cursor: default;
   user-select: none;
+  pointer-events: none;
+}
+.header { position: relative; }
+@media (max-width: 640px) {
+  .bhys-badge { display: none; }
 }
