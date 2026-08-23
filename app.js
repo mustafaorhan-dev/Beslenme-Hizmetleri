@@ -6627,6 +6627,8 @@ function renderYearlyCharts() {
   function makeYillikTotalDonut(canvasId, emptyId, color, thisTotal, prevTotal, unitLabel) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
+    var staleInstance = chartInstances.get(canvasId);
+    if (staleInstance) { try { staleInstance.destroy(); } catch (_) {} chartInstances.delete(canvasId); }
     var empty = document.getElementById(emptyId);
     if (thisTotal <= 0 && prevTotal <= 0) {
       if (empty) empty.style.display = 'block';
@@ -6710,6 +6712,8 @@ function renderYearlyCharts() {
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
     var canvas = document.getElementById(canvasId);
     if (!canvas) return;
+    var staleInstance = chartInstances.get(canvasId);
+    if (staleInstance) { try { staleInstance.destroy(); } catch (_) {} chartInstances.delete(canvasId); }
     var empty = document.getElementById(emptyId);
     var hasThis = thisData.some(function(v) { return getThis(v) > 0; });
     var hasPrev = prevData.some(function(v) { return getPrev(v) > 0; });
