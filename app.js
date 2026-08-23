@@ -244,6 +244,8 @@ let lastPollData = null;
 let chartYearFilter = String(new Date().getFullYear());
 let chartMonthFilter = 0;
 let yillikYearFilter = String(new Date().getFullYear());
+let yillikPrevYearFilter = '';
+let reportYearFilter = 0;
 function getAvailableYears() {
   const years = new Set();
   records.forEach(r => {
@@ -6340,8 +6342,37 @@ function formatTRY(val) {
 }
 
 // ─── REPORT ────────────────────────────────────────────────────────────────────
+function getReportData() {
+  if (!reportYearFilter) return records;
+  return records.filter(function(r) {
+    return r.tarih && new Date(r.tarih + 'T12:00:00').getFullYear() === Number(reportYearFilter);
+  });
+}
+
+function renderReportYearFilter() {
+  const container = document.getElementById('reportYearFilter');
+  if (!container) return;
+  const years = getAvailableYears();
+  let html = '<label style="font-size:0.8rem;color:var(--text-muted)">Yıl:</label>';
+  html += '<select onchange="setReportYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
+  html += '<option value="0"' + (Number(reportYearFilter) === 0 ? ' selected' : '') + '>Tümü</option>';
+  years.forEach(function(y) {
+    const sel = Number(reportYearFilter) === Number(y) ? ' selected' : '';
+    html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
+  });
+  html += '</select>';
+  container.innerHTML = html;
+}
+
+function setReportYear(v) {
+  reportYearFilter = Number(v) || 0;
+  renderReport();
+}
+
 function renderReport() {
-  const n = records.length;
+  renderReportYearFilter();
+  const data = getReportData();
+  const n = data.length;
 
   if (n === 0) {
     ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
@@ -6352,28 +6383,29 @@ function renderReport() {
     document.getElementById('reportTbody').innerHTML = '';
     const avgPorItem = document.getElementById('rAvgPorsiyonItem');
     if (avgPorItem) avgPorItem.style.display = '';
+    renderWasteByFoodType(data);
     return;
   }
 
-  const totalYemek = records.reduce((s,r) => s+(r.yemek||0), 0);
-  const totalTurnike = records.reduce((s,r) => s+(r.turnike||0), 0);
-  const totalPersonel = records.reduce((s,r) => s+(r.personel||0), 0);
-  const totalGecis = records.reduce((s,r) => s+(r.toplam||0), 0);
-  const porsiyonUretimKayitlari = records.filter(r => (r.yemek||0) > 0);
+  const totalYemek = data.reduce((s,r) => s+(r.yemek||0), 0);
+  const totalTurnike = data.reduce((s,r) => s+(r.turnike||0), 0);
+  const totalPersonel = data.reduce((s,r) => s+(r.personel||0), 0);
+  const totalGecis = data.reduce((s,r) => s+(r.toplam||0), 0);
+  const porsiyonUretimKayitlari = data.filter(r => (r.yemek||0) > 0);
   const avgPorsiyon = porsiyonUretimKayitlari.length ? porsiyonUretimKayitlari.reduce((s,r) => s+(r.porsiyon||0), 0) / porsiyonUretimKayitlari.length : 0;
   const porsiyonFarklari = porsiyonUretimKayitlari.filter(r => (r.porsiyon||0) !== 400);
-  const totalAtik = records.reduce((s,r) => s+(r.atik||0), 0);
-  const totalOgrenci = records.reduce((s,r) => s+(r.ogrenci||0), 0);
-  const atikValues = records.map(r => r.atik || 0);
+  const totalAtik = data.reduce((s,r) => s+(r.atik||0), 0);
+  const totalOgrenci = data.reduce((s,r) => s+(r.ogrenci||0), 0);
+  const atikValues = data.map(r => r.atik || 0);
   const maxAtik = Math.max(...atikValues);
   const minAtik = Math.min(...atikValues);
-  const maxAtikRec = records.find(r => (r.atik||0) === maxAtik);
-  const minAtikRec = records.find(r => (r.atik||0) === minAtik);
+  const maxAtikRec = data.find(r => (r.atik||0) === maxAtik);
+  const minAtikRec = data.find(r => (r.atik||0) === minAtik);
   const maxAtikDate = maxAtikRec ? displayDate(maxAtikRec.tarih) : '';
   const minAtikDate = minAtikRec ? displayDate(minAtikRec.tarih) : '';
 
   // Trend: son 7 gün vs önceki 7 gün
-  const sortedByDate = [...records].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+  const sortedByDate = [...data].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   const last7 = sortedByDate.slice(0, 7);
   const prev7 = sortedByDate.slice(7, 14);
   const avgAtikLast7 = last7.length ? last7.reduce((s, r) => s+(r.atik||0), 0) / last7.length : 0;
@@ -6385,7 +6417,7 @@ function renderReport() {
 
   // Haftalık Geçiş Hesaplama
   const weeklyGecis = {};
-  records.forEach(r => {
+  data.forEach(r => {
     const d = new Date(r.tarih + 'T12:00:00');
     // Haftanın başını (Pazartesi) bul
     const day = d.getDay();
@@ -6447,16 +6479,17 @@ function renderReport() {
   }
 
   const reportTbody = document.getElementById('reportTbody');
-  reportTbody.innerHTML = records.map(r => buildReportRow(r)).join('');
+  reportTbody.innerHTML = data.map(r => buildReportRow(r)).join('');
 
-  renderWasteByFoodType();
+  renderWasteByFoodType(data);
 }
 
-function renderWasteByFoodType() {
+function renderWasteByFoodType(list) {
   const section = document.getElementById('wasteByFoodType');
   const body = document.getElementById('wasteByFoodTypeBody');
   if (!section || !body) return;
-  const filtered = records.filter(r => r.yemek_adi && r.yemek_adi.trim());
+  const source = Array.isArray(list) ? list : records;
+  const filtered = source.filter(r => r.yemek_adi && r.yemek_adi.trim());
   if (filtered.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   const groups = {};
@@ -6521,21 +6554,37 @@ function renderYillikYearFilter() {
   if (years.length > 0 && years.indexOf(Number(yillikYearFilter)) === -1) {
     yillikYearFilter = String(years[years.length - 1]);
   }
+  const selN = Number(yillikYearFilter);
+  // Karşılaştırılan yıl: kullanıcı seçmediyse otomatik olarak bir önceki yıl
+  const prevN = yillikPrevYearFilter === '' ? selN - 1 : Number(yillikPrevYearFilter);
+  function yearOptions(selectedVal) {
+    let h = '';
+    years.forEach(function(y) {
+      const s = Number(selectedVal) === Number(y) ? ' selected' : '';
+      h += '<option value="' + y + '"' + s + '>' + y + '</option>';
+    });
+    return h;
+  }
+  const selectStyle = 'padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)';
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
-  html += '<label style="font-size:0.8rem;color:var(--text-muted)">Karşılaştırma Yılı:</label>';
-  html += '<select onchange="setYillikYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
-  years.forEach(function(y) {
-    var sel = yillikYearFilter === String(y) ? ' selected' : '';
-    html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
-  });
-  html += '</select>';
-  html += '<span style="font-size:0.8rem;color:var(--text-muted);margin-left:4px">' + Number(yillikYearFilter) + ' vs ' + (Number(yillikYearFilter) - 1) + '</span>';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">1. Yıl:</label>';
+  html += '<select onchange="setYillikYear(this.value)" style="' + selectStyle + '">' + yearOptions(selN) + '</select>';
+  html += '<span style="font-size:0.85rem;font-weight:700;color:var(--text-muted)">vs</span>';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">2. Yıl:</label>';
+  html += '<select onchange="setYillikPrevYear(this.value)" style="' + selectStyle + '">' + yearOptions(prevN) + '</select>';
   html += '</div>';
   container.innerHTML = html;
 }
 
 function setYillikYear(year) {
   yillikYearFilter = String(year);
+  yillikPrevYearFilter = '';
+  renderYillikYearFilter();
+  renderYearlyCharts();
+}
+
+function setYillikPrevYear(year) {
+  yillikPrevYearFilter = String(year);
   renderYillikYearFilter();
   renderYearlyCharts();
 }
@@ -6543,7 +6592,7 @@ function setYillikYear(year) {
 function renderYearlyCharts() {
   renderYillikYearFilter();
   var sel = Number(yillikYearFilter);
-  var prev = sel - 1;
+  var prev = yillikPrevYearFilter === '' ? sel - 1 : Number(yillikPrevYearFilter);
   var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 
   function buildYear(year) {
@@ -6612,13 +6661,13 @@ function renderYearlyCharts() {
     var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
     if (legendEl) {
       legendEl.innerHTML =
-        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + ' (Bu Yıl)<span class="val" style="color:' + color + '">' + curTxt + '</span></div>' +
-        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '66"></span>' + prev + ' (Geçen Yıl)<span class="val" style="color:' + color + '">' + prevTxt + '</span></div>';
+        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + '<span class="val" style="color:' + color + '">' + curTxt + '</span></div>' +
+        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '66"></span>' + prev + '<span class="val" style="color:' + color + '">' + prevTxt + '</span></div>';
     }
     var chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: [sel + ' (Bu Yıl)', prev + ' (Geçen Yıl)'],
+        labels: [String(sel), String(prev)],
         datasets: [{
           data: [thisTotal, prevTotal],
           backgroundColor: [color, color + '55'],
@@ -6692,7 +6741,7 @@ function renderYearlyCharts() {
         labels: monthLabels,
         datasets: [
           {
-            label: sel + ' (Bu Yıl)',
+            label: String(sel),
             data: thisArr,
             backgroundColor: metricColor,
             borderColor: metricColor,
@@ -6703,7 +6752,7 @@ function renderYearlyCharts() {
             maxBarThickness: 60,
           },
           {
-            label: prev + ' (Geçen Yıl)',
+            label: String(prev),
             data: prevArr,
             backgroundColor: metricColor + '35',
             borderColor: metricColor,
@@ -6759,7 +6808,7 @@ function renderYearlyCharts() {
               var d = new Date(r.tarih + 'T12:00:00');
               return !isNaN(d) && d.getFullYear() === sel && d.getMonth() === m;
             });
-            if (recs.length > 0) showChartDetailModal(monthLabels[m] + ' ' + sel + ' (Bu Yıl)', recs);
+            if (recs.length > 0) showChartDetailModal(monthLabels[m] + ' ' + sel, recs);
           }
         }
       },

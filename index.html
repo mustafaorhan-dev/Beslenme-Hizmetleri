@@ -608,6 +608,7 @@
       <div class="section-card">
         <div class="section-header">
           <h2>Özet Rapor</h2>
+          <div id="reportYearFilter" style="display:flex;gap:6px;align-items:center;margin-left:auto"></div>
           <div style="display:flex;gap:0.5rem">
             <button class="btn btn-primary btn-sm" onclick="exportPDF()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -1344,7 +1345,7 @@
             <div class="chart-empty" id="chartDonutUretimEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
           <div class="donut-legend" id="donutLegendUretim"></div>
-          <div class="chart-note">Yıl toplamı - seçilen yıl vs geçen yıl (porsiyon)</div>
+          <div class="chart-note">Yıl toplamı - 1. yıl vs 2. yıl (porsiyon)</div>
         </div>
 
         <!-- TOPLAM BAR: YARARLANAN TOPLAM KİŞİ -->
@@ -1357,7 +1358,7 @@
             <div class="chart-empty" id="chartDonutTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
           <div class="donut-legend" id="donutLegendTurnike"></div>
-          <div class="chart-note">Yıl toplamı - seçilen yıl vs geçen yıl (toplam kişi)</div>
+          <div class="chart-note">Yıl toplamı - 1. yıl vs 2. yıl (toplam kişi)</div>
         </div>
 
         <!-- TOPLAM BAR: ÖĞRENCİ -->
@@ -1370,7 +1371,7 @@
             <div class="chart-empty" id="chartDonutOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
           <div class="donut-legend" id="donutLegendOgrenci"></div>
-          <div class="chart-note">Yıl toplamı - seçilen yıl vs geçen yıl (öğrenci)</div>
+          <div class="chart-note">Yıl toplamı - 1. yıl vs 2. yıl (öğrenci)</div>
         </div>
 
         <!-- TOPLAM BAR: ATIK -->
@@ -1383,11 +1384,11 @@
             <div class="chart-empty" id="chartDonutAtikEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
           <div class="donut-legend" id="donutLegendAtik"></div>
-          <div class="chart-note">Yıl toplamı - seçilen yıl vs geçen yıl (kg)</div>
+          <div class="chart-note">Yıl toplamı - 1. yıl vs 2. yıl (kg)</div>
         </div>
       </div>
 
-      <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">Seçilen yıl, bir önceki yılla aylık bazda karşılaştırılır. Düz çubuk = seçilen yıl, kesikli çubuk = geçen yıl. Bar'a tıklayınca o ayın kayıtları açılır.</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">İki yıl serbestçe seçilebilir. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. Bar'a tıklayınca o ayın kayıtları açılır.</div>
 
       <div class="charts-grid">
 
@@ -1400,7 +1401,7 @@
             <canvas id="canvasYillikUretim"></canvas>
             <div class="chart-empty" id="chartYillikUretimEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-          <div class="chart-note">Seçilen yıl vs geçen yıl - üretilen yemek sayısı (porsiyon)</div>
+          <div class="chart-note">1. yıl vs 2. yıl - üretilen yemek sayısı (porsiyon)</div>
         </div>
 
         <!-- TURNIKE -->
@@ -1412,7 +1413,7 @@
             <canvas id="canvasYillikTurnike"></canvas>
             <div class="chart-empty" id="chartYillikTurnikeEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-          <div class="chart-note">Seçilen yıl vs geçen yıl - turnike geçiş sayısı</div>
+          <div class="chart-note">1. yıl vs 2. yıl - turnike geçiş sayısı</div>
         </div>
 
         <!-- ÖĞRENCİ -->
@@ -1424,7 +1425,7 @@
             <canvas id="canvasYillikOgrenci"></canvas>
             <div class="chart-empty" id="chartYillikOgrenciEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-          <div class="chart-note">Seçilen yıl vs geçen yıl - öğrenci turnike geçiş sayısı</div>
+          <div class="chart-note">1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı</div>
         </div>
 
         <!-- ATIK -->
@@ -1436,7 +1437,7 @@
             <canvas id="canvasYillikAtik"></canvas>
             <div class="chart-empty" id="chartYillikAtikEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
-          <div class="chart-note">Seçilen yıl vs geçen yıl - atık miktarı (kg)</div>
+          <div class="chart-note">1. yıl vs 2. yıl - atık miktarı (kg)</div>
         </div>
       </div>
     </div>
