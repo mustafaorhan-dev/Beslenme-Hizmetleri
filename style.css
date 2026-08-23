@@ -637,8 +637,8 @@ body {
 }
 
 .header-logo svg {
-  width: 32px;
-  height: 32px;
+  width: 54px;
+  height: 28px;
   flex-shrink: 0;
 }
 
@@ -859,7 +859,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .sidebar:not(.open) .sidebar-header span,
 .sidebar:not(.open) .sidebar-header .logo-small { display: none; }
 .sidebar:not(.open) .sidebar-header { border-bottom: none; padding: 0.5rem; justify-content: center; }
-.sidebar:not(.open) .sidebar-header .logo-small svg { width: 28px; height: 28px; }
+  .sidebar:not(.open) .sidebar-header .logo-small svg { width: 24px; height: 12px; }
 .sidebar:not(.open) .sidebar-nav .tab-btn,
 .sidebar:not(.open) .sidebar-actions .tab-btn {
   justify-content: center;
@@ -885,7 +885,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   margin: 0 0.5rem 0.5rem;
 }
 
-.logo-small svg { width: 28px; height: 28px; }
+.logo-small svg { width: 46px; height: 24px; }
 
 .sidebar-nav {
   display: flex;

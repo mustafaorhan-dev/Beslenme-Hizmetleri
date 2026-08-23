@@ -35,6 +35,15 @@
         <stop offset="0%" stop-color="#22d3ee"/>
         <stop offset="100%" stop-color="#6366f1"/>
       </linearGradient>
+      <linearGradient id="cutleryGrad" x1="0" y1="0" x2="220" y2="112" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#60a5fa"/>
+        <stop offset="45%" stop-color="#3b82f6"/>
+        <stop offset="100%" stop-color="#22d3ee"/>
+      </linearGradient>
+      <radialGradient id="plateGlow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="65%" stop-color="#3b82f6" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      </radialGradient>
     </defs>
   </svg>
 
@@ -45,17 +54,6 @@
         <h2 class="login-title">KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<span class="login-sub">BESLENME HİZMETLERİ YÖNETİM SİSTEMİ</span></h2>
         <div class="login-cutlery" aria-hidden="true">
           <svg viewBox="0 0 220 112" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="cutleryGrad" x1="0" y1="0" x2="220" y2="112" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#60a5fa"/>
-                <stop offset="45%" stop-color="#3b82f6"/>
-                <stop offset="100%" stop-color="#22d3ee"/>
-              </linearGradient>
-              <radialGradient id="plateGlow" cx="0.5" cy="0.5" r="0.5">
-                <stop offset="65%" stop-color="#3b82f6" stop-opacity="0"/>
-                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.3"/>
-              </radialGradient>
-            </defs>
             <circle cx="110" cy="60" r="58" fill="url(#plateGlow)"/>
             <!-- Çatal -->
             <g fill="url(#cutleryGrad)">
@@ -142,14 +140,30 @@
           <span>Menü</span>
         </button>
         <div class="header-logo">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-            <circle cx="32" cy="32" r="30" fill="url(#logoGrad)" opacity="0.12"/>
-            <path d="M12 30h40v8a20 20 0 01-20 20h0a20 20 0 01-20-20v-8z" fill="url(#logoGrad)" opacity="0.25"/>
-            <path d="M12 30h40v2H12v-2z" fill="url(#logoGrad)" opacity="0.5"/>
-            <path d="M22 18h20l-4 12H26l-4-12z" fill="url(#logoGrad)"/>
-            <path d="M28 12v6M36 12v6" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M26 10c-2 2-2 6 0 8M32 8c-2 2-2 6 0 8M38 10c-2 2-2 6 0 8" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-            <path d="M44 28c4-2 6-6 4-10s-8-2-12 2M44 28l-8 4" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <svg viewBox="0 0 220 112" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="110" cy="60" r="58" fill="url(#plateGlow)"/>
+            <!-- Çatal -->
+            <g fill="url(#cutleryGrad)">
+              <path d="M25.75 36V11Q25.75 6.5 27.25 6.5Q28.75 6.5 28.75 11V36Z"/>
+              <path d="M32.42 39V11Q32.42 6.5 33.92 6.5Q35.42 6.5 35.42 11V39Z"/>
+              <path d="M38.59 39V11Q38.59 6.5 40.09 6.5Q41.59 6.5 41.59 11V39Z"/>
+              <path d="M44.75 36V11Q44.75 6.5 46.25 6.5Q47.75 6.5 47.75 11V36Z"/>
+              <path d="M25 32h23.5c0 7-3.5 11-8.75 13v49a3 3 0 0 1-6 0V45c-5.25-2-8.75-6-8.75-13z"/>
+            </g>
+            <!-- Tabak -->
+            <circle cx="110" cy="60" r="42" stroke="url(#cutleryGrad)" stroke-width="6"/>
+            <circle cx="110" cy="60" r="27" stroke="url(#cutleryGrad)" stroke-width="4" opacity="0.45"/>
+            <circle cx="110" cy="60" r="5" fill="url(#cutleryGrad)"/>
+            <!-- Bıçak -->
+            <g fill="url(#cutleryGrad)">
+              <path d="M161 8c-9 13-11 31-4 46h9c2-16 0-33-5-46z"/>
+              <rect x="157" y="54" width="9" height="48" rx="4.5"/>
+            </g>
+            <!-- Kaşık -->
+            <g fill="url(#cutleryGrad)">
+              <ellipse cx="184.5" cy="26" rx="10.5" ry="16"/>
+              <rect x="180" y="40" width="9" height="62" rx="4.5"/>
+            </g>
           </svg>
           <span>Kırşehir Ahi Evran Üniversitesi<br><small style="display:block;font-size:0.64rem;font-weight:600;opacity:0.95;letter-spacing:0.5px;line-height:1.25">Beslenme Hizmetleri Yönetim Sistemi</small></span>
         </div>
@@ -179,14 +193,26 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div class="logo-small">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="32" cy="32" r="30" fill="url(#logoGrad)" opacity="0.12"/>
-            <path d="M12 30h40v8a20 20 0 01-20 20h0a20 20 0 01-20-20v-8z" fill="url(#logoGrad)" opacity="0.25"/>
-            <path d="M12 30h40v2H12v-2z" fill="url(#logoGrad)" opacity="0.5"/>
-            <path d="M22 18h20l-4 12H26l-4-12z" fill="url(#logoGrad)"/>
-            <path d="M28 12v6M36 12v6" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M26 10c-2 2-2 6 0 8M32 8c-2 2-2 6 0 8M38 10c-2 2-2 6 0 8" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-            <path d="M44 28c4-2 6-6 4-10s-8-2-12 2M44 28l-8 4" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <svg viewBox="0 0 220 112" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="110" cy="60" r="58" fill="url(#plateGlow)"/>
+            <g fill="url(#cutleryGrad)">
+              <path d="M25.75 36V11Q25.75 6.5 27.25 6.5Q28.75 6.5 28.75 11V36Z"/>
+              <path d="M32.42 39V11Q32.42 6.5 33.92 6.5Q35.42 6.5 35.42 11V39Z"/>
+              <path d="M38.59 39V11Q38.59 6.5 40.09 6.5Q41.59 6.5 41.59 11V39Z"/>
+              <path d="M44.75 36V11Q44.75 6.5 46.25 6.5Q47.75 6.5 47.75 11V36Z"/>
+              <path d="M25 32h23.5c0 7-3.5 11-8.75 13v49a3 3 0 0 1-6 0V45c-5.25-2-8.75-6-8.75-13z"/>
+            </g>
+            <circle cx="110" cy="60" r="42" stroke="url(#cutleryGrad)" stroke-width="6"/>
+            <circle cx="110" cy="60" r="27" stroke="url(#cutleryGrad)" stroke-width="4" opacity="0.45"/>
+            <circle cx="110" cy="60" r="5" fill="url(#cutleryGrad)"/>
+            <g fill="url(#cutleryGrad)">
+              <path d="M161 8c-9 13-11 31-4 46h9c2-16 0-33-5-46z"/>
+              <rect x="157" y="54" width="9" height="48" rx="4.5"/>
+            </g>
+            <g fill="url(#cutleryGrad)">
+              <ellipse cx="184.5" cy="26" rx="10.5" ry="16"/>
+              <rect x="180" y="40" width="9" height="62" rx="4.5"/>
+            </g>
           </svg>
         </div>
         <span>Beslenme Hizmetleri Yönetim Sistemi</span>
