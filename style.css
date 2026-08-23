@@ -3250,7 +3250,7 @@ input.production-input:focus {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(calc(-50% - 8px), -50%);
   font-family: 'Orbitron', 'Inter', sans-serif;
   font-size: 1.05rem;
   font-weight: 900;
