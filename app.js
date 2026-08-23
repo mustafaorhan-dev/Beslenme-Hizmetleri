@@ -246,6 +246,7 @@ let chartMonthFilter = 0;
 let yillikYearFilter = String(new Date().getFullYear());
 let yillikPrevYearFilter = '';
 let reportYearFilter = 0;
+let recordsYearFilter = 0;
 function getAvailableYears() {
   const years = new Set();
   records.forEach(r => {
@@ -5394,10 +5395,44 @@ function renderLastRecordsTable() {
   tbody.innerHTML = last5.map(r => buildRow(r, false)).join('');
 }
 
+function getYearFilteredRecords() {
+  if (!recordsYearFilter || Number(recordsYearFilter) === 0) return [...records];
+  return records.filter(r => {
+    if (!r.tarih) return false;
+    const d = new Date(r.tarih + 'T12:00:00');
+    return !isNaN(d) && d.getFullYear() === Number(recordsYearFilter);
+  });
+}
+
+function renderRecordsYearFilter() {
+  const container = document.getElementById('recordsYearFilter');
+  if (!container) return;
+  const years = getAvailableYears();
+  const selectStyle = 'padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)';
+  let h = '<div style="display:flex;gap:6px;align-items:center">';
+  h += '<label style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">Yıl:</label>';
+  h += '<select onchange="setRecordsYear(this.value)" style="' + selectStyle + '">';
+  h += '<option value="0"' + (Number(recordsYearFilter) === 0 ? ' selected' : '') + '>Tümü</option>';
+  years.forEach(y => {
+    const s = Number(recordsYearFilter) === Number(y) ? ' selected' : '';
+    h += '<option value="' + y + '"' + s + '>' + y + '</option>';
+  });
+  h += '</select></div>';
+  container.innerHTML = h;
+}
+
+function setRecordsYear(v) {
+  recordsYearFilter = Number(v) || 0;
+  renderRecordsTable();
+}
+
 function renderRecordsTable() {
   const tbody = document.getElementById('recordsTbody');
   const table = document.getElementById('recordsTable');
   const empty = document.getElementById('emptyStateRecords');
+
+  filteredRecords = getYearFilteredRecords();
+  renderRecordsYearFilter();
 
   if (filteredRecords.length === 0) {
     table.style.display = 'none';
