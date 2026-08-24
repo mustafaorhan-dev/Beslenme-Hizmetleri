@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - STYLESHEET
    ============================================= */
 
@@ -321,7 +321,7 @@
   --accent-green: #10b981;
   --accent-orange: #f59e0b;
   --accent-red: #ef4444;
-  --accent-purple: #a855f7;
+  --accent-purple: #0ea5e9;
 
   --gradient-main: linear-gradient(135deg, #0891b2, #4f46e5);
   --gradient-card: linear-gradient(145deg, #ffffff, #f8fafc);
@@ -355,8 +355,8 @@
   --gradient-main: linear-gradient(135deg, #059669, #10b981);
 }
 [data-accent="purple"] {
-  --accent: #a855f7;
-  --gradient-main: linear-gradient(135deg, #7e22ce, #a855f7);
+  --accent: #0ea5e9;
+  --gradient-main: linear-gradient(135deg, #0284c7, #0ea5e9);
 }
 [data-accent="orange"] {
   --accent: #f59e0b;
@@ -400,7 +400,7 @@
   background-image:
     radial-gradient(ellipse at 8% 15%, rgba(99,102,241,0.16) 0%, transparent 55%),
     radial-gradient(ellipse at 92% 12%, rgba(34,211,238,0.10) 0%, transparent 55%),
-    radial-gradient(ellipse at 88% 88%, rgba(168,85,247,0.13) 0%, transparent 55%),
+    radial-gradient(ellipse at 88% 88%, rgba(14,165,233,0.13) 0%, transparent 55%),
     radial-gradient(ellipse at 12% 90%, rgba(245,158,11,0.06) 0%, transparent 50%);
 }
 [data-theme="dark"] .header {
@@ -1208,7 +1208,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
 .kpi-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
-.kpi-purple { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+.kpi-purple { background: rgba(59,130,246,0.15); color: #3b82f6; }
 
 .kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
 
@@ -2212,12 +2212,12 @@ td.porsiyon-warn {
 .ws-cyan .ws-card-icon { background: rgba(34,211,238,0.12); color: #22d3ee; }
 .ws-green .ws-card-icon { background: rgba(16,185,129,0.12); color: #10b981; }
 .ws-orange .ws-card-icon { background: rgba(249,115,22,0.12); color: #f97316; }
-.ws-purple .ws-card-icon { background: rgba(168,85,247,0.12); color: #a855f7; }
+.ws-purple .ws-card-icon { background: rgba(14,165,233,0.12); color: #0ea5e9; }
 
 .ws-cyan:hover { border-color: rgba(34,211,238,0.4); }
 .ws-green:hover { border-color: rgba(16,185,129,0.4); }
 .ws-orange:hover { border-color: rgba(249,115,22,0.4); }
-.ws-purple:hover { border-color: rgba(168,85,247,0.4); }
+.ws-purple:hover { border-color: rgba(14,165,233,0.4); }
 
 [data-theme="dark"] .ws-card {
   background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
@@ -3401,7 +3401,7 @@ input.production-input:focus {
   border-left: 3px solid #6366f1;
 }
 .bf-kpi.ortalama {
-  border-left: 3px solid #8b5cf6;
+  border-left: 3px solid #3b82f6;
 }
 .bf-status {
   font-size: 0.85rem;

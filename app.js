@@ -1149,7 +1149,7 @@ async function apLoadLogs() {
       data = data.filter(function(r) { return (r.kullanici || '').toLowerCase().indexOf(arama) !== -1; });
     }
     if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>'; return; }
-    var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#8b5cf6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
+    var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
     var islemEtiket = { login: 'Giriş', logout: 'Çıkış', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_sil: 'Kullanıcı Sil' };
     var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
     html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
@@ -3323,7 +3323,7 @@ function renderHaccpDepoSummary() {
   });
 
   var html = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap">';
-  var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+  var depoRenkler = ['#6366f1', '#f97316', '#10b981', '#0ea5e9', '#22d3ee', '#f59e0b', '#ef4444', '#14b8a6'];
   var ri = 0;
   Object.keys(depoMap).sort().forEach(function(ad) {
     var sicVals = depoMap[ad].sicaklik;
@@ -4937,7 +4937,7 @@ function renderWeeklySummary() {
     '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs><path d="M5 10a7 7 0 0114 0v5H5v-5z" fill="url(#wCy)"/><ellipse cx="12" cy="15" rx="7" ry="2.4" fill="url(#wCy)"/><ellipse cx="12" cy="14.6" rx="5" ry="1.6" fill="#e2f8ff" opacity="0.5"/><path d="M8.5 6.5c-.5-.9.2-2.2.2-2.2M12 5.4c-.5-.9.2-2.2.2-2.2M15.5 6.5c-.5-.9.2-2.2.2-2.2" stroke="url(#wCy)" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ws-card-content"><span class="ws-label">Üretilen Yemek (Kişi)</span><span class="ws-value">' + topYemek.toLocaleString('tr-TR') + '</span></div></div>' +
     '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wGr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient></defs><circle cx="9" cy="8" r="3.2" fill="url(#wGr)"/><path d="M3.5 20v-1.5A4.5 4.5 0 018 14h2a4.5 4.5 0 014.5 4.5V20" fill="url(#wGr)"/><circle cx="16" cy="8.8" r="2.6" fill="url(#wGr)" opacity="0.75"/><path d="M16 13.5a4.5 4.5 0 014.5 4.5v1H13v-1a4.5 4.5 0 013-4.5" fill="url(#wGr)" opacity="0.75"/></svg></div><div class="ws-card-content"><span class="ws-label">Toplam Geçiş</span><span class="ws-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ws-sub">Turnike: ' + topTurnike.toLocaleString('tr-TR') + ' &middot; Y. Hiz. Yr. SKS: ' + topPersonel.toLocaleString('tr-TR') + '</span></div></div>' +
     '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wOr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></linearGradient></defs><path d="M4 7h16l-1 13.2A1.8 1.8 0 0117.2 22H6.8A1.8 1.8 0 015 20.2L4 7z" fill="url(#wOr)"/><path d="M3 5h18v2.4H3z" fill="url(#wOr)"/><path d="M9 11h2v7H9zM13 11h2v7h-2z" fill="#fff" opacity="0.45"/><path d="M10 3h4v2h-4z" fill="url(#wOr)"/></svg></div><div class="ws-card-content"><span class="ws-label">Atık Miktarı</span><span class="ws-value">' + topAtik.toFixed(1) + ' kg</span></div></div>' +
-    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wPu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#7e22ce"/></linearGradient></defs><path d="M4 7h7l2 2h7a1.5 1.5 0 011.5 1.5V18A1.5 1.5 0 0120 19.5H4A1.5 1.5 0 012.5 18V8.5A1.5 1.5 0 014 7z" fill="url(#wPu)"/><path d="M2.5 9.5h19" stroke="#fff" stroke-width="0.8" opacity="0.4"/></svg></div><div class="ws-card-content"><span class="ws-label">Y.H. Yar. Öğrenci</span><span class="ws-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div></div>';
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wPu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#0284c7"/></linearGradient></defs><path d="M4 7h7l2 2h7a1.5 1.5 0 011.5 1.5V18A1.5 1.5 0 0120 19.5H4A1.5 1.5 0 012.5 18V8.5A1.5 1.5 0 014 7z" fill="url(#wPu)"/><path d="M2.5 9.5h19" stroke="#fff" stroke-width="0.8" opacity="0.4"/></svg></div><div class="ws-card-content"><span class="ws-label">Y.H. Yar. Öğrenci</span><span class="ws-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div></div>';
 }
 
 function renderDataInfo() {
@@ -6864,7 +6864,7 @@ function renderYearlyCharts() {
 
   try { makeYillikTotalDonut('canvasDonutUretim', 'chartDonutUretimEmpty', '#6366f1', curTot.uretim, pastTot.uretim, ''); } catch (e) { console.warn('toplam uretim:', e); }
   try { makeYillikTotalDonut('canvasDonutTurnike', 'chartDonutTurnikeEmpty', '#10b981', curTot.toplam, pastTot.toplam, ''); } catch (e) { console.warn('toplam yararlanan:', e); }
-  try { makeYillikTotalDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#a855f7', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
+  try { makeYillikTotalDonut('canvasDonutOgrenci', 'chartDonutOgrenciEmpty', '#0ea5e9', curTot.ogrenci, pastTot.ogrenci, ''); } catch (e) { console.warn('toplam ogrenci:', e); }
   try { makeYillikTotalDonut('canvasDonutAtik', 'chartDonutAtikEmpty', '#f97316', curTot.atik, pastTot.atik, ' kg'); } catch (e) { console.warn('toplam atik:', e); }
 
   function makeYillikChart(canvasId, emptyId, metricColor, getThis, getPrev) {
@@ -6981,7 +6981,7 @@ function renderYearlyCharts() {
 
   try { makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; }); } catch (e) { console.warn('yillik uretim:', e); }
   try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
-  try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#a855f7', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
+  try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#0ea5e9', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
   try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
 }
 
@@ -7338,21 +7338,21 @@ function drawAllCharts() {
   try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
-  try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#8b5cf6', label: 'Üretim ile Turnike Geçişi Arasındaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
+  try { makeChart('canvasFark', allMonthLabels, [{ data: farkData, color: '#3b82f6', label: 'Üretim ile Turnike Geçişi Arasındaki Fark' }], { onClick: clickHandler }); } catch(e) { console.warn('chartFark error:', e); }
 
   const aylikOran = allMonthLabels.map(m => {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
     return y > 0 ? (a * 250 / y) : 0;
   });
-  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#a855f7', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
-  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#a855f7', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
+  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#0ea5e9', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
+  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#0ea5e9', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
   try { makeChart('canvasIdariPersonel', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'idari') + getMonthVal(m, 'personel')), color: '#0ea5e9', label: 'Akademik ve İdari + SKS Personeli' }], { onClick: clickHandler }); } catch(e) { console.warn('chartIdariPersonel error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
     return t > 0 ? a / t : 0;
   });
-  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#d946ef', label: 'Kişi Başı Atık (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
+  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#14b8a6', label: 'Kişi Başı Atık (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
 
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
@@ -7368,7 +7368,7 @@ function drawAllCharts() {
   if (!container) return;
   container.innerHTML = '';
   if (sicaklikKayitlari.length > 0) {
-    var depoRenkPaleti = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    var depoRenkPaleti = ['#6366f1', '#f97316', '#10b981', '#0ea5e9', '#22d3ee', '#f59e0b', '#ef4444', '#14b8a6'];
     var depoVeri = {};
     sicaklikKayitlari.forEach(function(r) {
       if (!r.tarih) return;
@@ -7470,7 +7470,7 @@ function drawAllCharts() {
       var nb = parseInt(b.match(/\d+/) || 0);
       return na - nb;
     });
-    var depoRenkler2 = ['#6366f1', '#f97316', '#10b981', '#a855f7', '#22d3ee', '#f59e0b', '#ef4444', '#d946ef'];
+    var depoRenkler2 = ['#6366f1', '#f97316', '#10b981', '#0ea5e9', '#22d3ee', '#f59e0b', '#ef4444', '#14b8a6'];
     var aylikDatasets = aylikDepoIsimleri.map(function(ad, idx) {
       return {
         data: aylikAyLabels.map(function(ay) {
@@ -10266,7 +10266,7 @@ function drawAmbalajTurChart(list) {
 
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   var textColor = isDark ? '#e2e8f0' : '#1e293b';
-  var palette = ['#10b981', '#14b8a6', '#34d399', '#0ea5e9', '#22d3ee', '#6366f1', '#a3e635', '#8b5cf6', '#06b6d4'];
+  var palette = ['#10b981', '#14b8a6', '#34d399', '#0ea5e9', '#22d3ee', '#6366f1', '#a3e635', '#3b82f6', '#06b6d4'];
   var data = keys.map(function(k) { return totals[k]; });
   var grand = data.reduce(function(a, b) { return a + b; }, 0);
 
