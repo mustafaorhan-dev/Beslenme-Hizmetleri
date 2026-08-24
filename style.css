@@ -978,6 +978,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: #ffffff;
   background: linear-gradient(135deg, rgba(37,99,235,0.55), rgba(34,211,238,0.30));
 }
+.sidebar-nav .tab-btn.active svg {
+  stroke: currentColor;
+}
+.sidebar-nav .tab-btn.active svg text {
+  fill: currentColor;
+}
 .sidebar-actions,
 .accent-picker {
   border-top: 1px solid rgba(255,255,255,0.12);
