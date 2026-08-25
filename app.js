@@ -6698,9 +6698,9 @@ function getEffectiveYillikYears() {
   const years = getAvailableYears();
   const latest = years.length > 0 ? Number(years[years.length - 1]) : new Date().getFullYear();
   const sel = Number(yillikYearFilter) > 0 ? Number(yillikYearFilter) : latest;
-  let prev = Number(yillikPrevYearFilter) > 0 ? Number(yillikPrevYearFilter) : sel - 1;
-  if (prev === sel) prev = sel - 1;
-  return { sel: sel, prev: prev };
+  let prev = Number(yillikPrevYearFilter) > 0 ? Number(yillikPrevYearFilter) : 0;
+  if (prev === sel) prev = 0;
+  return { sel: sel, prev: prev > 0 ? prev : null };
 }
 
 function renderYillikYearFilter() {
@@ -6723,7 +6723,13 @@ function renderYillikYearFilter() {
   html += '<select onchange="setYillikYear(this.value)" style="' + selectStyle + '">' + yearOptions(yillikYearFilter, null) + '</select>';
   html += '<span style="font-size:0.85rem;font-weight:700;color:var(--text-muted)">vs</span>';
   html += '<label style="font-size:0.8rem;color:var(--text-muted)">2. Yıl:</label>';
-  html += '<select onchange="setYillikPrevYear(this.value)" style="' + selectStyle + '">' + yearOptions(yillikPrevYearFilter, eff.sel) + '</select>';
+  var prevOpts = '<option value=""' + (yillikPrevYearFilter === '' ? ' selected' : '') + '>Karşılaştırma Yok</option>';
+  years.forEach(function(y) {
+    const s = yillikPrevYearFilter !== '' && Number(yillikPrevYearFilter) === Number(y) ? ' selected' : '';
+    const dis = Number(y) === eff.sel ? ' disabled' : '';
+    prevOpts += '<option value="' + y + '"' + s + dis + '>' + y + '</option>';
+  });
+  html += '<select onchange="setYillikPrevYear(this.value)" style="' + selectStyle + '">' + prevOpts + '</select>';
   html += '</div>';
   container.innerHTML = html;
 }
@@ -6737,13 +6743,6 @@ function setYillikYear(year) {
 }
 
 function setYillikPrevYear(year) {
-  if (year === '') return;
-  const eff = getEffectiveYillikYears();
-  if (Number(year) === eff.sel) {
-    showToast('1. ve 2. yıl aynı olamaz. Farklı bir yıl seçin.', 'error');
-    renderYillikYearFilter();
-    return;
-  }
   yillikPrevYearFilter = String(year);
   renderYillikYearFilter();
   renderYearlyCharts();
@@ -6754,6 +6753,7 @@ function renderYearlyCharts() {
   var eff = getEffectiveYillikYears();
   var sel = eff.sel;
   var prev = eff.prev;
+  var hasPrev = prev !== null && prev > 0;
   var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 
   function buildYear(year) {
@@ -6774,11 +6774,11 @@ function renderYearlyCharts() {
   }
 
   var thisData = buildYear(sel);
-  var prevData = buildYear(prev);
+  var prevData = hasPrev ? buildYear(prev) : [];
 
   function fieldTotal(monthly, field) { return monthly.reduce(function(s, v) { return s + (v[field] || 0); }, 0); }
   var curTot = { uretim: fieldTotal(thisData, 'uretim'), turnike: fieldTotal(thisData, 'turnike'), ogrenci: fieldTotal(thisData, 'ogrenci'), atik: fieldTotal(thisData, 'atik'), toplam: fieldTotal(thisData, 'toplam') };
-  var pastTot = { uretim: fieldTotal(prevData, 'uretim'), turnike: fieldTotal(prevData, 'turnike'), ogrenci: fieldTotal(prevData, 'ogrenci'), atik: fieldTotal(prevData, 'atik'), toplam: fieldTotal(prevData, 'toplam') };
+  var pastTot = hasPrev ? { uretim: fieldTotal(prevData, 'uretim'), turnike: fieldTotal(prevData, 'turnike'), ogrenci: fieldTotal(prevData, 'ogrenci'), atik: fieldTotal(prevData, 'atik'), toplam: fieldTotal(prevData, 'toplam') } : { uretim: 0, turnike: 0, ogrenci: 0, atik: 0, toplam: 0 };
 
   // Eski yıllık grafikleri temizle
   chartInstances.forEach(function(c, id) {
@@ -6808,7 +6808,9 @@ function renderYearlyCharts() {
     var center = null;
     var cUp = isDark ? '#4ade80' : '#16a34a';
     var cDn = isDark ? '#f87171' : '#dc2626';
-    if (prevTotal > 0) {
+    if (!hasPrev) {
+      center = { arrow: '', arrowColor: textColor, text: curTxt, color: textColor, fontSize: 13 };
+    } else if (prevTotal > 0) {
       var ch = (thisTotal - prevTotal) / prevTotal * 100;
       var up = ch >= 0;
       var abs = Math.abs(ch);
@@ -6823,17 +6825,22 @@ function renderYearlyCharts() {
     }
     var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
     if (legendEl) {
-      legendEl.innerHTML =
-        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + '<span class="val" style="color:' + color + '">' + curTxt + '</span></div>' +
-        '<div class="donut-legend-item"><span class="dot" style="background:' + color + '66"></span>' + prev + '<span class="val" style="color:' + color + '">' + prevTxt + '</span></div>';
+      if (!hasPrev) {
+        legendEl.innerHTML =
+          '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + '<span class="val" style="color:' + color + '">' + curTxt + '</span></div>';
+      } else {
+        legendEl.innerHTML =
+          '<div class="donut-legend-item"><span class="dot" style="background:' + color + '"></span>' + sel + '<span class="val" style="color:' + color + '">' + curTxt + '</span></div>' +
+          '<div class="donut-legend-item"><span class="dot" style="background:' + color + '66"></span>' + prev + '<span class="val" style="color:' + color + '">' + prevTxt + '</span></div>';
+      }
     }
     var chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: [String(sel), String(prev)],
+        labels: hasPrev ? [String(sel), String(prev)] : [String(sel)],
         datasets: [{
-          data: [thisTotal, prevTotal],
-          backgroundColor: [color, color + '55'],
+          data: hasPrev ? [thisTotal, prevTotal] : [thisTotal],
+          backgroundColor: hasPrev ? [color, color + '55'] : [color],
           borderColor: isDark ? '#1e293b' : '#ffffff',
           borderWidth: 2,
           hoverOffset: 5
@@ -6843,11 +6850,11 @@ function renderYearlyCharts() {
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
-        cutout: '62%',
+        cutout: hasPrev ? '62%' : '50%',
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: { display: false },
-          donutLabels: { enabled: true, values: [curTxt, prevTxt], colors: ['#000000', '#000000'], fontSize: 13, center: center },
+          donutLabels: { enabled: true, values: hasPrev ? [curTxt, prevTxt] : [curTxt], colors: ['#000000'], fontSize: 13, center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -6877,8 +6884,8 @@ function renderYearlyCharts() {
     if (staleInstance) { try { staleInstance.destroy(); } catch (_) {} chartInstances.delete(canvasId); }
     var empty = document.getElementById(emptyId);
     var hasThis = thisData.some(function(v) { return getThis(v) > 0; });
-    var hasPrev = prevData.some(function(v) { return getPrev(v) > 0; });
-    if (!hasThis && !hasPrev) {
+    var hasPrevData = prevData.length > 0 && prevData.some(function(v) { return getPrev(v) > 0; });
+    if (!hasThis && !hasPrevData) {
       if (empty) empty.style.display = 'block';
       canvas.style.display = 'none';
       return;
@@ -6897,38 +6904,41 @@ function renderYearlyCharts() {
       grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
     };
     var thisArr = monthLabels.map(function(_, m) { return getThis(thisData[m]); });
-    var prevArr = monthLabels.map(function(_, m) { return getPrev(prevData[m]); });
+    var prevArr = monthLabels.map(function(_, m) { return hasPrevData ? getPrev(prevData[m]) : 0; });
     var allMax = Math.max.apply(null, thisArr.concat(prevArr));
     var suggestedMax = allMax > 0 ? allMax * 1.18 : 10;
+    var datasets = [
+      {
+        label: String(sel),
+        data: thisArr,
+        backgroundColor: metricColor,
+        borderColor: metricColor,
+        borderWidth: 0,
+        borderRadius: 6,
+        barPercentage: 0.8,
+        categoryPercentage: hasPrevData ? 0.65 : 0.5,
+        maxBarThickness: 60,
+      }
+    ];
+    if (hasPrevData) {
+      datasets.push({
+        label: String(prev),
+        data: prevArr,
+        backgroundColor: metricColor + '35',
+        borderColor: metricColor,
+        borderWidth: 1,
+        borderDash: [4, 4],
+        borderRadius: 6,
+        barPercentage: 0.8,
+        categoryPercentage: 0.65,
+        maxBarThickness: 60,
+      });
+    }
     var chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: monthLabels,
-        datasets: [
-          {
-            label: String(sel),
-            data: thisArr,
-            backgroundColor: metricColor,
-            borderColor: metricColor,
-            borderWidth: 0,
-            borderRadius: 6,
-            barPercentage: 0.8,
-            categoryPercentage: 0.65,
-            maxBarThickness: 60,
-          },
-          {
-            label: String(prev),
-            data: prevArr,
-            backgroundColor: metricColor + '35',
-            borderColor: metricColor,
-            borderWidth: 1,
-            borderDash: [4, 4],
-            borderRadius: 6,
-            barPercentage: 0.8,
-            categoryPercentage: 0.65,
-            maxBarThickness: 60,
-          }
-        ]
+        datasets: datasets
       },
       options: {
         responsive: true,
