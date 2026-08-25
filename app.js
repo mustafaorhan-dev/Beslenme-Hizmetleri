@@ -249,6 +249,9 @@ let reportYearFilter = 0;
 let recordsYearFilter = 0;
 function getAvailableYears() {
   const years = new Set();
+  const now = new Date().getFullYear();
+  years.add(now);
+  years.add(now - 1);
   records.forEach(r => {
     if (r.tarih) {
       const y = new Date(r.tarih + 'T12:00:00').getFullYear();
