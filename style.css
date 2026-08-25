@@ -617,7 +617,7 @@ body {
 }
 
 @media (min-width: 601px) {
-  body.sidebar-open .header-left { margin-left: 180px; }
+  body.sidebar-open .header-left { margin-left: 0; }
 }
 
 .menu-toggle {
