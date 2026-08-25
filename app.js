@@ -4117,7 +4117,7 @@ async function switchTab(name) {
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
-  const labels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar', report: 'Rapor', haccp: 'Gıda Güvenliği', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', kalibrasyon: 'Kalibrasyon' };
+  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
 }
@@ -11043,7 +11043,572 @@ function printKalibrasyonList() {
   else updateBtn();
 })();
 
+// ─── I18N TRANSLATIONS ─────────────────────────────────────────────────────────
+var I18N = {
+  tr: {
+    loginTitle: "OTURUM AÇINIZ",
+    loginSubtitle: "Hesabınıza giriş yapmak için bilgilerinizi girin",
+    loginUsername: "Kullanıcı",
+    loginSelectUser: "Kullanıcı Seçin",
+    loginPassword: "Şifre",
+    loginBtn: "Giriş Yap",
+    loginHint: "Şifrenizi yöneticinizden alabilirsiniz",
+    loginTagline: "Yemekhane Otomasyon Sistemi",
+    loginFeature1: "Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi",
+    loginFeature2: "Detaylı Raporlama",
+    loginFeature3: "Canlı Panel ve Grafikler",
+    menuLabel: "Menü",
+    btnLogout: "Çıkış",
+    sidebarPanel: "Panel",
+    sidebarMenu: "Haftalık Menü",
+    sidebarRecords: "Kayıtlar",
+    sidebarReport: "Rapor",
+    sidebarHaccp: "Gıda Güvenliği",
+    sidebarCalibration: "Kalibrasyon",
+    sidebarEntry: "Üretim Tüketim Atık Gir",
+    sidebarOil: "Atık Yağ",
+    sidebarPackaging: "Ambalaj Atıkları",
+    sidebarCharts: "Grafikler",
+    sidebarYearly: "Yıllık Karşılaştırma",
+    sidebarSpending: "Harcama",
+    sidebarUnitPrice: "Birim Fiyatlar",
+    sidebarDownload: "Tümünü İndir",
+    sidebarBackup: "Supabase'e Yedekle",
+    sidebarRestore: "Supabase'ten Çek",
+    sidebarAdmin: "Yönetim",
+    sidebarLogs: "Log Kayıtları",
+    sidebarTheme: "Tema",
+    sidebarManual: "Kullanım Kılavuzu",
+    kpiTotalRecords: "Toplam Üretim Günü",
+    kpiTodayProduction: "Bugünkü Üretim",
+    kpiHaccpAlarm: "Soğuk Hava Depo Sıcaklık Alarmı",
+    kpiWasteRate: "Atık Oranı",
+    printPdf: "PDF Yazdır",
+    loadingSync: "Veriler senkronize ediliyor...",
+    loadingSupabase: "Supabase bağlantısı kontrol ediliyor",
+    loadingSkip: "Tıklayarak geç",
+    versionLabel: "Uygulama Sürümü",
+  },
+  en: {
+    loginTitle: "SIGN IN",
+    loginSubtitle: "Enter your credentials to sign in",
+    loginUsername: "Username",
+    loginSelectUser: "Select User",
+    loginPassword: "Password",
+    loginBtn: "Sign In",
+    loginHint: "You can get your password from your administrator",
+    loginTagline: "Canteen Automation System",
+    loginFeature1: "Menu Planning, Daily Production, Consumption & Waste Tracking",
+    loginFeature2: "Detailed Reporting",
+    loginFeature3: "Live Dashboard & Charts",
+    menuLabel: "Menu",
+    btnLogout: "Logout",
+    sidebarPanel: "Dashboard",
+    sidebarMenu: "Weekly Menu",
+    sidebarRecords: "Records",
+    sidebarReport: "Report",
+    sidebarHaccp: "Food Safety",
+    sidebarCalibration: "Calibration",
+    sidebarEntry: "Production Consumption Waste",
+    sidebarOil: "Waste Oil",
+    sidebarPackaging: "Packaging Waste",
+    sidebarCharts: "Charts",
+    sidebarYearly: "Yearly Comparison",
+    sidebarSpending: "Spending",
+    sidebarUnitPrice: "Unit Prices",
+    sidebarDownload: "Download All",
+    sidebarBackup: "Backup to Supabase",
+    sidebarRestore: "Restore from Supabase",
+    sidebarAdmin: "Administration",
+    sidebarLogs: "Log Records",
+    sidebarTheme: "Theme",
+    sidebarManual: "User Manual",
+    kpiTotalRecords: "Total Production Days",
+    kpiTodayProduction: "Today's Production",
+    kpiHaccpAlarm: "Cold Storage Temperature Alarm",
+    kpiWasteRate: "Waste Rate",
+    printPdf: "Print PDF",
+    loadingSync: "Syncing data...",
+    loadingSupabase: "Checking Supabase connection",
+    loadingSkip: "Click to skip",
+    versionLabel: "Application Version",
+  },
+  az: {
+    loginTitle: "DAXİL OLUN",
+    loginSubtitle: "Hesabınıza daxil olmaq üçün məlumatlarınızı daxil edin",
+    loginUsername: "İstifadəçi",
+    loginSelectUser: "İstifadəçi seçin",
+    loginPassword: "Şifrə",
+    loginBtn: "Daxil ol",
+    loginHint: "Şifrənizi administratorunuzdan ala bilərsiniz",
+    loginTagline: "Yeməkxana Avtomatlaşdırma Sistemi",
+    loginFeature1: "Menyu Planlaması, Günlük İstehsal, İstehlak və Tullantı İzləmə",
+    loginFeature2: "Ətraflı Hesabatlar",
+    loginFeature3: "Canlı Panel və Qrafiklər",
+    menuLabel: "Menyu",
+    btnLogout: "Çıxış",
+    sidebarPanel: "Panel",
+    sidebarMenu: "Həftəlik Menyu",
+    sidebarRecords: "Qeydlər",
+    sidebarReport: "Hesabat",
+    sidebarHaccp: "Qida Təhlükəsizliyi",
+    sidebarCalibration: "Kalibrləmə",
+    sidebarEntry: "İstehsal İstehlak Tullantı",
+    sidebarOil: "Tullantı Yağı",
+    sidebarPackaging: "Qablaşdırma Tullantıları",
+    sidebarCharts: "Qrafiklər",
+    sidebarYearly: "İlliq Müqayisə",
+    sidebarSpending: "Xərclər",
+    sidebarUnitPrice: "Vahid Qiymətlər",
+    sidebarDownload: "Hamısını Yüklə",
+    sidebarBackup: "Supabase-ə Yedeklə",
+    sidebarRestore: "Supabase-dən Çək",
+    sidebarAdmin: "İdarəetmə",
+    sidebarLogs: "Jurnal Qeydləri",
+    sidebarTheme: "Mövzu",
+    sidebarManual: "İstifadəçi Təlimatı",
+    kpiTotalRecords: "Ümumi İstehsal Günü",
+    kpiTodayProduction: "Bu günün İstehsalı",
+    kpiHaccpAlarm: "Soyuducu Anbar Temperaturu Alarmı",
+    kpiWasteRate: "Tullantı Nisbəti",
+    printPdf: "PDF Çap Et",
+    loadingSync: "Məlumatlar sinxronlaşdırılır...",
+    loadingSupabase: "Supabase bağlantısı yoxlanılır",
+    loadingSkip: "Keçmək üçün klikləyin",
+    versionLabel: "Tətbiq Versiyası",
+  },
+  ru: {
+    loginTitle: "ВОЙТИ",
+    loginSubtitle: "Введите данные для входа в аккаунт",
+    loginUsername: "Пользователь",
+    loginSelectUser: "Выберите пользователя",
+    loginPassword: "Пароль",
+    loginBtn: "Войти",
+    loginHint: "Пароль можно получить у администратора",
+    loginTagline: "Система автоматизации столовой",
+    loginFeature1: "Меню, ежедневное производство, потребление и отходы",
+    loginFeature2: "Подробные отчёты",
+    loginFeature3: "Живая панель и графики",
+    menuLabel: "Меню",
+    btnLogout: "Выход",
+    sidebarPanel: "Панель",
+    sidebarMenu: "Меню на неделю",
+    sidebarRecords: "Записи",
+    sidebarReport: "Отчёт",
+    sidebarHaccp: "Безопасность пищи",
+    sidebarCalibration: "Калибровка",
+    sidebarEntry: "Производство Потребление Отходы",
+    sidebarOil: "Отработанное масло",
+    sidebarPackaging: "Упаковочные отходы",
+    sidebarCharts: "Графики",
+    sidebarYearly: "Годовое сравнение",
+    sidebarSpending: "Расходы",
+    sidebarUnitPrice: "Единичные цены",
+    sidebarDownload: "Скачать всё",
+    sidebarBackup: "Резервное копирование",
+    sidebarRestore: "Восстановить из Supabase",
+    sidebarAdmin: "Администрирование",
+    sidebarLogs: "Журналы",
+    sidebarTheme: "Тема",
+    sidebarManual: "Руководство пользователя",
+    kpiTotalRecords: "Всего дней производства",
+    kpiTodayProduction: "Производство сегодня",
+    kpiHaccpAlarm: "Тревога температуры холодильника",
+    kpiWasteRate: "Процент отходов",
+    printPdf: "Печать PDF",
+    loadingSync: "Синхронизация данных...",
+    loadingSupabase: "Проверка подключения Supabase",
+    loadingSkip: "Нажмите для пропуска",
+    versionLabel: "Версия приложения",
+  },
+  ar: {
+    loginTitle: "تسجيل الدخول",
+    loginSubtitle: "أدخل بيانات الاعتماد للوصول إلى حسابك",
+    loginUsername: "اسم المستخدم",
+    loginSelectUser: "اختر المستخدم",
+    loginPassword: "كلمة المرور",
+    loginBtn: "تسجيل الدخول",
+    loginHint: "يمكنك الحصول على كلمة المرور من المسؤول",
+    loginTagline: "نظام أتمتة المطعم",
+    loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
+    loginFeature2: "تقارير مفصلة",
+    loginFeature3: "لوحة مباشرة ورسوم بيانية",
+    menuLabel: "القائمة",
+    btnLogout: "تسجيل الخروج",
+    sidebarPanel: "لوحة التحكم",
+    sidebarMenu: "القائمة الأسبوعية",
+    sidebarRecords: "السجلات",
+    sidebarReport: "التقرير",
+    sidebarHaccp: "سلامة الغذاء",
+    sidebarCalibration: "المعايرة",
+    sidebarEntry: "الإنتاج الاستهلاك النفايات",
+    sidebarOil: "النفايات الزيتية",
+    sidebarPackaging: "نفايات التغليف",
+    sidebarCharts: "الرسوم البيانية",
+    sidebarYearly: "المقارنة السنوية",
+    sidebarSpending: "المصروفات",
+    sidebarUnitPrice: "الأسعاروحدتها",
+    sidebarDownload: "تنزيل الكل",
+    sidebarBackup: "النسخ الاحتياطي",
+    sidebarRestore: "الاستعادة من Supabase",
+    sidebarAdmin: "الإدارة",
+    sidebarLogs: "سجلات النشاط",
+    sidebarTheme: "المظهر",
+    sidebarManual: "دليل المستخدم",
+    kpiTotalRecords: "إجمالي أيام الإنتاج",
+    kpiTodayProduction: "إنتاج اليوم",
+    kpiHaccpAlarm: "تنبيه درجة حرارة التخزين البارد",
+    kpiWasteRate: "نسبة النفايات",
+    printPdf: "طباعة PDF",
+    loadingSync: "مزامنة البيانات...",
+    loadingSupabase: "التحقق من اتصال Supabase",
+    loadingSkip: "انقر للتخطي",
+    versionLabel: "إصدار التطبيق",
+  },
+  de: {
+    loginTitle: "ANMELDEN",
+    loginSubtitle: "Geben Sie Ihre Anmeldedaten ein",
+    loginUsername: "Benutzername",
+    loginSelectUser: "Benutzer auswählen",
+    loginPassword: "Passwort",
+    loginBtn: "Anmelden",
+    loginHint: "Sie erhalten Ihr Passwort von Ihrem Administrator",
+    loginTagline: "Kantinen-Automatisierungssystem",
+    loginFeature1: "Menüplanung, tägliche Produktion, Verbrauch & Abfallverfolgung",
+    loginFeature2: "Detaillierte Berichte",
+    loginFeature3: "Live-Dashboard & Diagramme",
+    menuLabel: "Menü",
+    btnLogout: "Abmelden",
+    sidebarPanel: "Dashboard",
+    sidebarMenu: "Wochenmenü",
+    sidebarRecords: "Aufzeichnungen",
+    sidebarReport: "Bericht",
+    sidebarHaccp: "Lebensmittelsicherheit",
+    sidebarCalibration: "Kalibrierung",
+    sidebarEntry: "Produktion Verbrauch Abfall",
+    sidebarOil: "Altöl",
+    sidebarPackaging: "Verpackungsabfall",
+    sidebarCharts: "Diagramme",
+    sidebarYearly: "Jahresvergleich",
+    sidebarSpending: "Ausgaben",
+    sidebarUnitPrice: "Stückpreise",
+    sidebarDownload: "Alle herunterladen",
+    sidebarBackup: "Bei Supabase sichern",
+    sidebarRestore: "Von Supabase wiederherstellen",
+    sidebarAdmin: "Verwaltung",
+    sidebarLogs: "Protokolle",
+    sidebarTheme: "Design",
+    sidebarManual: "Benutzerhandbuch",
+    kpiTotalRecords: "Gesamte Produktions Tage",
+    kpiTodayProduction: "Heutige Produktion",
+    kpiHaccpAlarm: "Kühllager-Temperaturalarm",
+    kpiWasteRate: "Abfallquote",
+    printPdf: "PDF drucken",
+    loadingSync: "Daten werden synchronisiert...",
+    loadingSupabase: "Supabase-Verbindung wird geprüft",
+    loadingSkip: "Klicken zum Überspringen",
+    versionLabel: "Anwendungsversion",
+  },
+  fr: {
+    loginTitle: "CONNEXION",
+    loginSubtitle: "Entrez vos identifiants pour vous connecter",
+    loginUsername: "Nom d'utilisateur",
+    loginSelectUser: "Sélectionner l'utilisateur",
+    loginPassword: "Mot de passe",
+    loginBtn: "Se connecter",
+    loginHint: "Vous pouvez obtenir votre mot de passe auprès de votre administrateur",
+    loginTagline: "Système d'automatisation de la cantine",
+    loginFeature1: "Planification du menu, production quotidienne, consommation et déchets",
+    loginFeature2: "Rapports détaillés",
+    loginFeature3: "Tableau de bord en direct et graphiques",
+    menuLabel: "Menu",
+    btnLogout: "Déconnexion",
+    sidebarPanel: "Tableau de bord",
+    sidebarMenu: "Menu hebdomadaire",
+    sidebarRecords: "Enregistrements",
+    sidebarReport: "Rapport",
+    sidebarHaccp: "Sécurité alimentaire",
+    sidebarCalibration: "Calibration",
+    sidebarEntry: "Production Consommation Déchets",
+    sidebarOil: "Huile usagée",
+    sidebarPackaging: "Déchets d'emballage",
+    sidebarCharts: "Graphiques",
+    sidebarYearly: "Comparaison annuelle",
+    sidebarSpending: "Dépenses",
+    sidebarUnitPrice: "Prix unitaires",
+    sidebarDownload: "Tout télécharger",
+    sidebarBackup: "Sauvegarder sur Supabase",
+    sidebarRestore: "Restaurer depuis Supabase",
+    sidebarAdmin: "Administration",
+    sidebarLogs: "Journaux",
+    sidebarTheme: "Thème",
+    sidebarManual: "Manuel utilisateur",
+    kpiTotalRecords: "Total des jours de production",
+    kpiTodayProduction: "Production du jour",
+    kpiHaccpAlarm: "Alarme température chambre froide",
+    kpiWasteRate: "Taux de déchets",
+    printPdf: "Imprimer PDF",
+    loadingSync: "Synchronisation des données...",
+    loadingSupabase: "Vérification de la connexion Supabase",
+    loadingSkip: "Cliquez pour ignorer",
+    versionLabel: "Version de l'application",
+  },
+  es: {
+    loginTitle: "INICIAR SESIÓN",
+    loginSubtitle: "Ingrese sus credenciales para acceder",
+    loginUsername: "Usuario",
+    loginSelectUser: "Seleccionar usuario",
+    loginPassword: "Contraseña",
+    loginBtn: "Iniciar sesión",
+    loginHint: "Puede obtener su contraseña del administrador",
+    loginTagline: "Sistema de automatización de cafetería",
+    loginFeature1: "Planificación de menú, producción diaria, consumo y residuos",
+    loginFeature2: "Informes detallados",
+    loginFeature3: "Panel en vivo y gráficos",
+    menuLabel: "Menú",
+    btnLogout: "Cerrar sesión",
+    sidebarPanel: "Panel",
+    sidebarMenu: "Menú semanal",
+    sidebarRecords: "Registros",
+    sidebarReport: "Informe",
+    sidebarHaccp: "Seguridad alimentaria",
+    sidebarCalibration: "Calibración",
+    sidebarEntry: "Producción Consumo Residuos",
+    sidebarOil: "Aceite usado",
+    sidebarPackaging: "Residuos de envases",
+    sidebarCharts: "Gráficos",
+    sidebarYearly: "Comparación anual",
+    sidebarSpending: "Gastos",
+    sidebarUnitPrice: "Precios unitarios",
+    sidebarDownload: "Descargar todo",
+    sidebarBackup: "Copia de seguridad",
+    sidebarRestore: "Restaurar desde Supabase",
+    sidebarAdmin: "Administración",
+    sidebarLogs: "Registros de actividad",
+    sidebarTheme: "Tema",
+    sidebarManual: "Manual de usuario",
+    kpiTotalRecords: "Total de días de producción",
+    kpiTodayProduction: "Producción de hoy",
+    kpiHaccpAlarm: "Alarma de temperatura de cámara frigorífica",
+    kpiWasteRate: "Tasa de residuos",
+    printPdf: "Imprimir PDF",
+    loadingSync: "Sincronizando datos...",
+    loadingSupabase: "Verificando conexión con Supabase",
+    loadingSkip: "Haga clic para omitir",
+    versionLabel: "Versión de la aplicación",
+  },
+  pt: {
+    loginTitle: "ENTRAR",
+    loginSubtitle: "Insira suas credenciais para acessar",
+    loginUsername: "Usuário",
+    loginSelectUser: "Selecionar usuário",
+    loginPassword: "Senha",
+    loginBtn: "Entrar",
+    loginHint: "Você pode obter sua senha do administrador",
+    loginTagline: "Sistema de automação do refeitório",
+    loginFeature1: "Planejamento de cardápio, produção diária, consumo e resíduos",
+    loginFeature2: "Relatórios detalhados",
+    loginFeature3: "Painel ao vivo e gráficos",
+    menuLabel: "Cardápio",
+    btnLogout: "Sair",
+    sidebarPanel: "Painel",
+    sidebarMenu: "Cardápio semanal",
+    sidebarRecords: "Registros",
+    sidebarReport: "Relatório",
+    sidebarHaccp: "Segurança alimentar",
+    sidebarCalibration: "Calibração",
+    sidebarEntry: "Produção Consumo Resíduos",
+    sidebarOil: "Óleo usado",
+    sidebarPackaging: "Resíduos de embalagem",
+    sidebarCharts: "Gráficos",
+    sidebarYearly: "Comparação anual",
+    sidebarSpending: "Despesas",
+    sidebarUnitPrice: "Preços unitários",
+    sidebarDownload: "Baixar tudo",
+    sidebarBackup: "Backup no Supabase",
+    sidebarRestore: "Restaurar do Supabase",
+    sidebarAdmin: "Administração",
+    sidebarLogs: "Registros de atividade",
+    sidebarTheme: "Tema",
+    sidebarManual: "Manual do usuário",
+    kpiTotalRecords: "Total de dias de produção",
+    kpiTodayProduction: "Produção de hoje",
+    kpiHaccpAlarm: "Alarme de temperatura da câmara fria",
+    kpiWasteRate: "Taxa de resíduos",
+    printPdf: "Imprimir PDF",
+    loadingSync: "Sincronizando dados...",
+    loadingSupabase: "Verificando conexão com Supabase",
+    loadingSkip: "Clique para pular",
+    versionLabel: "Versão do aplicativo",
+  },
+  uz: {
+    loginTitle: "KIRISH",
+    loginSubtitle: "Hisobingizga kirish uchun ma'lumotlaringizni kiriting",
+    loginUsername: "Foydalanuvchi",
+    loginSelectUser: "Foydalanuvchini tanlang",
+    loginPassword: "Parol",
+    loginBtn: "Kirish",
+    loginHint: "Parolingizni administratoringizdan olishingiz mumkin",
+    loginTagline: "Oshxona avtomatlashtirish tizimi",
+    loginFeature1: "Menyu rejalashtirish, kunlik ishlab chiqarish, iste'mol va chiqindilarni kuzatish",
+    loginFeature2: "Batafsil hisobotlar",
+    loginFeature3: "Jonli panel va grafiklar",
+    menuLabel: "Menyu",
+    btnLogout: "Chiqish",
+    sidebarPanel: "Panel",
+    sidebarMenu: "Haftalik menyu",
+    sidebarRecords: "Yozuvlar",
+    sidebarReport: "Hisobot",
+    sidebarHaccp: "Oziq-ovqat xavfsizligi",
+    sidebarCalibration: "Kalibrlash",
+    sidebarEntry: "Ishlab chiqarish Istemol Chiqindi",
+    sidebarOil: "Chiqindilangan moy",
+    sidebarPackaging: "Qadoqlash chiqindilari",
+    sidebarCharts: "Grafiklar",
+    sidebarYearly: "Yillik taqqoslash",
+    sidebarSpending: "Xarajatlar",
+    sidebarUnitPrice: "Birlik narxlari",
+    sidebarDownload: "Hammasini yuklab olish",
+    sidebarBackup: "Supabase ga zaxiralash",
+    sidebarRestore: "Supabase dan tiklash",
+    sidebarAdmin: "Boshqaruv",
+    sidebarLogs: "Jurnal yozuvlari",
+    sidebarTheme: "Mavzu",
+    sidebarManual: "Foydalanuvchi qo'llanmasi",
+    kpiTotalRecords: "Jami ishlab chiqarish kunlari",
+    kpiTodayProduction: "Bugungi ishlab chiqarish",
+    kpiHaccpAlarm: "Sovutgich harorati signalizatsiyasi",
+    kpiWasteRate: "Chiqindi foizi",
+    printPdf: "PDF chop etish",
+    loadingSync: "Ma'lumotlar sinxronlashtirilmoqda...",
+    loadingSupabase: "Supabase ulanishi tekshirilmoqda",
+    loadingSkip: "O'tish uchun bosing",
+    versionLabel: "Ilova versiyasi",
+  }
+};
 
+var currentLang = localStorage.getItem('bhys_lang') || 'tr';
+var langLabels = { tr:'TR', en:'EN', az:'AZ', ru:'RU', ar:'AR', de:'DE', fr:'FR', es:'ES', pt:'PT', uz:'UZ' };
+
+function toggleLangDropdown() {
+  var dd = document.getElementById('langDropdown');
+  if (dd) dd.classList.toggle('open');
+}
+
+function setLanguage(lang) {
+  if (!I18N[lang]) return;
+  currentLang = lang;
+  localStorage.setItem('bhys_lang', lang);
+  document.documentElement.setAttribute('lang', lang);
+  if (lang === 'ar') {
+    document.documentElement.setAttribute('dir', 'rtl');
+  } else {
+    document.documentElement.removeAttribute('dir');
+  }
+  var opts = document.querySelectorAll('.lang-option');
+  opts.forEach(function(o) {
+    o.classList.toggle('active', o.getAttribute('data-lang') === lang);
+  });
+  var flagEl = document.getElementById('langCurrentFlag');
+  if (flagEl) flagEl.textContent = langLabels[lang] || lang.toUpperCase();
+  var dd = document.getElementById('langDropdown');
+  if (dd) dd.classList.remove('open');
+  applyTranslations();
+}
+
+function t(key) {
+  var dict = I18N[currentLang] || I18N['tr'];
+  return dict[key] || I18N['tr'][key] || key;
+}
+
+function applyTranslations() {
+  var dict = I18N[currentLang] || I18N['tr'];
+  function sc(sel, val) { var el = document.querySelector(sel); if (el) el.textContent = val; }
+
+  sc('.login-title', 'KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ');
+  sc('.login-sub', dict.loginTitle);
+  sc('.login-sub-en', 'Nutrition Services Management System (NSMS)');
+  sc('.login-form-title', 'BHYS');
+  sc('.login-form-sub', dict.loginTitle);
+  sc('.login-hint', dict.loginHint);
+
+  var feats = document.querySelectorAll('.login-features li');
+  if (feats.length >= 3) {
+    feats[0].lastChild.textContent = dict.loginFeature1;
+    feats[1].lastChild.textContent = dict.loginFeature2;
+    feats[2].lastChild.textContent = dict.loginFeature3;
+  }
+  var loginLabels = document.querySelectorAll('.login-label');
+  if (loginLabels.length >= 2) {
+    loginLabels[0].textContent = dict.loginUsername;
+    loginLabels[1].textContent = dict.loginPassword;
+  }
+  var selFirst = document.querySelector('#loginUsername option');
+  if (selFirst) selFirst.textContent = dict.loginSelectUser;
+  sc('.login-submit', dict.loginBtn);
+
+  sc('.menu-toggle span', dict.menuLabel);
+
+  var sidebarMap = {
+    'tab-dashboard': dict.sidebarPanel,
+    'tab-menu': dict.sidebarMenu,
+    'tab-records': dict.sidebarRecords,
+    'tab-report': dict.sidebarReport,
+    'tab-haccp': dict.sidebarHaccp,
+    'tab-kalibrasyon': dict.sidebarCalibration,
+    'tab-yag': dict.sidebarOil,
+    'tab-ambalaj': dict.sidebarPackaging,
+    'tab-charts': dict.sidebarCharts,
+    'tab-yillik': dict.sidebarYearly,
+    'tab-harcama': dict.sidebarSpending,
+    'tab-birimfiyat': dict.sidebarUnitPrice,
+  };
+  Object.keys(sidebarMap).forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (btn) {
+      var sp = btn.querySelector('span');
+      if (sp) sp.textContent = sidebarMap[id];
+    }
+  });
+  var sidebarActions = document.querySelectorAll('.sidebar-actions .tab-btn span');
+  var actionLabels = [dict.sidebarDownload, dict.sidebarBackup, dict.sidebarAdmin, dict.sidebarLogs, dict.sidebarRestore, dict.sidebarTheme, dict.sidebarManual];
+  sidebarActions.forEach(function(sp, i) {
+    if (i < actionLabels.length) sp.textContent = actionLabels[i];
+  });
+  var entryBtns = document.querySelectorAll('.sidebar-nav .tab-btn');
+  entryBtns.forEach(function(btn) {
+    var sp = btn.querySelector('span');
+    if (sp && sp.textContent.includes('Üretim Tüketim')) sp.textContent = dict.sidebarEntry;
+  });
+
+  s('loadingText', dict.loadingSync);
+  s('loadingSub', dict.loadingSupabase);
+  function s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+  var verEl = document.getElementById('appVersionLabel');
+  if (verEl) verEl.title = dict.versionLabel;
+
+  var pageTitleEl = document.getElementById('pageTitle');
+  if (pageTitleEl) {
+    var tabId = '';
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      if (b.classList.contains('active')) tabId = b.id;
+    });
+    if (sidebarMap[tabId]) pageTitleEl.textContent = sidebarMap[tabId];
+  }
+}
+
+document.addEventListener('click', function(e) {
+  var sel = document.getElementById('langSelector');
+  var dd = document.getElementById('langDropdown');
+  if (sel && dd && !sel.contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  setLanguage(currentLang);
+});
 
 
 
