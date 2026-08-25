@@ -6996,6 +6996,115 @@ function renderYearlyCharts() {
   try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
   try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#0ea5e9', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
   try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
+  renderYillikWasteTable(sel, hasPrev ? prev : null);
+}
+
+function renderYillikWasteTable(year1, year2) {
+  var container = document.getElementById('yillikWasteTableContainer');
+  if (!container) return;
+
+  function getYearData(year) {
+    var map = {};
+    records.forEach(function(r) {
+      if (!r.tarih) return;
+      var d = new Date(r.tarih + 'T12:00:00');
+      if (isNaN(d) || d.getFullYear() !== year) return;
+      var key = r.yemek_adi || 'Belirsiz';
+      if (!map[key]) map[key] = { uretim: 0, atik: 0, porsiyon: 0, adet: 0 };
+      map[key].uretim += Number(r.yemek) || 0;
+      map[key].atik += Number(r.atik) || 0;
+      map[key].porsiyon += Number(r.porsiyon) || 0;
+      map[key].adet++;
+    });
+    return map;
+  }
+
+  var data1 = getYearData(year1);
+  var data2 = year2 ? getYearData(year2) : null;
+
+  var allFoods = new Set(Object.keys(data1));
+  if (data2) Object.keys(data2).forEach(function(f) { allFoods.add(f); });
+  var foods = [...allFoods].sort();
+
+  if (foods.length === 0) {
+    container.innerHTML = '<div style="padding:1rem;color:var(--text-muted);text-align:center;font-size:0.85rem">' + (t('emptyDashboard') || 'Kayıt bulunamadı.') + '</div>';
+    return;
+  }
+
+  var hasComparison = data2 !== null;
+  var fmt = function(v) { return Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); };
+  var fmtInt = function(v) { return Number(v).toLocaleString('tr-TR'); };
+
+  var totals1 = { uretim: 0, atik: 0, porsiyon: 0 };
+  var totals2 = { uretim: 0, atik: 0, porsiyon: 0 };
+
+  var rows = foods.map(function(food) {
+    var d1 = data1[food] || { uretim: 0, atik: 0, porsiyon: 0 };
+    var d2 = data2 ? (data2[food] || { uretim: 0, atik: 0, porsiyon: 0 }) : null;
+    totals1.uretim += d1.uretim;
+    totals1.atik += d1.atik;
+    totals1.porsiyon += d1.porsiyon;
+    if (d2) {
+      totals2.uretim += d2.uretim;
+      totals2.atik += d2.atik;
+      totals2.porsiyon += d2.porsiyon;
+    }
+    var atikGr1 = d1.porsiyon > 0 ? (d1.atik * 1000 / d1.porsiyon) : 0;
+    var atikGr2 = d2 && d2.porsiyon > 0 ? (d2.atik * 1000 / d2.porsiyon) : 0;
+    return { food: food, d1: d1, d2: d2, atikGr1: atikGr1, atikGr2: atikGr2 };
+  });
+
+  rows.sort(function(a, b) { return b.d1.atik - a.d1.atik; });
+
+  var h = '<table class="data-table" style="width:100%;font-size:0.82rem;border-collapse:collapse">';
+  h += '<thead><tr>';
+  h += '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap">' + (t('thFoodType') || 'Yemek Türü') + '</th>';
+  h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Üretim</th>';
+  h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Atık (kg)</th>';
+  h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Atık (gr/pors.)</th>';
+  if (hasComparison) {
+    h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Üretim</th>';
+    h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Atık (kg)</th>';
+    h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Atık (gr/pors.)</th>';
+    h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">Fark (kg)</th>';
+  }
+  h += '</tr></thead><tbody>';
+
+  rows.forEach(function(row) {
+    h += '<tr style="border-bottom:1px solid var(--border)">';
+    h += '<td style="padding:7px 10px;font-weight:500">' + escapeHtml(row.food) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right">' + fmtInt(row.d1.uretim) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right;color:var(--accent-orange);font-weight:600">' + fmt(row.d1.atik) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right">' + fmt(row.atikGr1) + '</td>';
+    if (hasComparison) {
+      h += '<td style="padding:7px 10px;text-align:right">' + fmtInt(row.d2.uretim) + '</td>';
+      h += '<td style="padding:7px 10px;text-align:right;color:var(--accent-orange);font-weight:600">' + fmt(row.d2.atik) + '</td>';
+      h += '<td style="padding:7px 10px;text-align:right">' + fmt(row.atikGr2) + '</td>';
+      var fark = row.d1.atik - row.d2.atik;
+      var farkCls = fark > 0 ? 'color:var(--accent-red)' : fark < 0 ? 'color:var(--accent-green)' : '';
+      h += '<td style="padding:7px 10px;text-align:right;font-weight:600;' + farkCls + '">' + (fark > 0 ? '+' : '') + fmt(fark) + '</td>';
+    }
+    h += '</tr>';
+  });
+
+  var toplamAtikGr1 = totals1.porsiyon > 0 ? (totals1.atik * 1000 / totals1.porsiyon) : 0;
+  h += '<tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg-card)">';
+  h += '<td style="padding:8px 10px">TOPLAM</td>';
+  h += '<td style="padding:8px 10px;text-align:right">' + fmtInt(totals1.uretim) + '</td>';
+  h += '<td style="padding:8px 10px;text-align:right;color:var(--accent-orange)">' + fmt(totals1.atik) + '</td>';
+  h += '<td style="padding:8px 10px;text-align:right">' + fmt(toplamAtikGr1) + '</td>';
+  if (hasComparison) {
+    var toplamAtikGr2 = totals2.porsiyon > 0 ? (totals2.atik * 1000 / totals2.porsiyon) : 0;
+    var toplamFark = totals1.atik - totals2.atik;
+    var tfCls = toplamFark > 0 ? 'color:var(--accent-red)' : toplamFark < 0 ? 'color:var(--accent-green)' : '';
+    h += '<td style="padding:8px 10px;text-align:right">' + fmtInt(totals2.uretim) + '</td>';
+    h += '<td style="padding:8px 10px;text-align:right;color:var(--accent-orange)">' + fmt(totals2.atik) + '</td>';
+    h += '<td style="padding:8px 10px;text-align:right">' + fmt(toplamAtikGr2) + '</td>';
+    h += '<td style="padding:8px 10px;text-align:right;font-weight:700;' + tfCls + '">' + (toplamFark > 0 ? '+' : '') + fmt(toplamFark) + '</td>';
+  }
+  h += '</tr>';
+  h += '</tbody></table>';
+  container.innerHTML = h;
 }
 
 const chartInstances = new Map();
@@ -11279,6 +11388,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı",
     yearlyMonthlyWaste: "Aylık Atık Karşılaştırması (kg)",
     yearlyMonthlyWasteNote: "1. yıl vs 2. yıl - atık miktarı (kg)",
+    yearlyWasteListTitle: "Yıllık Atık Listesi",
     spendingRatesTitle: "Kişi Başı Harcama Oranları (Öğrenci, Personel & Yemek)",
     spendingStudentRate: "Öğrenci Başı Harcama Tutarı (TL)",
     btnSaveStudentRate: "Ögr. Tutar Kaydet",
@@ -11585,6 +11695,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "Year 1 vs Year 2 - student turnstile pass count",
     yearlyMonthlyWaste: "Monthly Waste Comparison (kg)",
     yearlyMonthlyWasteNote: "Year 1 vs Year 2 - waste amount (kg)",
+    yearlyWasteListTitle: "Yearly Waste List",
     spendingRatesTitle: "Per Person Spending Rates (Students, Staff & Meals)",
     spendingStudentRate: "Student Per Person Spending Amount (TL)",
     btnSaveStudentRate: "Save Student Amount",
@@ -11891,6 +12002,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "1. il vs 2. il - tələbə turnike keçid sayı",
     yearlyMonthlyWaste: "Aylıq Tullantı Müqayisəsi (kg)",
     yearlyMonthlyWasteNote: "1. il vs 2. il - tullantı miqdarı (kg)",
+    yearlyWasteListTitle: "İllik Tullantı Siyahısı",
     spendingRatesTitle: "Şəxs Başına Xərc Nisbətləri (Tələbə, Personnel & Yemək)",
     spendingStudentRate: "Tələbə Başına Xərc Məbləği (TL)",
     btnSaveStudentRate: "Tələbə Məbləğini Saxla",
@@ -12197,6 +12309,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "1-й год vs 2-й год - количество проходов студентов",
     yearlyMonthlyWaste: "Ежемесячное сравнение отходов (кг)",
     yearlyMonthlyWasteNote: "1-й год vs 2-й год - количество отходов (кг)",
+    yearlyWasteListTitle: "Годовой список отходов",
     spendingRatesTitle: "Расходы на человека (Студенты, персонал и блюда)",
     spendingStudentRate: "Расходы на студента (TL)",
     btnSaveStudentRate: "Сохранить сумму студентов",
@@ -12503,6 +12616,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "السنة الأولى vs السنة الثانية - عدد عبور الطلاب",
     yearlyMonthlyWaste: "مقارنة النفايات الشهرية (كغ)",
     yearlyMonthlyWasteNote: "السنة الأولى vs السنة الثانية - كمية النفايات (كغ)",
+    yearlyWasteListTitle: "قائمة النفايات السنوية",
     spendingRatesTitle: "معدلات الإنفاق لكل شخص (الطلاب والموظفون والوجبات)",
     spendingStudentRate: "مبلغ إنفاق كل طالب (TL)",
     btnSaveStudentRate: "حفظ مبلغ الطلاب",
@@ -12809,6 +12923,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "Jahr 1 vs Jahr 2 - Studierende-Drehkreuzdurchgänge",
     yearlyMonthlyWaste: "Monatlicher Abfall-Vergleich (kg)",
     yearlyMonthlyWasteNote: "Jahr 1 vs Jahr 2 - Abfallmenge (kg)",
+    yearlyWasteListTitle: "Jährliche Abfallliste",
     spendingRatesTitle: "Pro-Kopf-Ausgaben (Studierende, Personal & Mahlzeiten)",
     spendingStudentRate: "Studierenden-Ausgaben pro Person (TL)",
     btnSaveStudentRate: "Studierenden-Betrag speichern",
@@ -13115,6 +13230,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "Année 1 vs Année 2 - nombre de passages étudiants",
     yearlyMonthlyWaste: "Comparaison mensuelle des déchets (kg)",
     yearlyMonthlyWasteNote: "Année 1 vs Année 2 - quantité de déchets (kg)",
+    yearlyWasteListTitle: "Liste annuelle des déchets",
     spendingRatesTitle: "Taux de dépenses par personne (Étudiants, Personnel & Repas)",
     spendingStudentRate: "Montant de dépense par étudiant (TL)",
     btnSaveStudentRate: "Enregistrer montant étudiants",
@@ -13421,6 +13537,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "Año 1 vs Año 2 - cantidad de pasadas de estudiantes",
     yearlyMonthlyWaste: "Comparación mensual de residuos (kg)",
     yearlyMonthlyWasteNote: "Año 1 vs Año 2 - cantidad de residuos (kg)",
+    yearlyWasteListTitle: "Lista anual de residuos",
     spendingRatesTitle: "Tasas de gasto por persona (Estudiantes, Personal y Comidas)",
     spendingStudentRate: "Monto de gasto por estudiante (TL)",
     btnSaveStudentRate: "Guardar monto estudiantes",
@@ -13727,6 +13844,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "Ano 1 vs Ano 2 - quantidade de passagens de estudantes",
     yearlyMonthlyWaste: "Comparação mensal de resíduos (kg)",
     yearlyMonthlyWasteNote: "Ano 1 vs Ano 2 - quantidade de resíduos (kg)",
+    yearlyWasteListTitle: "Lista anual de resíduos",
     spendingRatesTitle: "Taxas de despesa por pessoa (Estudantes, Pessoal e Refeições)",
     spendingStudentRate: "Valor de despesa por estudante (TL)",
     btnSaveStudentRate: "Salvar valor estudantes",
@@ -14033,6 +14151,7 @@ var I18N = {
     yearlyMonthlyStudentNote: "1-yil vs 2-yil - talaba shlagbirdan o'tish soni",
     yearlyMonthlyWaste: "Oylik chiqindi taqqoslash (kg)",
     yearlyMonthlyWasteNote: "1-yil vs 2-yil - chiqindi miqdori (kg)",
+    yearlyWasteListTitle: "Yillik chiqindi ro'yxati",
     spendingRatesTitle: "Shaxs boshiga xarajat stavkalari (Talabalar, xodimlar va ovqatlar)",
     spendingStudentRate: "Talaba boshiga xarajat miqdori (TL)",
     btnSaveStudentRate: "Talaba miqdorini saqlash",
