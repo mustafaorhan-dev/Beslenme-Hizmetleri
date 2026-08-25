@@ -3813,9 +3813,7 @@ function exportChartsWord() {
   const sections = [
     { sel: '#content-charts', label: 'Aylık Grafikler' },
     { sel: '#content-yillik', label: 'Yıllık Grafikler' },
-    { sel: '#content-harcama', label: 'Harcama Grafikleri' },
-    { sel: '#content-yag', label: 'Atık Yağı Grafikleri' },
-    { sel: '#content-ambalaj', label: 'Ambalaj Atığı Grafikleri' }
+    { sel: '#content-harcama', label: 'Harcama Grafikleri' }
   ];
   const images = [];
   const blocks = [];
@@ -4130,6 +4128,7 @@ async function switchTab(name) {
   const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
   document.getElementById('pageTitle').textContent = labels[name] || name;
   localStorage.setItem('atik_kontrol_active_tab', name);
+  applyTranslations();
 }
 
 // ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
@@ -5576,7 +5575,7 @@ function renderProduction(_weekKey, _weekData, days) {
   let html = '';
   days.forEach(d => {
     const kisi = d.data.kisi || 0;
-    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} kişi</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
+    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} ${t('person')}</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
 
     const dayAgg = {};
     for (let ci = 0; ci < 5; ci++) {
@@ -5618,9 +5617,9 @@ function renderProduction(_weekKey, _weekData, days) {
         var tut = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
         if (tut > 0) gunlukToplam += Math.round(tut * 100) / 100;
       });
-      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> Stok Düşüm Listesi – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">Toplam: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
+      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${t('stockDeductionList')} – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">${t('total')}: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
       dayEntries.forEach((e, idx) => {
-        const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} çeşitte)</span>` : '';
+        const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} ${t('inVarieties')})</span>` : '';
         var hesapMiktari = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
         const found = findBirimFiyat(e.ad, e.birim);
         const tutar = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
@@ -5838,15 +5837,15 @@ function renderMaliTablo(days) {
 
   // Özet kartları
   html += '<div class="mali-chips">' +
-    '<div class="mali-chip mali-chip-vurgu"><div class="mali-chip-label">Haftalık Genel Toplam</div><div class="mali-chip-value">' + formatTRY(genelToplam) + '</div></div>' +
-    '<div class="mali-chip"><div class="mali-chip-label">Günlük Ortalama</div><div class="mali-chip-value">' + formatTRY(Math.round(genelToplam / 5 * 100) / 100) + '</div></div>' +
-    '<div class="mali-chip"><div class="mali-chip-label">Kişi Başı Ortalama</div><div class="mali-chip-value">' + formatTRY(Math.round(kisGun * 100) / 100) + '</div></div>' +
-    '<div class="mali-chip"><div class="mali-chip-label">Toplam Kişi/Gün</div><div class="mali-chip-value">' + toplamKisiGun + '</div></div>' +
+    '<div class="mali-chip mali-chip-vurgu"><div class="mali-chip-label">' + t('weeklyGrandTotal') + '</div><div class="mali-chip-value">' + formatTRY(genelToplam) + '</div></div>' +
+    '<div class="mali-chip"><div class="mali-chip-label">' + t('dailyAverage') + '</div><div class="mali-chip-value">' + formatTRY(Math.round(genelToplam / 5 * 100) / 100) + '</div></div>' +
+    '<div class="mali-chip"><div class="mali-chip-label">' + t('avgPerPerson') + '</div><div class="mali-chip-value">' + formatTRY(Math.round(kisGun * 100) / 100) + '</div></div>' +
+    '<div class="mali-chip"><div class="mali-chip-label">' + t('totalPersonDays') + '</div><div class="mali-chip-value">' + toplamKisiGun + '</div></div>' +
     '</div>';
 
   // Günlük maliyet tablosu
   html += '<div class="table-wrapper"><table class="data-table mali-table"><thead><tr>' +
-    '<th>Gün</th><th>Tarih</th><th style="text-align:center">Kişi</th><th style="text-align:right">Günlük Malzeme Maliyeti</th><th style="text-align:right">Kişi Başı</th>' +
+    '<th>' + t('colDay') + '</th><th>' + t('colDate') + '</th><th style="text-align:center">' + t('colPerson') + '</th><th style="text-align:right">' + t('dailyMaterialCost') + '</th><th style="text-align:right">' + t('perPerson') + '</th>' +
     '</tr></thead><tbody>';
   gunVerileri.forEach(function(g) {
     var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : '—';
@@ -6134,14 +6133,14 @@ function renderYemekForm(ad, kalori, alerjen) {
 
     <div style="border-top:1px solid var(--border);padding-top:0.75rem">
       <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
-        <strong style="font-size:0.82rem">Malzemeler</strong>
-        <span style="font-size:0.7rem;color:var(--text-muted)">(kişi başı gram)</span>
+        <strong style="font-size:0.82rem">${t('ingredients')}</strong>
+        <span style="font-size:0.7rem;color:var(--text-muted)">${t('perPersonGram')}</span>
       </div>
       <table style="width:100%;font-size:0.8rem">
-        <thead><tr><th style="text-align:left">Malzeme</th><th style="width:80px;text-align:center">/kişi</th><th style="width:60px">Birim</th><th style="width:30px"></th></tr></thead>
+        <thead><tr><th style="text-align:left">${t('colIngredient')}</th><th style="width:80px;text-align:center">${t('colPerPerson')}</th><th style="width:60px">${t('colUnit')}</th><th style="width:30px"></th></tr></thead>
         <tbody id="yfTarif_tbody">${tarifRows}</tbody>
       </table>
-      <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">+ Malzeme Ekle</button>
+      <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">${t('addIngredient')}</button>
     </div>
   </div>`;
 }
@@ -6274,7 +6273,7 @@ function exportYemekListesiPDF() {
     '<h1>Yemek Listesi</h1>' +
     '<div class="date">' + new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) + '</div>' +
     '<div class="info">Toplam ' + list.length + ' yemek</div>' +
-    '<table><thead><tr><th>Yemek Adı</th><th>Alerjen</th><th>Reçete (kişi başı)</th></tr></thead>' +
+    '<table><thead><tr><th>' + t('foodName') + '</th><th>' + t('allergen') + '</th><th>' + t('recipePerPerson') + '</th></tr></thead>' +
     '<tbody>' + rowsHtml + '</tbody></table>' +
     '<div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
     '</body></html>');
@@ -7448,10 +7447,10 @@ function drawAllCharts() {
   const clickHandler = (label) => { const r = getRecordsByLabel(label); if (r) showChartDetailModal(label, r); };
 
   // --- Charts (her biri try-catch ile izole) ---
-  try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: 'Aylık Atık (kg)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
-  try { makeChart('canvasAtikPorsiyon', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#fb923c', label: 'Aylık Atık (porsiyon)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPorsiyon error:', e); }
-  try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
-  try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: 'Aylık Turnike Geçisi' }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
+  try { makeChart('canvasAtik', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atik')), color: '#f97316', label: t('chartMonthlyWasteKg') }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtik error:', e); }
+  try { makeChart('canvasAtikPorsiyon', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#fb923c', label: t('chartMonthlyWastePortion') }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPorsiyon error:', e); }
+  try { makeChart('canvasYemek', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: t('chartMonthlyMealCount') }], { onClick: clickHandler }); } catch(e) { console.warn('chartYemek error:', e); }
+  try { makeChart('canvasTurnike', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#10b981', label: t('chartMonthlyTurnstile') }], { onClick: clickHandler }); } catch(e) { console.warn('chartTurnike error:', e); }
 
   const prevYearAtik = allMonthLabels.map(m => {
     const [ay, yil] = m.split('/');
@@ -7459,11 +7458,11 @@ function drawAllCharts() {
   });
   const hasPrevYear = prevYearAtik.some(v => v > 0);
   const aylikSets = [
-    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: 'Aylık Üretim (kişi)' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: 'Aylık Geçiş (kişi)' },
-    { data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#f59e0b', label: 'Aylık Çöpe Giden (porsiyon)' },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'yemek')), color: '#6366f1', label: t('chartMonthlyProduction') },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'toplam')), color: '#22d3ee', label: t('chartMonthlyPasses') },
+    { data: allMonthLabels.map(m => getMonthVal(m, 'atikPorsiyon')), color: '#f59e0b', label: t('chartMonthlyWaste') },
   ];
-  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: 'Geçen Yıl Çöpe Giden (porsiyon)', dashed: true });
+  if (hasPrevYear) aylikSets.push({ data: prevYearAtik, color: '#f59e0b', label: t('chartLastYearWaste'), dashed: true });
   try { makeChart('canvasAylik', allMonthLabels, aylikSets, { onClick: clickHandler, type: 'bar' }); } catch(e) { console.warn('chartAylik error:', e); }
 
   const farkData = allMonthLabels.map(m => getMonthVal(m, 'yemek') - getMonthVal(m, 'toplam'));
@@ -7473,15 +7472,15 @@ function drawAllCharts() {
     const y = getMonthVal(m, 'yemek'), a = getMonthVal(m, 'atik');
     return y > 0 ? (a * 250 / y) : 0;
   });
-  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#0ea5e9', label: 'Aylık Atık Oranı %' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
-  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#0ea5e9', label: 'Aylık Öğrenci Sayısı' }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
+  try { makeChart('canvasAtikOran', allMonthLabels, [{ data: aylikOran, color: '#0ea5e9', label: t('chartMonthlyWasteRate') }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikOran error:', e); }
+  try { makeChart('canvasOgrenci', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'ogrenci')), color: '#0ea5e9', label: t('chartMonthlyStudent') }], { onClick: clickHandler }); } catch(e) { console.warn('chartOgrenci error:', e); }
   try { makeChart('canvasIdariPersonel', allMonthLabels, [{ data: allMonthLabels.map(m => getMonthVal(m, 'idari') + getMonthVal(m, 'personel')), color: '#0ea5e9', label: 'Akademik ve İdari + SKS Personeli' }], { onClick: clickHandler }); } catch(e) { console.warn('chartIdariPersonel error:', e); }
 
   const atikPerKisi = allMonthLabels.map(m => {
     const t = getMonthVal(m, 'toplam'), a = getMonthVal(m, 'atik');
     return t > 0 ? a / t : 0;
   });
-  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#14b8a6', label: 'Kişi Başı Atık (kg/kisi)' }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
+  try { makeChart('canvasAtikPerKisi', allMonthLabels, [{ data: atikPerKisi, color: '#14b8a6', label: t('chartWastePerPersonLabel') }], { onClick: clickHandler }); } catch(e) { console.warn('chartAtikPerKisi error:', e); }
 
   // --- HACCP Sicaklik Chart (her depo ayri kart) ---
   function haccpFilter(r) {
@@ -10464,7 +10463,7 @@ function buildExportHTML() {
     kisiCells.push(v);
     kisiVals.push(parseInt(v) || 0);
   }
-  tableData.push({ label: 'Kişi Sayısı', cells: kisiCells });
+  tableData.push({ label: t('menuPersonCount'), cells: kisiCells });
   var dayNotes = [];
   for (var di = 0; di < 5; di++) {
     var notes = [];
@@ -10540,14 +10539,14 @@ function buildExportHTML() {
       var dayTotalHtml = '';
       var dayEntries = Object.values(dayAgg).filter(function(e) { return e.total > 0; });
       if (dayEntries.length) {
-        dayTotalHtml = '<div class="pdt"><div class="pdth">Stok Düşüm Listesi – ' + gunler[di] + '</div>';
+        dayTotalHtml = '<div class="pdt"><div class="pdth">' + t('stockDeductionList') + ' – ' + gunler[di] + '</div>';
         dayEntries.forEach(function(e) {
-          var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' çeşitte)</small>' : '';
+          var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' ' + t('inVarieties') + ')</small>' : '';
           dayTotalHtml += '<div class="pdting"><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span></div>';
         });
         dayTotalHtml += '</div>';
       }
-      prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' kişi</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div>' + dayTotalHtml + '</div></div>';
+      prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' ' + t('person') + '</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div>' + dayTotalHtml + '</div></div>';
     }
   }
 
@@ -10677,7 +10676,7 @@ function printYagList() {
   });
   html += '</tbody></table>';
   var total = list.reduce(function(s, r) { return s + (r.miktar || 0); }, 0);
-  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + total.toFixed(1) + ' lt</div>';
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">' + t('total') + ': ' + total.toFixed(1) + ' lt</div>';
   html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Atık Yağ Kayıt Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
@@ -10721,7 +10720,7 @@ function printAmbalajList() {
   });
   html += '</tbody></table>';
   var totalKg = list.reduce(function(s, r) { return s + ((r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0)); }, 0);
-  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + totalKg.toFixed(1) + ' kg</div>';
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">' + t('total') + ': ' + totalKg.toFixed(1) + ' kg</div>';
   html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Ambalaj Atığı Kayıt Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
@@ -11129,7 +11128,7 @@ function printKalibrasyonList() {
     html += '</tr>';
   });
   html += '</tbody></table>';
-  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">Toplam: ' + list.length + ' cihaz</div>';
+  html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">' + t('total') + ': ' + list.length + ' ' + t('devices') + '</div>';
   html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Kalibrasyona Tabi Cihaz Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
@@ -11532,6 +11531,40 @@ var I18N = {
     menuVariety4: "4. Çeşit",
     menuVariety5: "5. Çeşit",
     menuPersonCount: "Kişi Sayısı",
+    stockDeductionList: "Stok Düşüm Listesi",
+    total: "Toplam",
+    inVarieties: "çeşitte",
+    person: "kişi",
+    weeklyGrandTotal: "Haftalık Genel Toplam",
+    dailyAverage: "Günlük Ortalama",
+    avgPerPerson: "Kişi Başı Ortalama",
+    totalPersonDays: "Toplam Kişi/Gün",
+    colDay: "Gün",
+    colDate: "Tarih",
+    colPerson: "Kişi",
+    dailyMaterialCost: "Günlük Malzeme Maliyeti",
+    perPerson: "Kişi Başı",
+    ingredients: "Malzemeler",
+    perPersonGram: "(kişi başı gram)",
+    colIngredient: "Malzeme",
+    colPerPerson: "/kişi",
+    colUnit: "Birim",
+    addIngredient: "+ Malzeme Ekle",
+    foodName: "Yemek Adı",
+    allergen: "Alerjen",
+    recipePerPerson: "Reçete (kişi başı)",
+    devices: "cihaz",
+    chartMonthlyProduction: "Aylık Üretim (kişi)",
+    chartMonthlyPasses: "Aylık Geçiş (kişi)",
+    chartMonthlyWaste: "Aylık Çöpe Giden (porsiyon)",
+    chartLastYearWaste: "Geçen Yıl Çöpe Giden (porsiyon)",
+    chartMonthlyWasteKg: "Aylık Atık (kg)",
+    chartMonthlyWastePortion: "Aylık Atık (porsiyon)",
+    chartMonthlyMealCount: "Aylık Üretim Sayısı",
+    chartMonthlyTurnstile: "Aylık Turnike Geçisi",
+    chartMonthlyWasteRate: "Aylık Atık Oranı %",
+    chartMonthlyStudent: "Aylık Öğrenci Sayısı",
+    chartWastePerPersonLabel: "Kişi Başı Atık (kg/kişi)",
   },
   en: {
     loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
@@ -11890,6 +11923,40 @@ var I18N = {
     menuVariety4: "4th Variety",
     menuVariety5: "5th Variety",
     menuPersonCount: "Person Count",
+    stockDeductionList: "Stock Deduction List",
+    total: "Total",
+    inVarieties: "varieties",
+    person: "pax",
+    weeklyGrandTotal: "Weekly Grand Total",
+    dailyAverage: "Daily Average",
+    avgPerPerson: "Average per Person",
+    totalPersonDays: "Total Person/Days",
+    colDay: "Day",
+    colDate: "Date",
+    colPerson: "Pax",
+    dailyMaterialCost: "Daily Material Cost",
+    perPerson: "Per Person",
+    ingredients: "Ingredients",
+    perPersonGram: "(per person gram)",
+    colIngredient: "Ingredient",
+    colPerPerson: "/person",
+    colUnit: "Unit",
+    addIngredient: "+ Add Ingredient",
+    foodName: "Food Name",
+    allergen: "Allergen",
+    recipePerPerson: "Recipe (per person)",
+    devices: "devices",
+    chartMonthlyProduction: "Monthly Production (pax)",
+    chartMonthlyPasses: "Monthly Passes (pax)",
+    chartMonthlyWaste: "Monthly Wasted (portions)",
+    chartLastYearWaste: "Last Year Wasted (portions)",
+    chartMonthlyWasteKg: "Monthly Waste (kg)",
+    chartMonthlyWastePortion: "Monthly Waste (portions)",
+    chartMonthlyMealCount: "Monthly Meal Count",
+    chartMonthlyTurnstile: "Monthly Turnstile Passes",
+    chartMonthlyWasteRate: "Monthly Waste Rate %",
+    chartMonthlyStudent: "Monthly Student Count",
+    chartWastePerPersonLabel: "Waste per Person (kg/pax)",
   },
   az: {
     loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
@@ -12248,6 +12315,29 @@ var I18N = {
     menuVariety4: "4 növ",
     menuVariety5: "5 növ",
     menuPersonCount: "Şəxs sayı",
+    stockDeductionList: "Stok Siyahısı",
+    total: "Cəmi",
+    inVarieties: "növdə",
+    person: "nəfər",
+    weeklyGrandTotal: "Həftəlik Ümumi Cəmi",
+    dailyAverage: "Günlük Orta",
+    avgPerPerson: "Nəfər Başına Orta",
+    totalPersonDays: "Cəmi Nəfər/Gün",
+    colDay: "Gün",
+    colDate: "Tarix",
+    colPerson: "Nəfər",
+    dailyMaterialCost: "Günlük Material Xərci",
+    perPerson: "Nəfər Başına",
+    ingredients: "Materiallar",
+    perPersonGram: "(nəfər başı qr)",
+    colIngredient: "Material",
+    colPerPerson: "/nəfər",
+    colUnit: "Vahid",
+    addIngredient: "+ Material Əlavə Et",
+    foodName: "Yeməyin Adı",
+    allergen: "Allergen",
+    recipePerPerson: "Resept (nəfər başı)",
+    devices: "cihaz",
   },
   ru: {
     loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
@@ -12606,6 +12696,29 @@ var I18N = {
     menuVariety4: "4-й вид",
     menuVariety5: "5-й вид",
     menuPersonCount: "Кол-во человек",
+    stockDeductionList: "Списание со склада",
+    total: "Итого",
+    inVarieties: "видах",
+    person: "чел.",
+    weeklyGrandTotal: "Итого за неделю",
+    dailyAverage: "Среднее в день",
+    avgPerPerson: "Среднее на человека",
+    totalPersonDays: "Всего человек/дней",
+    colDay: "День",
+    colDate: "Дата",
+    colPerson: "Чел.",
+    dailyMaterialCost: "Суточная стоимость материалов",
+    perPerson: "На человека",
+    ingredients: "Ингредиенты",
+    perPersonGram: "(грамм на человека)",
+    colIngredient: "Ингредиент",
+    colPerPerson: "/чел.",
+    colUnit: "Ед.",
+    addIngredient: "+ Добавить ингредиент",
+    foodName: "Название блюда",
+    allergen: "Аллерген",
+    recipePerPerson: "Рецепт (на человека)",
+    devices: "шт.",
   },
   ar: {
     loginSub: "نظام إدارة خدمات التغذية",
@@ -12964,6 +13077,29 @@ var I18N = {
     menuVariety4: "النوع الرابع",
     menuVariety5: "النوع الخامس",
     menuPersonCount: "عدد الأشخاص",
+    stockDeductionList: "قائمة خصم المخزون",
+    total: "المجموع",
+    inVarieties: "أنواع",
+    person: "فرد",
+    weeklyGrandTotal: "المجموع الأسبوعي",
+    dailyAverage: "المتوسط اليومي",
+    avgPerPerson: "المتوسط للفرد",
+    totalPersonDays: "إجمالي الأشخاص/أيام",
+    colDay: "اليوم",
+    colDate: "التاريخ",
+    colPerson: "الأشخاص",
+    dailyMaterialCost: "تكلفة المواد اليومية",
+    perPerson: "للفرد",
+    ingredients: "المكونات",
+    perPersonGram: "(غرام للفرد)",
+    colIngredient: "المكون",
+    colPerPerson: "/فرد",
+    colUnit: "الوحدة",
+    addIngredient: "+ إضافة مكون",
+    foodName: "اسم الطبق",
+    allergen: "الallingيرجين",
+    recipePerPerson: "الوصفة (للفرد)",
+    devices: "أجهزة",
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
@@ -13322,6 +13458,29 @@ var I18N = {
     menuVariety4: "4. Sorte",
     menuVariety5: "5. Sorte",
     menuPersonCount: "Personenanzahl",
+    stockDeductionList: "Lagerabschreibungsliste",
+    total: "Gesamt",
+    inVarieties: "Sorten",
+    person: "Pers.",
+    weeklyGrandTotal: "Wöchentliche Gesamtsumme",
+    dailyAverage: "Tagesdurchschnitt",
+    avgPerPerson: "Durchschnitt pro Person",
+    totalPersonDays: "Gesamt Personen/Tage",
+    colDay: "Tag",
+    colDate: "Datum",
+    colPerson: "Pers.",
+    dailyMaterialCost: "Tägliche Materialkosten",
+    perPerson: "Pro Person",
+    ingredients: "Zutaten",
+    perPersonGram: "(Gramm pro Person)",
+    colIngredient: "Zutat",
+    colPerPerson: "/Pers.",
+    colUnit: "Einheit",
+    addIngredient: "+ Zutat hinzufügen",
+    foodName: "Gerichtname",
+    allergen: "Allergen",
+    recipePerPerson: "Rezept (pro Person)",
+    devices: "Geräte",
   },
   fr: {
     loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
@@ -13680,6 +13839,29 @@ var I18N = {
     menuVariety4: "4ème variété",
     menuVariety5: "5ème variété",
     menuPersonCount: "Nombre de personnes",
+    stockDeductionList: "Liste de déduction de stock",
+    total: "Total",
+    inVarieties: "variétés",
+    person: "pers.",
+    weeklyGrandTotal: "Total hebdomadaire",
+    dailyAverage: "Moyenne journalière",
+    avgPerPerson: "Moyenne par personne",
+    totalPersonDays: "Total personnes/jours",
+    colDay: "Jour",
+    colDate: "Date",
+    colPerson: "Pers.",
+    dailyMaterialCost: "Coût matériaux journalier",
+    perPerson: "Par personne",
+    ingredients: "Ingrédients",
+    perPersonGram: "(grammes par personne)",
+    colIngredient: "Ingrédient",
+    colPerPerson: "/pers.",
+    colUnit: "Unité",
+    addIngredient: "+ Ajouter un ingrédient",
+    foodName: "Nom du plat",
+    allergen: "Allergène",
+    recipePerPerson: "Recette (par personne)",
+    devices: "appareils",
   },
   es: {
     loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
@@ -14038,6 +14220,29 @@ var I18N = {
     menuVariety4: "4ª Variedad",
     menuVariety5: "5ª Variedad",
     menuPersonCount: "Número de personas",
+    stockDeductionList: "Lista de deducción de stock",
+    total: "Total",
+    inVarieties: "variedades",
+    person: "pers.",
+    weeklyGrandTotal: "Total semanal",
+    dailyAverage: "Promedio diario",
+    avgPerPerson: "Promedio por persona",
+    totalPersonDays: "Total personas/días",
+    colDay: "Día",
+    colDate: "Fecha",
+    colPerson: "Pers.",
+    dailyMaterialCost: "Costo diario de materiales",
+    perPerson: "Por persona",
+    ingredients: "Ingredientes",
+    perPersonGram: "(gramos por persona)",
+    colIngredient: "Ingrediente",
+    colPerPerson: "/pers.",
+    colUnit: "Unidad",
+    addIngredient: "+ Agregar ingrediente",
+    foodName: "Nombre del plato",
+    allergen: "Alérgeno",
+    recipePerPerson: "Receta (por persona)",
+    devices: "dispositivos",
   },
   pt: {
     loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
@@ -14396,6 +14601,29 @@ var I18N = {
     menuVariety4: "4ª Variedade",
     menuVariety5: "5ª Variedade",
     menuPersonCount: "Número de pessoas",
+    stockDeductionList: "Lista de dedução de estoque",
+    total: "Total",
+    inVarieties: "variedades",
+    person: "pessoa",
+    weeklyGrandTotal: "Total semanal",
+    dailyAverage: "Média diária",
+    avgPerPerson: "Média por pessoa",
+    totalPersonDays: "Total pessoas/dias",
+    colDay: "Dia",
+    colDate: "Data",
+    colPerson: "Pessoa",
+    dailyMaterialCost: "Custo diário de materiais",
+    perPerson: "Por pessoa",
+    ingredients: "Ingredientes",
+    perPersonGram: "(gramas por pessoa)",
+    colIngredient: "Ingrediente",
+    colPerPerson: "/pessoa",
+    colUnit: "Unidade",
+    addIngredient: "+ Adicionar ingrediente",
+    foodName: "Nome do prato",
+    allergen: "Alérgeno",
+    recipePerPerson: "Receita (por pessoa)",
+    devices: "dispositivos",
   },
   uz: {
     loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
@@ -14754,6 +14982,29 @@ var I18N = {
     menuVariety4: "4-tur",
     menuVariety5: "5-tur",
     menuPersonCount: "Kishilar soni",
+    stockDeductionList: "Ombor ayirish ro'yxati",
+    total: "Jami",
+    inVarieties: "turlarda",
+    person: "kishi",
+    weeklyGrandTotal: "Haftalik umumiy jami",
+    dailyAverage: "Kunlik ortacha",
+    avgPerPerson: "Kishi boshiga ortacha",
+    totalPersonDays: "Jami kishi/kunlar",
+    colDay: "Kun",
+    colDate: "Sana",
+    colPerson: "Kishi",
+    dailyMaterialCost: "Kunlik material xarajati",
+    perPerson: "Kishi boshiga",
+    ingredients: "Masallar",
+    perPersonGram: "(kishi boshiga gr)",
+    colIngredient: "Masal",
+    colPerPerson: "/kishi",
+    colUnit: "Birlik",
+    addIngredient: "+ Masal qo'shish",
+    foodName: "Ovqat nomi",
+    allergen: "Allergen",
+    recipePerPerson: "Retsept (kishi boshiga)",
+    devices: "qurilmalar",
   }
 };
 
