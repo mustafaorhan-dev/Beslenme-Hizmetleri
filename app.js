@@ -4833,7 +4833,7 @@ function renderDailySummary() {
   if (!el || !body) return;
 
   if (records.length === 0) {
-    body.innerHTML = '<div class="ts-item"><span class="ts-label">Henüz kayıt yok</span></div>';
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + t('wsNoRecordsYet') + '</span></div>';
     el.style.display = 'none';
     return;
   }
@@ -4846,14 +4846,14 @@ function renderDailySummary() {
   var rec = records.find(function(r) { return r.tarih === dayStr; });
 
   var isToday = dailySummaryOffset === 0;
-  label.textContent = isToday ? 'Bugünün Detayı' : 'Günlük Detay';
+  label.textContent = isToday ? t('wsTodayDetail') : t('wsDailyDetail');
   badge.textContent = dayLabel;
 
   document.getElementById('dailyPrev').disabled = false;
   document.getElementById('dailyNext').disabled = dailySummaryOffset >= 0;
 
   if (!rec) {
-    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + dayLabel + ' - Kayıt yok</span></div>';
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + dayLabel + ' - ' + t('wsNoRecordToday') + '</span></div>';
     return;
   }
 
@@ -4872,10 +4872,10 @@ function renderDailySummary() {
   var atikStatus = atik > avgAtik * 1.2 ? 'bad' : (atik < avgAtik * 0.8 ? 'good' : 'warn');
 
   body.innerHTML =
-    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg></div><div class="ws-card-content"><span class="ws-label">Üretilen Yemek (Kişi)</span><span class="ws-value">' + yemek.toLocaleString('tr-TR') + '</span></div></div>' +
-    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="ws-card-content"><span class="ws-label">Toplam Geçiş</span><span class="ws-value">' + toplam.toLocaleString('tr-TR') + '</span><span class="ws-sub">Tk: ' + turnike + ' &middot; Prs: ' + personel + '</span></div></div>' +
-    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ws-card-content"><span class="ws-label">Atık Miktarı</span><span class="ws-value">' + atik.toFixed(1) + ' kg</span><span class="ws-sub">Fire: ' + fire + '</span></div></div>' +
-    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="ws-card-content"><span class="ws-label">Çöpe Giden</span><span class="ws-value" style="color:#ef4444">' + copPorsiyon.toFixed(0) + ' porsiyon</span><span class="ws-sub" style="font-size:0.58rem">' + atik.toFixed(1) + ' × 1000 ÷ ' + porsiyon + ' = ' + copPorsiyon.toFixed(0) + '</span></div></div>';
+    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsProducedMeal') + '</span><span class="ws-value">' + yemek.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsTotalPasses') + '</span><span class="ws-value">' + toplam.toLocaleString('tr-TR') + '</span><span class="ws-sub">' + t('wsTurnstile') + ': ' + turnike + ' &middot; ' + t('wsStaffCount') + ': ' + personel + '</span></div></div>' +
+    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWasteAmount') + '</span><span class="ws-value">' + atik.toFixed(1) + ' kg</span><span class="ws-sub">' + t('wsWaste') + ': ' + fire + '</span></div></div>' +
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWastedPortion') + '</span><span class="ws-value" style="color:#ef4444">' + copPorsiyon.toFixed(0) + ' ' + t('wsPortion') + '</span><span class="ws-sub" style="font-size:0.58rem">' + atik.toFixed(1) + ' × 1000 ÷ ' + porsiyon + ' = ' + copPorsiyon.toFixed(0) + '</span></div></div>';
 }
 
 // ─── WEEKLY SUMMARY ──────────────────────────────────────────────────────────
@@ -4909,7 +4909,7 @@ function renderWeeklySummary() {
   if (!el || !body) return;
 
   if (records.length === 0) {
-    body.innerHTML = '<div class="ts-item"><span class="ts-label">Henüz kayıt yok</span></div>';
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + t('wsNoRecordsYet') + '</span></div>';
     return;
   }
 
@@ -4932,22 +4932,22 @@ function renderWeeklySummary() {
   var topOgrenci = weekRecs.reduce(function(s, r) { return s + (r.ogrenci || 0); }, 0);
 
   var isCurrentWeek = weeklySummaryOffset === 0;
-  label.textContent = isCurrentWeek ? 'Bu Hafta' : 'Haftalık Özet';
+  label.textContent = isCurrentWeek ? t('weeklyBadge') : t('weeklySummary');
   badge.textContent = fmtDateShort(mon) + ' — ' + fmtDateShort(sun);
 
   document.getElementById('weeklyPrev').disabled = false;
   document.getElementById('weeklyNext').disabled = weeklySummaryOffset >= 0;
 
   if (weekRecs.length === 0) {
-    body.innerHTML = '<div class="ts-item"><span class="ts-label">Bu hafta kayıt yok</span></div>';
+    body.innerHTML = '<div class="ts-item"><span class="ts-label">' + t('wsNoRecordThisWeek') + '</span></div>';
     return;
   }
 
   body.innerHTML =
-    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs><path d="M5 10a7 7 0 0114 0v5H5v-5z" fill="url(#wCy)"/><ellipse cx="12" cy="15" rx="7" ry="2.4" fill="url(#wCy)"/><ellipse cx="12" cy="14.6" rx="5" ry="1.6" fill="#e2f8ff" opacity="0.5"/><path d="M8.5 6.5c-.5-.9.2-2.2.2-2.2M12 5.4c-.5-.9.2-2.2.2-2.2M15.5 6.5c-.5-.9.2-2.2.2-2.2" stroke="url(#wCy)" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ws-card-content"><span class="ws-label">Üretilen Yemek (Kişi)</span><span class="ws-value">' + topYemek.toLocaleString('tr-TR') + '</span></div></div>' +
-    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wGr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient></defs><circle cx="9" cy="8" r="3.2" fill="url(#wGr)"/><path d="M3.5 20v-1.5A4.5 4.5 0 018 14h2a4.5 4.5 0 014.5 4.5V20" fill="url(#wGr)"/><circle cx="16" cy="8.8" r="2.6" fill="url(#wGr)" opacity="0.75"/><path d="M16 13.5a4.5 4.5 0 014.5 4.5v1H13v-1a4.5 4.5 0 013-4.5" fill="url(#wGr)" opacity="0.75"/></svg></div><div class="ws-card-content"><span class="ws-label">Toplam Geçiş</span><span class="ws-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ws-sub">Turnike: ' + topTurnike.toLocaleString('tr-TR') + ' &middot; Y. Hiz. Yr. SKS: ' + topPersonel.toLocaleString('tr-TR') + '</span></div></div>' +
-    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wOr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></linearGradient></defs><path d="M4 7h16l-1 13.2A1.8 1.8 0 0117.2 22H6.8A1.8 1.8 0 015 20.2L4 7z" fill="url(#wOr)"/><path d="M3 5h18v2.4H3z" fill="url(#wOr)"/><path d="M9 11h2v7H9zM13 11h2v7h-2z" fill="#fff" opacity="0.45"/><path d="M10 3h4v2h-4z" fill="url(#wOr)"/></svg></div><div class="ws-card-content"><span class="ws-label">Atık Miktarı</span><span class="ws-value">' + topAtik.toFixed(1) + ' kg</span></div></div>' +
-    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wPu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#0284c7"/></linearGradient></defs><path d="M4 7h7l2 2h7a1.5 1.5 0 011.5 1.5V18A1.5 1.5 0 0120 19.5H4A1.5 1.5 0 012.5 18V8.5A1.5 1.5 0 014 7z" fill="url(#wPu)"/><path d="M2.5 9.5h19" stroke="#fff" stroke-width="0.8" opacity="0.4"/></svg></div><div class="ws-card-content"><span class="ws-label">Y.H. Yar. Öğrenci</span><span class="ws-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div></div>';
+    '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#0e7490"/></linearGradient></defs><path d="M5 10a7 7 0 0114 0v5H5v-5z" fill="url(#wCy)"/><ellipse cx="12" cy="15" rx="7" ry="2.4" fill="url(#wCy)"/><ellipse cx="12" cy="14.6" rx="5" ry="1.6" fill="#e2f8ff" opacity="0.5"/><path d="M8.5 6.5c-.5-.9.2-2.2.2-2.2M12 5.4c-.5-.9.2-2.2.2-2.2M15.5 6.5c-.5-.9.2-2.2.2-2.2" stroke="url(#wCy)" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsProducedMeal') + '</span><span class="ws-value">' + topYemek.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wGr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient></defs><circle cx="9" cy="8" r="3.2" fill="url(#wGr)"/><path d="M3.5 20v-1.5A4.5 4.5 0 018 14h2a4.5 4.5 0 014.5 4.5V20" fill="url(#wGr)"/><circle cx="16" cy="8.8" r="2.6" fill="url(#wGr)" opacity="0.75"/><path d="M16 13.5a4.5 4.5 0 014.5 4.5v1H13v-1a4.5 4.5 0 013-4.5" fill="url(#wGr)" opacity="0.75"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsTotalPasses') + '</span><span class="ws-value">' + (topTurnike + topPersonel).toLocaleString('tr-TR') + '</span><span class="ws-sub">' + t('wsTurnstile') + ': ' + topTurnike.toLocaleString('tr-TR') + ' &middot; ' + t('wsStaffSKS') + ': ' + topPersonel.toLocaleString('tr-TR') + '</span></div></div>' +
+    '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wOr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></linearGradient></defs><path d="M4 7h16l-1 13.2A1.8 1.8 0 0117.2 22H6.8A1.8 1.8 0 015 20.2L4 7z" fill="url(#wOr)"/><path d="M3 5h18v2.4H3z" fill="url(#wOr)"/><path d="M9 11h2v7H9zM13 11h2v7h-2z" fill="#fff" opacity="0.45"/><path d="M10 3h4v2h-4z" fill="url(#wOr)"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWasteAmount') + '</span><span class="ws-value">' + topAtik.toFixed(1) + ' kg</span></div></div>' +
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none"><defs><linearGradient id="wPu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#0284c7"/></linearGradient></defs><path d="M4 7h7l2 2h7a1.5 1.5 0 011.5 1.5V18A1.5 1.5 0 0120 19.5H4A1.5 1.5 0 012.5 18V8.5A1.5 1.5 0 014 7z" fill="url(#wPu)"/><path d="M2.5 9.5h19" stroke="#fff" stroke-width="0.8" opacity="0.4"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsStudents') + '</span><span class="ws-value">' + topOgrenci.toLocaleString('tr-TR') + '</span></div></div>';
 }
 
 function renderDataInfo() {
@@ -6657,7 +6657,7 @@ function renderWasteByFoodType(list) {
     totalAtik += r.atik || 0;
   });
   const sorted = Object.values(groups).sort((a, b) => b.toplamAtik - a.toplamAtik);
-  let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>Yemek Türü</th><th>Kayıt Sayısı</th><th>Toplam Atık (kg)</th><th>Atık Oranı</th><th>Kişi Başı Atık (kg)</th></tr></thead><tbody>';
+  let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>' + t('thFoodType') + '</th><th>' + t('wasteByFoodRecords') + '</th><th>' + t('kpiTotalWaste') + '</th><th>' + t('wasteByFoodRate') + '</th><th>' + t('wasteByFoodPerPerson') + '</th></tr></thead><tbody>';
   sorted.forEach(g => {
     const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : '—';
     const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : '—';
@@ -11282,6 +11282,26 @@ var I18N = {
     rBeneficiaryTrend: "Yemek Hiz. Yararlanan Trendi (son 7 gün)",
     wasteByFoodTitle: "Yemek Türü Bazında Atık Analizi",
     wasteByFoodEmpty: "Yemek türü verisi girilen kayıt bulunamadı.",
+    wasteByFoodRecords: "Kayıt Sayısı",
+    wasteByFoodRate: "Atık Oranı",
+    wasteByFoodPerPerson: "Kişi Başı Atık (kg)",
+    wsProducedMeal: "Üretilen Yemek (Kişi)",
+    wsTotalPasses: "Toplam Geçiş",
+    wsTurnstile: "Turnike",
+    wsStaffSKS: "Y. Hiz. Yr. SKS",
+    wsWasteAmount: "Atık Miktarı",
+    wsWastedPortion: "Çöpe Giden",
+    wsStudents: "Y.H. Yar. Öğrenci",
+    wsNoRecordsYet: "Henüz kayıt yok",
+    wsNoRecordThisWeek: "Bu hafta kayıt yok",
+    wsNoRecordToday: "Kayıt yok",
+    wsTodayDetail: "Bugünün Detayı",
+    wsDailyDetail: "Günlük Detay",
+    wsWaste: "Fire",
+    wsPortion: "porsiyon",
+    wsProduced: "Üretilen",
+    wsTurnstileCount: "Turnike Geçiş",
+    wsStaffCount: "Personel",
     menuTitle: "Haftalık Menü Listesi",
     menuStatusBadge: "Durum",
     menuSaveBtn: "Kaydet",
@@ -11589,6 +11609,26 @@ var I18N = {
     rBeneficiaryTrend: "Beneficiary Trend (last 7 days)",
     wasteByFoodTitle: "Waste Analysis by Food Type",
     wasteByFoodEmpty: "No records with food type data found.",
+    wasteByFoodRecords: "Record Count",
+    wasteByFoodRate: "Waste Rate",
+    wasteByFoodPerPerson: "Waste per Person (kg)",
+    wsProducedMeal: "Meals Produced (Pax)",
+    wsTotalPasses: "Total Passes",
+    wsTurnstile: "Turnstile",
+    wsStaffSKS: "Nutr. Staff",
+    wsWasteAmount: "Waste Amount",
+    wsWastedPortion: "Wasted Portion",
+    wsStudents: "Nutr. Students",
+    wsNoRecordsYet: "No records yet",
+    wsNoRecordThisWeek: "No records this week",
+    wsNoRecordToday: "No record",
+    wsTodayDetail: "Today's Detail",
+    wsDailyDetail: "Daily Detail",
+    wsWaste: "Waste",
+    wsPortion: "portion",
+    wsProduced: "Produced",
+    wsTurnstileCount: "Turnstile",
+    wsStaffCount: "Staff",
     menuTitle: "Weekly Menu List",
     menuStatusBadge: "Status",
     menuSaveBtn: "Save",
@@ -11896,6 +11936,26 @@ var I18N = {
     rBeneficiaryTrend: "Faydalanan Trendi (son 7 gün)",
     wasteByFoodTitle: "Yemək Növü üzrə Tullantı Təhlili",
     wasteByFoodEmpty: "Yemək növü məlumatı olan qeyd tapılmadı.",
+    wasteByFoodRecords: "Qeyd sayı",
+    wasteByFoodRate: "Tullantı nisbəti",
+    wasteByFoodPerPerson: "Şəxs başına tullantı (kg)",
+    wsProducedMeal: "İstehsal olunan yemək (nəfər)",
+    wsTotalPasses: "Ümumi keçiş",
+    wsTurnstile: "Turniket",
+    wsStaffSKS: "SKS personalı",
+    wsWasteAmount: "Tullantı miqdarı",
+    wsWastedPortion: "Çöpe gedən",
+    wsStudents: "Yemək xidm. tələbələri",
+    wsNoRecordsYet: "Hələ qeyd yoxdur",
+    wsNoRecordThisWeek: "Bu həftə qeyd yoxdur",
+    wsNoRecordToday: "Qeyd yoxdur",
+    wsTodayDetail: "Bu günün təfərrüatı",
+    wsDailyDetail: "Günlük təfərrüat",
+    wsWaste: "İtki",
+    wsPortion: "porsiya",
+    wsProduced: "İstehsal",
+    wsTurnstileCount: "Turniket keçidi",
+    wsStaffCount: "Personal",
     menuTitle: "Həftəlik Menyu Siyahısı",
     menuStatusBadge: "Vəziyyət",
     menuSaveBtn: "Saxla",
@@ -12203,6 +12263,26 @@ var I18N = {
     rBeneficiaryTrend: "Динамика получателей (посл. 7 дней)",
     wasteByFoodTitle: "Анализ отходов по типу блюда",
     wasteByFoodEmpty: "Записи с данными о типе блюда не найдены.",
+    wasteByFoodRecords: "Количество записей",
+    wasteByFoodRate: "Процент отходов",
+    wasteByFoodPerPerson: "Отходы на человека (кг)",
+    wsProducedMeal: "Приготовлено блюд (чел.)",
+    wsTotalPasses: "Всего проходов",
+    wsTurnstile: "Турникет",
+    wsStaffSKS: "Персонал СКС",
+    wsWasteAmount: "Количество отходов",
+    wsWastedPortion: "В мусор",
+    wsStudents: "Студенты пит.",
+    wsNoRecordsYet: "Записей пока нет",
+    wsNoRecordThisWeek: "Нет записей за эту неделю",
+    wsNoRecordToday: "Нет записи",
+    wsTodayDetail: "Детали за сегодня",
+    wsDailyDetail: "Дневная сводка",
+    wsWaste: "Потери",
+    wsPortion: "порция",
+    wsProduced: "Выработано",
+    wsTurnstileCount: "Проходы турникета",
+    wsStaffCount: "Персонал",
     menuTitle: "Меню на неделю",
     menuStatusBadge: "Статус",
     menuSaveBtn: "Сохранить",
@@ -12510,6 +12590,26 @@ var I18N = {
     rBeneficiaryTrend: "اتجاه المستفيدين (آخر 7 أيام)",
     wasteByFoodTitle: "تحليل النفايات حسب نوع الطعام",
     wasteByFoodEmpty: "لم يتم العثور على سجلات تحتوي على بيانات نوع الطعام.",
+    wasteByFoodRecords: "عدد السجلات",
+    wasteByFoodRate: "نسبة النفايات",
+    wasteByFoodPerPerson: "النفايات للشخص (كغ)",
+    wsProducedMeal: "الوجبات المنتجة (فرد)",
+    wsTotalPasses: "إجمالي العبور",
+    wsTurnstile: "البوابة الدوّارة",
+    wsStaffSKS: "موظفو التغذية",
+    wsWasteAmount: "كمية النفايات",
+    wsWastedPortion: "النفايات",
+    wsStudents: "طلاب التغذية",
+    wsNoRecordsYet: "لا توجد سجلات بعد",
+    wsNoRecordThisWeek: "لا سجلات هذا الأسبوع",
+    wsNoRecordToday: "لا سجل",
+    wsTodayDetail: "تفاصيل اليوم",
+    wsDailyDetail: "التفاصيل اليومية",
+    wsWaste: "هدر",
+    wsPortion: "وجبة",
+    wsProduced: "إنتاج",
+    wsTurnstileCount: "عبور البوابة",
+    wsStaffCount: "الموظفون",
     menuTitle: "قائمة الطعام الأسبوعية",
     menuStatusBadge: "الحالة",
     menuSaveBtn: "حفظ",
@@ -12817,6 +12917,26 @@ var I18N = {
     rBeneficiaryTrend: "Nutzertrend (letzte 7 Tage)",
     wasteByFoodTitle: "Abfallanalyse nach Essenstyp",
     wasteByFoodEmpty: "Keine Aufzeichnungen mit Essenstyp-Daten gefunden.",
+    wasteByFoodRecords: "Anzahl Einträge",
+    wasteByFoodRate: "Abfallquote",
+    wasteByFoodPerPerson: "Abfall pro Person (kg)",
+    wsProducedMeal: "Mahlzeiten produziert (Pers.)",
+    wsTotalPasses: "Gesamte Durchgänge",
+    wsTurnstile: "Drehkreuz",
+    wsStaffSKS: "Verpflegungspersonal",
+    wsWasteAmount: "Abfallmenge",
+    wsWastedPortion: "In den Müll",
+    wsStudents: "Ernährungsstud.",
+    wsNoRecordsYet: "Noch keine Einträge",
+    wsNoRecordThisWeek: "Keine Einträge diese Woche",
+    wsNoRecordToday: "Kein Eintrag",
+    wsTodayDetail: "Heutige Details",
+    wsDailyDetail: "Tagesdetails",
+    wsWaste: "Verlust",
+    wsPortion: "Portion",
+    wsProduced: "Produziert",
+    wsTurnstileCount: "Drehkreuzgänge",
+    wsStaffCount: "Personal",
     menuTitle: "Wochen-Menüliste",
     menuStatusBadge: "Status",
     menuSaveBtn: "Speichern",
@@ -13124,6 +13244,26 @@ var I18N = {
     rBeneficiaryTrend: "Tendance des bénéficiaires (7 derniers jours)",
     wasteByFoodTitle: "Analyse des déchets par type de plat",
     wasteByFoodEmpty: "Aucun enregistrement avec des données de type de plat trouvé.",
+    wasteByFoodRecords: "Nombre d'enreg.",
+    wasteByFoodRate: "Taux de déchets",
+    wasteByFoodPerPerson: "Déchets par personne (kg)",
+    wsProducedMeal: "Repas produits (pers.)",
+    wsTotalPasses: "Total des passages",
+    wsTurnstile: "Tourniquet",
+    wsStaffSKS: "Personnel restauration",
+    wsWasteAmount: "Quantité de déchets",
+    wsWastedPortion: "Jeté",
+    wsStudents: "Étudiants nutrition",
+    wsNoRecordsYet: "Aucun enregistrement",
+    wsNoRecordThisWeek: "Aucun enreg. cette semaine",
+    wsNoRecordToday: "Aucun enreg.",
+    wsTodayDetail: "Détails du jour",
+    wsDailyDetail: "Détails quotidiens",
+    wsWaste: "Perte",
+    wsPortion: "portion",
+    wsProduced: "Produit",
+    wsTurnstileCount: "Passages tourniquet",
+    wsStaffCount: "Personnel",
     menuTitle: "Menu hebdomadaire",
     menuStatusBadge: "Statut",
     menuSaveBtn: "Enregistrer",
@@ -13431,6 +13571,26 @@ var I18N = {
     rBeneficiaryTrend: "Tendencia de beneficiarios (últimos 7 días)",
     wasteByFoodTitle: "Análisis de residuos por tipo de comida",
     wasteByFoodEmpty: "No se encontraron registros con datos de tipo de comida.",
+    wasteByFoodRecords: "Nº de registros",
+    wasteByFoodRate: "Tasa de residuos",
+    wasteByFoodPerPerson: "Residuos por persona (kg)",
+    wsProducedMeal: "Comidas producidas (pers.)",
+    wsTotalPasses: "Total de pases",
+    wsTurnstile: "Torniquete",
+    wsStaffSKS: "Personal de nutrición",
+    wsWasteAmount: "Cantidad de residuos",
+    wsWastedPortion: "Al basurero",
+    wsStudents: "Estudiantes nutrición",
+    wsNoRecordsYet: "Sin registros aún",
+    wsNoRecordThisWeek: "Sin registros esta semana",
+    wsNoRecordToday: "Sin registro",
+    wsTodayDetail: "Detalle de hoy",
+    wsDailyDetail: "Detalle diario",
+    wsWaste: "Merma",
+    wsPortion: "porción",
+    wsProduced: "Producido",
+    wsTurnstileCount: "Pases torniquete",
+    wsStaffCount: "Personal",
     menuTitle: "Menú semanal",
     menuStatusBadge: "Estado",
     menuSaveBtn: "Guardar",
@@ -13738,6 +13898,26 @@ var I18N = {
     rBeneficiaryTrend: "Tendência de beneficiários (últimos 7 dias)",
     wasteByFoodTitle: "Análise de resíduos por tipo de refeição",
     wasteByFoodEmpty: "Nenhum registro com dados de tipo de refeição encontrado.",
+    wasteByFoodRecords: "Nº de registros",
+    wasteByFoodRate: "Taxa de resíduos",
+    wasteByFoodPerPerson: "Resíduos por pessoa (kg)",
+    wsProducedMeal: "Refeições produzidas (pessoa)",
+    wsTotalPasses: "Total de passagens",
+    wsTurnstile: "Catraca",
+    wsStaffSKS: "Pessoal de nutrição",
+    wsWasteAmount: "Quantidade de resíduos",
+    wsWastedPortion: "Descartado",
+    wsStudents: "Estudantes nutrição",
+    wsNoRecordsYet: "Nenhum registro ainda",
+    wsNoRecordThisWeek: "Nenhum registro esta semana",
+    wsNoRecordToday: "Sem registro",
+    wsTodayDetail: "Detalhe de hoje",
+    wsDailyDetail: "Detalhe diário",
+    wsWaste: "Perda",
+    wsPortion: "porção",
+    wsProduced: "Produzido",
+    wsTurnstileCount: "Passagens catraca",
+    wsStaffCount: "Pessoal",
     menuTitle: "Cardápio semanal",
     menuStatusBadge: "Estado",
     menuSaveBtn: "Salvar",
@@ -14045,6 +14225,26 @@ var I18N = {
     rBeneficiaryTrend: "Foydalanuvchilar trendi (oxirgi 7 kun)",
     wasteByFoodTitle: "Ovqat turi bo'yicha chiqindi tahlili",
     wasteByFoodEmpty: "Ovqat turi ma'lumotlari kiritilgan yozuvlar topilmadi.",
+    wasteByFoodRecords: "Yozuvlar soni",
+    wasteByFoodRate: "Chiqindi foizi",
+    wasteByFoodPerPerson: "Shaxs boshiga chiqindi (kg)",
+    wsProducedMeal: "Tayyorlangan ovqat (kishi)",
+    wsTotalPasses: "Jami o'tish",
+    wsTurnstile: "Turniket",
+    wsStaffSKS: "Ovqatlanish xodimi",
+    wsWasteAmount: "Chiqindi miqdori",
+    wsWastedPortion: "Chiqindiga",
+    wsStudents: "Ovqatlanish talab.",
+    wsNoRecordsYet: "Hali yozuv yo'q",
+    wsNoRecordThisWeek: "Shu haftada yozuv yo'q",
+    wsNoRecordToday: "Yozuv yo'q",
+    wsTodayDetail: "Bugunning tafsilotlari",
+    wsDailyDetail: "Kunlik tafsilotlar",
+    wsWaste: "Yo'qotish",
+    wsPortion: "porsiya",
+    wsProduced: "Ishlab chiqarilgan",
+    wsTurnstileCount: "Turniket o'tishlari",
+    wsStaffCount: "Xodimlar",
     menuTitle: "Haftalik menyu ro'yxati",
     menuStatusBadge: "Holat",
     menuSaveBtn: "Saqlash",
