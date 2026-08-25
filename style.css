@@ -409,6 +409,16 @@
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
+[data-theme="dark"] .lang-btn {
+  color: #ffffff;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+}
+[data-theme="dark"] .lang-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.25);
+}
+[data-theme="dark"] .lang-btn svg { color: #ffffff; }
 [data-theme="dark"] .sidebar {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
