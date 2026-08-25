@@ -6351,7 +6351,7 @@ function refreshMenuProduction() {
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-  const days = GUNLER.map((gun, i) => {
+  const days = getGUNLER().map((gun, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
@@ -8613,7 +8613,7 @@ async function getCurrentWeekContext() {
 function collectMenuWeekFromDOM() {
   const monday = getWeekStartDate(menuWeekOffset);
   const weekData = {};
-  GUNLER.forEach((_, i) => {
+  getGUNLER().forEach((_, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
@@ -8844,7 +8844,7 @@ async function renderMenu() {
   const canEdit = renderMenuDurumBar(currentMenuDurumMeta, pendingCount);
 
   // Gün verilerini topla
-  const days = GUNLER.map((gun, i) => {
+  const days = getGUNLER().map((gun, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
     const key = formatDateStr(tarih);
@@ -8857,7 +8857,7 @@ async function renderMenu() {
   // Başlık satırı
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
-    <th style="width:100px">Çeşit</th>
+    <th style="width:100px">${t('menuVariety')}</th>
     ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="display:inline-block;margin-top:0.3rem;font-size:0.74rem;font-weight:800;background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:#fff;padding:0.18rem 0.65rem;border-radius:999px;box-shadow:0 2px 6px rgba(99,102,241,0.3)">${formatDateStrTR(d.tarih)}</span></th>`).join('')}
   </tr>`;
 
@@ -8868,7 +8868,7 @@ async function renderMenu() {
   }
 
   // Gövde: her çeşit için bir satır + kişi sayısı satırı
-  const cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  const cesitler = [t('menuVariety1'), t('menuVariety2'), t('menuVariety3'), t('menuVariety4'), t('menuVariety5')];
   const tbody = document.getElementById('menuTbody');
   tbody.innerHTML = cesitler.map((label, ci) => {
     return `<tr>
@@ -8879,7 +8879,7 @@ async function renderMenu() {
       }).join('')}
     </tr>`;
   }).join('') + `<tr style="pointer-events:none"><td colspan="6" style="height:8px;padding:0;border:none;background:var(--bg-card)"></td></tr>` + `<tr onclick="event.stopPropagation()">
-    <td><strong>Kişi Sayısı</strong></td>
+    <td><strong>${t('menuPersonCount')}</strong></td>
     ${days.map((d, di) => {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" onclick="event.stopPropagation()" /></td>`;
     }).join('')}
@@ -8944,7 +8944,7 @@ async function renderMenu() {
         if (cell) { cell.style.cursor = 'default'; cell.style.pointerEvents = 'none'; }
       }
     }
-    GUNLER.forEach((_, i) => {
+    getGUNLER().forEach((_, i) => {
       const k = document.getElementById('mk_' + i);
       if (k) k.disabled = true;
       for (let n = 0; n < 10; n++) {
@@ -9038,7 +9038,8 @@ function autoResizeTextarea(el) {
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
-const GUNLER = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+const GUNLER_TR = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+function getGUNLER() { return t('dayNames'); }
 let menuWeekOffset = 0;
 
 function formatDateStr(date) {
@@ -9098,7 +9099,7 @@ function addNoteRow() {
   tr.innerHTML = `<td><strong>Not ${ni + 1}</strong>
     <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="Bu notu sil" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
   </td>
-    ${GUNLER.map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation"></textarea></td>`).join('')}`;
+    ${getGUNLER().map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation"></textarea></td>`).join('')}`;
   const addRow = document.getElementById('noteAddRow');
   if (addRow) tbody.insertBefore(tr, addRow);
   window._menuNoteCount = ni + 1;
@@ -9116,7 +9117,7 @@ function removeNoteRow(ni) {
   const tbody = document.getElementById('menuTbody');
   // Değerleri kaydır: silinen nottan sonrakileri bir üst satıra taşı
   for (let n = ni + 1; n < (window._menuNoteCount || 1); n++) {
-    GUNLER.forEach((_, di) => {
+    getGUNLER().forEach((_, di) => {
       const fromEl = document.getElementById('mn_' + n + '_' + di);
       const toEl = document.getElementById('mn_' + (n - 1) + '_' + di);
       if (fromEl && toEl) toEl.value = fromEl.value;
@@ -9140,7 +9141,7 @@ function removeNoteRow(ni) {
 function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
   const monday = getWeekStartDate(menuWeekOffset);
-  GUNLER.forEach((_, i) => {
+  getGUNLER().forEach((_, i) => {
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
       if (el) el.textContent = '';
@@ -9199,7 +9200,7 @@ function importMenuCSV(event) { if (!requireAdmin()) return;
       const headers = parseCSVLine(lines[0]);
       // gün sütunlarını bul (Pazartesi, Salı, ...)
       const gunIdxMap = {};
-      GUNLER.forEach((gun, i) => {
+      getGUNLER().forEach((gun, i) => {
         const idx = headers.findIndex(h => h.toLowerCase().includes(gun.slice(0,3).toLowerCase()) || gun.toLowerCase().includes(h.toLowerCase()));
         if (idx !== -1) gunIdxMap[i] = idx;
       });
@@ -9221,7 +9222,7 @@ function importMenuCSV(event) { if (!requireAdmin()) return;
       const allData = await fetchMenuData();
       const weekKey = formatDateStr(monday) + '-' + formatDateStr(new Date(monday.getTime() + 4*86400000));
       if (!allData[weekKey]) allData[weekKey] = {};
-      GUNLER.forEach((_, i) => {
+      getGUNLER().forEach((_, i) => {
         const tarih = new Date(monday);
         tarih.setDate(monday.getDate() + i);
         const key = formatDateStr(tarih);
@@ -10441,8 +10442,8 @@ function drawAmbalajTurChart(list) {
 
 
 function buildExportHTML() {
-  var gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-  var cesitler = ['1. Çeşit', '2. Çeşit', '3. Çeşit', '4. Çeşit', '5. Çeşit'];
+  var gunler = t('dayNames');
+  var cesitler = [t('menuVariety1'), t('menuVariety2'), t('menuVariety3'), t('menuVariety4'), t('menuVariety5')];
   var weekLabel = (document.getElementById('menuWeekLabel') || {}).textContent || '';
 
   // Read menu data from DOM
@@ -11516,6 +11517,21 @@ var I18N = {
     monthlyCompDesc: "Bu ay ile geçen ay karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
     yearlyCompDesc: "Bu yıl (yılbaşından bugüne) ile geçen yılın aynı dönemi karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
     monthNames: ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"],
+    haccpColDate: "Tarih",
+    haccpColTime: "Saat",
+    haccpColDepot: "Depo Adı",
+    haccpColTemp: "Sıcaklık (°C)",
+    haccpColHumidity: "Nem (%)",
+    haccpColNote: "Not",
+    haccpColAction: "İşlem",
+    dayNames: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
+    menuVariety: "Çeşit",
+    menuVariety1: "1. Çeşit",
+    menuVariety2: "2. Çeşit",
+    menuVariety3: "3. Çeşit",
+    menuVariety4: "4. Çeşit",
+    menuVariety5: "5. Çeşit",
+    menuPersonCount: "Kişi Sayısı",
   },
   en: {
     loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
@@ -11859,6 +11875,21 @@ var I18N = {
     monthlyCompDesc: "Comparing this month with last month. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
     yearlyCompDesc: "Comparing this year (year-to-date) with the same period last year. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
     monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+    haccpColDate: "Date",
+    haccpColTime: "Time",
+    haccpColDepot: "Depot Name",
+    haccpColTemp: "Temperature (°C)",
+    haccpColHumidity: "Humidity (%)",
+    haccpColNote: "Note",
+    haccpColAction: "Action",
+    dayNames: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    menuVariety: "Variety",
+    menuVariety1: "1st Variety",
+    menuVariety2: "2nd Variety",
+    menuVariety3: "3rd Variety",
+    menuVariety4: "4th Variety",
+    menuVariety5: "5th Variety",
+    menuPersonCount: "Person Count",
   },
   az: {
     loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
@@ -12202,6 +12233,21 @@ var I18N = {
     monthlyCompDesc: "Bu ay keçən ay ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
     yearlyCompDesc: "Bu il (ilin əvvəlindən bu günə) keçən ilin eyni dövrü ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
     monthNames: ["Yanvar","Fevral","Mart","Aprel","May","İyun","İyul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"],
+    haccpColDate: "Tarix",
+    haccpColTime: "Saat",
+    haccpColDepot: "Anbar adı",
+    haccpColTemp: "Temperatur (°C)",
+    haccpColHumidity: "Rütubət (%)",
+    haccpColNote: "Qeyd",
+    haccpColAction: "Əməliyyat",
+    dayNames: ["Bazar ertəsi", "Çərşənbə axşamı", "Çərşənbə", "Cümə axşamı", "Cümə"],
+    menuVariety: "Növ",
+    menuVariety1: "1 növ",
+    menuVariety2: "2 növ",
+    menuVariety3: "3 növ",
+    menuVariety4: "4 növ",
+    menuVariety5: "5 növ",
+    menuPersonCount: "Şəxs sayı",
   },
   ru: {
     loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
@@ -12545,6 +12591,21 @@ var I18N = {
     monthlyCompDesc: "Сравнение текущего месяца с прошлым. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
     yearlyCompDesc: "Сравнение текущего года (с начала года) с аналогичным периодом прошлого года. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
     monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
+    haccpColDate: "Дата",
+    haccpColTime: "Время",
+    haccpColDepot: "Название склада",
+    haccpColTemp: "Температура (°C)",
+    haccpColHumidity: "Влажность (%)",
+    haccpColNote: "Примечание",
+    haccpColAction: "Действие",
+    dayNames: ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"],
+    menuVariety: "Вид",
+    menuVariety1: "1-й вид",
+    menuVariety2: "2-й вид",
+    menuVariety3: "3-й вид",
+    menuVariety4: "4-й вид",
+    menuVariety5: "5-й вид",
+    menuPersonCount: "Кол-во человек",
   },
   ar: {
     loginSub: "نظام إدارة خدمات التغذية",
@@ -12888,6 +12949,21 @@ var I18N = {
     monthlyCompDesc: "مقارنة هذا الشهر مع الشهر الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
     yearlyCompDesc: "مقارنة هذا العام (من بداية السنة حتى الآن) مع نفس الفترة من العام الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
     monthNames: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
+    haccpColDate: "التاريخ",
+    haccpColTime: "الوقت",
+    haccpColDepot: "اسم المستودع",
+    haccpColTemp: "درجة الحرارة (°م)",
+    haccpColHumidity: "الرطوبة (%)",
+    haccpColNote: "ملاحظة",
+    haccpColAction: "إجراء",
+    dayNames: ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
+    menuVariety: "نوع",
+    menuVariety1: "النوع الأول",
+    menuVariety2: "النوع الثاني",
+    menuVariety3: "النوع الثالث",
+    menuVariety4: "النوع الرابع",
+    menuVariety5: "النوع الخامس",
+    menuPersonCount: "عدد الأشخاص",
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
@@ -13231,6 +13307,21 @@ var I18N = {
     monthlyCompDesc: "Vergleich dieses Monats mit dem Vormonat. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
     yearlyCompDesc: "Vergleich dieses Jahres (Jahresbilanz) mit demselben Zeitraum des Vorjahres. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
     monthNames: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
+    haccpColDate: "Datum",
+    haccpColTime: "Uhrzeit",
+    haccpColDepot: "Lagername",
+    haccpColTemp: "Temperatur (°C)",
+    haccpColHumidity: "Feuchtigkeit (%)",
+    haccpColNote: "Notiz",
+    haccpColAction: "Aktion",
+    dayNames: ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"],
+    menuVariety: "Sorte",
+    menuVariety1: "1. Sorte",
+    menuVariety2: "2. Sorte",
+    menuVariety3: "3. Sorte",
+    menuVariety4: "4. Sorte",
+    menuVariety5: "5. Sorte",
+    menuPersonCount: "Personenanzahl",
   },
   fr: {
     loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
@@ -13574,6 +13665,21 @@ var I18N = {
     monthlyCompDesc: "Comparaison de ce mois avec le mois dernier. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
     yearlyCompDesc: "Comparaison de cette année (du début de l'année à aujourd'hui) avec la même période l'année dernière. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
     monthNames: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+    haccpColDate: "Date",
+    haccpColTime: "Heure",
+    haccpColDepot: "Nom de l'entrepôt",
+    haccpColTemp: "Température (°C)",
+    haccpColHumidity: "Humidité (%)",
+    haccpColNote: "Note",
+    haccpColAction: "Action",
+    dayNames: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"],
+    menuVariety: "Variété",
+    menuVariety1: "1ère variété",
+    menuVariety2: "2ème variété",
+    menuVariety3: "3ème variété",
+    menuVariety4: "4ème variété",
+    menuVariety5: "5ème variété",
+    menuPersonCount: "Nombre de personnes",
   },
   es: {
     loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
@@ -13917,6 +14023,21 @@ var I18N = {
     monthlyCompDesc: "Comparación de este mes con el mes pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
     yearlyCompDesc: "Comparación de este año (año hasta la fecha) con el mismo período del año pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
     monthNames: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+    haccpColDate: "Fecha",
+    haccpColTime: "Hora",
+    haccpColDepot: "Nombre del almacén",
+    haccpColTemp: "Temperatura (°C)",
+    haccpColHumidity: "Humedad (%)",
+    haccpColNote: "Nota",
+    haccpColAction: "Acción",
+    dayNames: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
+    menuVariety: "Variedad",
+    menuVariety1: "1ª Variedad",
+    menuVariety2: "2ª Variedad",
+    menuVariety3: "3ª Variedad",
+    menuVariety4: "4ª Variedad",
+    menuVariety5: "5ª Variedad",
+    menuPersonCount: "Número de personas",
   },
   pt: {
     loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
@@ -14260,6 +14381,21 @@ var I18N = {
     monthlyCompDesc: "Comparação deste mês com o mês passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
     yearlyCompDesc: "Comparação deste ano (ano até o momento) com o mesmo período do ano passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
     monthNames: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+    haccpColDate: "Data",
+    haccpColTime: "Hora",
+    haccpColDepot: "Nome do depósito",
+    haccpColTemp: "Temperatura (°C)",
+    haccpColHumidity: "Umidade (%)",
+    haccpColNote: "Nota",
+    haccpColAction: "Ação",
+    dayNames: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"],
+    menuVariety: "Variedade",
+    menuVariety1: "1ª Variedade",
+    menuVariety2: "2ª Variedade",
+    menuVariety3: "3ª Variedade",
+    menuVariety4: "4ª Variedade",
+    menuVariety5: "5ª Variedade",
+    menuPersonCount: "Número de pessoas",
   },
   uz: {
     loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
@@ -14603,6 +14739,21 @@ var I18N = {
     monthlyCompDesc: "Joriy oy o'tgan oy bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
     yearlyCompDesc: "Joriy yil (yil boshidan bugunga) o'tgan yilning shu davri bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
     monthNames: ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"],
+    haccpColDate: "Sana",
+    haccpColTime: "Vaqt",
+    haccpColDepot: "Ombor nomi",
+    haccpColTemp: "Harorat (°C)",
+    haccpColHumidity: "Namlik (%)",
+    haccpColNote: "Eslatma",
+    haccpColAction: "Amal",
+    dayNames: ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma"],
+    menuVariety: "Turi",
+    menuVariety1: "1-tur",
+    menuVariety2: "2-tur",
+    menuVariety3: "3-tur",
+    menuVariety4: "4-tur",
+    menuVariety5: "5-tur",
+    menuPersonCount: "Kishilar soni",
   }
 };
 
