@@ -3497,12 +3497,12 @@ input.production-input:focus {
 /* ---- LOGIN ENGLISH SUBTITLE ---- */
 .login-sub-en {
   display: block;
-  font-size: 0.65rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
   letter-spacing: 0.8px;
-  opacity: 0.7;
-  margin-top: 0.3rem;
-  color: var(--text-secondary);
+  opacity: 0.85;
+  margin-top: 0.35rem;
+  color: #f97316;
 }
 
 /* ---- LANGUAGE SELECTOR ---- */

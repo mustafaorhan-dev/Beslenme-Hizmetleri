@@ -88,7 +88,7 @@
       </aside>
       <section class="login-form-panel">
         <div class="login-form-head">
-          <h3 class="login-form-title">BHYS</h3>
+           <h3 class="login-form-title">NSMS</h3>
           <p class="login-form-sub" data-i18n="loginFormSub">Oturum Açınız</p>
         </div>
         <form class="login-form" onsubmit="event.preventDefault();doLogin()">
@@ -169,7 +169,7 @@
         </div>
       </div>
       <div class="header-right">
-        <span class="bhys-badge" title="Beslenme Hizmetleri Yönetim Sistemi">BHYS</span>
+        <span class="bhys-badge" title="Nutrition Services Management System">NSMS</span>
         <div class="conn-status" id="connStatus" title="Bağlantı durumu">
           <span class="conn-dot" id="connDot"></span>
           <span class="conn-sync-time" id="connSyncTime" style="font-size:0.75rem;color:#ffffff;margin-left:6px;font-weight:500"></span>
@@ -233,7 +233,7 @@
             </g>
           </svg>
         </div>
-        <span title="Beslenme Hizmetleri Yönetim Sistemi">BHYS</span>
+        <span title="Nutrition Services Management System">NSMS</span>
       </div>
       <nav class="sidebar-nav">
         <button class="tab-btn active" id="tab-dashboard" onclick="switchTab('dashboard')">
@@ -408,7 +408,7 @@
       <!-- Weekly Summary -->
       <div class="weekly-summary" id="weeklySummary">
         <div class="weekly-summary-header">
-          <button class="weekly-nav-btn" id="weeklyPrev" onclick="changeWeeklyOffset(-1)" title="Önceki Hafta" data-i18n="weeklyPrevBtn">
+          <button class="weekly-nav-btn" id="weeklyPrev" onclick="changeWeeklyOffset(-1)" title="Önceki Hafta">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <div class="weekly-summary-title">
@@ -416,7 +416,7 @@
             <span id="weeklySummaryLabel" data-i18n="weeklySummary">Haftalık Özet</span>
             <span class="badge" id="weeklySummaryBadge"></span>
           </div>
-          <button class="weekly-nav-btn" id="weeklyNext" onclick="changeWeeklyOffset(1)" title="Sonraki Hafta" data-i18n="weeklyNextBtn">
+          <button class="weekly-nav-btn" id="weeklyNext" onclick="changeWeeklyOffset(1)" title="Sonraki Hafta">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
@@ -428,7 +428,7 @@
       <!-- Daily Detail Panel -->
       <div class="weekly-summary" id="dailySummary">
         <div class="weekly-summary-header">
-          <button class="weekly-nav-btn" id="dailyPrev" onclick="changeDailyOffset(-1)" title="Önceki Gün" data-i18n="dailyPrevBtn">
+          <button class="weekly-nav-btn" id="dailyPrev" onclick="changeDailyOffset(-1)" title="Önceki Gün">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <div class="weekly-summary-title">
@@ -436,7 +436,7 @@
             <span id="dailySummaryLabel" data-i18n="dailySummary">Günlük Detay</span>
             <span class="badge" id="dailySummaryBadge"></span>
           </div>
-          <button class="weekly-nav-btn" id="dailyNext" onclick="changeDailyOffset(1)" title="Sonraki Gün" data-i18n="dailyNextBtn">
+          <button class="weekly-nav-btn" id="dailyNext" onclick="changeDailyOffset(1)" title="Sonraki Gün">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
