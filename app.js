@@ -3963,6 +3963,13 @@ function exportYillikPDF() {
       .comparison-badge { font-weight: 700; }
       .badge { font-size: 0.75rem; color: #555; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      table.data-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; margin-top: 0.5rem; }
+      table.data-table th, table.data-table td { padding: 5px 6px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+      table.data-table th { background: #f1f5f9; font-weight: 700; text-align: left; font-size: 0.6rem; }
+      table.data-table td { text-align: right; }
+      table.data-table td:first-child { text-align: left; font-weight: 500; }
+      table.data-table tr:last-child { font-weight: 700; background: #f8fafc; border-top: 2px solid #cbd5e1; }
+      @media print { table.data-table { font-size: 0.55rem; } table.data-table th, table.data-table td { padding: 3px 4px; } }
     </style>
   </head><body>
     <h1>Yıllık Karşılaştırma - Atık Kontrol Yönetim Sistemi</h1>
