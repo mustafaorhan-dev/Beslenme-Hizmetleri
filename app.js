@@ -5114,19 +5114,19 @@ function renderWeeklyComparison() {
   badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
 
   var items = [
-    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
+    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">VERİ TÜRÜ</span>'
-    + '<span class="comparison-old">GEÇEN HAFTA</span>'
+    + '<span class="comparison-label">' + t('compDataType') + '</span>'
+    + '<span class="comparison-old">' + t('compLastWeek') + '</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">BU HAFTA</span>'
-    + '<span class="comparison-diff">FARK</span>'
+    + '<span class="comparison-new">' + t('compThisWeek') + '</span>'
+    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
@@ -5181,23 +5181,23 @@ function renderMonthlyComparison() {
   var thisOgrenci = sum(thisMonth, 'ogrenci');
   var lastOgrenci = sum(lastMonth, 'ogrenci');
 
-  var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var months = t('monthNames');
   badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
 
   var items = [
-    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
+    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">VERİ TÜRÜ</span>'
-    + '<span class="comparison-old">GEÇEN AY</span>'
+    + '<span class="comparison-label">' + t('compDataType') + '</span>'
+    + '<span class="comparison-old">' + t('compLastMonth') + '</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">BU AY</span>'
-    + '<span class="comparison-diff">FARK</span>'
+    + '<span class="comparison-new">' + t('compThisMonth') + '</span>'
+    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
@@ -5253,19 +5253,19 @@ function renderYearlyComparison() {
   badge.textContent = now.getFullYear() + ' vs ' + (now.getFullYear() - 1);
 
   var items = [
-    { label: 'Toplam Atık (kg)', val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: 'Toplam Üretim', val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: 'Turnike Geçiş', val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: 'Öğrenci Sayısı', val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: 'Kişi Başı Atık (gr)', val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
+    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
+    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
+    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
+    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
+    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
   ];
 
   grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">VERİ TÜRÜ</span>'
-    + '<span class="comparison-old">GEÇEN YIL</span>'
+    + '<span class="comparison-label">' + t('compDataType') + '</span>'
+    + '<span class="comparison-old">' + t('compLastYear') + '</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">BU YIL</span>'
-    + '<span class="comparison-diff">FARK</span>'
+    + '<span class="comparison-new">' + t('compThisYear') + '</span>'
+    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
@@ -11500,6 +11500,22 @@ var I18N = {
     adminRefreshBtn: "Yenile",
     manualTitle: "Kullanım Kılavuzu",
     manualSubtitle: "Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi",
+    compDataType: "Veri Türü",
+    compLastWeek: "Geçen Hafta",
+    compThisWeek: "Bu Hafta",
+    compLastMonth: "Geçen Ay",
+    compThisMonth: "Bu Ay",
+    compLastYear: "Geçen Yıl",
+    compThisYear: "Bu Yıl",
+    compDiff: "Fark",
+    compTotalWaste: "Toplam Atık (kg)",
+    compTotalProduction: "Toplam Üretim",
+    compTurnstilePasses: "Turnike Geçiş",
+    compStudentCount: "Öğrenci Sayısı",
+    compWastePerPerson: "Kişi Başı Atık (gr)",
+    monthlyCompDesc: "Bu ay ile geçen ay karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
+    yearlyCompDesc: "Bu yıl (yılbaşından bugüne) ile geçen yılın aynı dönemi karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
+    monthNames: ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"],
   },
   en: {
     loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
@@ -11827,6 +11843,22 @@ var I18N = {
     adminRefreshBtn: "Refresh",
     manualTitle: "User Manual",
     manualSubtitle: "Dining Hall Production, Consumption and Waste Control System",
+    compDataType: "Data Type",
+    compLastWeek: "Last Week",
+    compThisWeek: "This Week",
+    compLastMonth: "Last Month",
+    compThisMonth: "This Month",
+    compLastYear: "Last Year",
+    compThisYear: "This Year",
+    compDiff: "Diff",
+    compTotalWaste: "Total Waste (kg)",
+    compTotalProduction: "Total Production",
+    compTurnstilePasses: "Turnstile Passes",
+    compStudentCount: "Student Count",
+    compWastePerPerson: "Waste per Person (gr)",
+    monthlyCompDesc: "Comparing this month with last month. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
+    yearlyCompDesc: "Comparing this year (year-to-date) with the same period last year. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
+    monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
   },
   az: {
     loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
@@ -12154,6 +12186,22 @@ var I18N = {
     adminRefreshBtn: "Yenilə",
     manualTitle: "İstifadəçi Təlimatı",
     manualSubtitle: "Müəssisə İstehsalı, İstehlakı və Tullantı Nəzarət Sistemi",
+    compDataType: "Məlumat Növü",
+    compLastWeek: "Keçən Həftə",
+    compThisWeek: "Bu Həftə",
+    compLastMonth: "Keçən Ay",
+    compThisMonth: "Bu Ay",
+    compLastYear: "Keçən İl",
+    compThisYear: "Bu İl",
+    compDiff: "Fərq",
+    compTotalWaste: "Ümumi Tullantı (kg)",
+    compTotalProduction: "Ümumi İstehsal",
+    compTurnstilePasses: "Turnike Keçidi",
+    compStudentCount: "Tələbə Sayı",
+    compWastePerPerson: "Adambaşına Tullantı (qr)",
+    monthlyCompDesc: "Bu ay keçən ay ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
+    yearlyCompDesc: "Bu il (ilin əvvəlindən bu günə) keçən ilin eyni dövrü ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
+    monthNames: ["Yanvar","Fevral","Mart","Aprel","May","İyun","İyul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"],
   },
   ru: {
     loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
@@ -12481,6 +12529,22 @@ var I18N = {
     adminRefreshBtn: "Обновить",
     manualTitle: "Руководство пользователя",
     manualSubtitle: "Система контроля производства, потребления и отходов",
+    compDataType: "Тип данных",
+    compLastWeek: "Прошлая неделя",
+    compThisWeek: "Эта неделя",
+    compLastMonth: "Прошлый месяц",
+    compThisMonth: "Этот месяц",
+    compLastYear: "Прошлый год",
+    compThisYear: "Этот год",
+    compDiff: "Разница",
+    compTotalWaste: "Всего отходов (кг)",
+    compTotalProduction: "Всего произведено",
+    compTurnstilePasses: "Проходы турникета",
+    compStudentCount: "Кол-во студентов",
+    compWastePerPerson: "Отходов на человека (гр)",
+    monthlyCompDesc: "Сравнение текущего месяца с прошлым. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
+    yearlyCompDesc: "Сравнение текущего года (с начала года) с аналогичным периодом прошлого года. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
+    monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
   },
   ar: {
     loginSub: "نظام إدارة خدمات التغذية",
@@ -12808,6 +12872,22 @@ var I18N = {
     adminRefreshBtn: "تحديث",
     manualTitle: "دليل المستخدم",
     manualSubtitle: "نظام التحكم في إنتاج واستهلاك ونفايات المطعم",
+    compDataType: "نوع البيانات",
+    compLastWeek: "الأسبوع الماضي",
+    compThisWeek: "هذا الأسبوع",
+    compLastMonth: "الشهر الماضي",
+    compThisMonth: "هذا الشهر",
+    compLastYear: "العام الماضي",
+    compThisYear: "هذا العام",
+    compDiff: "الفرق",
+    compTotalWaste: "إجمالي النفايات (كغ)",
+    compTotalProduction: "إجمالي الإنتاج",
+    compTurnstilePasses: "عبور البوابة",
+    compStudentCount: "عدد الطلاب",
+    compWastePerPerson: "النفايات للفرد (غرام)",
+    monthlyCompDesc: "مقارنة هذا الشهر مع الشهر الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
+    yearlyCompDesc: "مقارنة هذا العام (من بداية السنة حتى الآن) مع نفس الفترة من العام الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
+    monthNames: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
@@ -13135,6 +13215,22 @@ var I18N = {
     adminRefreshBtn: "Aktualisieren",
     manualTitle: "Benutzerhandbuch",
     manualSubtitle: "Speisenhaus-Produktions-, Verbrauchs- und Abfallkontrollsystem",
+    compDataType: "Datentyp",
+    compLastWeek: "Vorherige Woche",
+    compThisWeek: "Diese Woche",
+    compLastMonth: "Vorheriger Monat",
+    compThisMonth: "Dieser Monat",
+    compLastYear: "Vorheriges Jahr",
+    compThisYear: "Dieses Jahr",
+    compDiff: "Differenz",
+    compTotalWaste: "Gesamtabfall (kg)",
+    compTotalProduction: "Gesamtproduktion",
+    compTurnstilePasses: "Drehkreuzdurchgänge",
+    compStudentCount: "Anzahl Studenten",
+    compWastePerPerson: "Abfall pro Person (g)",
+    monthlyCompDesc: "Vergleich dieses Monats mit dem Vormonat. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
+    yearlyCompDesc: "Vergleich dieses Jahres (Jahresbilanz) mit demselben Zeitraum des Vorjahres. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
+    monthNames: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
   },
   fr: {
     loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
@@ -13462,6 +13558,22 @@ var I18N = {
     adminRefreshBtn: "Actualiser",
     manualTitle: "Manuel utilisateur",
     manualSubtitle: "Système de contrôle de la production, consommation et des déchets de la cantine",
+    compDataType: "Type de données",
+    compLastWeek: "Semaine dernière",
+    compThisWeek: "Cette semaine",
+    compLastMonth: "Mois dernier",
+    compThisMonth: "Ce mois-ci",
+    compLastYear: "Année dernière",
+    compThisYear: "Cette année",
+    compDiff: "Écart",
+    compTotalWaste: "Déchets totaux (kg)",
+    compTotalProduction: "Production totale",
+    compTurnstilePasses: "Passages tourniquet",
+    compStudentCount: "Nombre d'étudiants",
+    compWastePerPerson: "Déchets par personne (g)",
+    monthlyCompDesc: "Comparaison de ce mois avec le mois dernier. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
+    yearlyCompDesc: "Comparaison de cette année (du début de l'année à aujourd'hui) avec la même période l'année dernière. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
+    monthNames: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
   },
   es: {
     loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
@@ -13789,6 +13901,22 @@ var I18N = {
     adminRefreshBtn: "Actualizar",
     manualTitle: "Manual de usuario",
     manualSubtitle: "Sistema de control de producción, consumo y residuos del comedor",
+    compDataType: "Tipo de dato",
+    compLastWeek: "Semana pasada",
+    compThisWeek: "Esta semana",
+    compLastMonth: "Mes pasado",
+    compThisMonth: "Este mes",
+    compLastYear: "Año pasado",
+    compThisYear: "Este año",
+    compDiff: "Diferencia",
+    compTotalWaste: "Residuos totales (kg)",
+    compTotalProduction: "Producción total",
+    compTurnstilePasses: "Pasos de torniquete",
+    compStudentCount: "Número de estudiantes",
+    compWastePerPerson: "Residuos por persona (g)",
+    monthlyCompDesc: "Comparación de este mes con el mes pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
+    yearlyCompDesc: "Comparación de este año (año hasta la fecha) con el mismo período del año pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
+    monthNames: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
   },
   pt: {
     loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
@@ -14116,6 +14244,22 @@ var I18N = {
     adminRefreshBtn: "Atualizar",
     manualTitle: "Manual do usuário",
     manualSubtitle: "Sistema de controle de produção, consumo e resíduos do refeitório",
+    compDataType: "Tipo de dado",
+    compLastWeek: "Semana passada",
+    compThisWeek: "Esta semana",
+    compLastMonth: "Mês passado",
+    compThisMonth: "Este mês",
+    compLastYear: "Ano passado",
+    compThisYear: "Este ano",
+    compDiff: "Diferença",
+    compTotalWaste: "Resíduos totais (kg)",
+    compTotalProduction: "Produção total",
+    compTurnstilePasses: "Passagens catraca",
+    compStudentCount: "Número de estudantes",
+    compWastePerPerson: "Resíduos por pessoa (g)",
+    monthlyCompDesc: "Comparação deste mês com o mês passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
+    yearlyCompDesc: "Comparação deste ano (ano até o momento) com o mesmo período do ano passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
+    monthNames: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
   },
   uz: {
     loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
@@ -14443,6 +14587,22 @@ var I18N = {
     adminRefreshBtn: "Yangilash",
     manualTitle: "Foydalanuvchi qo'llanmasi",
     manualSubtitle: "Oshxona ishlab chiqarish, iste'mol va chiqindi nazorat tizimi",
+    compDataType: "Ma'lumot turi",
+    compLastWeek: "O'tgan hafta",
+    compThisWeek: "Bu hafta",
+    compLastMonth: "O'tgan oy",
+    compThisMonth: "Bu oy",
+    compLastYear: "O'tgan yil",
+    compThisYear: "Bu yil",
+    compDiff: "Farq",
+    compTotalWaste: "Jami chiqindi (kg)",
+    compTotalProduction: "Jami ishlab chiqarish",
+    compTurnstilePasses: "Turniket o'tishlari",
+    compStudentCount: "Talabalar soni",
+    compWastePerPerson: "Kishi boshiga chiqindi (gr)",
+    monthlyCompDesc: "Joriy oy o'tgan oy bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
+    yearlyCompDesc: "Joriy yil (yil boshidan bugunga) o'tgan yilning shu davri bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
+    monthNames: ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"],
   }
 };
 
