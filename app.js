@@ -11046,14 +11046,13 @@ function printKalibrasyonList() {
 // ─── I18N TRANSLATIONS ─────────────────────────────────────────────────────────
 var I18N = {
   tr: {
-    loginTitle: "OTURUM AÇINIZ",
-    loginSubtitle: "Hesabınıza giriş yapmak için bilgilerinizi girin",
+    loginSub: "BESLENME HİZMETLERİ YÖNETİM SİSTEMİ",
+    loginFormSub: "Oturum Açınız",
     loginUsername: "Kullanıcı",
     loginSelectUser: "Kullanıcı Seçin",
     loginPassword: "Şifre",
     loginBtn: "Giriş Yap",
     loginHint: "Şifrenizi yöneticinizden alabilirsiniz",
-    loginTagline: "Yemekhane Otomasyon Sistemi",
     loginFeature1: "Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi",
     loginFeature2: "Detaylı Raporlama",
     loginFeature3: "Canlı Panel ve Grafikler",
@@ -11090,14 +11089,13 @@ var I18N = {
     versionLabel: "Uygulama Sürümü",
   },
   en: {
-    loginTitle: "SIGN IN",
-    loginSubtitle: "Enter your credentials to sign in",
+    loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
+    loginFormSub: "Sign In",
     loginUsername: "Username",
     loginSelectUser: "Select User",
     loginPassword: "Password",
     loginBtn: "Sign In",
     loginHint: "You can get your password from your administrator",
-    loginTagline: "Canteen Automation System",
     loginFeature1: "Menu Planning, Daily Production, Consumption & Waste Tracking",
     loginFeature2: "Detailed Reporting",
     loginFeature3: "Live Dashboard & Charts",
@@ -11134,14 +11132,13 @@ var I18N = {
     versionLabel: "Application Version",
   },
   az: {
-    loginTitle: "DAXİL OLUN",
-    loginSubtitle: "Hesabınıza daxil olmaq üçün məlumatlarınızı daxil edin",
+    loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
+    loginFormSub: "Daxil olun",
     loginUsername: "İstifadəçi",
     loginSelectUser: "İstifadəçi seçin",
     loginPassword: "Şifrə",
     loginBtn: "Daxil ol",
     loginHint: "Şifrənizi administratorunuzdan ala bilərsiniz",
-    loginTagline: "Yeməkxana Avtomatlaşdırma Sistemi",
     loginFeature1: "Menyu Planlaması, Günlük İstehsal, İstehlak və Tullantı İzləmə",
     loginFeature2: "Ətraflı Hesabatlar",
     loginFeature3: "Canlı Panel və Qrafiklər",
@@ -11178,14 +11175,13 @@ var I18N = {
     versionLabel: "Tətbiq Versiyası",
   },
   ru: {
-    loginTitle: "ВОЙТИ",
-    loginSubtitle: "Введите данные для входа в аккаунт",
+    loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
+    loginFormSub: "Войти",
     loginUsername: "Пользователь",
     loginSelectUser: "Выберите пользователя",
     loginPassword: "Пароль",
     loginBtn: "Войти",
     loginHint: "Пароль можно получить у администратора",
-    loginTagline: "Система автоматизации столовой",
     loginFeature1: "Меню, ежедневное производство, потребление и отходы",
     loginFeature2: "Подробные отчёты",
     loginFeature3: "Живая панель и графики",
@@ -11222,14 +11218,13 @@ var I18N = {
     versionLabel: "Версия приложения",
   },
   ar: {
-    loginTitle: "تسجيل الدخول",
-    loginSubtitle: "أدخل بيانات الاعتماد للوصول إلى حسابك",
+    loginSub: "نظام إدارة خدمات التغذية",
+    loginFormSub: "تسجيل الدخول",
     loginUsername: "اسم المستخدم",
     loginSelectUser: "اختر المستخدم",
     loginPassword: "كلمة المرور",
     loginBtn: "تسجيل الدخول",
     loginHint: "يمكنك الحصول على كلمة المرور من المسؤول",
-    loginTagline: "نظام أتمتة المطعم",
     loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
     loginFeature2: "تقارير مفصلة",
     loginFeature3: "لوحة مباشرة ورسوم بيانية",
@@ -11266,14 +11261,13 @@ var I18N = {
     versionLabel: "إصدار التطبيق",
   },
   de: {
-    loginTitle: "ANMELDEN",
-    loginSubtitle: "Geben Sie Ihre Anmeldedaten ein",
+    loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
+    loginFormSub: "Anmelden",
     loginUsername: "Benutzername",
     loginSelectUser: "Benutzer auswählen",
     loginPassword: "Passwort",
     loginBtn: "Anmelden",
     loginHint: "Sie erhalten Ihr Passwort von Ihrem Administrator",
-    loginTagline: "Kantinen-Automatisierungssystem",
     loginFeature1: "Menüplanung, tägliche Produktion, Verbrauch & Abfallverfolgung",
     loginFeature2: "Detaillierte Berichte",
     loginFeature3: "Live-Dashboard & Diagramme",
@@ -11310,14 +11304,13 @@ var I18N = {
     versionLabel: "Anwendungsversion",
   },
   fr: {
-    loginTitle: "CONNEXION",
-    loginSubtitle: "Entrez vos identifiants pour vous connecter",
+    loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
+    loginFormSub: "Connexion",
     loginUsername: "Nom d'utilisateur",
     loginSelectUser: "Sélectionner l'utilisateur",
     loginPassword: "Mot de passe",
     loginBtn: "Se connecter",
     loginHint: "Vous pouvez obtenir votre mot de passe auprès de votre administrateur",
-    loginTagline: "Système d'automatisation de la cantine",
     loginFeature1: "Planification du menu, production quotidienne, consommation et déchets",
     loginFeature2: "Rapports détaillés",
     loginFeature3: "Tableau de bord en direct et graphiques",
@@ -11354,14 +11347,13 @@ var I18N = {
     versionLabel: "Version de l'application",
   },
   es: {
-    loginTitle: "INICIAR SESIÓN",
-    loginSubtitle: "Ingrese sus credenciales para acceder",
+    loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
+    loginFormSub: "Iniciar sesión",
     loginUsername: "Usuario",
     loginSelectUser: "Seleccionar usuario",
     loginPassword: "Contraseña",
     loginBtn: "Iniciar sesión",
     loginHint: "Puede obtener su contraseña del administrador",
-    loginTagline: "Sistema de automatización de cafetería",
     loginFeature1: "Planificación de menú, producción diaria, consumo y residuos",
     loginFeature2: "Informes detallados",
     loginFeature3: "Panel en vivo y gráficos",
@@ -11398,14 +11390,13 @@ var I18N = {
     versionLabel: "Versión de la aplicación",
   },
   pt: {
-    loginTitle: "ENTRAR",
-    loginSubtitle: "Insira suas credenciais para acessar",
+    loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
+    loginFormSub: "Entrar",
     loginUsername: "Usuário",
     loginSelectUser: "Selecionar usuário",
     loginPassword: "Senha",
     loginBtn: "Entrar",
     loginHint: "Você pode obter sua senha do administrador",
-    loginTagline: "Sistema de automação do refeitório",
     loginFeature1: "Planejamento de cardápio, produção diária, consumo e resíduos",
     loginFeature2: "Relatórios detalhados",
     loginFeature3: "Painel ao vivo e gráficos",
@@ -11442,14 +11433,13 @@ var I18N = {
     versionLabel: "Versão do aplicativo",
   },
   uz: {
-    loginTitle: "KIRISH",
-    loginSubtitle: "Hisobingizga kirish uchun ma'lumotlaringizni kiriting",
+    loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
+    loginFormSub: "Kirish",
     loginUsername: "Foydalanuvchi",
     loginSelectUser: "Foydalanuvchini tanlang",
     loginPassword: "Parol",
     loginBtn: "Kirish",
     loginHint: "Parolingizni administratoringizdan olishingiz mumkin",
-    loginTagline: "Oshxona avtomatlashtirish tizimi",
     loginFeature1: "Menyu rejalashtirish, kunlik ishlab chiqarish, iste'mol va chiqindilarni kuzatish",
     loginFeature2: "Batafsil hisobotlar",
     loginFeature3: "Jonli panel va grafiklar",
@@ -11523,13 +11513,12 @@ function t(key) {
 
 function applyTranslations() {
   var dict = I18N[currentLang] || I18N['tr'];
+  function s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
   function sc(sel, val) { var el = document.querySelector(sel); if (el) el.textContent = val; }
 
-  sc('.login-title', 'KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ');
-  sc('.login-sub', dict.loginTitle);
-  sc('.login-sub-en', 'Nutrition Services Management System (NSMS)');
-  sc('.login-form-title', 'BHYS');
-  sc('.login-form-sub', dict.loginTitle);
+  // Login
+  sc('.login-sub', dict.loginSub);
+  sc('.login-form-sub', dict.loginFormSub);
   sc('.login-hint', dict.loginHint);
 
   var feats = document.querySelectorAll('.login-features li');
@@ -11547,8 +11536,10 @@ function applyTranslations() {
   if (selFirst) selFirst.textContent = dict.loginSelectUser;
   sc('.login-submit', dict.loginBtn);
 
+  // Header
   sc('.menu-toggle span', dict.menuLabel);
 
+  // Sidebar nav labels
   var sidebarMap = {
     'tab-dashboard': dict.sidebarPanel,
     'tab-menu': dict.sidebarMenu,
@@ -11570,24 +11561,30 @@ function applyTranslations() {
       if (sp) sp.textContent = sidebarMap[id];
     }
   });
+
+  // Sidebar action buttons
   var sidebarActions = document.querySelectorAll('.sidebar-actions .tab-btn span');
   var actionLabels = [dict.sidebarDownload, dict.sidebarBackup, dict.sidebarAdmin, dict.sidebarLogs, dict.sidebarRestore, dict.sidebarTheme, dict.sidebarManual];
   sidebarActions.forEach(function(sp, i) {
     if (i < actionLabels.length) sp.textContent = actionLabels[i];
   });
+
+  // Entry button (no id)
   var entryBtns = document.querySelectorAll('.sidebar-nav .tab-btn');
   entryBtns.forEach(function(btn) {
     var sp = btn.querySelector('span');
-    if (sp && sp.textContent.includes('Üretim Tüketim')) sp.textContent = dict.sidebarEntry;
+    if (sp && (sp.textContent.includes('Üretim Tüketim') || sp.textContent.includes('Production'))) sp.textContent = dict.sidebarEntry;
   });
 
+  // Loading
   s('loadingText', dict.loadingSync);
   s('loadingSub', dict.loadingSupabase);
-  function s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
 
+  // Version
   var verEl = document.getElementById('appVersionLabel');
   if (verEl) verEl.title = dict.versionLabel;
 
+  // Page title
   var pageTitleEl = document.getElementById('pageTitle');
   if (pageTitleEl) {
     var tabId = '';
@@ -11606,9 +11603,11 @@ document.addEventListener('click', function(e) {
   }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { setLanguage(currentLang); });
+} else {
   setLanguage(currentLang);
-});
+}
 
 
 
