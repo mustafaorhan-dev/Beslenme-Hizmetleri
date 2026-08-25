@@ -11515,6 +11515,7 @@ function applyTranslations() {
   var dict = I18N[currentLang] || I18N['tr'];
   function s(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
   function sc(sel, val) { var el = document.querySelector(sel); if (el) el.textContent = val; }
+  function skpi(id, key) { var el = document.querySelector('#' + id + ' .kpi-label'); if (el) el.textContent = dict[key] || key; }
 
   // Login
   sc('.login-sub', dict.loginSub);
@@ -11569,12 +11570,30 @@ function applyTranslations() {
     if (i < actionLabels.length) sp.textContent = actionLabels[i];
   });
 
-  // Entry button (no id)
+  // Entry button
   var entryBtns = document.querySelectorAll('.sidebar-nav .tab-btn');
   entryBtns.forEach(function(btn) {
     var sp = btn.querySelector('span');
-    if (sp && (sp.textContent.includes('Üretim Tüketim') || sp.textContent.includes('Production'))) sp.textContent = dict.sidebarEntry;
+    if (sp && (sp.textContent.includes('Üretim Tüketim') || sp.textContent.includes('Produktion') || sp.textContent.includes('Production') || sp.textContent.includes('İstehsal'))) sp.textContent = dict.sidebarEntry;
   });
+
+  // KPI labels
+  skpi('kpi-toplam-kayit', 'kpiTotalRecords');
+  skpi('kpi-bugun-uretim', 'kpiTodayProduction');
+  skpi('kpi-haccp-alarm', 'kpiHaccpAlarm');
+  skpi('kpi-kalibrasyon-alarm', 'kpiCalibrationAlarm');
+  skpi('kpi-ort-atik', 'kpiAvgWaste');
+  skpi('kpi-toplam-gecis', 'kpiTotalPasses');
+  skpi('kpi-fire-oran', 'kpiTotalWaste');
+
+  // Dashboard print button
+  var pdfBtn = document.querySelector('.toolbar-actions .btn-outline');
+  if (pdfBtn) {
+    var svgEl = pdfBtn.querySelector('svg');
+    pdfBtn.textContent = '';
+    if (svgEl) pdfBtn.appendChild(svgEl);
+    pdfBtn.appendChild(document.createTextNode(' ' + dict.printPdf));
+  }
 
   // Loading
   s('loadingText', dict.loadingSync);

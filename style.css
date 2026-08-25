@@ -585,6 +585,8 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 0 2rem;
   margin-left: 60px;
+  position: relative;
+  z-index: 95;
 }
 
 .header-content {
@@ -658,6 +660,8 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .page-title {
@@ -849,7 +853,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   transition: width 0.25s ease;
 }
 .sidebar.open {
-  width: 240px;
+  width: 260px;
 }
 .sidebar.open .sidebar-nav .tab-btn span,
 .sidebar.open .sidebar-actions .tab-btn span,
@@ -911,6 +915,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   transition: all var(--transition);
   text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .sidebar-nav .tab-btn svg,
