@@ -1,10 +1,10 @@
-/* =============================================
-   ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
+﻿/* =============================================
+   ATIK KONTROL YÃ–NETÄ°M SÄ°STEMÄ° - APP LOGIC
    ============================================= */
 
 'use strict';
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let records = [];
 let editingId = null;
 let filteredRecords = [];
@@ -12,11 +12,11 @@ let yemeklerCache = [];
 let unitPricesCache = [];
 let weeklySummaryOffset = 0;
 let dailySummaryOffset = 0;
-let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıtlardan türetilir)
-let hcSelectedMonth = null;  // Harcama menüsünde seçili ay (null => Tüm Yıl, 0-11 => belirli ay)
+let hcSelectedYear = null;   // Harcama menÃ¼sÃ¼nde seÃ§ili yÄ±l (null => kayÄ±tlardan tÃ¼retilir)
+let hcSelectedMonth = null;  // Harcama menÃ¼sÃ¼nde seÃ§ili ay (null => TÃ¼m YÄ±l, 0-11 => belirli ay)
 let hcTablePage = 0;         // Harcama tablosunda aktif sayfa
 
-// ─── SUPABASE ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SUPABASE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
 const SUPABASE_ANON_KEY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseAnonKey : '';
 var supabaseClient = null;
@@ -33,7 +33,7 @@ try {
   }
 } catch (_) {}
 
-// ─── SUPABASE AUTH STATE ──────────────────────────────────────────────────────
+// â”€â”€â”€ SUPABASE AUTH STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let supabaseSession = null;
 
 async function initSupabaseAuth() {
@@ -62,8 +62,8 @@ async function handleSupabaseLogin(session) {
       .eq('auth_user_id', userId)
       .single();
     if (error || !data) {
-      // user_roles'da kayıt yoksa legacy kullanıcı listesinden bulup otomatik at
-      // (böylece Supabase'de "kullanıcı rolleri" boş kalmaz)
+      // user_roles'da kayÄ±t yoksa legacy kullanÄ±cÄ± listesinden bulup otomatik at
+      // (bÃ¶ylece Supabase'de "kullanÄ±cÄ± rolleri" boÅŸ kalmaz)
       var email = session.user.email || '';
       var username = email.split('@')[0].toLowerCase();
       var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
@@ -72,18 +72,18 @@ async function handleSupabaseLogin(session) {
         legacyUser = cfg.users.find(function(u) { return (u.username || '').toLowerCase() === username; }) || null;
       }
       var role = legacyUser ? (legacyUser.role || 'asci') : 'asci';
-      var displayName = legacyUser ? (legacyUser.displayName || username) : (session.user.email || 'Kullanıcı');
+      var displayName = legacyUser ? (legacyUser.displayName || username) : (session.user.email || 'KullanÄ±cÄ±');
       try {
         await supabaseClient.from('user_roles').insert({ auth_user_id: userId, role: role, display_name: displayName });
       } catch (_) {}
       applyLoginState(role, displayName, true);
-      logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
+      logIslem('login', displayName + ' Supabase Auth ile giriÅŸ yaptÄ±');
       return;
     }
     var role = data.role || 'asci';
-    var displayName = data.display_name || session.user.email || 'Kullanıcı';
+    var displayName = data.display_name || session.user.email || 'KullanÄ±cÄ±';
     applyLoginState(role, displayName, true);
-    logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
+    logIslem('login', displayName + ' Supabase Auth ile giriÅŸ yaptÄ±');
   } catch (_) {}
 }
 
@@ -108,16 +108,16 @@ function handleSupabaseLogout() {
   sessionStorage.removeItem('atik_kontrol_supabase_auth');
 }
 
-// ─── REMOTE PASSWORD HASH CACHE (legacy) ──────────────────────────────────────
+// â”€â”€â”€ REMOTE PASSWORD HASH CACHE (legacy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let remoteHashes = { adminHash: null };
 
 async function syncPasswordHashesFromRemote() {
-  // Legacy: config tablosu anon erişime kapalı, bu yüzden çalışmaz
+  // Legacy: config tablosu anon eriÅŸime kapalÄ±, bu yÃ¼zden Ã§alÄ±ÅŸmaz
   // Sadece Supabase Auth ile devam edin
 }
 
 async function syncUsersFromSupabase() {
-  // Kullanıcı listesi app_users tablosundan çekilir (çoklu cihaz desteği)
+  // KullanÄ±cÄ± listesi app_users tablosundan Ã§ekilir (Ã§oklu cihaz desteÄŸi)
   if (!supabaseClient) return false;
   try {
     var { data, error } = await supabaseClient.from('app_users')
@@ -136,12 +136,12 @@ async function syncUsersFromSupabase() {
     var remoteByUsername = {};
     remoteUsers.forEach(function(u) { remoteByUsername[u.username] = u; });
     var combined = [];
-    // Yereldeki kullanıcıları koru, uzaktaki güncel kayıtla değiştir
+    // Yereldeki kullanÄ±cÄ±larÄ± koru, uzaktaki gÃ¼ncel kayÄ±tla deÄŸiÅŸtir
     localUsers.forEach(function(u) {
       if (remoteByUsername[u.username]) combined.push(remoteByUsername[u.username]);
       else combined.push(u);
     });
-    // Uzaktaki yeni kullanıcıları ekle (başka cihazdan eklenen)
+    // Uzaktaki yeni kullanÄ±cÄ±larÄ± ekle (baÅŸka cihazdan eklenen)
     remoteUsers.forEach(function(u) {
       if (!localUsers.some(function(l) { return l.username === u.username; })) combined.push(u);
     });
@@ -154,7 +154,7 @@ async function syncUsersFromSupabase() {
 }
 
 async function saveUsersToSupabase(users) {
-  // Kullanıcı listesi app_users tablosuna yazılır (çoklu cihaz desteği)
+  // KullanÄ±cÄ± listesi app_users tablosuna yazÄ±lÄ±r (Ã§oklu cihaz desteÄŸi)
   if (!supabaseClient) return false;
   try {
     var rows = users.map(function(u) {
@@ -171,7 +171,7 @@ async function saveUsersToSupabase(users) {
   } catch (_) { return false; }
 }
 
-// ─── THEME ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ THEME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Initial theme is handled by inline script in HTML (reads localStorage)
 function toggleTheme() {
   const html = document.documentElement;
@@ -214,7 +214,7 @@ function setAccent(name) {
   redrawActiveCharts();
 }
 
-// ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
+// â”€â”€â”€ TOAST NOTIFICATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showToast(message, type) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -231,16 +231,16 @@ function showToast(message, type) {
   }, 4000);
 }
 
-// ─── PAGINATION ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAGE_SIZE = 20;
 let currentPage = 1;
 let selectedIds = new Set();
 
-// ─── UNSAVED CHANGES ──────────────────────────────────────────────────────────
+// â”€â”€â”€ UNSAVED CHANGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let formModified = false;
 let lastPollData = null;
 
-// ─── CHART YEAR / MONTH FILTER ──────────────────────────────────────────────
+// â”€â”€â”€ CHART YEAR / MONTH FILTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let chartYearFilter = String(new Date().getFullYear());
 let chartMonthFilter = 0;
 let yillikYearFilter = String(new Date().getFullYear());
@@ -271,7 +271,7 @@ function setChartMonth(month) {
   });
   drawAllCharts();
 }
-// ─── LOGIN / LOGOUT / ROLES ────────────────────────────────────────────────
+// â”€â”€â”€ LOGIN / LOGOUT / ROLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ROLE_ADMIN = 'admin';
 const ROLE_DIYETISYEN = 'diyetisyen';
@@ -280,7 +280,7 @@ const ROLE_ASCI = 'asci';
 const ROLE_GIDA_MUHENDISI = 'gida_muhendisi';
 const ROLE_TEMIZLIKCI = 'temizlikci';
 
-const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı', gida_muhendisi: 'Gıda Mühendisi', temizlikci: 'Temizlikçi', sadece_gorme: 'Sadece Görme' };
+const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'AÅŸÃ§Ä±', gida_muhendisi: 'GÄ±da MÃ¼hendisi', temizlikci: 'TemizlikÃ§i', sadece_gorme: 'Sadece GÃ¶rme' };
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
@@ -541,12 +541,12 @@ function getRole() {
   return sessionStorage.getItem('atik_kontrol_role') || '';
 }
 
-// Harcama (₺) bilgileri yalnızca admin rolüne görünür
+// Harcama (â‚º) bilgileri yalnÄ±zca admin rolÃ¼ne gÃ¶rÃ¼nÃ¼r
 function canSeeHarcama() {
   return getRole() === ROLE_ADMIN;
 }
 
-// Dışa aktarma (PDF/yazdırma) pencerelerinde harcama öğelerini gizleyen CSS kuralı
+// DÄ±ÅŸa aktarma (PDF/yazdÄ±rma) pencerelerinde harcama Ã¶ÄŸelerini gizleyen CSS kuralÄ±
 function harcamaHiddenCss() {
   return canSeeHarcama() ? '' : '.col-harcama,.td-harcama,.report-item-harcama,.chart-card-harcama,.field-harcama{display:none!important}';
 }
@@ -558,12 +558,12 @@ function isUsingSupabaseAuth() {
 function isAdminSessionValid() {
   if (getRole() !== ROLE_ADMIN) return false;
 
-  // Supabase Auth ile giriş yapıldıysa cache'lenmiş session'ı kontrol et
+  // Supabase Auth ile giriÅŸ yapÄ±ldÄ±ysa cache'lenmiÅŸ session'Ä± kontrol et
   if (isUsingSupabaseAuth()) {
     return !!supabaseSession;
   }
 
-  // Legacy: client-side hash kontrolü
+  // Legacy: client-side hash kontrolÃ¼
   const storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
   if (!storedHash) return false;
   const loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
@@ -582,28 +582,28 @@ function isAdminSessionValid() {
 
 function requireAdmin() {
   var role = getRole();
-  if (!role) { showToast('Oturum bulunamadı. Lütfen giriş yapın.', 'error'); return false; }
+  if (!role) { showToast('Oturum bulunamadÄ±. LÃ¼tfen giriÅŸ yapÄ±n.', 'error'); return false; }
   
-  // Supabase Auth kullanılıyorsa session varlığını kontrol et
+  // Supabase Auth kullanÄ±lÄ±yorsa session varlÄ±ÄŸÄ±nÄ± kontrol et
   if (isUsingSupabaseAuth() && supabaseClient) {
     if (!supabaseSession) {
-      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
+      showToast('Oturum sÃ¼resi doldu. LÃ¼tfen tekrar giriÅŸ yapÄ±n.', 'error');
       sessionStorage.removeItem('atik_kontrol_role');
       location.reload();
       return false;
     }
   } else if (role === ROLE_ADMIN) {
-    // Legacy admin: hash proof kontrolü
+    // Legacy admin: hash proof kontrolÃ¼
     var storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
     if (!storedHash) {
-      showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+      showToast('Bu iÅŸlem iÃ§in admin yetkisi gerekli.', 'error');
       return false;
     }
     var loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
     if (Date.now() - loginTime > 3600000) {
       sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
       sessionStorage.removeItem('atik_kontrol_login_time');
-      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
+      showToast('Oturum sÃ¼resi doldu. LÃ¼tfen tekrar giriÅŸ yapÄ±n.', 'error');
       location.reload();
       return false;
     }
@@ -625,7 +625,7 @@ async function doLogin() {
     return;
   }
 
-  // 1. Önce legacy auth dene (yönetim panelinde değiştirilen şifre burada geçerli)
+  // 1. Ã–nce legacy auth dene (yÃ¶netim panelinde deÄŸiÅŸtirilen ÅŸifre burada geÃ§erli)
   const inputHash = await sha256(password);
   
   let role = null;
@@ -655,11 +655,11 @@ async function doLogin() {
     renderAdminPanelBtn();
     applyRolePermissions();
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
-    logIslem('login', displayName + ' (legacy) sisteme giriş yaptı');
+    logIslem('login', displayName + ' (legacy) sisteme giriÅŸ yaptÄ±');
     return;
   }
 
-  // 2. Legacy yoksa/başarısızsa Supabase Auth ile dene (e-posta olarak @ekle)
+  // 2. Legacy yoksa/baÅŸarÄ±sÄ±zsa Supabase Auth ile dene (e-posta olarak @ekle)
   if (supabaseClient) {
     var email = username.indexOf('@') === -1 ? username + '@beslenme.local' : username;
     var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
@@ -667,12 +667,12 @@ async function doLogin() {
       password: password
     });
     if (!signInError && signInData && signInData.session) {
-      // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek
+      // BaÅŸarÄ±lÄ± Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek
       return;
     }
   }
 
-  // 3. Her ikisi de başarısız
+  // 3. Her ikisi de baÅŸarÄ±sÄ±z
   window._loginAttempts = (window._loginAttempts || 0) + 1;
   error.textContent = t('wrongCredentials');
   error.style.display = 'block';
@@ -694,7 +694,7 @@ function renderAdminPanelBtn() {
 
 function openAdminPanel() {
   if (getRole() !== ROLE_ADMIN) {
-    showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+    showToast('Bu iÅŸlem iÃ§in admin yetkisi gerekli.', 'error');
     return;
   }
   document.getElementById('apReAuthContainer').style.display = 'block';
@@ -707,7 +707,7 @@ function openAdminPanel() {
   document.getElementById('apSuccess').style.display = 'none';
   document.getElementById('apSuccess').textContent = '';
   apRenderRolePermissions();
-  var roleLabel = getRole() === ROLE_ADMIN ? 'Yönetici' : 'Görüntüleme';
+  var roleLabel = getRole() === ROLE_ADMIN ? 'YÃ¶netici' : 'GÃ¶rÃ¼ntÃ¼leme';
   document.getElementById('apSessionRole').textContent = roleLabel;
   var lastLogin = localStorage.getItem('atik_kontrol_last_login');
   if (lastLogin) {
@@ -720,7 +720,7 @@ function openAdminPanel() {
   }
   var authMode = isUsingSupabaseAuth() ? 'Supabase Auth' : 'Legacy (SHA-256)';
   document.getElementById('apAuthMode').textContent = authMode;
-  document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
+  document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayÄ±cÄ±)';
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   apLoadLogs();
@@ -730,7 +730,7 @@ async function apReAuth() {
   const pw = document.getElementById('apReAuthPw').value;
   const errorEl = document.getElementById('apReAuthError');
 
-  // Supabase Auth ile giriş yapıldıysa session doğrulaması yap
+  // Supabase Auth ile giriÅŸ yapÄ±ldÄ±ysa session doÄŸrulamasÄ± yap
   if (isUsingSupabaseAuth() && supabaseClient) {
     try {
       var { data: { session } } = await supabaseClient.auth.getSession();
@@ -746,7 +746,7 @@ async function apReAuth() {
     } catch (_) {}
   }
 
-  // Legacy fallback: SHA-256 hash kontrolü
+  // Legacy fallback: SHA-256 hash kontrolÃ¼
   const hash = await sha256(pw);
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   var adminHash = '';
@@ -762,7 +762,7 @@ async function apReAuth() {
     apRenderRolePermissions();
     apRenderInactivityTimeout();
   } else {
-    errorEl.textContent = 'Admin şifresi yanlış!';
+    errorEl.textContent = 'Admin ÅŸifresi yanlÄ±ÅŸ!';
     errorEl.style.display = 'block';
     document.getElementById('apReAuthPw').value = '';
     document.getElementById('apReAuthPw').focus();
@@ -775,12 +775,12 @@ function closeAdminPanel() {
 }
 
 function doLogout() {
-  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' çıkış yaptı');
-  // Supabase Auth'ten çıkış yap
+  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' Ã§Ä±kÄ±ÅŸ yaptÄ±');
+  // Supabase Auth'ten Ã§Ä±kÄ±ÅŸ yap
   if (supabaseClient && isUsingSupabaseAuth()) {
     supabaseClient.auth.signOut();
   }
-  // Tüm veriyi temizle (sekme bazlı sessionStorage)
+  // TÃ¼m veriyi temizle (sekme bazlÄ± sessionStorage)
   var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel', 'atik_kontrol_inactivity_timeout'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
@@ -790,9 +790,9 @@ function doLogout() {
   Object.keys(preserved).forEach(function(k) {
     try { localStorage.setItem(k, preserved[k]); } catch (_) {}
   });
-  // sessionStorage'ı da temizle (veriler burada duruyor)
+  // sessionStorage'Ä± da temizle (veriler burada duruyor)
   try { sessionStorage.clear(); } catch (_) {}
-  // Service Worker önbelleğini temizle
+  // Service Worker Ã¶nbelleÄŸini temizle
   if ('caches' in window) {
     caches.keys().then(function(names) {
       names.forEach(function(name) { caches.delete(name); });
@@ -851,7 +851,7 @@ async function saveAdminSettings() {
   });
   saveRolePermissions();
   syncRolePermissionsToSupabase();
-  successEl.textContent = 'Rol izinleri güncellendi.';
+  successEl.textContent = 'Rol izinleri gÃ¼ncellendi.';
   successEl.style.display = 'block';
   showToast('Ayarlar kaydedildi.', 'success');
   applyRolePermissions();
@@ -862,29 +862,29 @@ function apRenderRolePermissions() {
   if (!container) return;
   var roles = Object.keys(rolePermissions);
   var permLabels = {
-    canEditMenu: 'Menüdüzenleyebilir',
-    canSaveMenu: 'Menüyü kaydedebilir',
-    canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
-    canAddRecord: 'Yeni kayıt ekleyebilir (üretim/tüketim/atık ana kayıtlar)',
-    canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
-    canAddYag: 'Atık yağ kaydı ekleyebilir',
-    canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
-    canAddKalibrasyon: 'Kalibrasyona tabi cihaz kaydı ekleyebilir',
-    canExport: 'Dışa aktarabilir',
+    canEditMenu: 'MenÃ¼dÃ¼zenleyebilir',
+    canSaveMenu: 'MenÃ¼yÃ¼ kaydedebilir',
+    canSeeProduction: 'ÃœrÃ¼n ihtiyaÃ§ listesini gÃ¶rebilir',
+    canAddRecord: 'Yeni kayÄ±t ekleyebilir (Ã¼retim/tÃ¼ketim/atÄ±k ana kayÄ±tlar)',
+    canAddHaccp: 'Depo sÄ±caklÄ±k kaydÄ± ekleyebilir',
+    canAddYag: 'AtÄ±k yaÄŸ kaydÄ± ekleyebilir',
+    canAddAmbalaj: 'Ambalaj atÄ±ÄŸÄ± kaydÄ± ekleyebilir',
+    canAddKalibrasyon: 'Kalibrasyona tabi cihaz kaydÄ± ekleyebilir',
+    canExport: 'DÄ±ÅŸa aktarabilir',
     canSync: 'Senkronizasyon yapabilir',
-    canSeeAdminPanel: 'Yönetim panelini görebilir',
-    canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
-    canEditDepo: 'Depo adlarını düzenleyebilir',
-    canEditHarcamaOran: 'Harcama oranını/tutarını değiştirebilir',
-    canEditBirimFiyat: 'Birim fiyat listesini düzenleyebilir',
-    canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
-    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
-    canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
-    canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
-    canMenuOnayla: 'Menüyü onaylayabilir',
-    canMenuReddet: 'Menüyü reddedebilir'
+    canSeeAdminPanel: 'YÃ¶netim panelini gÃ¶rebilir',
+    canEditHaccp: 'Depo sÄ±caklÄ±k kayÄ±tlarÄ±nÄ± dÃ¼zenleyebilir/silebilir',
+    canEditDepo: 'Depo adlarÄ±nÄ± dÃ¼zenleyebilir',
+    canEditHarcamaOran: 'Harcama oranÄ±nÄ±/tutarÄ±nÄ± deÄŸiÅŸtirebilir',
+    canEditBirimFiyat: 'Birim fiyat listesini dÃ¼zenleyebilir',
+    canEditYag: 'AtÄ±k yaÄŸ bilgilerini dÃ¼zenleyebilir/silebilir',
+    canEditAmbalaj: 'Ambalaj atÄ±k kayÄ±tlarÄ±nÄ± dÃ¼zenleyebilir/silebilir',
+    canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini dÃ¼zenleyebilir/silebilir',
+    canMenuOnayaGonder: 'MenÃ¼yÃ¼ onaya gÃ¶nderebilir',
+    canMenuOnayla: 'MenÃ¼yÃ¼ onaylayabilir',
+    canMenuReddet: 'MenÃ¼yÃ¼ reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar' };
+  var tabLabels = { dashboard: 'Panel', menu: 'MenÃ¼', records: 'KayÄ±tlar', report: 'Rapor', haccp: 'GÄ±da GÃ¼venliÄŸi', kalibrasyon: 'Kalibrasyon', yag: 'AtÄ±k YaÄŸ', ambalaj: 'Ambalaj AtÄ±klarÄ±', charts: 'Grafikler', yillik: 'YÄ±llÄ±k', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -893,14 +893,14 @@ function apRenderRolePermissions() {
     var label = (ROLE_LABELS[role] || role);
     html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.75rem">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">';
-    html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">' + label + (isCore ? '' : ' <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">(özel rol)</span>') + '</div>';
+    html += '<div style="font-size:0.95rem;font-weight:700;color:var(--text-primary)">' + label + (isCore ? '' : ' <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">(Ã¶zel rol)</span>') + '</div>';
     html += '<div style="display:flex;gap:0.4rem">';
-    html += '<button class="btn btn-ghost btn-sm" onclick="apResetRolePermissions(\'' + role + '\')" title="Varsayılana sıfırla" style="font-size:0.75rem;padding:3px 8px;color:var(--accent)">Sıfırla</button>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apResetRolePermissions(\'' + role + '\')" title="VarsayÄ±lana sÄ±fÄ±rla" style="font-size:0.75rem;padding:3px 8px;color:var(--accent)">SÄ±fÄ±rla</button>';
     if (!isCore) {
-      html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteRole(\'' + role + '\')" title="Bu rolü sil" style="font-size:0.75rem;padding:3px 8px;color:#ef4444">Sil</button>';
+      html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteRole(\'' + role + '\')" title="Bu rolÃ¼ sil" style="font-size:0.75rem;padding:3px 8px;color:#ef4444">Sil</button>';
     }
     html += '</div></div>';
-    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Görünen Sekmeler</div>';
+    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">GÃ¶rÃ¼nen Sekmeler</div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem;margin-bottom:0.75rem">';
     Object.keys(tabLabels).forEach(function(tab) {
       html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
@@ -908,7 +908,7 @@ function apRenderRolePermissions() {
       html += '</label>';
     });
     html += '</div>';
-    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">İzinler</div>';
+    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Ä°zinler</div>';
     Object.keys(permLabels).forEach(function(key) {
       html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
       html += '<input type="checkbox" id="' + prefix + key + '"' + (perm[key] ? ' checked' : '') + ' /> ' + permLabels[key];
@@ -919,7 +919,7 @@ function apRenderRolePermissions() {
   html += '<div style="background:var(--bg-card);border:1px dashed var(--border);border-radius:10px;padding:0.85rem;margin-bottom:0.75rem">';
   html += '<div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem">Yeni Rol Ekle</div>';
   html += '<div style="display:flex;gap:0.5rem">';
-  html += '<input type="text" id="apNewRoleName" placeholder="Rol adı (ör: temizlikçi)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />';
+  html += '<input type="text" id="apNewRoleName" placeholder="Rol adÄ± (Ã¶r: temizlikÃ§i)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />';
   html += '<button class="btn btn-primary btn-sm" onclick="apAddRole()">Ekle</button>';
   html += '</div></div>';
   container.innerHTML = html;
@@ -927,7 +927,7 @@ function apRenderRolePermissions() {
 
 function apResetRolePermissions(role) {
   if (getRole() !== ROLE_ADMIN) return;
-  if (!confirm('Bu rolün izinlerini varsayılana sıfırlamak istediğinize emin misiniz?')) return;
+  if (!confirm('Bu rolÃ¼n izinlerini varsayÄ±lana sÄ±fÄ±rlamak istediÄŸinize emin misiniz?')) return;
   if (DEFAULT_ROLE_PERMISSIONS[role]) {
     rolePermissions[role] = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
   } else {
@@ -937,38 +937,38 @@ function apResetRolePermissions(role) {
   syncRolePermissionsToSupabase();
   apRenderRolePermissions();
   applyRolePermissions();
-  showToast((ROLE_LABELS[role] || role) + ' izinleri sıfırlandı.', 'success');
+  showToast((ROLE_LABELS[role] || role) + ' izinleri sÄ±fÄ±rlandÄ±.', 'success');
 }
 
 function apDeleteRole(role) {
   if (getRole() !== ROLE_ADMIN) return;
   if (CORE_ROLES.indexOf(role) !== -1) { showToast('Temel roller silinemez.', 'error'); return; }
-  if (!confirm('"' + (ROLE_LABELS[role] || role) + '" rolünü silmek istediğinize emin misiniz?')) return;
+  if (!confirm('"' + (ROLE_LABELS[role] || role) + '" rolÃ¼nÃ¼ silmek istediÄŸinize emin misiniz?')) return;
   delete rolePermissions[role];
   delete ROLE_LABELS[role];
   saveRolePermissions();
   syncRolePermissionsToSupabase();
   apRenderRolePermissions();
-  showToast((ROLE_LABELS[role] || role) + ' rolü silindi.', 'success');
+  showToast((ROLE_LABELS[role] || role) + ' rolÃ¼ silindi.', 'success');
 }
 
 function apAddRole() {
   if (getRole() !== ROLE_ADMIN) return;
   var nameInput = document.getElementById('apNewRoleName');
   var name = (nameInput.value || '').trim().toLowerCase().replace(/\s+/g, '_');
-  if (!name) { showToast('Rol adı gerekli.', 'error'); return; }
+  if (!name) { showToast('Rol adÄ± gerekli.', 'error'); return; }
   if (rolePermissions[name]) { showToast('Bu rol zaten var.', 'error'); return; }
-  if (['admin'].indexOf(name) !== -1) { showToast('Bu rol adı kullanılamaz.', 'error'); return; }
+  if (['admin'].indexOf(name) !== -1) { showToast('Bu rol adÄ± kullanÄ±lamaz.', 'error'); return; }
   ROLE_LABELS[name] = nameInput.value.trim();
   rolePermissions[name] = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
   saveRolePermissions();
   syncRolePermissionsToSupabase();
   nameInput.value = '';
   apRenderRolePermissions();
-  showToast('"' + ROLE_LABELS[name] + '" rolü eklendi. İzinleri özelleştirebilirsiniz.', 'success');
+  showToast('"' + ROLE_LABELS[name] + '" rolÃ¼ eklendi. Ä°zinleri Ã¶zelleÅŸtirebilirsiniz.', 'success');
 }
 
-// ─── KULLANICI YÖNETİMİ ─────────────────────────────────────────────────────
+// â”€â”€â”€ KULLANICI YÃ–NETÄ°MÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getUsers() {
   var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   if (cfg.users && Array.isArray(cfg.users)) return JSON.parse(JSON.stringify(cfg.users));
@@ -997,10 +997,10 @@ function apRenderUserList() {
   if (!container) return;
   var users = getUsers();
   if (users.length === 0) {
-    container.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);margin:0">Kayıtlı kullanıcı yok.</p>';
+    container.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);margin:0">KayÄ±tlÄ± kullanÄ±cÄ± yok.</p>';
     return;
   }
-  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
+  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'AÅŸÃ§Ä±' };
   var roleColors = { admin: '#ef4444', diyetisyen: '#6366f1', depo: '#f59e0b', asci: '#22c55e' };
   var html = '<div style="display:flex;flex-direction:column;gap:0.5rem">';
   users.forEach(function(user, i) {
@@ -1011,7 +1011,7 @@ function apRenderUserList() {
     html += '<div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)">' + escapeHtml(user.displayName) + '</div>';
     html += '<div style="font-size:0.75rem;color:var(--text-muted)">@' + escapeHtml(user.username) + ' &middot; <span style="color:' + roleColor + ';font-weight:600">' + roleLabel + '</span></div>';
     html += '</div>';
-    html += '<button class="btn btn-ghost btn-sm" onclick="apEditUser(' + i + ')" title="Düzenle" style="padding:4px 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apEditUser(' + i + ')" title="DÃ¼zenle" style="padding:4px 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>';
     html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteUser(' + i + ')" title="Sil" style="padding:4px 8px;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
     html += '</div>';
   });
@@ -1030,13 +1030,13 @@ async function apAddUser() {
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
-  if (!username) { errorEl.textContent = 'Kullanıcı adı gerekli.'; errorEl.style.display = 'block'; return; }
-  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
-  if (!password || password.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
+  if (!username) { errorEl.textContent = 'KullanÄ±cÄ± adÄ± gerekli.'; errorEl.style.display = 'block'; return; }
+  if (!displayName) { errorEl.textContent = 'GÃ¶rÃ¼nen ad gerekli.'; errorEl.style.display = 'block'; return; }
+  if (!password || password.length < 3) { errorEl.textContent = 'Åifre en az 3 karakter olmalÄ±.'; errorEl.style.display = 'block'; return; }
 
   var users = getUsers();
   if (users.some(function(u) { return u.username === username; })) {
-    errorEl.textContent = 'Bu kullanıcı adı zaten var.';
+    errorEl.textContent = 'Bu kullanÄ±cÄ± adÄ± zaten var.';
     errorEl.style.display = 'block';
     return;
   }
@@ -1049,9 +1049,9 @@ async function apAddUser() {
   document.getElementById('apNewDisplayName').value = '';
   document.getElementById('apNewPassword').value = '';
   apRenderUserList();
-  successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
+  successEl.textContent = '"' + displayName + '" kullanÄ±cÄ±sÄ± eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
   successEl.style.display = 'block';
-  showToast('Kullanıcı eklendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  showToast('KullanÄ±cÄ± eklendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
   logIslem('kullanici_ekle', displayName + ' (' + role + ') eklendi');
 }
 
@@ -1061,20 +1061,20 @@ function apEditUser(index) {
   var user = users[index];
   if (!user) return;
 
-  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
+  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'AÅŸÃ§Ä±' };
 
   var container = document.getElementById('apUserList');
-  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">Kullanıcıyı Düzenle</div>';
+  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">KullanÄ±cÄ±yÄ± DÃ¼zenle</div>';
   html += '<input type="hidden" id="apEditIndex" value="' + index + '" />';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Kullanıcı Adı</label>';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">KullanÄ±cÄ± AdÄ±</label>';
   html += '<input type="text" id="apEditUsername" value="' + escapeHtml(user.username) + '" readonly style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:0.85rem" /></div>';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Görünen Ad</label>';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">GÃ¶rÃ¼nen Ad</label>';
   html += '<input type="text" id="apEditDisplayName" value="' + escapeHtml(user.displayName) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
   html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Yeni Şifre (boş = değişmez)</label>';
-  html += '<input type="password" id="apEditPassword" placeholder="Yeni şifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
+  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Yeni Åifre (boÅŸ = deÄŸiÅŸmez)</label>';
+  html += '<input type="password" id="apEditPassword" placeholder="Yeni ÅŸifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
   html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>';
   html += '<select id="apEditRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">';
   ['admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci','sadece_gorme'].forEach(function(r) {
@@ -1084,7 +1084,7 @@ function apEditUser(index) {
   html += '</div>';
   html += '<div style="display:flex;gap:0.5rem">';
   html += '<button class="btn btn-primary btn-sm" onclick="apSaveEditUser()">Kaydet</button>';
-  html += '<button class="btn btn-ghost btn-sm" onclick="apRenderUserList()">İptal</button>';
+  html += '<button class="btn btn-ghost btn-sm" onclick="apRenderUserList()">Ä°ptal</button>';
   html += '</div></div>';
   container.innerHTML = html;
 }
@@ -1104,8 +1104,8 @@ async function apSaveEditUser() {
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
-  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
-  if (newPw && newPw.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
+  if (!displayName) { errorEl.textContent = 'GÃ¶rÃ¼nen ad gerekli.'; errorEl.style.display = 'block'; return; }
+  if (newPw && newPw.length < 3) { errorEl.textContent = 'Åifre en az 3 karakter olmalÄ±.'; errorEl.style.display = 'block'; return; }
 
   user.displayName = displayName;
   user.role = role;
@@ -1115,10 +1115,10 @@ async function apSaveEditUser() {
   users[index] = user;
   var remoteOk = await saveUsers(users);
   apRenderUserList();
-  successEl.textContent = displayName + ' güncellendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
+  successEl.textContent = displayName + ' gÃ¼ncellendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
   successEl.style.display = 'block';
-  showToast(displayName + ' güncellendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
-  logIslem('kullanici_duzenle', displayName + ' güncellendi');
+  showToast(displayName + ' gÃ¼ncellendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  logIslem('kullanici_duzenle', displayName + ' gÃ¼ncellendi');
 }
 
 async function apDeleteUser(index) {
@@ -1126,20 +1126,20 @@ async function apDeleteUser(index) {
   var users = getUsers();
   var user = users[index];
   if (!user) return;
-  if (user.username === 'admin') { showToast('Admin kullanıcısı silinemez.', 'error'); return; }
-  if (!confirm('"' + user.displayName + '" kullanıcısını silmek istediğinize emin misiniz?')) return;
+  if (user.username === 'admin') { showToast('Admin kullanÄ±cÄ±sÄ± silinemez.', 'error'); return; }
+  if (!confirm('"' + user.displayName + '" kullanÄ±cÄ±sÄ±nÄ± silmek istediÄŸinize emin misiniz?')) return;
   users.splice(index, 1);
   var remoteOk = await saveUsers(users);
   apRenderUserList();
-  showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  showToast('KullanÄ±cÄ± silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
   logIslem('kullanici_sil', user.displayName + ' silindi');
 }
 
 async function apLoadLogs() {
   var container = document.getElementById('logPanelBody') || document.getElementById('apLogList');
   if (!container) return;
-  if (!supabaseClient) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Supabase bağlı değil.</div>'; return; }
-  container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Yükleniyor...</div>';
+  if (!supabaseClient) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Supabase baÄŸlÄ± deÄŸil.</div>'; return; }
+  container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">YÃ¼kleniyor...</div>';
   try {
     var filterIslem = document.getElementById('logFilterIslem');
     var filterKullanici = document.getElementById('logFilterKullanici');
@@ -1151,11 +1151,11 @@ async function apLoadLogs() {
       var arama = filterKullanici.value.toLowerCase();
       data = data.filter(function(r) { return (r.kullanici || '').toLowerCase().indexOf(arama) !== -1; });
     }
-    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>'; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydÄ± bulunamadÄ±.</div>'; return; }
     var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
-    var islemEtiket = { login: 'Giriş', logout: 'Çıkış', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_sil: 'Kullanıcı Sil' };
+    var islemEtiket = { login: 'GiriÅŸ', logout: 'Ã‡Ä±kÄ±ÅŸ', yeni_kayit: 'Yeni KayÄ±t', kayit_duzenle: 'DÃ¼zenleme', kayit_sil: 'Silme', kullanici_ekle: 'KullanÄ±cÄ± Ekle', kullanici_duzenle: 'KullanÄ±cÄ± DÃ¼zenle', kullanici_sil: 'KullanÄ±cÄ± Sil' };
     var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
-    html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
+    html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">KullanÄ±cÄ±</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Ä°ÅŸlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
     data.forEach(function(r) {
       var tarih = '';
       try { tarih = new Date(r.tarih).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { tarih = r.tarih || ''; }
@@ -1171,7 +1171,7 @@ async function apLoadLogs() {
     html += '</tbody></table>';
     container.innerHTML = html;
   } catch (_) {
-    container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--danger)">Loglar yüklenemedi.</div>';
+    container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--danger)">Loglar yÃ¼klenemedi.</div>';
   }
 }
 
@@ -1206,12 +1206,12 @@ function closeManualModal() {
 
 function exportManualPDF() {
   var body = document.querySelector('#manualModal .manual-body');
-  if (!body) { showToast('Kılavuz içeriği bulunamadı.', 'error'); return; }
+  if (!body) { showToast('KÄ±lavuz iÃ§eriÄŸi bulunamadÄ±.', 'error'); return; }
   var printWin = window.open('', '_blank', 'width=900,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   var manualHtml = body.outerHTML;
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Kullanım Kılavuzu - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>KullanÄ±m KÄ±lavuzu - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 24px; color: #222; font-size: 13px; line-height: 1.6; }
       h1 { font-size: 1.4rem; margin: 0 0 0.2rem; }
@@ -1235,7 +1235,7 @@ function exportManualPDF() {
       @media print { a { color: inherit !important; } }
     </style>
   </head><body>
-    <h1>KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<br>Beslenme Hizmetleri Yönetim Sistemi</h1>
+    <h1>KIRÅEHÄ°R AHÄ° EVRAN ÃœNÄ°VERSÄ°TESÄ°<br>Beslenme Hizmetleri YÃ¶netim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${manualHtml}
   </body></html>`);
@@ -1258,7 +1258,7 @@ function applyViewerRestrictions() {
   if (syncBtn) syncBtn.style.display = perm.canSync ? '' : 'none';
   var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
   if (pullBtn) pullBtn.style.display = perm.canSync ? '' : 'none';
-  // Sekme içindeki tüm "Supabase'e Kaydet / Supabase'ten Çek" butonları da canSync'e bağlı
+  // Sekme iÃ§indeki tÃ¼m "Supabase'e Kaydet / Supabase'ten Ã‡ek" butonlarÄ± da canSync'e baÄŸlÄ±
   if (!perm.canSync) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
@@ -1303,15 +1303,15 @@ function applyViewerRestrictions() {
   }
   if (!perm.canEditHarcamaOran) {
     var hcOran = document.getElementById('hcOran');
-    if (hcOran) { hcOran.readOnly = true; hcOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    if (hcOran) { hcOran.readOnly = true; hcOran.title = 'OranÄ± deÄŸiÅŸtirme yetkiniz yok.'; }
     var hcOranBtn = document.querySelector('button[onclick*="hcKaydetOran"]');
     if (hcOranBtn) hcOranBtn.style.display = 'none';
     var hcPersOran = document.getElementById('hcPersonelOran');
-    if (hcPersOran) { hcPersOran.readOnly = true; hcPersOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    if (hcPersOran) { hcPersOran.readOnly = true; hcPersOran.title = 'OranÄ± deÄŸiÅŸtirme yetkiniz yok.'; }
     var hcPersOranBtn = document.querySelector('button[onclick*="hcKaydetPersonelOran"]');
     if (hcPersOranBtn) hcPersOranBtn.style.display = 'none';
     var hcYemekOran = document.getElementById('hcYemekOran');
-    if (hcYemekOran) { hcYemekOran.readOnly = true; hcYemekOran.title = 'Oranı değiştirme yetkiniz yok.'; }
+    if (hcYemekOran) { hcYemekOran.readOnly = true; hcYemekOran.title = 'OranÄ± deÄŸiÅŸtirme yetkiniz yok.'; }
     var hcYemekOranBtn = document.querySelector('button[onclick*="hcKaydetYemekOran"]');
     if (hcYemekOranBtn) hcYemekOranBtn.style.display = 'none';
   }
@@ -1363,7 +1363,7 @@ function populateLoginUsers() {
   if (!select) return;
   var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
   if (!cfg.users || !Array.isArray(cfg.users)) return;
-  // Mevcut seçenekleri temizle (ilk option hariç)
+  // Mevcut seÃ§enekleri temizle (ilk option hariÃ§)
   while (select.options.length > 1) select.remove(1);
   cfg.users.forEach(function(user) {
     var opt = document.createElement('option');
@@ -1373,9 +1373,9 @@ function populateLoginUsers() {
   });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener('DOMContentLoaded', async () => {
-  // Önce Supabase Auth'u başlat (session varsa otomatik giriş yapar)
+  // Ã–nce Supabase Auth'u baÅŸlat (session varsa otomatik giriÅŸ yapar)
   await initSupabaseAuth();
 
   loadRolePermissions();
@@ -1388,11 +1388,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   var isSupabaseAuth = isUsingSupabaseAuth();
 
   if (existingRole) {
-    // Supabase Auth ile giriş yapıldıysa session'ı doğrula
+    // Supabase Auth ile giriÅŸ yapÄ±ldÄ±ysa session'Ä± doÄŸrula
     if (isSupabaseAuth && supabaseClient) {
       var { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
-        // Session geçersiz, legacy'e düş veya login göster
+        // Session geÃ§ersiz, legacy'e dÃ¼ÅŸ veya login gÃ¶ster
         sessionStorage.removeItem('atik_kontrol_role');
         sessionStorage.removeItem('atik_kontrol_supabase_auth');
       }
@@ -1401,7 +1401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (existingRole) {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.body.setAttribute('data-role', existingRole);
-      var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
+      var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'GÃ¶rÃ¼ntÃ¼leme');
       document.getElementById('roleBadge').textContent = displayName;
       renderAdminPanelBtn();
       applyRolePermissions();
@@ -1416,16 +1416,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadAccent();
-  setLoadingText('Veriler yükleniyor...', 'Supabase bağlantısı kontrol ediliyor');
+  setLoadingText('Veriler yÃ¼kleniyor...', 'Supabase baÄŸlantÄ±sÄ± kontrol ediliyor');
   loadData();
   loadHaccpData();
   loadYagData();
   loadAmbalajData();
   loadKalibrasyonData();
 
-  // Records her sayfa yüklenişinde Supabase'ten çekilir (çoklu cihaz desteği)
+  // Records her sayfa yÃ¼kleniÅŸinde Supabase'ten Ã§ekilir (Ã§oklu cihaz desteÄŸi)
   if (supabaseClient) {
-    setLoadingText('Veriler yükleniyor...', 'Sunucudan veriler alınıyor...');
+    setLoadingText('Veriler yÃ¼kleniyor...', 'Sunucudan veriler alÄ±nÄ±yor...');
     try {
       var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
       if (rData && rData.length > 0) {
@@ -1457,7 +1457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await syncUnitPricesFromSupabase().catch(function(){});
   }
 
-  // Yag ve ambalaj her sayfada Supabase'ten çekilir
+  // Yag ve ambalaj her sayfada Supabase'ten Ã§ekilir
   if (supabaseClient) {
     try {
       await syncYagFromSupabase();
@@ -1479,12 +1479,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
   }
 
-  // YemeklerCache boşsa yine de dene
+  // YemeklerCache boÅŸsa yine de dene
   if (!yemeklerCache.length && supabaseClient) {
     await syncDishesFromSupabase();
   }
 
-  // HACCP (soğuk depo sıcaklık) verileri her sayfa yüklenişinde Supabase'ten çekilir
+  // HACCP (soÄŸuk depo sÄ±caklÄ±k) verileri her sayfa yÃ¼kleniÅŸinde Supabase'ten Ã§ekilir
   if (supabaseClient) {
     await syncHaccpFromSupabase();
     if (haccpRecords.length > 0) {
@@ -1503,18 +1503,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreActiveTab();
   menuOnayBildirim();
 
-  // Güvenlik: 10 sn sonra loading overlay'i zorla kapat
+  // GÃ¼venlik: 10 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
     document.getElementById('loadingOverlay').classList.add('hidden');
   }, 10000);
 
-  setLoadingSub('Uygulama başlatılıyor...');
+  setLoadingSub('Uygulama baÅŸlatÄ±lÄ±yor...');
   clearTimeout(forceHideTimer);
 
   refreshMenuProduction();
   initDishAutocomplete();
 
-  // Ana içeriğe tıklayınca sidebar'ı kapat
+  // Ana iÃ§eriÄŸe tÄ±klayÄ±nca sidebar'Ä± kapat
   var mc = document.querySelector('.main-content');
   if (mc) mc.addEventListener('click', function(e) {
     if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
@@ -1524,12 +1524,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loadingOverlay').classList.add('hidden');
 
   setConnectionStatus('ok');
-  showSyncTime('hazır');
+  showSyncTime('hazÄ±r');
   startPolling();
   resetInactivityTimer();
 });
 
-// ─── AUTO POLL & INACTIVITY LOCK ─────────────────────────────────────────────
+// â”€â”€â”€ AUTO POLL & INACTIVITY LOCK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let pollInterval = null;
 let inactivityTimer = null;
 const POLL_INTERVAL = 180000;
@@ -1544,7 +1544,7 @@ function startPolling() {
       var localIds = new Set(records.map(function(r) { return r.id; }));
       var hasNew = data.some(function(r) { return !localIds.has(Number(r.id)); });
       var hasRemoved = records.some(function(r) { return !serverIds.has(r.id); });
-      if (!hasNew && !hasRemoved) { showSyncTime('otomatik • güncel'); return; }
+      if (!hasNew && !hasRemoved) { showSyncTime('otomatik â€¢ gÃ¼ncel'); return; }
       records = data.map(function(r) { return {
         id: Number(r.id) || Date.now() + Math.random(),
         tarih: normalizeDate(r.tarih),
@@ -1559,7 +1559,7 @@ function startPolling() {
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      showSyncTime('otomatik • güncellendi');
+      showSyncTime('otomatik â€¢ gÃ¼ncellendi');
     }).catch(function() {});
   }, POLL_INTERVAL);
 }
@@ -1584,7 +1584,7 @@ function apRenderInactivityTimeout() {
 }
 
 function lockScreen() {
-  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kapattı');
+  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kapattÄ±');
   stopPolling();
   if (supabaseClient && isUsingSupabaseAuth()) {
     supabaseClient.auth.signOut();
@@ -1605,34 +1605,34 @@ function showSyncTime(msg) {
   if (!el) return;
   const now = new Date();
   const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  el.textContent = msg ? `Bağlı • ${time} (${msg})` : `Bağlı • ${time}`;
+  el.textContent = msg ? `BaÄŸlÄ± â€¢ ${time} (${msg})` : `BaÄŸlÄ± â€¢ ${time}`;
 }
 
-// ─── DATE ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function normalizeDate(v) {
   if (!v) return '';
-  // Zaten YYYY-MM-DD formatında mı?
+  // Zaten YYYY-MM-DD formatÄ±nda mÄ±?
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-  // DD.MM.YYYY veya DD/MM/YYYY (Türkiye formatı)
+  // DD.MM.YYYY veya DD/MM/YYYY (TÃ¼rkiye formatÄ±)
   var m = v.match(/^(\d{1,2})[\.\/](\d{1,2})[\.\/](\d{4})$/);
   if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
-  // Sayısal (Google Sheets serial date)?
+  // SayÄ±sal (Google Sheets serial date)?
   if (/^\d+(\.\d+)?$/.test(String(v))) {
     const d = new Date(1899, 11, 30 + Number(v));
     if (!isNaN(d)) return formatLocalDate(d);
   }
-  // Diğer formatlar (ISO, "Sat Jan 15 2026", vb.)
+  // DiÄŸer formatlar (ISO, "Sat Jan 15 2026", vb.)
   const d = new Date(v);
   if (!isNaN(d)) return formatLocalDate(d);
   return '';
 }
 
 function displayDate(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return 'â€”';
   var n = normalizeDate(dateStr);
-  if (!n) return '—';
+  if (!n) return 'â€”';
   var d = new Date(n + 'T12:00:00');
-  if (isNaN(d)) return '—';
+  if (isNaN(d)) return 'â€”';
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
@@ -1663,17 +1663,17 @@ function setCurrentDate() {
   document.getElementById('fTarih').value = formatLocalDate(now);
 }
 
-// ─── STORAGE ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ STORAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const STORAGE_KEY = 'atik_kontrol_records';
 
 function loadData() {
   try {
-    // sessionStorage'den oku (sekme bazlı, kapanınca silinir)
+    // sessionStorage'den oku (sekme bazlÄ±, kapanÄ±nca silinir)
     var stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
       records = JSON.parse(stored);
     } else {
-      // localStorage'dan migrate et (eski kullanıcılar için) ve temizle
+      // localStorage'dan migrate et (eski kullanÄ±cÄ±lar iÃ§in) ve temizle
       stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         records = JSON.parse(stored);
@@ -1744,7 +1744,7 @@ function parseNumComma(v) {
   return Number(String(v).replace(',', '.'));
 }
 
-// ─── ÖĞRENCİ BAŞINA HARCAMA ORANI ────────────────────────────────────────────
+// â”€â”€â”€ Ã–ÄRENCÄ° BAÅINA HARCAMA ORANI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const HARCAMA_ORAN_SUPABASE_KEY = 'harcama_oranlari';
 function getOgrenciBasiHarcamaOrani() {
   var val = localStorage.getItem('ogrenci_basi_harcama_orani');
@@ -1755,7 +1755,7 @@ function setOgrenciBasiHarcamaOrani(val) {
   syncHarcamaOranlariToSupabase();
 }
 
-// ─── PERSONEL BAŞINA HARCAMA ORANI ───────────────────────────────────────────
+// â”€â”€â”€ PERSONEL BAÅINA HARCAMA ORANI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getPersonelBasiHarcamaOrani() {
   var val = localStorage.getItem('personel_basi_harcama_orani');
   return val !== null ? parseFloat(val) : 50.00;
@@ -1765,7 +1765,7 @@ function setPersonelBasiHarcamaOrani(val) {
   syncHarcamaOranlariToSupabase();
 }
 
-// ─── ÜRETİLEN YEMEK BAŞINA HARCAMA ORANI ─────────────────────────────────────
+// â”€â”€â”€ ÃœRETÄ°LEN YEMEK BAÅINA HARCAMA ORANI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getUretilenYemekBasiHarcamaOrani() {
   var val = localStorage.getItem('uretilen_yemek_basi_harcama_orani');
   return val !== null ? parseFloat(val) : 12.00;
@@ -1775,7 +1775,7 @@ function setUretilenYemekBasiHarcamaOrani(val) {
   syncHarcamaOranlariToSupabase();
 }
 
-// ─── SUPABASE HARCAMA ORAN SENKRONİZASYONU ───────────────────────────────────
+// â”€â”€â”€ SUPABASE HARCAMA ORAN SENKRONÄ°ZASYONU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function syncHarcamaOranlariToSupabase() {
   if (!supabaseClient) return;
   try {
@@ -1807,7 +1807,7 @@ async function syncHarcamaOranlariFromSupabase() {
   } catch (_) { return false; }
 }
 
-// ─── BİRİM FİYAT LİSTESİ ────────────────────────────────────────────────────
+// â”€â”€â”€ BÄ°RÄ°M FÄ°YAT LÄ°STESÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const UNIT_PRICES_SUPABASE_KEY = 'unit_prices';
 
 function loadUnitPrices() { return unitPricesCache; }
@@ -1881,7 +1881,7 @@ function bfBulDuplike() {
 }
 
 async function bfTemizleDuplike(grup) {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditBirimFiyat()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var enIyi = grup.reduce(function(a, b) { return a.birim_fiyat > b.birim_fiyat ? a : b; });
   for (var i = 0; i < grup.length; i++) {
     if (grup[i].id !== enIyi.id) {
@@ -1889,13 +1889,13 @@ async function bfTemizleDuplike(grup) {
     }
   }
   renderBirimFiyatlar();
-  showToast('Duplike kayıtlar temizlendi. En yüksek fiyat korundu.', 'success');
+  showToast('Duplike kayÄ±tlar temizlendi. En yÃ¼ksek fiyat korundu.', 'success');
 }
 
 async function bfTumDuplariTemizle() {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditBirimFiyat()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var duplar = bfBulDuplike();
-  if (duplar.length === 0) { showToast('Duplike kayıt bulunamadı.', 'info'); return; }
+  if (duplar.length === 0) { showToast('Duplike kayÄ±t bulunamadÄ±.', 'info'); return; }
   for (var d = 0; d < duplar.length; d++) {
     var grup = duplar[d];
     var enIyi = grup.reduce(function(a, b) { return a.birim_fiyat > b.birim_fiyat ? a : b; });
@@ -1906,7 +1906,7 @@ async function bfTumDuplariTemizle() {
     }
   }
   renderBirimFiyatlar();
-  showToast(duplar.length + ' grupta toplam ' + duplar.reduce(function(s, g) { return s + g.length - 1; }, 0) + ' duplike kayıt silindi.', 'success');
+  showToast(duplar.length + ' grupta toplam ' + duplar.reduce(function(s, g) { return s + g.length - 1; }, 0) + ' duplike kayÄ±t silindi.', 'success');
 }
 
 async function syncUnitPricesFromSupabase() {
@@ -1944,8 +1944,8 @@ function normBirimGlobal(b) {
 
 function normIsim(s) {
   return s.trim().toLowerCase()
-    .replace(/İ/g, 'i').replace(/ı/g, 'i').replace(/I/g, 'i')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+    .replace(/Ä°/g, 'i').replace(/Ä±/g, 'i').replace(/I/g, 'i')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ÄŸ/g, 'g').replace(/Ã¼/g, 'u').replace(/ÅŸ/g, 's').replace(/Ã¶/g, 'o').replace(/Ã§/g, 'c');
 }
 
 function findBirimFiyat(malzemeAdi, birim) {
@@ -2089,16 +2089,16 @@ function renderBirimFiyatlar() {
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
           <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden">
             <button class="btn btn-ghost btn-sm" onclick="bfYilDegistir(-1)" style="border:none;border-radius:0;padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <span id="bfYilGoster" style="padding:6px 14px;font-weight:700;font-size:0.95rem;color:var(--text-primary);min-width:50px;text-align:center;cursor:pointer;user-select:none" title="Tıkla, yıl seç" onclick="bfYilSeciciAc()">${birimFiyatSeciliYil}</span>
+            <span id="bfYilGoster" style="padding:6px 14px;font-weight:700;font-size:0.95rem;color:var(--text-primary);min-width:50px;text-align:center;cursor:pointer;user-select:none" title="TÄ±kla, yÄ±l seÃ§" onclick="bfYilSeciciAc()">${birimFiyatSeciliYil}</span>
             <button class="btn btn-ghost btn-sm" onclick="bfYilDegistir(1)" style="border:none;border-radius:0;padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
-          ${bfPerms ? '<button class="btn btn-primary btn-sm" onclick="bfYeniUrun()">+ Yeni Ürün</button>' : ''}
-          <button class="btn btn-ghost btn-sm" onclick="bfExportCSV()">CSV İndir</button>
+          ${bfPerms ? '<button class="btn btn-primary btn-sm" onclick="bfYeniUrun()">+ Yeni ÃœrÃ¼n</button>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="bfExportCSV()">CSV Ä°ndir</button>
           <button class="btn btn-ghost btn-sm" onclick="printBirimFiyatlar()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Yazdır
+            YazdÄ±r
           </button>
-          ${bfPerms ? '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bfCSVUpload\').click()">CSV Yükle</button>' : ''}
+          ${bfPerms ? '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bfCSVUpload\').click()">CSV YÃ¼kle</button>' : ''}
           <input type="file" id="bfCSVUpload" accept=".csv,.txt" style="display:none" onchange="bfImportCSV(event)" />
         </div>
       </div>
@@ -2108,7 +2108,7 @@ function renderBirimFiyatlar() {
         <div class="bf-kpi ortalama"><div class="bf-kpi-value">${formatTRY(ortalama)}</div><div class="bf-kpi-label">${t('avgUnitPrice')}</div></div>
         <div class="bf-kpi fiyat"><div class="bf-kpi-value">${birimFiyatSeciliYil}</div><div class="bf-kpi-label">${t('selectedYear')}</div></div>
       </div>
-      ${bfBulDuplike().length > 0 ? '<div style="padding:0.6rem 0.8rem;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.4);border-radius:8px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem"><span style="font-size:0.82rem;color:#ca8a04;font-weight:600">⚠️ ' + bfBulDuplike().length + ' ' + t('duplicateWarning') + '</span>' + (bfPerms ? '<button class="btn btn-ghost btn-sm" style="color:#ca8a04;border:1px solid rgba(250,204,21,0.4)" onclick="bfTumDuplariTemizle()">' + t('cleanDuplicates') + '</button>' : '') + '</div>' : ''}
+      ${bfBulDuplike().length > 0 ? '<div style="padding:0.6rem 0.8rem;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.4);border-radius:8px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem"><span style="font-size:0.82rem;color:#ca8a04;font-weight:600">âš ï¸ ' + bfBulDuplike().length + ' ' + t('duplicateWarning') + '</span>' + (bfPerms ? '<button class="btn btn-ghost btn-sm" style="color:#ca8a04;border:1px solid rgba(250,204,21,0.4)" onclick="bfTumDuplariTemizle()">' + t('cleanDuplicates') + '</button>' : '') + '</div>' : ''}
       <div id="bfFormContainer" style="display:none;margin-bottom:1rem"></div>
       <div class="table-wrapper">
         <table class="data-table" style="width:100%">
@@ -2119,17 +2119,17 @@ function renderBirimFiyatlar() {
               <th style="text-align:center;width:18%">${t('colUnitPrice')}</th>
               <th style="text-align:center;width:18%">${t('colUnitEquals')}</th>
               <th style="text-align:center;width:10%">${t('colYear')}</th>
-              ${bfPerms ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
+              ${bfPerms ? '<th style="text-align:center;width:12%">Ä°ÅŸlem</th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${bfSlice.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">' + t('noProductsThisYear') + '</td></tr>' : ''}
             ${bfSlice.map(function(p) {
-              var carpanGoster = p.birim_carpan > 0 ? p.birim_carpan + ' ' + (p.birim === 'teneke' ? 'lt' : p.birim === 'koli' ? 'kg' : p.birim === 'kg' ? 'gr' : p.birim === 'litre' ? 'ml' : '') : '—';
+              var carpanGoster = p.birim_carpan > 0 ? p.birim_carpan + ' ' + (p.birim === 'teneke' ? 'lt' : p.birim === 'koli' ? 'kg' : p.birim === 'kg' ? 'gr' : p.birim === 'litre' ? 'ml' : '') : 'â€”';
               return '<tr data-id="' + p.id + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
-                '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺</td>' +
+                '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º</td>' +
                 '<td style="text-align:center;font-size:0.8rem;color:var(--text-dim)">' + carpanGoster + '</td>' +
                 '<td style="text-align:center">' + p.yil + '</td>' +
                 (bfPerms ?
@@ -2183,7 +2183,7 @@ function bfYilSeciciAc() {
 let bfDuzenlemeId = null;
 
 function bfYeniUrun() {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditBirimFiyat()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   bfDuzenlemeId = null;
   var form = document.getElementById('bfFormContainer');
   if (!form) return;
@@ -2192,14 +2192,14 @@ function bfYeniUrun() {
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
       <div style="flex:4;min-width:200px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">${t('colProductName')}</label>
-        <input type="text" id="bf_ad" placeholder="Örn: Domates" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <input type="text" id="bf_ad" placeholder="Ã–rn: Domates" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">${t('colUnit')}</label>
         <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
           <option value="kg">KG</option>
-          <option value="koli">KOLİ</option>
-          <option value="litre">LİTRE</option>
+          <option value="koli">KOLÄ°</option>
+          <option value="litre">LÄ°TRE</option>
           <option value="adet">ADET</option>
           <option value="teneke">TENEKE</option>
         </select>
@@ -2210,7 +2210,7 @@ function bfYeniUrun() {
       </div>
       <div style="flex:0.8;min-width:90px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
-        <input type="number" id="bf_carpan" step="any" min="0" placeholder="Örn: 18" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <input type="number" id="bf_carpan" step="any" min="0" placeholder="Ã–rn: 18" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
         <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">teneke=18, koli=10</div>
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
@@ -2239,8 +2239,8 @@ function bfDuzenle(id) {
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">${t('colUnit')}</label>
         <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
           <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>KG</option>
-          <option value="koli"${item.birim === 'koli' ? ' selected' : ''}>KOLİ</option>
-          <option value="litre"${item.birim === 'litre' ? ' selected' : ''}>LİTRE</option>
+          <option value="koli"${item.birim === 'koli' ? ' selected' : ''}>KOLÄ°</option>
+          <option value="litre"${item.birim === 'litre' ? ' selected' : ''}>LÄ°TRE</option>
           <option value="adet"${item.birim === 'adet' ? ' selected' : ''}>ADET</option>
           <option value="teneke"${item.birim === 'teneke' ? ' selected' : ''}>TENEKE</option>
         </select>
@@ -2264,19 +2264,19 @@ function bfDuzenle(id) {
 }
 
 function bfKaydet() {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditBirimFiyat()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var ad = (document.getElementById('bf_ad').value || '').trim();
   var birim = document.getElementById('bf_birim').value;
   var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
   var carpan = parseFloat(document.getElementById('bf_carpan').value) || 0;
-  if (!ad) { showToast('Ürün adı zorunludur.', 'error'); return; }
-  if (fiyat <= 0) { showToast('Geçerli bir fiyat girin.', 'error'); return; }
+  if (!ad) { showToast('ÃœrÃ¼n adÄ± zorunludur.', 'error'); return; }
+  if (fiyat <= 0) { showToast('GeÃ§erli bir fiyat girin.', 'error'); return; }
   if (bfDuzenlemeId) {
     editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan });
-    showToast('Ürün güncellendi.', 'success');
+    showToast('ÃœrÃ¼n gÃ¼ncellendi.', 'success');
   } else {
     addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil, carpan);
-    showToast('Ürün eklendi.', 'success');
+    showToast('ÃœrÃ¼n eklendi.', 'success');
   }
   document.getElementById('bfFormContainer').style.display = 'none';
   bfDuzenlemeId = null;
@@ -2284,16 +2284,16 @@ function bfKaydet() {
 }
 
 function bfSil(id) {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+  if (!canEditBirimFiyat()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu Ã¼rÃ¼nÃ¼ silmek istediÄŸinize emin misiniz?')) return;
   deleteUnitPrice(id);
-  showToast('Ürün silindi.', 'success');
+  showToast('ÃœrÃ¼n silindi.', 'success');
   renderBirimFiyatlar();
 }
 
 function bfExportCSV() {
   var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
-  if (!filtered.length) { showToast('Dışa aktarılacak ürün yok.', 'error'); return; }
+  if (!filtered.length) { showToast('DÄ±ÅŸa aktarÄ±lacak Ã¼rÃ¼n yok.', 'error'); return; }
   var rows = [[t('colProductName'), t('colUnit'), t('colUnitPrice'), t('colYear')]];
   filtered.forEach(function(p) { rows.push([p.urun_adi, p.birim, p.birim_fiyat, p.yil]); });
   var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
@@ -2311,7 +2311,7 @@ function bfImportCSV(event) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var lines = e.target.result.split(/\r?\n/).filter(function(l) { return l.trim(); });
-    if (lines.length < 2) { showToast('CSV boş veya geçersiz.', 'error'); return; }
+    if (lines.length < 2) { showToast('CSV boÅŸ veya geÃ§ersiz.', 'error'); return; }
     var imported = 0;
     for (var i = 1; i < lines.length; i++) {
       var cols = lines[i].split(/[;,]/).map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
@@ -2325,7 +2325,7 @@ function bfImportCSV(event) {
         imported++;
       }
     }
-    showToast(imported + ' ürün içe aktarıldı.', 'success');
+    showToast(imported + ' Ã¼rÃ¼n iÃ§e aktarÄ±ldÄ±.', 'success');
     renderBirimFiyatlar();
   };
   reader.readAsText(file, 'UTF-8');
@@ -2342,7 +2342,7 @@ function printBirimFiyatlar() {
   }).join('');
 
   var win = window.open('', '_blank', 'width=800,height=600');
-  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!win) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + t('unitPriceList') + ' - ' + birimFiyatSeciliYil + '</title><style>');
   win.document.write('@page{size:portrait;margin:1.5cm}');
   win.document.write('body{font-family:Arial,sans-serif;padding:20px;margin:0;color:#1e293b}');
@@ -2355,7 +2355,7 @@ function printBirimFiyatlar() {
   win.document.write('.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}');
   win.document.write('</style></head><body>');
   win.document.write('<h1>' + t('unitPriceList') + '</h1>');
-  win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
+  win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' YÄ±lÄ± \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
   win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">' + t('colProductName') + '</th><th>' + t('colUnit') + '</th><th>' + t('colUnitPrice') + '</th><th>' + t('colYear') + '</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
   win.document.write('</body></html>');
@@ -2378,22 +2378,22 @@ function haccpRecordToDB(r) {
 }
 
 async function syncHaccpToSupabase() {
-  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase baÄŸlantÄ±sÄ± yok.', 'error'); return; }
   try {
     if (haccpRecords.length > 0) {
       var dbRows = haccpRecords.map(haccpRecordToDB);
       var { error } = await supabaseClient.from('haccp_records').upsert(dbRows, { onConflict: 'id' });
-      if (error) { showToast('Supabase hatası: ' + error.message, 'error'); return; }
+      if (error) { showToast('Supabase hatasÄ±: ' + error.message, 'error'); return; }
     }
     var depoAdlari = loadHaccpDepoAdlari();
     if (depoAdlari.length > 0) {
       var depoRows = depoAdlari.map(function(ad) { return { ad: ad }; });
       var { error: depoErr } = await supabaseClient.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
-      if (depoErr) { showToast('Depo adı hatası: ' + depoErr.message, 'error'); return; }
+      if (depoErr) { showToast('Depo adÄ± hatasÄ±: ' + depoErr.message, 'error'); return; }
     }
     showToast('HACCP verileri Supabase\'e senkronize edildi.', 'success');
   } catch (err) {
-    showToast('Supabase bağlantı hatası: ' + err.message, 'error');
+    showToast('Supabase baÄŸlantÄ± hatasÄ±: ' + err.message, 'error');
   }
 }
 
@@ -2411,7 +2411,7 @@ function syncHaccpSilent(forceDepoOnly) {
       if (haccpRecords.length > 0) {
         var dbRows = haccpRecords.map(haccpRecordToDB);
         var { error } = await supabaseClient.from('haccp_records').upsert(dbRows, { onConflict: 'id' });
-        if (error) showToast('Supabase HACCP hatası: ' + error.message, 'error');
+        if (error) showToast('Supabase HACCP hatasÄ±: ' + error.message, 'error');
       }
       var depoAdlari = loadHaccpDepoAdlari();
       var depoLimitleri = depoLimitleriCache;
@@ -2423,7 +2423,7 @@ function syncHaccpSilent(forceDepoOnly) {
         await supabaseClient.from('haccp_depo_adlari').upsert(depoRows, { onConflict: 'ad' });
       }
     } catch (err) {
-      showToast('Supabase bağlantı hatası: ' + (err.message || err), 'error');
+      showToast('Supabase baÄŸlantÄ± hatasÄ±: ' + (err.message || err), 'error');
     }
   }, 400);
 }
@@ -2466,10 +2466,10 @@ async function syncHaccpFromSupabase() {
   } catch (_) { return false; }
 }
 
-// ─── HACCP 100 KAYIT OLUŞTUR ────────────────────────────────────────────────
+// â”€â”€â”€ HACCP 100 KAYIT OLUÅTUR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function generateHaccpSample() {
-  if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  var depo = 'Soğuk Hava Deposu 5';
+  if (!canAddHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  var depo = 'SoÄŸuk Hava Deposu 5';
   var now = Date.now();
   var records = [];
   var mevcut = haccpRecords.filter(function(r) { return r.id && r.type === 'sicaklik'; });
@@ -2492,10 +2492,10 @@ function generateHaccpSample() {
   haccpRecords = mevcut.concat(records);
   saveHaccpData();
   renderHaccp();
-  showToast('100 adet sıcaklık kaydı oluşturuldu (son 25 gün, günde 4 ölçüm).', 'success');
+  showToast('100 adet sÄ±caklÄ±k kaydÄ± oluÅŸturuldu (son 25 gÃ¼n, gÃ¼nde 4 Ã¶lÃ§Ã¼m).', 'success');
 }
 
-// ─── HACCP EXCEL İNDİR ──────────────────────────────────────────────────────
+// â”€â”€â”€ HACCP EXCEL Ä°NDÄ°R â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function canExport() {
   if (getRole() === ROLE_ADMIN) return true;
   var perm = getRolePermissions(getRole());
@@ -2503,8 +2503,8 @@ function canExport() {
 }
 
 function exportHaccpCSV() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (haccpRecords.length === 0) { showToast('Ä°ndirilecek kayÄ±t yok.', 'error'); return; }
   var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem'];
   var rows = [headers.join(',')];
   haccpRecords.forEach(function(r) {
@@ -2527,13 +2527,13 @@ function exportHaccpCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast(haccpRecords.length + ' kayıt CSV olarak indirildi.', 'success');
+  showToast(haccpRecords.length + ' kayÄ±t CSV olarak indirildi.', 'success');
 }
 
-// ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
+// â”€â”€â”€ HACCP DOSYA YÃœKLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var HACCP_FIELD_MAP = {
-  'Tarih': 'tarih', 'Saat': 'saat', 'Depo Adı': 'depoAd', 'Depo Ad': 'depoAd', 'Depo': 'depoAd',
-  'Sıcaklık (°C)': 'sicaklik', 'Sıcaklık': 'sicaklik', 'Sicaklik': 'sicaklik', 'Sıcaklık (C)': 'sicaklik',
+  'Tarih': 'tarih', 'Saat': 'saat', 'Depo AdÄ±': 'depoAd', 'Depo Ad': 'depoAd', 'Depo': 'depoAd',
+  'SÄ±caklÄ±k (Â°C)': 'sicaklik', 'SÄ±caklÄ±k': 'sicaklik', 'Sicaklik': 'sicaklik', 'SÄ±caklÄ±k (C)': 'sicaklik',
   'Nem (%)': 'nem', 'Nem': 'nem', 'Not': 'not', 'not': 'not',
   'id': 'id', 'type': 'type', 'tarih': 'tarih', 'saat': 'saat',
   'depoAd': 'depoAd', 'depo_ad': 'depoAd', 'sicaklik': 'sicaklik', 'nem': 'nem',
@@ -2541,7 +2541,7 @@ var HACCP_FIELD_MAP = {
 };
 
 function importHaccpFile(event) {
-  if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -2554,7 +2554,7 @@ function importHaccpFile(event) {
         if (!Array.isArray(rows)) rows = [rows];
       } else {
         var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
-        if (lines.length < 2) { showToast('CSV en az 2 satır olmalı (başlık + veri).', 'error'); return; }
+        if (lines.length < 2) { showToast('CSV en az 2 satÄ±r olmalÄ± (baÅŸlÄ±k + veri).', 'error'); return; }
         var delim = lines[0].includes(';') ? ';' : ',';
         var headers = lines[0].split(delim).map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
         rows = [];
@@ -2575,7 +2575,7 @@ function importHaccpFile(event) {
           }
         }
       }
-      if (rows.length === 0) { showToast('Dosyada kayıt bulunamadı.', 'error'); return; }
+      if (rows.length === 0) { showToast('Dosyada kayÄ±t bulunamadÄ±.', 'error'); return; }
       var eklenen = 0;
       var guncellenen = 0;
       rows.forEach(function(r) {
@@ -2590,16 +2590,16 @@ function importHaccpFile(event) {
       });
       saveHaccpData();
       renderHaccp();
-      var mesaj = eklenen + ' yeni kayıt eklendi';
-      if (guncellenen > 0) mesaj += ', ' + guncellenen + ' kayıt güncellendi';
+      var mesaj = eklenen + ' yeni kayÄ±t eklendi';
+      if (guncellenen > 0) mesaj += ', ' + guncellenen + ' kayÄ±t gÃ¼ncellendi';
       showToast(mesaj + ' (' + haccpRecords.length + ' toplam).', 'success');
-    } catch (err) { showToast('Dosya okuma hatası: ' + err.message, 'error'); }
+    } catch (err) { showToast('Dosya okuma hatasÄ±: ' + err.message, 'error'); }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
-// ─── YAG (Atık Yağ) SYNC ────────────────────────────────────────────────────
+// â”€â”€â”€ YAG (AtÄ±k YaÄŸ) SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function yagRecordToDB(r) {
   return {
@@ -2619,7 +2619,7 @@ async function syncYagToSupabase() {
     if (yagRecords.length > 0) {
       await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
     }
-    showToast('Yağ verileri Supabase\'e senkronize edildi.', 'success');
+    showToast('YaÄŸ verileri Supabase\'e senkronize edildi.', 'success');
   } catch (_) {}
 }
 
@@ -2677,7 +2677,7 @@ async function refreshYagFromSupabase() {
   } catch (_) {}
 }
 
-// ─── AMBALAJ (Ambalaj Atıkları) SYNC ────────────────────────────────────────
+// â”€â”€â”€ AMBALAJ (Ambalaj AtÄ±klarÄ±) SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ambalajRecordToDB(r) {
   return {
@@ -2770,7 +2770,7 @@ async function refreshAmbalajFromSupabase() {
   } catch (_) {}
 }
 
-// ─── KALİBRASYON (Kalibrasyona Tabi Cihazlar) SYNC ──────────────────────────
+// â”€â”€â”€ KALÄ°BRASYON (Kalibrasyona Tabi Cihazlar) SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function kalibrasyonRecordToDB(r) {
   return {
@@ -2915,18 +2915,18 @@ function setLoadingSub(text) {
   if (el) el.textContent = text;
 }
 
-// ─── SUPABASE SYNC ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ SUPABASE SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getMenuUrl() {
   return SUPABASE_URL;
 }
 
 async function syncAllToSupabase() { if (!requireAdmin()) return;
-  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase baÄŸlantÄ±sÄ± yok.', 'error'); return; }
   var toastMsg = [];
   try {
     if (records.length > 0) {
       var { count: rCount } = await supabaseClient.from('records').upsert(records, { onConflict: 'id' }).select('count');
-      toastMsg.push('Kayıtlar: ' + (rCount || records.length));
+      toastMsg.push('KayÄ±tlar: ' + (rCount || records.length));
     }
     if (haccpRecords.length > 0) {
       await supabaseClient.from('haccp_records').upsert(haccpRecords.map(haccpRecordToDB), { onConflict: 'id' });
@@ -2938,7 +2938,7 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
     }
     if (yagRecords.length > 0) {
       await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
-      toastMsg.push('Yağ: ' + yagRecords.length);
+      toastMsg.push('YaÄŸ: ' + yagRecords.length);
     }
     if (ambalajRecords.length > 0) {
       await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
@@ -2949,14 +2949,14 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
       toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
     }
     await syncHarcamaOranlariToSupabase();
-    showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
+    showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'gÃ¼ncel veri yok'), 'success');
   } catch (err) {
-    showToast('Supabase hatası: ' + err.message, 'error');
+    showToast('Supabase hatasÄ±: ' + err.message, 'error');
   }
 }
 
 async function syncAllFromSupabase() { if (!requireAdmin()) return;
-  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
+  if (!supabaseClient) { showToast('Supabase baÄŸlantÄ±sÄ± yok.', 'error'); return; }
   var toastMsg = [];
   try {
     var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
@@ -2980,7 +2980,7 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      toastMsg.push('Kayıtlar: ' + records.length);
+      toastMsg.push('KayÄ±tlar: ' + records.length);
     }
     var hPulled = await syncHaccpFromSupabase();
     if (hPulled) toastMsg.push('HACCP: ' + haccpRecords.length);
@@ -2989,21 +2989,21 @@ async function syncAllFromSupabase() { if (!requireAdmin()) return;
     var kPulled = await syncKalibrasyonFromSupabase();
     if (kPulled) toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
     var hOranPulled = await syncHarcamaOranlariFromSupabase();
-    if (hOranPulled) toastMsg.push('Harcama Oranları');
-    showToast('Supabase\'ten alındı: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
+    if (hOranPulled) toastMsg.push('Harcama OranlarÄ±');
+    showToast('Supabase\'ten alÄ±ndÄ±: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
   } catch (err) {
-    showToast('Supabase hatası: ' + err.message, 'error');
+    showToast('Supabase hatasÄ±: ' + err.message, 'error');
   }
 }
 
-// ─── PREDICTION ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ PREDICTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getLast7AvgWaste() {
   const last7 = records.slice(0, Math.min(7, records.length));
   if (last7.length === 0) return 0;
   return last7.reduce((s, r) => s + r.atik, 0) / last7.length;
 }
 
-// ─── SPARKLINES ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ SPARKLINES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function drawSparkline(canvasId, data, color) {
   const canvas = document.getElementById(canvasId);
   if (!canvas || data.length < 2) return;
@@ -3048,8 +3048,8 @@ function renderSparklines() {
   drawSparkline('sparklineGecis', gecisData, '#22c55e');
 }
 
-// ─── WASTE DETAIL ────────────────────────────────────────────────────────────
-// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ WASTE DETAIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ PDF EXPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function triggerPrint(win, ms) {
   if (!win) return;
   win.onafterprint = function () { try { win.close(); } catch (e) {} };
@@ -3065,19 +3065,19 @@ function triggerPrint(win, ms) {
 }
 
 function exportPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    showToast('DÄ±ÅŸa aktarÄ±lacak kayÄ±t yok.', 'error');
     return;
   }
   switchTab('report');
   renderReport();
   setTimeout(() => {
     const printWin = window.open('', '_blank', 'width=1100,height=800');
-    if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+    if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
     const cards = [...document.querySelectorAll('#content-report > .section-card')].map(c => c.outerHTML).join('');
     printWin.document.write(`<!DOCTYPE html><html><head>
-      <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
+      <meta charset="UTF-8"><title>AtÄ±k Kontrol Raporu</title>
       <style>
       @page { size: landscape; margin: 1cm; }
       body { font-family: Arial, sans-serif; padding: 20px; }
@@ -3102,10 +3102,10 @@ function exportPDF() {
       ${harcamaHiddenCss()}
       </style>
     </head><body>
-      <h1>Atık Kontrol Raporu</h1>
+      <h1>AtÄ±k Kontrol Raporu</h1>
       <div class="date">${new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</div>
       ${cards}
-      <div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+      <div class="footer">KÄ±rÅŸehir Ahi Evran Ãœniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
     </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -3132,7 +3132,7 @@ function closeQrModal() {
 }
 
 function printQr() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var depoAdi = document.getElementById('qrDepoAdi').textContent;
   var img = document.getElementById('qrImage');
   var printWin = window.open('', '_blank', 'width=400,height=500');
@@ -3152,10 +3152,10 @@ function printQr() {
   triggerPrint(printWin);
 }
 
-// ─── HACCP / GIDA GUVENLIGI ───────────────────────────────────────────────────
+// â”€â”€â”€ HACCP / GIDA GUVENLIGI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const HACCP_STORAGE_KEY = 'haccp_records';
 const HACCP_DEPO_KEY = 'haccp_depo_adlari';
-const DEFAULT_DEPO_ADLARI = ['Soğuk Hava Deposu 5', 'Soğuk Hava Deposu 6', 'Soğuk Hava Deposu 7', 'Soğuk Hava Deposu 8'];
+const DEFAULT_DEPO_ADLARI = ['SoÄŸuk Hava Deposu 5', 'SoÄŸuk Hava Deposu 6', 'SoÄŸuk Hava Deposu 7', 'SoÄŸuk Hava Deposu 8'];
 let haccpRecords = [];
 let depoLimitleriCache = {};
 let editingHaccpId = null;
@@ -3207,7 +3207,7 @@ function addHaccpDepoAdi(name) {
 }
 
 function removeHaccpDepoAdi(name) {
-  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditDepoAdlari()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const list = loadHaccpDepoAdlari().filter(n => n !== name);
   saveHaccpDepoAdlari(list);
   delete depoLimitleriCache[name];
@@ -3224,7 +3224,7 @@ function canEditDepoAdlari() {
 }
 
 function showHaccpDepoYonetim() {
-  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditDepoAdlari()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   document.getElementById('haccpDepoModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   renderHaccpDepoListesi();
@@ -3236,7 +3236,7 @@ function closeHaccpDepoModal() {
 }
 
 function addHaccpDepoAdiFromInput() {
-  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditDepoAdlari()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('haccpYeniDepoInput');
   if (!input || !input.value.trim()) return;
   addHaccpDepoAdi(input.value.trim());
@@ -3261,8 +3261,8 @@ function renderHaccpDepoListesi() {
       '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button>' +
       '</div></div>' +
       '<div style="display:flex;gap:8px;align-items:center;margin-top:4px;font-size:0.78rem;color:var(--text-muted)">' +
-      'Alt Limit: <input type="number" step="0.1" value="' + minVal + '" class="depo-limit-min" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" oninput="saveDepoLimitsFromRow(this)" placeholder="—"> °C' +
-      'Üst Limit: <input type="number" step="0.1" value="' + maxVal + '" class="depo-limit-max" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" oninput="saveDepoLimitsFromRow(this)" placeholder="—"> °C' +
+      'Alt Limit: <input type="number" step="0.1" value="' + minVal + '" class="depo-limit-min" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" oninput="saveDepoLimitsFromRow(this)" placeholder="â€”"> Â°C' +
+      'Ãœst Limit: <input type="number" step="0.1" value="' + maxVal + '" class="depo-limit-max" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" oninput="saveDepoLimitsFromRow(this)" placeholder="â€”"> Â°C' +
       '</div></div>';
   }).join('');
 }
@@ -3348,9 +3348,9 @@ function renderHaccpDepoSummary() {
       var limits = getDepoSicaklikLimitleri(ad);
       var minOk = limits.min, maxOk = limits.max;
       var durum = min >= minOk && max <= maxOk ? t('tempAppropriate') : (max > maxOk ? t('tempHigh') : t('tempLow'));
-      html += '<span>' + t('tempMin') + '<strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + '°C</strong></span>' +
-        '<span>' + t('tempAvg') + '<strong style="color:var(--text-primary)">' + avg.toFixed(1) + '°C</strong></span>' +
-        '<span>' + t('tempMax') + '<strong style="color:' + (max > maxOk || max < minOk ? '#ef4444' : 'var(--text-primary)') + '">' + max.toFixed(1) + '°C</strong></span>';
+      html += '<span>' + t('tempMin') + '<strong style="color:' + (min < minOk || min > maxOk ? '#ef4444' : 'var(--text-primary)') + '">' + min.toFixed(1) + 'Â°C</strong></span>' +
+        '<span>' + t('tempAvg') + '<strong style="color:var(--text-primary)">' + avg.toFixed(1) + 'Â°C</strong></span>' +
+        '<span>' + t('tempMax') + '<strong style="color:' + (max > maxOk || max < minOk ? '#ef4444' : 'var(--text-primary)') + '">' + max.toFixed(1) + 'Â°C</strong></span>';
     }
     if (nemAvg !== null) {
       html += '<span>' + t('humidity') + '<strong>' + nemAvg.toFixed(0) + '%</strong></span>';
@@ -3382,7 +3382,7 @@ function getDepoSicaklikLimitleri(depoAd) {
 
 function sicaklikDurum(sicaklik, depoAd) {
   const v = parseFloat(sicaklik);
-  if (isNaN(v)) return { text: '—', cls: '' };
+  if (isNaN(v)) return { text: 'â€”', cls: '' };
   var limits = getDepoSicaklikLimitleri(depoAd);
   if (v >= limits.min && v <= limits.max) return { text: t('tempAppropriate'), cls: 'badge badge-ok' };
   if (v < limits.min) return { text: t('tempLow'), cls: 'badge badge-warn' };
@@ -3394,7 +3394,7 @@ var haccpSicaklikPageSize = 100;
 var haccpSelectedIds = new Set();
 
 function formatTarihTR(t) {
-  if (!t) return '—';
+  if (!t) return 'â€”';
   const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? m[3] + '.' + m[2] + '.' + m[1] : t;
 }
@@ -3472,7 +3472,7 @@ function renderHaccpSicaklik() {
       : '<td></td>';
     var actionCell = canEdit
       ? '<td>' +
-        '<button class="btn-icon" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="DÃ¼zenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
         '<button class="btn-icon" onclick="deleteHaccpRecord(\'sicaklik\',' + r.id + ')" title="Sil" style="color:var(--danger)">' +
@@ -3483,11 +3483,11 @@ function renderHaccpSicaklik() {
     return `<tr>
       ${chkCell}
       <td>${formatTarihTR(r.tarih)}</td>
-      <td>${r.saat || '—'}</td>
+      <td>${r.saat || 'â€”'}</td>
       <td>${depoAd}</td>
-      <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</strong></td>
-      <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : '—'}</td>
-      <td>${r.not || '—'}</td>
+      <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : 'â€”'}</strong></td>
+      <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : 'â€”'}</td>
+      <td>${r.not || 'â€”'}</td>
       ${actionCell}
     </tr>`;
   }).join('');
@@ -3533,7 +3533,7 @@ function haccpSicaklikPrint() {
   win.document.write('</style></head><body>');
   win.document.write('<h1>So\u011fuk Depo S\u0131cakl\u0131k Kay\u0131tlar\u0131</h1>');
   var tarihEtiketi = '';
-  if (tarihBas && tarihBas.value) tarihEtiketi += ' ' + tarihBas.value + ' —';
+  if (tarihBas && tarihBas.value) tarihEtiketi += ' ' + tarihBas.value + ' â€”';
   if (tarihBit && tarihBit.value) tarihEtiketi += ' ' + tarihBit.value;
   if (tarihEtiketi) tarihEtiketi = t('dateRangeLabel') + tarihEtiketi;
   win.document.write('<p>' + (depo || t('allDepots')) + tarihEtiketi + ' &mdash; ' + records.length + ' kay\u0131t</p>');
@@ -3582,7 +3582,7 @@ function haccpToggleSelectAll(checked) {
 }
 
 async function haccpDeleteSelected() {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (haccpSelectedIds.size === 0) { showToast(t('noSelectedRecord'), 'error'); return; }
   if (!confirm(t('deleteSelectedConfirm') + haccpSelectedIds.size + t('deleteSelectedConfirmSuffix'))) return;
   var ids = [...haccpSelectedIds];
@@ -3603,11 +3603,11 @@ async function haccpDeleteSelected() {
 }
 
 function openHaccpModal(type, id) {
-  if (type !== 'sicaklik') return showToast('Sadece sıcaklık kaydı destekleniyor.', 'error');
+  if (type !== 'sicaklik') return showToast('Sadece sÄ±caklÄ±k kaydÄ± destekleniyor.', 'error');
   if (id) {
-    if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
   editingHaccpType = type;
   editingHaccpId = id || null;
@@ -3635,10 +3635,10 @@ function openHaccpModal(type, id) {
       <div class="form-grid" style="grid-template-columns:1fr 1fr">
         <div class="form-group"><label>Tarih</label><input type="date" id="hfTarih" value="${rec ? rec.tarih : today}" required /></div>
         <div class="form-group"><label>Saat</label><input type="time" id="hfSaat" value="${rec ? rec.saat : saat}" required /></div>
-        <div class="form-group"><label>Depo Adı</label><select id="hfDepoAd" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">${depoOptions}</select></div>
-        <div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0 (boş bırakılabilir)" /></div>
+        <div class="form-group"><label>Depo AdÄ±</label><select id="hfDepoAd" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">${depoOptions}</select></div>
+        <div class="form-group"><label>SÄ±caklÄ±k (Â°C)</label><input type="number" id="hfSicaklik" step="0.1" value="${rec ? rec.sicaklik : ''}" placeholder="0.0 (boÅŸ bÄ±rakÄ±labilir)" /></div>
         <div class="form-group"><label>Nem (%)</label><input type="number" id="hfNem" step="0.1" value="${rec ? (rec.nem ?? '') : ''}" placeholder="50" /></div>
-        <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="İsteğe bağlı" /></div>
+        <div class="form-group" style="grid-column:span 2"><label>Not</label><input type="text" id="hfNot" value="${rec ? (rec.not || '') : ''}" placeholder="Ä°steÄŸe baÄŸlÄ±" /></div>
       </div>`;
 
   overlay.classList.add('open');
@@ -3655,9 +3655,9 @@ function closeHaccpModal() {
 function saveHaccpRecord(e) {
   e.preventDefault();
   if (editingHaccpId) {
-    if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
   const type = editingHaccpType;
   let rec = { id: editingHaccpId || Date.now(), type };
@@ -3672,10 +3672,10 @@ function saveHaccpRecord(e) {
   if (editingHaccpId) {
     const idx = haccpRecords.findIndex(r => r.id === editingHaccpId);
     if (idx !== -1) haccpRecords[idx] = rec;
-    showToast('Kayıt güncellendi.', 'success');
+    showToast('KayÄ±t gÃ¼ncellendi.', 'success');
   } else {
     haccpRecords.push(rec);
-    showToast('Kayıt eklendi.', 'success');
+    showToast('KayÄ±t eklendi.', 'success');
   }
 
   saveHaccpData();
@@ -3688,7 +3688,7 @@ function editHaccpRecord(type, id) {
 }
 
 async function deleteHaccpRecord(type, id) {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditHaccpRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (!confirm(t('deleteConfirm'))) return;
   if (supabaseClient) {
     try {
@@ -3709,10 +3709,10 @@ async function deleteHaccpRecord(type, id) {
 
 
 function exportChartsPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  // Canvas'ları resim'e çevir
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
+  // Canvas'larÄ± resim'e Ã§evir
   const canvases = document.querySelectorAll('#content-charts canvas');
   const replacements = [];
   canvases.forEach(c => {
@@ -3725,7 +3725,7 @@ function exportChartsPDF() {
   let chartsHtml = document.getElementById('content-charts').innerHTML;
   replacements.forEach(r => { chartsHtml = chartsHtml.replace(r.old, r.new); });
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Grafikler - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>Grafikler - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
@@ -3741,17 +3741,17 @@ function exportChartsPDF() {
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Grafikler - Atık Kontrol Yönetim Sistemi</h1>
+    <h1>Grafikler - AtÄ±k Kontrol YÃ¶netim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${chartsHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
   triggerPrint(printWin);
 }
 
-// ─── GRAFİK YARDIMCILARI & WORD'E AKTARMA ─────────────────────────────────────
+// â”€â”€â”€ GRAFÄ°K YARDIMCILARI & WORD'E AKTARMA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function _chartHeaderEl(canvas) {
   const area = canvas.closest('.chart-area') || canvas.parentElement;
@@ -3809,10 +3809,10 @@ function _toAsciiHtml(html) {
 }
 
 function exportChartsWord() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const sections = [
-    { sel: '#content-charts', label: 'Aylık Grafikler' },
-    { sel: '#content-yillik', label: 'Yıllık Grafikler' },
+    { sel: '#content-charts', label: 'AylÄ±k Grafikler' },
+    { sel: '#content-yillik', label: 'YÄ±llÄ±k Grafikler' },
     { sel: '#content-harcama', label: 'Harcama Grafikleri' }
   ];
   const images = [];
@@ -3829,7 +3829,7 @@ function exportChartsWord() {
       if (!chart) return;
       idx++;
       const name = 'grafik_' + idx + '.png';
-      // Word CSS'i güvenilir uygulamadigi icin resimlere acik width/height veriyoruz (A4 yatay sayfaya sigacak)
+      // Word CSS'i gÃ¼venilir uygulamadigi icin resimlere acik width/height veriyoruz (A4 yatay sayfaya sigacak)
       const w0 = canvas.width || 800, h0 = canvas.height || 400;
       const oran = w0 / h0;
       let dispW;
@@ -3845,7 +3845,7 @@ function exportChartsWord() {
     });
     if (cards.length) blocks.push('<h1>' + escapeHtml(sec.label) + '</h1>' + cards.join(''));
   });
-  if (!hadAny) { showToast('Dışa aktarılacak dolu grafik bulunamadı.', 'error'); return; }
+  if (!hadAny) { showToast('DÄ±ÅŸa aktarÄ±lacak dolu grafik bulunamadÄ±.', 'error'); return; }
 
   const bugun = new Date().toLocaleDateString('tr-TR');
   const html =
@@ -3863,7 +3863,7 @@ function exportChartsWord() {
     '</style></head><body><div class="WordSection1">' +
     '<p class="tarih">Rapor Tarihi: ' + bugun + '</p>' +
     blocks.join('') +
-    '<p class="tarih">Atık Kontrol Yönetim Sistemi &bull; ' + bugun + '</p>' +
+    '<p class="tarih">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ' + bugun + '</p>' +
     '</div></body></html>';
 
   const boundary = '----=_NextPart_ATIK_' + Date.now();
@@ -3898,13 +3898,13 @@ function exportChartsWord() {
   a.click();
   a.remove();
   setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
-  showToast(idx + ' grafik Word belgesine aktarıldı.', 'success');
+  showToast(idx + ' grafik Word belgesine aktarÄ±ldÄ±.', 'success');
 }
 
 function exportYillikPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   const canvases = document.querySelectorAll('#content-yillik canvas');
   const replacements = [];
   canvases.forEach(c => {
@@ -3931,7 +3931,7 @@ function exportYillikPDF() {
   let html = document.getElementById('content-yillik').innerHTML;
   replacements.forEach(r => { html = html.replace(r.old, r.new); });
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Yıllık Karşılaştırma - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>YÄ±llÄ±k KarÅŸÄ±laÅŸtÄ±rma - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
@@ -3970,10 +3970,10 @@ function exportYillikPDF() {
       @media print { table.data-table { font-size: 0.55rem; } table.data-table th, table.data-table td { padding: 3px 4px; } }
     </style>
   </head><body>
-    <h1>Yıllık Karşılaştırma - Atık Kontrol Yönetim Sistemi</h1>
+    <h1>YÄ±llÄ±k KarÅŸÄ±laÅŸtÄ±rma - AtÄ±k Kontrol YÃ¶netim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${html}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -3981,15 +3981,15 @@ function exportYillikPDF() {
 }
 
 function exportDashboardPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
   const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
   const weeklyHtml = content.querySelector('.weekly-summary') ? content.querySelector('.weekly-summary').outerHTML : '';
   const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Pano - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>Pano - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
@@ -4050,12 +4050,12 @@ function exportDashboardPDF() {
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Kırşehir Ahi Evran Üniversitesi - Beslenme Hizmetleri Yönetim Sistemi</h1>
+    <h1>KÄ±rÅŸehir Ahi Evran Ãœniversitesi - Beslenme Hizmetleri YÃ¶netim Sistemi</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${kpiHtml}
     ${weeklyHtml}
     ${cardsHtml}
-    <div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">KÄ±rÅŸehir Ahi Evran Ãœniversitesi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -4063,12 +4063,12 @@ function exportDashboardPDF() {
 }
 
 function exportRecordsPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const printWin = window.open('', '_blank', 'width=1100,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>Kayıt yok</p>';
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
+  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>KayÄ±t yok</p>';
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Kayıtlar - Atık Kontrol</title>
+    <meta charset="UTF-8"><title>KayÄ±tlar - AtÄ±k Kontrol</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; }
       h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
@@ -4081,17 +4081,17 @@ function exportRecordsPDF() {
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Tüm Kayıtlar</h1>
+    <h1>TÃ¼m KayÄ±tlar</h1>
     <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
     ${tableHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <div class="footer">AtÄ±k Kontrol YÃ¶netim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
   triggerPrint(printWin);
 }
 
-// ─── TABS ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function restoreActiveTab() {
   const saved = localStorage.getItem('atik_kontrol_active_tab');
   if (saved && saved !== 'dashboard') {
@@ -4131,7 +4131,7 @@ async function switchTab(name) {
   applyTranslations();
 }
 
-// ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
+// â”€â”€â”€ SIDEBAR TOGGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.body.classList.toggle('sidebar-open');
@@ -4144,9 +4144,9 @@ function closeSidebar() {
   document.body.classList.remove('sidebar-open');
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
-// ─── MODAL ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openModal(id = null) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   editingId = id;
   formModified = false;
   const overlay = document.getElementById('modalOverlay');
@@ -4165,7 +4165,7 @@ function openModal(id = null) {
     title.textContent = t('addRecord');
     submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${t('btnSave')}`;
     document.getElementById('fTarih').value = formatLocalDate(new Date());
-    // Yemekhanede Çalışan Personel Sayısı: son kayıtta kullanılan değer otomatik dolar, elle değiştirilebilir
+    // Yemekhanede Ã‡alÄ±ÅŸan Personel SayÄ±sÄ±: son kayÄ±tta kullanÄ±lan deÄŸer otomatik dolar, elle deÄŸiÅŸtirilebilir
     const fPersonelEl = document.getElementById('fPersonel');
     if (fPersonelEl) {
       const sonPersonel = localStorage.getItem('atik_kontrol_son_personel');
@@ -4174,7 +4174,7 @@ function openModal(id = null) {
     }
   }
 
-  // Porsiyon: yeni kayıtta sabit (400), düzenlemede değiştirilebilir (eski hataları düzeltmek için)
+  // Porsiyon: yeni kayÄ±tta sabit (400), dÃ¼zenlemede deÄŸiÅŸtirilebilir (eski hatalarÄ± dÃ¼zeltmek iÃ§in)
   const fPorsiyonEl = document.getElementById('fPorsiyon');
   const fPorsiyonBadge = document.getElementById('fPorsiyonBadge');
   if (fPorsiyonEl) {
@@ -4191,7 +4191,7 @@ function openModal(id = null) {
     }
   }
 
-  // Form değişiklik izleme
+  // Form deÄŸiÅŸiklik izleme
   document.querySelectorAll('#entryForm input').forEach(el => {
     el.addEventListener('input', () => { formModified = true; }, { once: true });
   });
@@ -4226,7 +4226,7 @@ function populateForm(rec) {
   autoCalcHarcama();
 }
 
-// ─── AUTO CALC ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ AUTO CALC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function autoCalc() {
   const yemek = parseFloat(document.getElementById('fYemek').value) || 0;
   document.getElementById('fFire').value = (yemek * 0.9).toFixed(2);
@@ -4236,7 +4236,7 @@ function autoCalc() {
 function autoCalcGecis() {
   const turnike = parseInt(document.getElementById('fTurnike').value) || 0;
   const personel = parseInt(document.getElementById('fPersonel').value) || 0;
-  // Toplam Geçiş = Turnike + Personel (iç personel dahil, öğrenci ayrı kolon)
+  // Toplam GeÃ§iÅŸ = Turnike + Personel (iÃ§ personel dahil, Ã¶ÄŸrenci ayrÄ± kolon)
   document.getElementById('fToplam').value = turnike + personel;
   autoCalcAtik();
 }
@@ -4246,8 +4246,8 @@ function autoCalcAtik() {
   const fire    = parseFloat(document.getElementById('fFire').value)   || 0;
   const toplam  = parseInt(document.getElementById('fToplam').value)   || 0;
   const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
-  // Formül: (FireMiktarı - ToplamGeçiş) x Porsiyon / 1000
-  // Örnek: fire=495, toplam=443, porsiyon=400 → (495-443)*400/1000 = 20,80 kg
+  // FormÃ¼l: (FireMiktarÄ± - ToplamGeÃ§iÅŸ) x Porsiyon / 1000
+  // Ã–rnek: fire=495, toplam=443, porsiyon=400 â†’ (495-443)*400/1000 = 20,80 kg
   const atik = Math.max(0, (fire - toplam) * porsiyon / 1000);
   document.getElementById('fAtik').value = atik.toFixed(2);
 }
@@ -4260,7 +4260,7 @@ function autoCalcHarcama() {
   if (el) el.value = harcama.toFixed(2);
 }
 
-// ─── DEFERRED RENDER ───────────────────────────────────────────────────────────
+// â”€â”€â”€ DEFERRED RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function scheduleRender() {
   setTimeout(function() {
     try { renderAll(); } catch (e) { console.warn('renderAll:', e); }
@@ -4270,9 +4270,9 @@ function scheduleRender() {
   }, 100);
 }
 
-// ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
+// â”€â”€â”€ SAVE / UPDATE RECORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function saveRecord(e) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   e.preventDefault();
 
   const fYemek = document.getElementById('fYemek');
@@ -4305,7 +4305,7 @@ function saveRecord(e) {
     const porsiyon = parseInt(document.getElementById('fPorsiyon').value) || 0;
     const atik = Math.max(0, (fire - toplam) * porsiyon / 1000);
     const harcama_tutari = ogrenci * getOgrenciBasiHarcamaOrani();
-    // Yemekhanede çalışan personel sayısını sonraki kayıtlar için otomatik doldurmak üzere sakla
+    // Yemekhanede Ã§alÄ±ÅŸan personel sayÄ±sÄ±nÄ± sonraki kayÄ±tlar iÃ§in otomatik doldurmak Ã¼zere sakla
     try { localStorage.setItem('atik_kontrol_son_personel', String(personel)); } catch (_) {}
 
     const rec = {
@@ -4327,7 +4327,7 @@ function saveRecord(e) {
       const idx = records.findIndex(r => r.id === savedEditingId);
       if (idx !== -1) records[idx] = rec;
       showToast(t('recordUpdated'), 'success');
-      logIslem('kayit_duzenle', 'yemek #' + savedEditingId + ' güncellendi');
+      logIslem('kayit_duzenle', 'yemek #' + savedEditingId + ' gÃ¼ncellendi');
     } else {
       records.push(rec);
       showToast(t('recordAdded'), 'success');
@@ -4343,9 +4343,9 @@ function saveRecord(e) {
   }
 }
 
-// ─── DELETE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DELETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function deleteRecord(id) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (!confirm(t('deleteConfirm'))) return;
   if (supabaseClient) {
     try {
@@ -4371,7 +4371,7 @@ async function deleteRecord(id) {
   }
 }
 
-// ─── SORT ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let sortField = 'tarih';
 let sortDir = -1; // -1 = desc, 1 = asc
 function toggleSort(field) {
@@ -4393,11 +4393,11 @@ function sortRecords(arr) {
 function renderSortIndicators() {
   document.querySelectorAll('#recordsTable th[data-field]').forEach(th => {
     const f = th.dataset.field;
-    th.innerHTML = th.innerHTML.replace(/ ?[▲▼]?$/, '') + (f === sortField ? (sortDir === -1 ? ' ▼' : ' ▲') : '');
+    th.innerHTML = th.innerHTML.replace(/ ?[â–²â–¼]?$/, '') + (f === sortField ? (sortDir === -1 ? ' â–¼' : ' â–²') : '');
   });
 }
 
-// ─── PAGINATION ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getPaginatedRecords() {
   const start = (currentPage - 1) * PAGE_SIZE;
   return filteredRecords.slice(start, start + PAGE_SIZE);
@@ -4427,11 +4427,11 @@ function renderPagination() {
   html += `<span class="page-info">${currentPage} / ${tp}</span>`;
   html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${currentPage + 1})" ${currentPage === tp ? 'disabled' : ''}>&#8250;</button>`;
   html += `<button class="btn btn-ghost btn-sm" onclick="goToPage(${tp})" ${currentPage === tp ? 'disabled' : ''}>&#187;</button>`;
-  html += `<span class="page-total">${filteredRecords.length} kayıt</span>`;
+  html += `<span class="page-total">${filteredRecords.length} kayÄ±t</span>`;
   container.innerHTML = html;
 }
 
-// ─── BULK DELETE ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ BULK DELETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function toggleSelect(id) {
   if (!canAddRecords()) return;
   if (selectedIds.has(id)) selectedIds.delete(id);
@@ -4464,12 +4464,12 @@ function updateBulkBar() {
 }
 
 function deleteSelected() {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canAddRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (selectedIds.size === 0) {
     showToast(t('noSelectedRecord'), 'error');
     return;
   }
-  if (!confirm('Seçili ' + selectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
+  if (!confirm('SeÃ§ili ' + selectedIds.size + ' kaydÄ± silmek istediÄŸinize emin misiniz?')) return;
   try {
     var ids = [...selectedIds];
     records = records.filter(function(r) { return !selectedIds.has(r.id); });
@@ -4489,8 +4489,8 @@ function deleteSelected() {
   }
 }
 
-// ─── IMPORT ────────────────────────────────────────────────────────────────────
-// ─── CSV YARDIMCILARI (Türkçe format: tırnaklı alan, binlik nokta, ondalık virgül) ──
+// â”€â”€â”€ IMPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ CSV YARDIMCILARI (TÃ¼rkÃ§e format: tÄ±rnaklÄ± alan, binlik nokta, ondalÄ±k virgÃ¼l) â”€â”€
 function parseCsvText(text) {
   const rows = [];
   let row = [], field = '', inQ = false;
@@ -4514,23 +4514,23 @@ function parseCsvText(text) {
 }
 
 function _csvNormKey(s) {
-  return String(s).toLocaleLowerCase('tr').replace(/[^a-zçğıöşü0-9]/g, '');
+  return String(s).toLocaleLowerCase('tr').replace(/[^a-zÃ§ÄŸÄ±Ã¶ÅŸÃ¼0-9]/g, '');
 }
 
 function mapCsvHeader(h) {
   const k = _csvNormKey(h);
   if (!k) return '';
-  if (/tarih|tarıh/.test(k)) return 'tarih';
-  if (/öğr|ogrenci|öğrenci/.test(k)) return 'ogrenci';
-  if (/tür[üu]|ad[ıi]$/.test(k)) return 'yemek_adi';
+  if (/tarih|tarÄ±h/.test(k)) return 'tarih';
+  if (/Ã¶ÄŸr|ogrenci|Ã¶ÄŸrenci/.test(k)) return 'ogrenci';
+  if (/tÃ¼r[Ã¼u]|ad[Ä±i]$/.test(k)) return 'yemek_adi';
   if (/fire/.test(k)) return 'fire';
   if (/turnike/.test(k)) return 'turnike';
   if (/porsiyon/.test(k)) return 'porsiyon';
-  if (/atık|atik/.test(k)) return 'atik';
+  if (/atÄ±k|atik/.test(k)) return 'atik';
   if (/harcama/.test(k)) return 'harcama_tutari';
   if (/personel|pers/.test(k)) return 'personel';
   if (/toplam/.test(k)) return 'toplam';
-  if (/üretilen|uretilen|üretim|uretim/.test(k)) return 'yemek';
+  if (/Ã¼retilen|uretilen|Ã¼retim|uretim/.test(k)) return 'yemek';
   return '';
 }
 
@@ -4540,7 +4540,7 @@ function parseTrNum(v) {
   if (!s || s === '-') return 0;
   const neg = /^-/.test(s);
   s = s.replace(/^-/, '').replace(/[^\d.,]/g, '');
-  // 1.283 veya 1.283,50 -> binlik ayraç noktalarını kaldır
+  // 1.283 veya 1.283,50 -> binlik ayraÃ§ noktalarÄ±nÄ± kaldÄ±r
   if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '');
   s = s.replace(',', '.');
   const n = parseFloat(s);
@@ -4565,7 +4565,7 @@ function handleImport(e) {
         if (!Array.isArray(imported)) imported = [imported];
       } else if (file.name.endsWith('.csv')) {
         const rows = parseCsvText(content);
-        if (rows.length < 2) throw new Error('CSV en az 2 satır olmalı (başlık + veri)');
+        if (rows.length < 2) throw new Error('CSV en az 2 satÄ±r olmalÄ± (baÅŸlÄ±k + veri)');
         const headers = rows[0].map(mapCsvHeader);
         for (let i = 1; i < rows.length; i++) {
           const cells = rows[i];
@@ -4598,10 +4598,10 @@ function handleImport(e) {
           imported.push(rec);
         }
       } else {
-        throw new Error('Desteklenen dosya türleri: .csv, .json');
+        throw new Error('Desteklenen dosya tÃ¼rleri: .csv, .json');
       }
       if (imported.length === 0) {
-        showToast('İçe aktarılacak geçerli kayıt bulunamadı.', 'error');
+        showToast('Ä°Ã§e aktarÄ±lacak geÃ§erli kayÄ±t bulunamadÄ±.', 'error');
         return;
       }
       // Cift kayit korumasi: ayni tarih + uretim + turnike + yemek adi varsa atla
@@ -4623,26 +4623,26 @@ function handleImport(e) {
       renderAll();
       drawAllCharts();
       if (yeniKayitlar.length > 0) {
-        showToast(yeniKayitlar.length + ' kayıt eklendi' + (atlanan > 0 ? ' (' + atlanan + ' kayıt zaten mevcut, atlandı)' : '') + '.', 'success');
+        showToast(yeniKayitlar.length + ' kayÄ±t eklendi' + (atlanan > 0 ? ' (' + atlanan + ' kayÄ±t zaten mevcut, atlandÄ±)' : '') + '.', 'success');
       } else {
-        showToast('Tüm kayıtlar zaten mevcut, hiçbir şey eklenmedi.', 'error');
+        showToast('TÃ¼m kayÄ±tlar zaten mevcut, hiÃ§bir ÅŸey eklenmedi.', 'error');
       }
     } catch (err) {
-      showToast('İçe aktarma hatası: ' + err.message, 'error');
+      showToast('Ä°Ã§e aktarma hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 }
 
-// ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
+// â”€â”€â”€ DATA MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function clearAllData() { if (!requireAdmin()) return;
   if (records.length === 0) {
     showToast(t('noRecordToDelete'), 'error');
     return;
   }
   if (!confirm(t('deleteAllConfirm'))) return;
-  if (!confirm('Son bir kez daha: Tüm veriler silinsin mi?')) return;
+  if (!confirm('Son bir kez daha: TÃ¼m veriler silinsin mi?')) return;
   records = [];
   filteredRecords = [];
   selectedIds.clear();
@@ -4657,14 +4657,14 @@ async function clearAllData() { if (!requireAdmin()) return;
 }
 
 function exportData() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   exportDataJSON();
 }
 
 function exportDataJSON() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
-    showToast('Dışa aktarılacak kayıt yok.', 'error');
+    showToast('DÄ±ÅŸa aktarÄ±lacak kayÄ±t yok.', 'error');
     return;
   }
   const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json;charset=utf-8;' });
@@ -4674,15 +4674,15 @@ function exportDataJSON() {
   link.download = `atik_kontrol_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('JSON dosyası indirildi.', 'success');
+  showToast('JSON dosyasÄ± indirildi.', 'success');
 }
 
 function exportDataCSV() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (records.length === 0) { showToast('DÄ±ÅŸa aktarÄ±lacak kayÄ±t yok.', 'error'); return; }
   var showHarcama = canSeeHarcama();
-  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
-  if (showHarcama) headers.splice(9, 0, 'Harcama Tutarı (₺)');
+  var headers = ['Tarih','Ãœretilen Yemek SayÄ±sÄ±','%10 Fire','Turnike GeÃ§iÅŸ SayÄ±sÄ±','Yemekhanede Ã‡alÄ±ÅŸan Personel SayÄ±sÄ±','Toplam GeÃ§iÅŸ','Porsiyon MiktarÄ± (gr)','AtÄ±k MiktarÄ± (kg)','Yemek Hiz. Yar. Ã–ÄŸr. SayÄ±sÄ±','Yemek AdÄ±'];
+  if (showHarcama) headers.splice(9, 0, 'Harcama TutarÄ± (â‚º)');
   var rows = records.map(function(r) {
     var row = [r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
       r.toplam || 0, r.porsiyon || 0, r.atik || 0, r.ogrenci || 0, (r.yemek_adi || '').replace(/"/g,'""')];
@@ -4697,11 +4697,11 @@ function exportDataCSV() {
   link.download = 'atik_kontrol_' + new Date().toISOString().split('T')[0] + '.csv';
   link.click();
   URL.revokeObjectURL(url);
-  showToast('CSV dosyası indirildi.', 'success');
+  showToast('CSV dosyasÄ± indirildi.', 'success');
 }
 
 function exportAllCSV() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var done = 0;
   var total = 3;
   var tasks = [
@@ -4713,7 +4713,7 @@ function exportAllCSV() {
     setTimeout(function() {
       fn();
       done++;
-      if (done === total) showToast('Tüm CSV dosyaları indirildi.', 'success');
+      if (done === total) showToast('TÃ¼m CSV dosyalarÄ± indirildi.', 'success');
     }, i * 500);
   });
 }
@@ -4723,9 +4723,9 @@ function exportDelay(ms) { return new Promise(function(res) { setTimeout(res, ms
 
 async function exportEverything() {
   if (exportRunning) return;
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   exportRunning = true;
-  showToast('Tüm veriler indiriliyor...', 'info');
+  showToast('TÃ¼m veriler indiriliyor...', 'info');
   var yemekler = loadYemekler() || [];
   var tasks = [];
   if (records.length > 0) tasks.push(exportDataCSV);
@@ -4743,11 +4743,11 @@ async function exportEverything() {
   try { await exportMenuJSON(); } catch (e) { }
   await exportDelay(300);
   exportRunning = false;
-  showToast('Tüm veriler indirildi.', 'success');
+  showToast('TÃ¼m veriler indirildi.', 'success');
 }
 
 function exportDataSettings() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const settings = {
     version: 3,
     exportedAt: new Date().toISOString(),
@@ -4760,7 +4760,7 @@ function exportDataSettings() {
   link.download = `atik_kontrol_yedek_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Tüm veriler dışa aktarıldı.', 'success');
+  showToast('TÃ¼m veriler dÄ±ÅŸa aktarÄ±ldÄ±.', 'success');
 }
 
 function importFullBackup() { if (!requireAdmin()) return;
@@ -4775,10 +4775,10 @@ function handleFullBackupImport(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!data.records) {
-        showToast('Geçersiz yedek dosyası.', 'error');
+        showToast('GeÃ§ersiz yedek dosyasÄ±.', 'error');
         return;
       }
-      if (!confirm(`${data.records.length} kayıt içe aktarılsın mı? Mevcut kayıtlar korunacak.`)) return;
+      if (!confirm(`${data.records.length} kayÄ±t iÃ§e aktarÄ±lsÄ±n mÄ±? Mevcut kayÄ±tlar korunacak.`)) return;
       const existingIds = new Set(records.map(r => r.id));
       const newRecords = data.records.filter(r => r.id && !existingIds.has(r.id));
       records.push(...newRecords);
@@ -4787,16 +4787,16 @@ function handleFullBackupImport(e) {
       filteredRecords = [...records];
       renderAll();
       drawAllCharts();
-      showToast(`${newRecords.length} kayıt içe aktarıldı.`, 'success');
+      showToast(`${newRecords.length} kayÄ±t iÃ§e aktarÄ±ldÄ±.`, 'success');
     } catch (err) {
-      showToast('Yedek yükleme hatası: ' + err.message, 'error');
+      showToast('Yedek yÃ¼kleme hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 }
 
-// ─── RENDER ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAll() {
   renderKPIs();
   renderWeeklySummary();
@@ -4818,7 +4818,7 @@ function renderAll() {
   renderKalibrasyon();
 }
 
-// ─── DAILY DETAIL PANEL ─────────────────────────────────────────────────────
+// â”€â”€â”€ DAILY DETAIL PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function changeDailyOffset(delta) {
   dailySummaryOffset += delta;
   renderDailySummary();
@@ -4874,10 +4874,10 @@ function renderDailySummary() {
     '<div class="ws-card ws-cyan"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsProducedMeal') + '</span><span class="ws-value">' + yemek.toLocaleString('tr-TR') + '</span></div></div>' +
     '<div class="ws-card ws-green"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsTotalPasses') + '</span><span class="ws-value">' + toplam.toLocaleString('tr-TR') + '</span><span class="ws-sub">' + t('wsTurnstile') + ': ' + turnike + ' &middot; ' + t('wsStaffCount') + ': ' + personel + '</span></div></div>' +
     '<div class="ws-card ws-orange"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWasteAmount') + '</span><span class="ws-value">' + atik.toFixed(1) + ' kg</span><span class="ws-sub">' + t('wsWaste') + ': ' + fire + '</span></div></div>' +
-    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWastedPortion') + '</span><span class="ws-value" style="color:#ef4444">' + copPorsiyon.toFixed(0) + ' ' + t('wsPortion') + '</span><span class="ws-sub" style="font-size:0.58rem">' + atik.toFixed(1) + ' × 1000 ÷ ' + porsiyon + ' = ' + copPorsiyon.toFixed(0) + '</span></div></div>';
+    '<div class="ws-card ws-purple"><div class="ws-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="ws-card-content"><span class="ws-label">' + t('wsWastedPortion') + '</span><span class="ws-value" style="color:#ef4444">' + copPorsiyon.toFixed(0) + ' ' + t('wsPortion') + '</span><span class="ws-sub" style="font-size:0.58rem">' + atik.toFixed(1) + ' Ã— 1000 Ã· ' + porsiyon + ' = ' + copPorsiyon.toFixed(0) + '</span></div></div>';
 }
 
-// ─── WEEKLY SUMMARY ──────────────────────────────────────────────────────────
+// â”€â”€â”€ WEEKLY SUMMARY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getWeeklyDateRange(offset) {
   var now = new Date();
   var dayOfWeek = now.getDay();
@@ -4932,7 +4932,7 @@ function renderWeeklySummary() {
 
   var isCurrentWeek = weeklySummaryOffset === 0;
   label.textContent = isCurrentWeek ? t('weeklyBadge') : t('weeklySummary');
-  badge.textContent = fmtDateShort(mon) + ' — ' + fmtDateShort(sun);
+  badge.textContent = fmtDateShort(mon) + ' â€” ' + fmtDateShort(sun);
 
   document.getElementById('weeklyPrev').disabled = false;
   document.getElementById('weeklyNext').disabled = weeklySummaryOffset >= 0;
@@ -4964,7 +4964,7 @@ function renderDataInfo() {
   const fmt = (d) => displayDate(d);
   const totalYemek = records.reduce((s, r) => s + (r.yemek || 0), 0);
   const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
-  rangeEl.textContent = `${records.length} ${t('dataInfoRecord')} • ${fmt(first)} — ${fmt(last)} • ${totalYemek.toLocaleString('tr-TR')} ${t('dataInfoProduction')} • ${totalAtik.toFixed(1)} kg ${t('dataInfoWaste')}`;
+  rangeEl.textContent = `${records.length} ${t('dataInfoRecord')} â€¢ ${fmt(first)} â€” ${fmt(last)} â€¢ ${totalYemek.toLocaleString('tr-TR')} ${t('dataInfoProduction')} â€¢ ${totalAtik.toFixed(1)} kg ${t('dataInfoWaste')}`;
 }
 
 function getTrend(_current, arr, field) {
@@ -4983,7 +4983,7 @@ function renderTrend(elId, pct, reverse) {
   if (!el || pct === null) { if (el) el.textContent = ''; return; }
   const up = reverse ? pct < 0 : pct > 0;
   const cls = up ? '#ef4444' : '#10b981';
-  el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? '▲' : '▼'} %${Math.abs(pct).toFixed(1)}</span>`;
+  el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? 'â–²' : 'â–¼'} %${Math.abs(pct).toFixed(1)}</span>`;
 }
 function renderKPIs() {
   const n = records.length;
@@ -4993,7 +4993,7 @@ function renderKPIs() {
     document.getElementById('kpiAvgAtik').textContent = '0';
     document.getElementById('kpiLastGecis').textContent = '0';
     document.getElementById('kpiTotalAtik').textContent = '0';
-    document.getElementById('kpiBugunYemek').textContent = '—';
+    document.getElementById('kpiBugunYemek').textContent = 'â€”';
     document.getElementById('kpiHaccpAlarm').textContent = '0';
     document.getElementById('kpiKalibrasyonAlarm').textContent = '0';
     renderTrend('trendAvgAtik', null);
@@ -5011,7 +5011,7 @@ function renderKPIs() {
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
 
-  // Bugünkü Üretim
+  // BugÃ¼nkÃ¼ Ãœretim
   const todayStr = formatLocalDate(new Date());
   const todayRec = records.find(r => r.tarih === todayStr);
   const elBugunYemek = document.getElementById('kpiBugunYemek');
@@ -5020,11 +5020,11 @@ function renderKPIs() {
     elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
     elBugunYemekSub.textContent = t('kpiBeneficiary') + (todayRec.toplam || 0).toLocaleString('tr-TR');
   } else {
-    elBugunYemek.textContent = '—';
+    elBugunYemek.textContent = 'â€”';
     elBugunYemekSub.textContent = t('kpiNoRecordToday');
   }
 
-  // HACCP Alarm: son 24 saatteki uygunsuz sıcaklıklar
+  // HACCP Alarm: son 24 saatteki uygunsuz sÄ±caklÄ±klar
   const alarmRecs = haccpRecords.filter(function(r) {
     if (r.type !== 'sicaklik') return false;
     if (!r.tarih || !r.sicaklik) return false;
@@ -5047,7 +5047,7 @@ function renderKPIs() {
     alarmSub.textContent = t('kpiAllValuesOk');
   }
 
-  // Kalibrasyon Alarm: süresi dolan veya kalibrasyon yapılmamış cihazlar
+  // Kalibrasyon Alarm: sÃ¼resi dolan veya kalibrasyon yapÄ±lmamÄ±ÅŸ cihazlar
   var kalibrasyonAlarmSayisi = kalibrasyonCihazlari.filter(function(r) {
     var st = getKalibrasyonDurum(r);
     return st === 'suresi_doldu' || st === 'yapilmadi';
@@ -5132,12 +5132,12 @@ function renderWeeklyComparison() {
     var pct = it.prev ? (diff / it.prev) * 100 : 0;
     var good = it.lower ? diff < 0 : diff > 0;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var arrow = diff > 0 ? 'â†‘' : (diff < 0 ? 'â†“' : 'â†’');
     var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
     return '<div class="comparison-item">'
       + '<span class="comparison-label">' + it.label + '</span>'
       + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-arrow">â†’</span>'
       + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
       + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
       + '</div>';
@@ -5201,12 +5201,12 @@ function renderMonthlyComparison() {
     + items.map(function(it) {
     var diff = it.val - it.prev;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var arrow = diff > 0 ? 'â†‘' : (diff < 0 ? 'â†“' : 'â†’');
     var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
     return '<div class="comparison-item">'
       + '<span class="comparison-label">' + it.label + '</span>'
       + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-arrow">â†’</span>'
       + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
       + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
       + '</div>';
@@ -5269,12 +5269,12 @@ function renderYearlyComparison() {
     + items.map(function(it) {
     var diff = it.val - it.prev;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-    var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    var arrow = diff > 0 ? 'â†‘' : (diff < 0 ? 'â†“' : 'â†’');
     var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
     return '<div class="comparison-item">'
       + '<span class="comparison-label">' + it.label + '</span>'
       + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
+      + '<span class="comparison-arrow">â†’</span>'
       + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
       + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
       + '</div>';
@@ -5320,7 +5320,7 @@ function renderAnomalies() {
       + '<td style="color:var(--accent-orange)">' + por.toFixed(0) + '</td>'
       + '<td>' + mean.toFixed(1) + '</td>'
       + '<td><span class="comparison-badge up">+' + pctAbove.toFixed(0) + '%</span></td>'
-      + '<td>' + (r.yemek_adi || '—') + '</td>'
+      + '<td>' + (r.yemek_adi || 'â€”') + '</td>'
       + '</tr>';
   }).join('');
 
@@ -5387,9 +5387,9 @@ function renderRecordsYearFilter() {
   const years = getAvailableYears();
   const selectStyle = 'padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)';
   let h = '<div style="display:flex;gap:6px;align-items:center">';
-  h += '<label style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">Yıl:</label>';
+  h += '<label style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap">YÄ±l:</label>';
   h += '<select onchange="setRecordsYear(this.value)" style="' + selectStyle + '">';
-  h += '<option value="0"' + (Number(recordsYearFilter) === 0 ? ' selected' : '') + '>Tümü</option>';
+  h += '<option value="0"' + (Number(recordsYearFilter) === 0 ? ' selected' : '') + '>TÃ¼mÃ¼</option>';
   years.forEach(y => {
     const s = Number(recordsYearFilter) === Number(y) ? ' selected' : '';
     h += '<option value="' + y + '"' + s + '>' + y + '</option>';
@@ -5485,7 +5485,7 @@ function buildReportRow(r) {
   const turnike = safe(r.turnike);
   const ogrenci = safe(r.ogrenci);
   const personel = safe(r.personel);
-  // Turnike = Akademik/İdari Personel + Öğrenci → Akademik ve İdari = Turnike − Öğrenci
+  // Turnike = Akademik/Ä°dari Personel + Ã–ÄŸrenci â†’ Akademik ve Ä°dari = Turnike âˆ’ Ã–ÄŸrenci
   const idariAkademik = Math.max(0, turnike - ogrenci);
   const fazlalik = ogrenci > turnike ? ' style="background:rgba(250,204,21,0.18);outline:1px solid rgba(250,204,21,0.5)"' : '';
   return `<tr${fazlalik}>
@@ -5503,27 +5503,27 @@ function buildReportRow(r) {
   </tr>`;
 }
 
-// ===== ORTAK KATEGORİ YARDIMCILARI =====
+// ===== ORTAK KATEGORÄ° YARDIMCILARI =====
 var MENU_KATEGORI_SOZLUK = {
-  'Et Ürünleri': ['kıyma', 'kiyma', 'tavuk', 'sığır', 'sigir', 'kuzu', 'balık', 'balik', 'sucuk', 'sosis', 'pastırma', 'pastirma', 'jambon', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'döner', 'doner', 'köfte', 'kofte', 'fileto', 'adana', 'urfa', 'dana', 'kuyruk yağı', 'kuyruk'],
-  'Süt Ürünleri': ['süt', 'sut', 'yoğurt', 'yogurt', 'peynir', 'tereyağı', 'tereyagi', 'tereyağ', 'terayağı', 'tereyag', 'ayran', 'kaşar', 'kasar', 'krema', 'çökelek', 'cökelek', 'süzme', 'kaymak', 'beyaz peynir', 'lor', 'kefir', 'yumurta'],
-  'Kuru Bakliyat': ['nohut', 'mercimek', 'fasulye', 'pirinç', 'pirinc', 'bulgur', 'mısır', 'misir', 'arpa', 'buğday', 'bugday', 'kuru fasulye', 'maş', 'barbunya', 'keşkek', 'keskek', 'susam', 'tahin', 'makarna', 'şehriye', 'sehriye', 'erişte', 'eriste', 'noodle', 'tel şehriye', 'yufka', 'un'],
-  'Baharatlar': ['tuz', 'kırmızı biber', 'pul biber', 'toz biber', 'nane', 'kuru nane', 'taze nane', 'karabiber', 'kimyon', 'kekik', 'sumak', 'zerdeçal', 'tarçın', 'yenibahar', 'mahlep', 'safran', 'köri', 'hardal', 'vanilya', 'kakule', 'zencefil', 'muskat', 'çöven', 'isot', 'tatlı biber', 'acı biber', 'çemen', 'çemenotu', 'rigan', 'reyhan', 'defne yaprağı', 'hing', 'darçın', 'anason', 'yıldız anason', 'karanfil', 'alibiber', 'çam fıstığı', 'fındık', 'badem', 'ceviz'],
-  'Sebze ve Meyve': ['domates', 'biber', 'çarliston biber', 'kapya biber', 'sivri biber', 'yeşil biber', 'soğan', 'sogan', 'sarımsak', 'patates', 'patlıcan', 'salatalık', 'salatalik', 'salça', 'salca', 'limon', 'marul', 'çilek', 'cilek', 'muz', 'portakal', 'elma', 'üzüm', 'uzum', 'havuç', 'havuc', 'kabak', 'ıspanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'rok', 'tarhun', 'rezene', 'kereviz', 'pırasa', 'pirasa', 'bezelye', 'mantar', 'kuşkonmaz', 'enginar', 'kuru incir', 'incir', 'kuru kayısı', 'kayısı', 'kuru üzüm', 'kuru erik', 'erik', 'kiraz', 'vişne', 'nar', 'armut', 'kavun', 'karpuz', 'ananas', 'greyfurt', 'mandalina', 'kivi', 'balkabağı', 'kestane']
+  'Et ÃœrÃ¼nleri': ['kÄ±yma', 'kiyma', 'tavuk', 'sÄ±ÄŸÄ±r', 'sigir', 'kuzu', 'balÄ±k', 'balik', 'sucuk', 'sosis', 'pastÄ±rma', 'pastirma', 'jambon', 'antrikot', 'bonfile', 'pirzola', 'kavurma', 'dÃ¶ner', 'doner', 'kÃ¶fte', 'kofte', 'fileto', 'adana', 'urfa', 'dana', 'kuyruk yaÄŸÄ±', 'kuyruk'],
+  'SÃ¼t ÃœrÃ¼nleri': ['sÃ¼t', 'sut', 'yoÄŸurt', 'yogurt', 'peynir', 'tereyaÄŸÄ±', 'tereyagi', 'tereyaÄŸ', 'terayaÄŸÄ±', 'tereyag', 'ayran', 'kaÅŸar', 'kasar', 'krema', 'Ã§Ã¶kelek', 'cÃ¶kelek', 'sÃ¼zme', 'kaymak', 'beyaz peynir', 'lor', 'kefir', 'yumurta'],
+  'Kuru Bakliyat': ['nohut', 'mercimek', 'fasulye', 'pirinÃ§', 'pirinc', 'bulgur', 'mÄ±sÄ±r', 'misir', 'arpa', 'buÄŸday', 'bugday', 'kuru fasulye', 'maÅŸ', 'barbunya', 'keÅŸkek', 'keskek', 'susam', 'tahin', 'makarna', 'ÅŸehriye', 'sehriye', 'eriÅŸte', 'eriste', 'noodle', 'tel ÅŸehriye', 'yufka', 'un'],
+  'Baharatlar': ['tuz', 'kÄ±rmÄ±zÄ± biber', 'pul biber', 'toz biber', 'nane', 'kuru nane', 'taze nane', 'karabiber', 'kimyon', 'kekik', 'sumak', 'zerdeÃ§al', 'tarÃ§Ä±n', 'yenibahar', 'mahlep', 'safran', 'kÃ¶ri', 'hardal', 'vanilya', 'kakule', 'zencefil', 'muskat', 'Ã§Ã¶ven', 'isot', 'tatlÄ± biber', 'acÄ± biber', 'Ã§emen', 'Ã§emenotu', 'rigan', 'reyhan', 'defne yapraÄŸÄ±', 'hing', 'darÃ§Ä±n', 'anason', 'yÄ±ldÄ±z anason', 'karanfil', 'alibiber', 'Ã§am fÄ±stÄ±ÄŸÄ±', 'fÄ±ndÄ±k', 'badem', 'ceviz'],
+  'Sebze ve Meyve': ['domates', 'biber', 'Ã§arliston biber', 'kapya biber', 'sivri biber', 'yeÅŸil biber', 'soÄŸan', 'sogan', 'sarÄ±msak', 'patates', 'patlÄ±can', 'salatalÄ±k', 'salatalik', 'salÃ§a', 'salca', 'limon', 'marul', 'Ã§ilek', 'cilek', 'muz', 'portakal', 'elma', 'Ã¼zÃ¼m', 'uzum', 'havuÃ§', 'havuc', 'kabak', 'Ä±spanak', 'ispanak', 'lahana', 'brokoli', 'karnabahar', 'dereotu', 'maydanoz', 'rok', 'tarhun', 'rezene', 'kereviz', 'pÄ±rasa', 'pirasa', 'bezelye', 'mantar', 'kuÅŸkonmaz', 'enginar', 'kuru incir', 'incir', 'kuru kayÄ±sÄ±', 'kayÄ±sÄ±', 'kuru Ã¼zÃ¼m', 'kuru erik', 'erik', 'kiraz', 'viÅŸne', 'nar', 'armut', 'kavun', 'karpuz', 'ananas', 'greyfurt', 'mandalina', 'kivi', 'balkabaÄŸÄ±', 'kestane']
 };
-var MENU_KATEGORI_SIRASI = ['Et Ürünleri', 'Süt Ürünleri', 'Kuru Bakliyat', 'Baharatlar', 'Sebze ve Meyve', 'Diğer'];
+var MENU_KATEGORI_SIRASI = ['Et ÃœrÃ¼nleri', 'SÃ¼t ÃœrÃ¼nleri', 'Kuru Bakliyat', 'Baharatlar', 'Sebze ve Meyve', 'DiÄŸer'];
 var MENU_KATEGORI_RENKLERI = {
-  'Et Ürünleri': { bg: '#fef2f2', border: '#fca5a5', icon: '🥩', renk: '#dc2626' },
-  'Süt Ürünleri': { bg: '#eff6ff', border: '#93c5fd', icon: '🧀', renk: '#2563eb' },
-  'Kuru Bakliyat': { bg: '#fefce8', border: '#fde047', icon: '🫘', renk: '#ca8a04' },
-  'Baharatlar': { bg: '#fff7ed', border: '#fdba74', icon: '🌶️', renk: '#ea580c' },
-  'Sebze ve Meyve': { bg: '#f0fdf4', border: '#86efac', icon: '🥬', renk: '#16a34a' },
-  'Diğer': { bg: '#f1f5f9', border: '#94a3b8', icon: '📦', renk: '#475569' }
+  'Et ÃœrÃ¼nleri': { bg: '#fef2f2', border: '#fca5a5', icon: 'ğŸ¥©', renk: '#dc2626' },
+  'SÃ¼t ÃœrÃ¼nleri': { bg: '#eff6ff', border: '#93c5fd', icon: 'ğŸ§€', renk: '#2563eb' },
+  'Kuru Bakliyat': { bg: '#fefce8', border: '#fde047', icon: 'ğŸ«˜', renk: '#ca8a04' },
+  'Baharatlar': { bg: '#fff7ed', border: '#fdba74', icon: 'ğŸŒ¶ï¸', renk: '#ea580c' },
+  'Sebze ve Meyve': { bg: '#f0fdf4', border: '#86efac', icon: 'ğŸ¥¬', renk: '#16a34a' },
+  'DiÄŸer': { bg: '#f1f5f9', border: '#94a3b8', icon: 'ğŸ“¦', renk: '#475569' }
 };
 
 function menuGetKategori(malzemeAdi) {
   var ad = malzemeAdi.toLowerCase().trim()
-    .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
+    .replace(/[Ä±I]/g, 'Ä±').replace(/Ä°/g, 'i')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   for (var kategori in MENU_KATEGORI_SOZLUK) {
     var keywords = MENU_KATEGORI_SOZLUK[kategori];
@@ -5533,7 +5533,7 @@ function menuGetKategori(malzemeAdi) {
       if (re.test(ad) || kw === ad) return kategori;
     }
   }
-  return 'Diğer';
+  return 'DiÄŸer';
 }
 
 function renderProduction(_weekKey, _weekData, days) {
@@ -5552,7 +5552,7 @@ function renderProduction(_weekKey, _weekData, days) {
   };
   const normBirim = normBirimGlobal;
   const fmt = (total, birim) => {
-    if (total <= 0) return '—';
+    if (total <= 0) return 'â€”';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
     if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
@@ -5584,7 +5584,7 @@ function renderProduction(_weekKey, _weekData, days) {
       if (!name) continue;
       const dish = findDish(name);
 
-      html += `<div class="prod-cesit-col prod-cesit-col-c${ci + 1}"><div class="prod-cesit">${ci + 1}. Çeşit: ${escapeHtml(name)}</div>`;
+      html += `<div class="prod-cesit-col prod-cesit-col-c${ci + 1}"><div class="prod-cesit">${ci + 1}. Ã‡eÅŸit: ${escapeHtml(name)}</div>`;
 
       if (dish && dish.tarif && dish.tarif.length) {
         dish.tarif.forEach((ing, idx) => {
@@ -5592,7 +5592,7 @@ function renderProduction(_weekKey, _weekData, days) {
           const total = miktarKisi * kisi;
           const birim = normBirim(ing.birim);
           const birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' || birim === 'litre' ? ' lt' : ' ' + birim;
-          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">—</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
+          html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(ing.malzeme.trim())} <span class="prod-kisi-birim">(${miktarKisi}${birimLabel})</span></span><span class="prod-sep">â€”</span><span class="prod-qty">${fmt(total, birim)}</span></div>`;
 
           const key = ing.malzeme.trim().toLowerCase() + '|' + birim;
           if (!dayAgg[key]) {
@@ -5617,14 +5617,14 @@ function renderProduction(_weekKey, _weekData, days) {
         var tut = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
         if (tut > 0) gunlukToplam += Math.round(tut * 100) / 100;
       });
-      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${t('stockDeductionList')} – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">${t('total')}: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
+      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Î£</span> ${t('stockDeductionList')} â€“ ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">${t('total')}: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
       dayEntries.forEach((e, idx) => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} ${t('inVarieties')})</span>` : '';
         var hesapMiktari = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
         const found = findBirimFiyat(e.ad, e.birim);
         const tutar = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
         const fiyatGoster = found && tutar > 0 ? `<span class="fiyat-badge">${formatTRY(tutar)}</span>` : '';
-        html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">—</span><span class="prod-qty">${fmt(e.total, e.birim)}${fiyatGoster}</span></div>`;
+        html += `<div class="prod-ing"><span class="prod-num">${idx + 1}.</span><span class="prod-name">${escapeHtml(e.ad)}${cInfo}</span><span class="prod-sep">â€”</span><span class="prod-qty">${fmt(e.total, e.birim)}${fiyatGoster}</span></div>`;
       });
       html += '</div></div>';
     }
@@ -5655,7 +5655,7 @@ function renderWeeklyTotal(dishEntries, days) {
   if (!section) return;
 
   const fmtTotal = (total, birim) => {
-    if (total <= 0) return '—';
+    if (total <= 0) return 'â€”';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
     if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
@@ -5723,7 +5723,7 @@ function renderWeeklyTotal(dishEntries, days) {
 
   siraliKategoriler.forEach(function(kategori) {
     var items = kategoriler[kategori];
-    var renk = MENU_KATEGORI_RENKLERI[kategori] || MENU_KATEGORI_RENKLERI['Diğer'];
+    var renk = MENU_KATEGORI_RENKLERI[kategori] || MENU_KATEGORI_RENKLERI['DiÄŸer'];
     var kategoriToplam = 0;
     items.forEach(function(e) {
       if (e.total <= 0) return;
@@ -5747,7 +5747,7 @@ function renderWeeklyTotal(dishEntries, days) {
       var found = findBirimFiyat(e.ad, birimAd);
       var tutar = birimFiyatTutar(e.ad, birimAd, hesapMiktariW);
       var fiyatGoster = found && tutar > 0 ? `<span class="fiyat-badge">${formatTRY(tutar)}</span>` : '';
-      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">—</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}${fiyatGoster}</span></div>`;
+      html += `<div class="weekly-total-item"><span class="weekly-total-num">${globalIdx}.</span><span class="weekly-total-name">${escapeHtml(e.ad)} <span class="prod-kisi-birim">(${e.miktarKisi}${e.birimLabel})</span></span><span class="weekly-total-sep">â€”</span><span class="weekly-total-qty">${fmtTotal(total, e.birim)}${fiyatGoster}</span></div>`;
     });
     html += '</div></div>';
   });
@@ -5756,7 +5756,7 @@ function renderWeeklyTotal(dishEntries, days) {
   section.innerHTML = html;
 }
 
-// ===== MALİ TABLO (HAFTALIK MALİYET ÖZETİ) =====
+// ===== MALÄ° TABLO (HAFTALIK MALÄ°YET Ã–ZETÄ°) =====
 function renderMaliTablo(days) {
   var container = document.getElementById('menuMaliTablo');
   if (!container) return;
@@ -5830,12 +5830,12 @@ function renderMaliTablo(days) {
   var eksikSayi = Object.keys(eksikSet).length;
 
   var html = '<div class="mali-card">';
-  html += '<div class="mali-header"><span class="mali-header-icon">₺</span><span>' + t('maliTablo') + '</span><span class="mali-header-sub">' + t('maliTabloSubtitle') + '</span>' +
+  html += '<div class="mali-header"><span class="mali-header-icon">â‚º</span><span>' + t('maliTablo') + '</span><span class="mali-header-sub">' + t('maliTabloSubtitle') + '</span>' +
     (eksikSayi > 0 ? '<span class="mali-uyari" title="' + t('maliUnitPriceHint') + '">' + eksikSayi + ' ' + t('maliUnitPriceMissing') + '</span>' : '') +
     '</div>';
   html += '<div class="mali-body">';
 
-  // Özet kartları
+  // Ã–zet kartlarÄ±
   html += '<div class="mali-chips">' +
     '<div class="mali-chip mali-chip-vurgu"><div class="mali-chip-label">' + t('weeklyGrandTotal') + '</div><div class="mali-chip-value">' + formatTRY(genelToplam) + '</div></div>' +
     '<div class="mali-chip"><div class="mali-chip-label">' + t('dailyAverage') + '</div><div class="mali-chip-value">' + formatTRY(Math.round(genelToplam / 5 * 100) / 100) + '</div></div>' +
@@ -5843,33 +5843,33 @@ function renderMaliTablo(days) {
     '<div class="mali-chip"><div class="mali-chip-label">' + t('totalPersonDays') + '</div><div class="mali-chip-value">' + toplamKisiGun + '</div></div>' +
     '</div>';
 
-  // Günlük maliyet tablosu
+  // GÃ¼nlÃ¼k maliyet tablosu
   html += '<div class="table-wrapper"><table class="data-table mali-table"><thead><tr>' +
     '<th>' + t('colDay') + '</th><th>' + t('colDate') + '</th><th style="text-align:center">' + t('colPerson') + '</th><th style="text-align:right">' + t('dailyMaterialCost') + '</th><th style="text-align:right">' + t('perPerson') + '</th>' +
     '</tr></thead><tbody>';
   gunVerileri.forEach(function(g) {
-    var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : '—';
+    var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : 'â€”';
     html += '<tr' + (g.aktif ? '' : ' class="mali-pasif"') + '>' +
       '<td><strong>' + escapeHtml(g.gun) + '</strong></td>' +
       '<td>' + tarihFormatla2(g.tarih) + '</td>' +
-      '<td style="text-align:center">' + (g.kisi || '—') + '</td>' +
+      '<td style="text-align:center">' + (g.kisi || 'â€”') + '</td>' +
       '<td class="mali-tutar">' + formatTRY(g.toplam) + '</td>' +
       '<td class="mali-tutar-alt">' + basi + '</td></tr>';
   });
-  var ortBasi = toplamKisiGun > 0 ? formatTRY(Math.round(kisGun * 100) / 100) : '—';
+  var ortBasi = toplamKisiGun > 0 ? formatTRY(Math.round(kisGun * 100) / 100) : 'â€”';
   html += '</tbody><tfoot><tr class="mali-toplam-row">' +
     '<td colspan="2"><strong>' + t('weeklyTotal') + '</strong></td>' +
     '<td style="text-align:center"><strong>' + toplamKisiGun + '</strong></td>' +
     '<td class="mali-tutar"><strong>' + formatTRY(genelToplam) + '</strong></td>' +
     '<td class="mali-tutar-alt"><strong>' + ortBasi + '</strong></td></tr></tfoot></table></div>';
 
-  // Kategori dağılımı
+  // Kategori daÄŸÄ±lÄ±mÄ±
   var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return katAgg[k] && katAgg[k] > 0; });
   if (katSirali.length) {
     html += '<div class="mali-kat-baslik">' + t('categoryDistribution') + '</div>';
     html += '<div class="mali-kat-liste">';
     katSirali.forEach(function(kat) {
-      var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
+      var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['DiÄŸer'];
       var tutar = katAgg[kat];
       var pctRaw = genelToplam > 0 ? Math.round(tutar / genelToplam * 100) : 0;
       var yuzde = Math.max(2, Math.min(100, pctRaw));
@@ -5889,7 +5889,7 @@ function renderMaliTablo(days) {
 }
 
 function tarihFormatla2(str) {
-  if (!str) return '—';
+  if (!str) return 'â€”';
   var p = str.split('.');
   if (p.length !== 3) return escapeHtml(str);
   var ay = t('month' + (parseInt(p[1], 10) || 1));
@@ -5904,18 +5904,18 @@ function importYemekCSV(event) { if (!requireAdmin()) return;
   reader.onload = function(ev) {
     try {
       var text = ev.target.result;
-      var hasMojibake = /[Ãâ€€ŸŒŽšž]/.test(text) || /\?EHR|ORUM/.test(text);
-      if (hasMojibake && !text.includes('Ş')) {
+      var hasMojibake = /[ÃƒÃ¢â‚¬â‚¬Å¸Å’Å½Å¡Å¾]/.test(text) || /\?EHR|ORUM/.test(text);
+      if (hasMojibake && !text.includes('Å')) {
         var reader2 = new FileReader();
         reader2.onload = function(ev2) {
           try { processYemekCSV(ev2.target.result.replace(/^\uFEFF/, '')); }
-          catch(e2) { showToast('CSV işleme hatası: ' + e2.message, 'error'); }
+          catch(e2) { showToast('CSV iÅŸleme hatasÄ±: ' + e2.message, 'error'); }
         };
         reader2.readAsText(file, 'ISO-8859-9');
         return;
       }
       processYemekCSV(text.replace(/^\uFEFF/, ''));
-    } catch(e) { showToast('CSV okuma hatası: ' + e.message, 'error'); }
+    } catch(e) { showToast('CSV okuma hatasÄ±: ' + e.message, 'error'); }
     inputEl.value = '';
   };
   reader.readAsText(file);
@@ -5925,16 +5925,16 @@ function importYemekCSV(event) { if (!requireAdmin()) return;
 function processYemekCSV(text) {
   try {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (!lines.length) throw new Error('CSV boş');
+    if (!lines.length) throw new Error('CSV boÅŸ');
     const headers = parseCSVLine(lines[0]);
-    const adIdx = headers.findIndex(h => /yemek.*ad|adı|^ad$/i.test(h));
+    const adIdx = headers.findIndex(h => /yemek.*ad|adÄ±|^ad$/i.test(h));
     const kaloriIdx = headers.findIndex(h => /kalori|kcal/i.test(h));
     const alerjenIdx = headers.findIndex(h => /alerjen/i.test(h));
     const urunCols = [];
     const miktarCols = [];
     const birimCols = [];
     headers.forEach((h, i) => {
-      const m = h.match(/^\s*[üu]r[üu]n\s*(\d+)\s*$/i);
+      const m = h.match(/^\s*[Ã¼u]r[Ã¼u]n\s*(\d+)\s*$/i);
       if (m) urunCols.push({ idx: i, num: parseInt(m[1]) });
       if (/^\s*miktar\s*\d+\s*$/i.test(h)) miktarCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
       if (/^\s*birim\s*\d+\s*$/i.test(h)) birimCols.push({ idx: i, num: parseInt(h.match(/\d+/)[0]) });
@@ -5978,20 +5978,20 @@ function processYemekCSV(text) {
     }
     saveYemekler(list);
     renderYemekListesi();
-    showToast(list.length + ' yemek yüklendi.', 'success');
+    showToast(list.length + ' yemek yÃ¼klendi.', 'success');
   } catch (err) {
-    showToast('CSV yükleme hatası: ' + err.message, 'error');
+    showToast('CSV yÃ¼kleme hatasÄ±: ' + err.message, 'error');
   }
 }
 
 function exportYemekCSV() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const list = loadYemekler();
-  if (!list || !list.length) { showToast('Dışa aktarılacak yemek yok.', 'error'); return; }
+  if (!list || !list.length) { showToast('DÄ±ÅŸa aktarÄ±lacak yemek yok.', 'error'); return; }
   const maxUrun = list.reduce((m, y) => Math.max(m, (y.tarif || []).length), 0);
-  const headers = ['Yemek Adı', 'Kalori', 'Alerjen'];
+  const headers = ['Yemek AdÄ±', 'Kalori', 'Alerjen'];
   for (let i = 1; i <= maxUrun; i++) {
-    headers.push('Ürün ' + i, 'Miktar ' + i, 'Birim ' + i);
+    headers.push('ÃœrÃ¼n ' + i, 'Miktar ' + i, 'Birim ' + i);
   }
   function cell(v) {
     var s = String(v == null ? '' : v);
@@ -6016,7 +6016,7 @@ function exportYemekCSV() {
   showToast('Yemek listesi CSV olarak indirildi.', 'success');
 }
 
-// ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
+// â”€â”€â”€ YEMEK LISTESI (DISH POOL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadYemekler() {
   return yemeklerCache;
 }
@@ -6041,22 +6041,22 @@ function renderYemekListesi() {
 
   if (!filtered.length) {
     if (query) {
-      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">"<strong>' + escapeHtml(query) + '</strong>" için eşleşen yemek bulunamadı.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">"<strong>' + escapeHtml(query) + '</strong>" iÃ§in eÅŸleÅŸen yemek bulunamadÄ±.</div>';
     } else {
-      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">Henüz yemek eklenmemiş. "+ Yeni Yemek" butonuna tıklayarak ekleyin.</div>';
+      container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem">HenÃ¼z yemek eklenmemiÅŸ. "+ Yeni Yemek" butonuna tÄ±klayarak ekleyin.</div>';
     }
     return;
   }
 
   container.innerHTML = `<table class="data-table" style="width:100%">
-    <thead><tr><th style="width:30%">Yemek Adı</th><th style="width:12%">Kalori</th><th style="width:20%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:70px">İşlem</th></tr></thead>
+    <thead><tr><th style="width:30%">Yemek AdÄ±</th><th style="width:12%">Kalori</th><th style="width:20%">Alerjen</th><th style="width:50px">ReÃ§ete</th><th style="width:70px">Ä°ÅŸlem</th></tr></thead>
     <tbody>${filtered.map(y => `<tr>
       <td style="max-width:0;overflow:hidden;text-overflow:ellipsis"><strong>${escapeHtml(y.ad)}</strong></td>
       <td style="font-size:0.8rem;white-space:nowrap">${escapeHtml(y.kalori || '')}</td>
       <td style="font-size:0.8rem;color:var(--text-muted);max-width:0;overflow:hidden;text-overflow:ellipsis">${escapeHtml(y.alerjen || '')}</td>
-      <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
+      <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} Ã¼rÃ¼n</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">â€”</span>`}</td>
       <td style="white-space:nowrap;text-align:center">
-        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
+        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="DÃ¼zenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">
@@ -6096,7 +6096,7 @@ function renderYemekForm(ad, kalori, alerjen) {
   const container = document.getElementById('yemekFormContainer');
   const tarifRows = yfTarif.map((t, i) => `
     <tr>
-      <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adı" data-idx="${i}" style="width:100%" /></td>
+      <td><input type="text" class="yf-malzeme" value="${escapeHtml(t.malzeme)}" placeholder="Malzeme adÄ±" data-idx="${i}" style="width:100%" /></td>
       <td style="width:80px"><input type="number" class="yf-miktar" value="${t.miktar_kisi || ''}" step="0.1" min="0" data-idx="${i}" style="width:70px;text-align:center" placeholder="0" /></td>
       <td style="width:60px">
         <select class="yf-birim" data-idx="${i}" style="width:55px;padding:0.3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:0.75rem">
@@ -6106,27 +6106,27 @@ function renderYemekForm(ad, kalori, alerjen) {
           <option value="ml" ${t.birim==='ml'?'selected':''}>ml</option>
         </select>
       </td>
-      <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">✕</button></td>
+      <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">âœ•</button></td>
     </tr>
   `).join('');
 
   container.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end;margin-bottom:0.75rem">
       <div style="flex:2;min-width:140px">
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek Adı</label>
-        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Örn: ŞEHRIYE ÇORBASI" style="width:100%" />
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Yemek AdÄ±</label>
+        <input type="text" id="yf_ad" value="${escapeHtml(ad)}" placeholder="Ã–rn: ÅEHRIYE Ã‡ORBASI" style="width:100%" />
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Kalori</label>
-        <input type="text" id="yf_kalori" value="${escapeHtml(kalori)}" placeholder="Örn: 160 KCAL" style="width:100%" />
+        <input type="text" id="yf_kalori" value="${escapeHtml(kalori)}" placeholder="Ã–rn: 160 KCAL" style="width:100%" />
       </div>
       <div style="flex:1;min-width:120px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Alerjen</label>
-        <input type="text" id="yf_alerjen" value="${escapeHtml(alerjen)}" placeholder="Örn: Gluten İçeren Tahıllar" style="width:100%" />
+        <input type="text" id="yf_alerjen" value="${escapeHtml(alerjen)}" placeholder="Ã–rn: Gluten Ä°Ã§eren TahÄ±llar" style="width:100%" />
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="saveYemekForm()">Kaydet</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekFormContainer').style.display='none'">İptal</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekFormContainer').style.display='none'">Ä°ptal</button>
       </div>
     </div>
 
@@ -6160,9 +6160,9 @@ function yfTarifSil(idx) {
   renderYemekForm(ad, kalori, alerjen);
 }
 
-function saveYemekForm() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+function saveYemekForm() { if (!canEditMenuRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const ad = document.getElementById('yf_ad').value.trim();
-  if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
+  if (!ad) { showToast('Yemek adÄ± zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
   const alerjen = document.getElementById('yf_alerjen').value.trim();
 
@@ -6202,7 +6202,7 @@ function editYemek(id) {
   showYemekForm(id);
 }
 
-function deleteYemek(id) { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+function deleteYemek(id) { if (!canEditMenuRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   if (!confirm(t('deleteFoodConfirm'))) return;
   let list = loadYemekler();
   list = list.filter(y => y.id !== id);
@@ -6217,7 +6217,7 @@ function openYemekModal() {
   editingYemekId = null;
   document.getElementById('yemekFormContainer').style.display = 'none';
   renderYemekListesi();
-  // Background'da Supabase'ten taze veri çek (cache güncelle)
+  // Background'da Supabase'ten taze veri Ã§ek (cache gÃ¼ncelle)
   syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
 }
 function closeYemekModal() {
@@ -6225,14 +6225,14 @@ function closeYemekModal() {
 }
 
 function exportYemekListesiPDF() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const list = loadYemekler();
   if (!list || !list.length) {
-    showToast('Dışa aktarılacak yemek yok.', 'error');
+    showToast('DÄ±ÅŸa aktarÄ±lacak yemek yok.', 'error');
     return;
   }
   const printWin = window.open('', '_blank', 'width=1000,height=800');
-  if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!printWin) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
 
   const rowsHtml = list.map(function(y) {
     const tarifHtml = (y.tarif && y.tarif.length)
@@ -6240,7 +6240,7 @@ function exportYemekListesiPDF() {
           const miktar = Number(t.miktar_kisi) || 0;
           return '<tr><td class="mz">' + escapeHtml(t.malzeme || '') + '</td><td class="mk">' + (miktar ? miktar.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) : '') + ' ' + escapeHtml(t.birim || 'gr') + '</td></tr>';
         }).join('') + '</table>'
-      : '<div class="tarif-yok">—</div>';
+      : '<div class="tarif-yok">â€”</div>';
     return '<tr>' +
       '<td class="yemek-ad"><strong>' + escapeHtml(y.ad) + '</strong>' + (y.kalori ? '<div class="kalori">' + escapeHtml(y.kalori) + '</div>' : '') + '</td>' +
       '<td class="alerjen">' + (y.alerjen ? escapeHtml(y.alerjen) : '') + '</td>' +
@@ -6274,7 +6274,7 @@ function exportYemekListesiPDF() {
     '<div class="info">Toplam ' + list.length + ' yemek</div>' +
     '<table><thead><tr><th>' + t('foodName') + '</th><th>' + t('allergen') + '</th><th>' + t('recipePerPerson') + '</th></tr></thead>' +
     '<tbody>' + rowsHtml + '</tbody></table>' +
-    '<div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
+    '<div class="footer">KÄ±rÅŸehir Ahi Evran Ãœniversitesi &bull; Yemek Listesi &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>' +
     '</body></html>');
   printWin.document.close();
   printWin.focus();
@@ -6337,14 +6337,14 @@ async function saveMenuData(allData) {
     });
     if (upserts.length > 0) {
       var { error } = await supabaseClient.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
-      if (error) showToast('Menü kaydedilemedi: ' + error.message, 'error');
+      if (error) showToast('MenÃ¼ kaydedilemedi: ' + error.message, 'error');
     }
-  } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
+  } catch (_) { showToast('MenÃ¼ kaydedilemedi (baÄŸlantÄ± hatasÄ±).', 'error'); }
 }
 
 // -- Live production refresh --
 function refreshMenuProduction() {
-  if (!document.getElementById('mk_0')) return; // menü henüz render edilmemiş
+  if (!document.getElementById('mk_0')) return; // menÃ¼ henÃ¼z render edilmemiÅŸ
   const monday = getWeekStartDate(menuWeekOffset);
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
@@ -6489,11 +6489,11 @@ function escapeHtml(s) {
 }
 
 function formatTRY(val) {
-  if (typeof val !== 'number' || isNaN(val)) return '0,00 ₺';
-  return val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+  if (typeof val !== 'number' || isNaN(val)) return '0,00 â‚º';
+  return val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º';
 }
 
-// ─── REPORT ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getReportData() {
   if (!reportYearFilter) return records;
   return records.filter(function(r) {
@@ -6507,7 +6507,7 @@ function renderReportYearFilter() {
   const years = getAvailableYears();
   let html = '<label style="font-size:0.8rem;color:var(--text-muted)">' + t('yearFilterLabel') + '</label>';
   html += '<select onchange="setReportYear(this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text)">';
-  html += '<option value="0"' + (Number(reportYearFilter) === 0 ? ' selected' : '') + '>Tümü</option>';
+  html += '<option value="0"' + (Number(reportYearFilter) === 0 ? ' selected' : '') + '>TÃ¼mÃ¼</option>';
   years.forEach(function(y) {
     const sel = Number(reportYearFilter) === Number(y) ? ' selected' : '';
     html += '<option value="' + y + '"' + sel + '>' + y + '</option>';
@@ -6530,7 +6530,7 @@ function renderReport() {
     ['rTotalKayit','rTotalYemek','rTotalFireKar','rTotalYemekSonrasi','rTotalTurnike',
      'rTotalGecis','rTotalPersonel','rAvgPorsiyon','rTotalPorsiyon','rCopPorsiyon','rMaxWeekGecis','rTotalAtik','rAvgAtik','rTotalOgrenci',
      'rMaxAtik','rMinAtik','rTrendAtik','rTrendGecis'].forEach(id => {
-      document.getElementById(id).textContent = '—';
+      document.getElementById(id).textContent = 'â€”';
     });
     document.getElementById('reportTbody').innerHTML = '';
     const avgPorItem = document.getElementById('rAvgPorsiyonItem');
@@ -6556,7 +6556,7 @@ function renderReport() {
   const maxAtikDate = maxAtikRec ? displayDate(maxAtikRec.tarih) : '';
   const minAtikDate = minAtikRec ? displayDate(minAtikRec.tarih) : '';
 
-  // Trend: son 7 gün vs önceki 7 gün
+  // Trend: son 7 gÃ¼n vs Ã¶nceki 7 gÃ¼n
   const sortedByDate = [...data].sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
   const last7 = sortedByDate.slice(0, 7);
   const prev7 = sortedByDate.slice(7, 14);
@@ -6567,11 +6567,11 @@ function renderReport() {
   const trendAtik = avgAtikPrev7 > 0 ? ((avgAtikLast7 - avgAtikPrev7) / avgAtikPrev7 * 100).toFixed(1) : 0;
   const trendGecis = avgGecisPrev7 > 0 ? ((avgGecisLast7 - avgGecisPrev7) / avgGecisPrev7 * 100).toFixed(1) : 0;
 
-  // Haftalık Geçiş Hesaplama
+  // HaftalÄ±k GeÃ§iÅŸ Hesaplama
   const weeklyGecis = {};
   data.forEach(r => {
     const d = new Date(r.tarih + 'T12:00:00');
-    // Haftanın başını (Pazartesi) bul
+    // HaftanÄ±n baÅŸÄ±nÄ± (Pazartesi) bul
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d);
@@ -6585,7 +6585,7 @@ function renderReport() {
     weeklyGecis[weekLabel] = (weeklyGecis[weekLabel] || 0) + r.toplam;
   });
 
-  let maxWeekLabel = '—';
+  let maxWeekLabel = 'â€”';
   let maxWeekVal = 0;
   for (const [w, val] of Object.entries(weeklyGecis)) {
     if (val > maxWeekVal) {
@@ -6609,7 +6609,7 @@ function renderReport() {
   if (avgPorEl) avgPorEl.innerHTML = t('avgPortion400') + (porsiyonFarklari.length > 0 ? `<span style="display:block;font-size:0.7rem;color:#ef4444;font-weight:600">${porsiyonFarklari.length} ${t('recordsNot400')}</span>` : '');
   document.getElementById('rTotalPorsiyon').textContent = totalPorsiyon.toLocaleString('tr-TR') + ' ' + t('gram');
   document.getElementById('rCopPorsiyon').textContent = copPorsiyon.toFixed(0).toLocaleString('tr-TR') + ' ' + t('portion');
-  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== '—' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} ${t('personLabel')})</span>` : '—';
+  document.getElementById('rMaxWeekGecis').innerHTML = maxWeekLabel !== 'â€”' ? `${maxWeekLabel} <br><span style="font-size:0.9rem;opacity:0.8;font-weight:normal">(${maxWeekVal.toLocaleString('tr-TR')} ${t('personLabel')})</span>` : 'â€”';
   document.getElementById('rTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rAvgAtik').textContent = (totalAtik / n).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
   document.getElementById('rTotalOgrenci').textContent = totalOgrenci.toLocaleString('tr-TR');
@@ -6620,12 +6620,12 @@ function renderReport() {
   const trendAtikEl = document.getElementById('rTrendAtik');
   const trendGecisEl = document.getElementById('rTrendGecis');
   if (trendAtikEl) {
-    const sign = trendAtik > 0 ? '↑' : trendAtik < 0 ? '↓' : '→';
+    const sign = trendAtik > 0 ? 'â†‘' : trendAtik < 0 ? 'â†“' : 'â†’';
     const cls = trendAtik > 0 ? 'trend-up' : trendAtik < 0 ? 'trend-down' : 'trend-flat';
     trendAtikEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendAtik)}</span><span class="report-subdate">${t('last7RecordsPrev7')}</span>`;
   }
   if (trendGecisEl) {
-    const sign = trendGecis > 0 ? '↑' : trendGecis < 0 ? '↓' : '→';
+    const sign = trendGecis > 0 ? 'â†‘' : trendGecis < 0 ? 'â†“' : 'â†’';
     const cls = trendGecis > 0 ? 'trend-up' : trendGecis < 0 ? 'trend-down' : 'trend-flat';
     trendGecisEl.innerHTML = `<span class="${cls}">${sign} %${Math.abs(trendGecis)}</span><span class="report-subdate">${t('last7RecordsPrev7')}</span>`;
   }
@@ -6657,21 +6657,21 @@ function renderWasteByFoodType(list) {
   const sorted = Object.values(groups).sort((a, b) => b.toplamAtik - a.toplamAtik);
   let html = '<table class="data-table" style="min-width:500px"><thead><tr><th>' + t('thFoodType') + '</th><th>' + t('wasteByFoodRecords') + '</th><th>' + t('kpiTotalWaste') + '</th><th>' + t('wasteByFoodRate') + '</th><th>' + t('wasteByFoodPerPerson') + '</th></tr></thead><tbody>';
   sorted.forEach(g => {
-    const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : '—';
-    const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : '—';
+    const pct = totalAtik > 0 ? ((g.toplamAtik / totalAtik) * 100).toFixed(1) : 'â€”';
+    const kisiBasi = g.toplamGecis > 0 ? (g.toplamAtik / g.toplamGecis).toFixed(3) : 'â€”';
     html += `<tr><td><strong>${g.ad}</strong></td><td>${g.kayitSayisi}</td><td>${g.toplamAtik.toFixed(1)}</td><td>%${pct}</td><td>${kisiBasi}</td></tr>`;
   });
   html += '</tbody></table>';
   body.innerHTML = html;
 }
 
-// ─── CHART UTILITY ───────────────────────────────────────────────────────────
+// â”€â”€â”€ CHART UTILITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmt(v) {
-  // Trailing zero'ları at, tam sayıysa .00 gösterme
+  // Trailing zero'larÄ± at, tam sayÄ±ysa .00 gÃ¶sterme
   return v.toFixed(2).replace(/\.?0+$/, '');
 }
 
-// ─── CHARTS (Chart.js) ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ CHARTS (Chart.js) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function renderChartYearFilter() {
   const container = document.getElementById('chartYearFilter');
@@ -6698,7 +6698,7 @@ function renderChartYearFilter() {
   container.innerHTML = html;
 }
 
-// ─── YILLIK KARŞILAŞTIRMA TAB ───────────────────────────────────────────────
+// â”€â”€â”€ YILLIK KARÅILAÅTIRMA TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getEffectiveYillikYears() {
   const years = getAvailableYears();
   const latest = years.length > 0 ? Number(years[years.length - 1]) : new Date().getFullYear();
@@ -6785,7 +6785,7 @@ function renderYearlyCharts() {
   var curTot = { uretim: fieldTotal(thisData, 'uretim'), turnike: fieldTotal(thisData, 'turnike'), ogrenci: fieldTotal(thisData, 'ogrenci'), atik: fieldTotal(thisData, 'atik'), toplam: fieldTotal(thisData, 'toplam') };
   var pastTot = hasPrev ? { uretim: fieldTotal(prevData, 'uretim'), turnike: fieldTotal(prevData, 'turnike'), ogrenci: fieldTotal(prevData, 'ogrenci'), atik: fieldTotal(prevData, 'atik'), toplam: fieldTotal(prevData, 'toplam') } : { uretim: 0, turnike: 0, ogrenci: 0, atik: 0, toplam: 0 };
 
-  // Eski yıllık grafikleri temizle
+  // Eski yÄ±llÄ±k grafikleri temizle
   chartInstances.forEach(function(c, id) {
     if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) { c.destroy(); chartInstances.delete(id); }
   });
@@ -6823,10 +6823,10 @@ function renderYearlyCharts() {
         center = { arrow: '', arrowColor: textColor, text: '%0', color: textColor, fontSize: 14 };
       } else {
         var txt = (abs >= 10 ? Math.round(abs) : (Math.round(abs * 10) / 10)).toString().replace('.', ',') + '%';
-        center = { arrow: up ? '▲' : '▼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: 14 };
+        center = { arrow: up ? 'â–²' : 'â–¼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: 14 };
       }
     } else if (thisTotal > 0) {
-      center = { arrow: '●', arrowColor: cUp, text: t('newLabel'), color: cUp, fontSize: 14 };
+      center = { arrow: 'â—', arrowColor: cUp, text: t('newLabel'), color: cUp, fontSize: 14 };
     }
     var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
     if (legendEl) {
@@ -6866,7 +6866,7 @@ function renderYearlyCharts() {
             callbacks: {
               label: function(c) {
                 var p = grand > 0 ? (c.parsed / grand * 100).toFixed(1) : '0.0';
-                return ' ' + c.label + ': ' + fmt(c.parsed) + unitLabel + ' · %' + p;
+                return ' ' + c.label + ': ' + fmt(c.parsed) + unitLabel + ' Â· %' + p;
               }
             }
           }
@@ -7032,7 +7032,7 @@ function renderYillikWasteTable(year1, year2) {
   var foods = [...allFoods].sort();
 
   if (foods.length === 0) {
-    container.innerHTML = '<div style="padding:1rem;color:var(--text-muted);text-align:center;font-size:0.85rem">' + (t('emptyDashboard') || 'Kayıt bulunamadı.') + '</div>';
+    container.innerHTML = '<div style="padding:1rem;color:var(--text-muted);text-align:center;font-size:0.85rem">' + (t('emptyDashboard') || 'KayÄ±t bulunamadÄ±.') + '</div>';
     return;
   }
 
@@ -7172,10 +7172,10 @@ const chartValueLabelPlugin = {
       meta.data.forEach((bar, idx) => {
         const val = ds.data[idx];
         if (val === undefined || val === null || isNaN(val)) return;
-        const isTL = ds.label && ds.label.includes('₺');
+        const isTL = ds.label && ds.label.includes('â‚º');
         if (isTL && val === 0) return;
         const display = isTL
-          ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
+          ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º'
           : val === 0 ? '0' : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
         let inside = pos === 'inside';
         let labelX = bar.x;
@@ -7212,7 +7212,7 @@ function drawAllCharts() {
     return true;
   });
 
-  // Grafik kartlarındaki canlı yıl toplamları (veri değiştikçe güncellenir)
+  // Grafik kartlarÄ±ndaki canlÄ± yÄ±l toplamlarÄ± (veri deÄŸiÅŸtikÃ§e gÃ¼ncellenir)
   const totYemek = chartRecords.reduce((s, r) => s + (Number(r.yemek) || 0), 0);
   const totTurnike = chartRecords.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
   const totOgrenci = chartRecords.reduce((s, r) => s + (Number(r.ogrenci) || 0), 0);
@@ -7279,7 +7279,7 @@ function drawAllCharts() {
     monthlyData[monthKey].personel += r.personel;
     monthlyData[monthKey].harcama += (r.harcama_tutari || 0);
     monthlyData[monthKey].porsiyon += r.porsiyon;
-    // Çöpe giden porsiyon = atık kg × 1000 / porsiyon gr
+    // Ã‡Ã¶pe giden porsiyon = atÄ±k kg Ã— 1000 / porsiyon gr
     if (r.porsiyon > 0) {
       monthlyData[monthKey].atikPorsiyon += r.atik * 1000 / r.porsiyon;
     }
@@ -7296,18 +7296,18 @@ function drawAllCharts() {
   allMonthLabels.forEach(m => {
     const top = getMonthVal(m, 'toplam');
     const sum = getMonthVal(m, 'ogrenci') + getMonthVal(m, 'idari') + getMonthVal(m, 'personel');
-    if (Math.abs(top - sum) > 0.5) uyari.push(m + ': Geçiş=' + top + ' | Öğr+Akd+İdr+Pers=' + sum + ' (fark ' + (top - sum) + ')');
+    if (Math.abs(top - sum) > 0.5) uyari.push(m + ': GeÃ§iÅŸ=' + top + ' | Ã–ÄŸr+Akd+Ä°dr+Pers=' + sum + ' (fark ' + (top - sum) + ')');
   });
   const fazlaOgrenci = chartRecords.filter(r => (Number(r.ogrenci) || 0) > (Number(r.turnike) || 0))
-    .map(r => r.tarih + ' (Turnike:' + r.turnike + ' / Öğr:' + r.ogrenci + ')');
+    .map(r => r.tarih + ' (Turnike:' + r.turnike + ' / Ã–ÄŸr:' + r.ogrenci + ')');
   const uyariEl = document.getElementById('chartAylikUyari');
   if (uyariEl) {
     const lines = [];
-    if (uyari.length) lines.push('Aylık uyumsuzluk: ' + uyari.join(' | '));
-    if (fazlaOgrenci.length) lines.push('Öğrenci > Turnike olan günler: ' + fazlaOgrenci.join(', '));
+    if (uyari.length) lines.push('AylÄ±k uyumsuzluk: ' + uyari.join(' | '));
+    if (fazlaOgrenci.length) lines.push('Ã–ÄŸrenci > Turnike olan gÃ¼nler: ' + fazlaOgrenci.join(', '));
     if (lines.length) {
       uyariEl.style.display = 'block';
-      uyariEl.textContent = lines.join(' — ');
+      uyariEl.textContent = lines.join(' â€” ');
     } else {
       uyariEl.style.display = 'none';
     }
@@ -7532,7 +7532,7 @@ function drawAllCharts() {
       card.className = 'section-card chart-card chart-card-full';
       var header = document.createElement('div');
       header.className = 'section-header';
-      header.innerHTML = '<h2>' + escapeHtml(ad) + ' - Sıcaklık Geçmişi</h2>';
+      header.innerHTML = '<h2>' + escapeHtml(ad) + ' - SÄ±caklÄ±k GeÃ§miÅŸi</h2>';
       card.appendChild(header);
       var area = document.createElement('div');
       area.className = 'chart-area';
@@ -7543,7 +7543,7 @@ function drawAllCharts() {
       card.appendChild(area);
       var note = document.createElement('div');
       note.className = 'chart-note';
-      note.textContent = 'Haftalık ortalama sıcaklık değerleri — alt ve üst limit çizgileriyle birlikte';
+      note.textContent = 'HaftalÄ±k ortalama sÄ±caklÄ±k deÄŸerleri â€” alt ve Ã¼st limit Ã§izgileriyle birlikte';
       card.appendChild(note);
       container.appendChild(card);
       var depoData = {
@@ -7558,8 +7558,8 @@ function drawAllCharts() {
       };
       var limits = getDepoSicaklikLimitleri(ad);
       var thresholds = [
-        { data: haftaEtiketleri.map(function() { return limits.max; }), color: '#ef4444', label: 'Üst Limit (' + (limits.max > 0 ? '+' : '') + limits.max + '°C)', dashed: true },
-        { data: haftaEtiketleri.map(function() { return limits.min; }), color: '#3b82f6', label: 'Alt Limit (' + limits.min + '°C)', dashed: true },
+        { data: haftaEtiketleri.map(function() { return limits.max; }), color: '#ef4444', label: 'Ãœst Limit (' + (limits.max > 0 ? '+' : '') + limits.max + 'Â°C)', dashed: true },
+        { data: haftaEtiketleri.map(function() { return limits.min; }), color: '#3b82f6', label: 'Alt Limit (' + limits.min + 'Â°C)', dashed: true },
       ];
       try { makeChart(cid, haftaEtiketleri, [depoData].concat(thresholds), { type: 'line', showValues: false }); } catch(e) { console.warn('chartSicaklik_' + idx + ' error:', e); }
     });
@@ -7618,7 +7618,7 @@ function drawAllCharts() {
 
 }
 
-// ─── HARCAMA MENÜSÜ ────────────────────────────────────────────────────────────
+// â”€â”€â”€ HARCAMA MENÃœSÃœ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let harcamaMenuChart = null;
 let harcamaPersonelChart = null;
 let harcamaYemekChart = null;
@@ -7633,7 +7633,7 @@ function renderHarcamaMenu() {
   const status = document.getElementById('hcOranStatus');
   if (status) {
     const saved = getOgrenciBasiHarcamaOrani();
-    status.textContent = t('registeredRate') + saved.toFixed(2) + ' ₺' + (oran !== saved ? t('unsavedChanges') : '');
+    status.textContent = t('registeredRate') + saved.toFixed(2) + ' â‚º' + (oran !== saved ? t('unsavedChanges') : '');
     status.style.color = oran !== saved ? '#f59e0b' : '#22c55e';
   }
   const persOranInput = document.getElementById('hcPersonelOran');
@@ -7644,7 +7644,7 @@ function renderHarcamaMenu() {
   const persStatus = document.getElementById('hcPersonelOranStatus');
   if (persStatus) {
     const persSaved = getPersonelBasiHarcamaOrani();
-    persStatus.textContent = t('registeredRate') + persSaved.toFixed(2) + ' ₺' + (persOran !== persSaved ? t('unsavedChanges') : '');
+    persStatus.textContent = t('registeredRate') + persSaved.toFixed(2) + ' â‚º' + (persOran !== persSaved ? t('unsavedChanges') : '');
     persStatus.style.color = persOran !== persSaved ? '#f59e0b' : '#22c55e';
   }
   const yemekOranInput = document.getElementById('hcYemekOran');
@@ -7655,7 +7655,7 @@ function renderHarcamaMenu() {
   const yemekStatus = document.getElementById('hcYemekOranStatus');
   if (yemekStatus) {
     const yemekSaved = getUretilenYemekBasiHarcamaOrani();
-    yemekStatus.textContent = t('registeredRate') + yemekSaved.toFixed(2) + ' ₺' + (yemekOran !== yemekSaved ? t('unsavedChanges') : '');
+    yemekStatus.textContent = t('registeredRate') + yemekSaved.toFixed(2) + ' â‚º' + (yemekOran !== yemekSaved ? t('unsavedChanges') : '');
     yemekStatus.style.color = yemekOran !== yemekSaved ? '#f59e0b' : '#22c55e';
   }
   renderHarcamaMenuKpis(oran, persOran, yemekOran);
@@ -7711,11 +7711,11 @@ function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
   const maxKeyP = valsP.length ? Object.keys(monthlyPersonel).reduce((a, b) => monthlyPersonel[a] >= monthlyPersonel[b] ? a : b) : null;
   const maxYKey = valsY.length ? Object.keys(monthlyYemek).reduce((a, b) => monthlyYemek[a] >= monthlyYemek[b] ? a : b) : null;
   const monthLabel = key => {
-    if (!key) return '—';
+    if (!key) return 'â€”';
     const parts = key.split('/');
     return HC_MONTHS_TR[Number(parts[0]) - 1] + ' ' + parts[1];
   };
-  const fmtTL = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+  const fmtTL = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º';
   el.innerHTML = `
     <div class="kpi-card">
       <div class="kpi-icon kpi-cyan">
@@ -7834,7 +7834,7 @@ function renderHarcamaMenuChart(oran) {
   if (!canvas || !empty) return;
   if (harcamaMenuChart) { harcamaMenuChart.destroy(); harcamaMenuChart = null; }
 
-  // Hiç kayıt yoksa boş durumu göster
+  // HiÃ§ kayÄ±t yoksa boÅŸ durumu gÃ¶ster
   const hasAnyDate = records.some(r => { const d = new Date(r.tarih + 'T12:00:00'); return !isNaN(d); });
   if (!hasAnyDate) {
     empty.style.display = 'block';
@@ -7844,7 +7844,7 @@ function renderHarcamaMenuChart(oran) {
   empty.style.display = 'none';
   canvas.style.display = 'block';
 
-  // Seçili yıl/aya göre aylık toplamlar
+  // SeÃ§ili yÄ±l/aya gÃ¶re aylÄ±k toplamlar
   const active = hcActiveRecords();
   const monthly = {};
   active.forEach(r => {
@@ -7854,7 +7854,7 @@ function renderHarcamaMenuChart(oran) {
     monthly[m] = (monthly[m] || 0) + (r.ogrenci || 0) * oran;
   });
 
-  // Tüm Yıl => 12 ay (boş aylar 0 ile), belirli ay => tek çubuk
+  // TÃ¼m YÄ±l => 12 ay (boÅŸ aylar 0 ile), belirli ay => tek Ã§ubuk
   let labels, data;
   if (hcSelectedMonth === null) {
     labels = HC_MONTHS_TR.map((m, i) => m.slice(0, 3) + ' ' + String(hcSelectedYear).slice(2));
@@ -7868,7 +7868,7 @@ function renderHarcamaMenuChart(oran) {
   const suggestedMax = chartMax > 0 ? chartMax * 1.18 : 10;
 
   const area = canvas.parentElement;
-  // Kaydırma için kanvas boyutu: 12 ay => geniş kanvas (yatay kaydırma çubuğu görünür)
+  // KaydÄ±rma iÃ§in kanvas boyutu: 12 ay => geniÅŸ kanvas (yatay kaydÄ±rma Ã§ubuÄŸu gÃ¶rÃ¼nÃ¼r)
   const areaW = Math.max(area.clientWidth || 400, 320);
   const barW = 88;
   const targetW = Math.max(areaW, labels.length * barW + 70);
@@ -7924,7 +7924,7 @@ function renderHarcamaMenuChart(oran) {
           cornerRadius: 8,
           bodyFont: { size: 11, family: 'Inter' },
           titleFont: { size: 11, family: 'Inter', weight: 'bold' },
-          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º' }
         },
         valueLabels: true,
       },
@@ -8034,7 +8034,7 @@ function renderHarcamaMenuPersonelChart(persOran) {
           cornerRadius: 8,
           bodyFont: { size: 11, family: 'Inter' },
           titleFont: { size: 11, family: 'Inter', weight: 'bold' },
-          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º' }
         },
         valueLabels: true,
       },
@@ -8144,7 +8144,7 @@ function renderHarcamaMenuYemekChart(yemekOran) {
           cornerRadius: 8,
           bodyFont: { size: 11, family: 'Inter' },
           titleFont: { size: 11, family: 'Inter', weight: 'bold' },
-          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺' }
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º' }
         },
         valueLabels: true,
       },
@@ -8183,7 +8183,7 @@ function renderHarcamaMenuTable(oran, persOran, yemekOran) {
     const persTutar = toplamPersonel * persOran;
     const uretilenYemek = (r.yemek || 0);
     const yemekTutar = uretilenYemek * (yemekOran || 0);
-    const tl = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+    const tl = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' â‚º';
     return `<tr>
       <td>${displayDate(r.tarih)}</td>
       <td>${(r.ogrenci || 0).toLocaleString('tr-TR')}</td>
@@ -8208,12 +8208,12 @@ function renderHarcamaMenuTable(oran, persOran, yemekOran) {
         `<span class="page-info">${p} / ${totalPages}</span>` +
         `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(${p + 1})" ${p === totalPages ? 'disabled' : ''}>&#8250;</button>` +
         `<button class="btn btn-ghost btn-sm" onclick="hcGoToPage(${totalPages})" ${p === totalPages ? 'disabled' : ''}>&#187;</button>` +
-        `<span class="page-total">${sorted.length} kayıt</span>`;
+        `<span class="page-total">${sorted.length} kayÄ±t</span>`;
     }
   }
 }
 
-// ─── HARCAMA MENÜSÜ NAV (yıl / ay / kaydırma) ────────────────────────────────
+// â”€â”€â”€ HARCAMA MENÃœSÃœ NAV (yÄ±l / ay / kaydÄ±rma) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const HC_MONTHS_TR = [t('month1'), t('month2'), t('month3'), t('month4'), t('month5'), t('month6'), t('month7'), t('month8'), t('month9'), t('month10'), t('month11'), t('month12')];
 
 function hcGetYears() {
@@ -8237,7 +8237,7 @@ function renderHarcamaNav() {
   var years = hcGetYears();
   if (hcSelectedYear === null || years.indexOf(hcSelectedYear) === -1) hcSelectedYear = hcDefaultYear();
   var html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">';
-  html += '<label style="font-size:0.8rem;color:var(--text-muted)">Yıl:</label>';
+  html += '<label style="font-size:0.8rem;color:var(--text-muted)">YÄ±l:</label>';
   html += '<select id="hcYearSelect" onchange="hcSetYearFromSelect()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;background:var(--bg-card);color:var(--text-primary)">';
   years.forEach(function (y) {
     html += '<option value="' + y + '"' + (hcSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
@@ -8346,7 +8346,7 @@ function canEditBirimFiyat() {
 }
 
 function hcKaydetOran() {
-  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditHarcamaOran()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('hcOran');
   const val = parseFloat(input && input.value);
   const status = document.getElementById('hcOranStatus');
@@ -8357,13 +8357,13 @@ function hcKaydetOran() {
     return;
   }
   setOgrenciBasiHarcamaOrani(val);
-  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' â‚º';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
 
 function hcKaydetPersonelOran() {
-  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditHarcamaOran()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('hcPersonelOran');
   const val = parseFloat(input && input.value);
   const status = document.getElementById('hcPersonelOranStatus');
@@ -8374,13 +8374,13 @@ function hcKaydetPersonelOran() {
     return;
   }
   setPersonelBasiHarcamaOrani(val);
-  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' â‚º';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
 
 function hcKaydetYemekOran() {
-  if (!canEditHarcamaOran()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canEditHarcamaOran()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const input = document.getElementById('hcYemekOran');
   const val = parseFloat(input && input.value);
   const status = document.getElementById('hcYemekOranStatus');
@@ -8391,7 +8391,7 @@ function hcKaydetYemekOran() {
     return;
   }
   setUretilenYemekBasiHarcamaOrani(val);
-  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' â‚º';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
@@ -8539,12 +8539,12 @@ function showChartDetailModal(title, records) {
         <thead><tr><th>${t('formDate')}</th><th>${t('chartColProduction')}</th><th>${t('chartColPasses')}</th><th>${t('chartColWaste')}</th><th>${t('chartColStudent')}</th>${canSeeHarcama() ? '<th>Harcama</th>' : ''}<th>${t('chartColFoodType')}</th></tr></thead>
         <tbody>${records.slice(0, 100).map(r => `<tr>
           <td>${displayDate(r.tarih)}</td>
-          <td>${r.yemek || '—'}</td>
-          <td>${r.toplam || '—'}</td>
+          <td>${r.yemek || 'â€”'}</td>
+          <td>${r.toplam || 'â€”'}</td>
           <td>${(r.atik||0).toFixed(1)}</td>
-          <td>${r.ogrenci || '—'}</td>
-          ${canSeeHarcama() ? `<td>${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺</td>` : ''}
-          <td>${r.yemek_adi || '—'}</td>
+          <td>${r.ogrenci || 'â€”'}</td>
+          ${canSeeHarcama() ? `<td>${Number(r.harcama_tutari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} â‚º</td>` : ''}
+          <td>${r.yemek_adi || 'â€”'}</td>
         </tr>`).join('')}</tbody>
       </table>
     </div>`;
@@ -8553,7 +8553,7 @@ function showChartDetailModal(title, records) {
   overlay.style.display = 'flex';
 }
 
-// ─── MENÜ ONAY AKIŞI (Diyetisyen → Gıda Mühendisi/Admin) ─────────────────────
+// â”€â”€â”€ MENÃœ ONAY AKIÅI (Diyetisyen â†’ GÄ±da MÃ¼hendisi/Admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const MENU_DURUMLAR = { TASLAK: 'taslak', ONAY_BEKLIYOR: 'onay_bekliyor', ONAYLANDI: 'onaylandi', REDDEDILDI: 'reddedildi' };
 let currentMenuDurumMeta = null;
 
@@ -8632,41 +8632,41 @@ function collectMenuWeekFromDOM() {
 }
 
 async function menuOnayaGonder() {
-  if (!canMenuOnayaGonder()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canMenuOnayaGonder()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (meta.durum !== MENU_DURUMLAR.TASLAK && meta.durum !== MENU_DURUMLAR.REDDEDILDI) {
-    showToast('Menü zaten onay sürecinde veya onaylanmış. Onayı kaldırmadan gönderemezsiniz.', 'error');
+    showToast('MenÃ¼ zaten onay sÃ¼recinde veya onaylanmÄ±ÅŸ. OnayÄ± kaldÄ±rmadan gÃ¶nderemezsiniz.', 'error');
     return;
   }
   const weekData = collectMenuWeekFromDOM();
   weekData._durum = { durum: MENU_DURUMLAR.ONAY_BEKLIYOR, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_onaya_gonder', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
+  logIslem('menu_onaya_gonder', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menÃ¼sÃ¼nÃ¼ onaya gÃ¶nderdi');
   showToast(t('menuSentForApproval'), 'success');
   await renderMenu();
 }
 
 async function menuOnayla() {
-  if (!canMenuOnayla()) { showToast('Bu işlem için gıda mühendisi veya admin yetkisi gerekli.', 'error'); return; }
+  if (!canMenuOnayla()) { showToast('Bu iÅŸlem iÃ§in gÄ±da mÃ¼hendisi veya admin yetkisi gerekli.', 'error'); return; }
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
-    showToast('Onaylanacak bekleyen menü yok (durum: ' + menuDurumLabel(meta.durum) + ').', 'error');
+    showToast('Onaylanacak bekleyen menÃ¼ yok (durum: ' + menuDurumLabel(meta.durum) + ').', 'error');
     return;
   }
   const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
   ctx.weekData._durum = { durum: MENU_DURUMLAR.ONAYLANDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: '' };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_onayla', displayName + ' ' + ctx.weekKey + ' menüsünü onayladı');
+  logIslem('menu_onayla', displayName + ' ' + ctx.weekKey + ' menÃ¼sÃ¼nÃ¼ onayladÄ±');
   showToast(t('menuApproved'), 'success');
   await renderMenu();
 }
 
 function menuReddet() {
-  if (!canMenuReddet()) { showToast('Bu işlem için menü reddetme yetkisi gerekli.', 'error'); return; }
+  if (!canMenuReddet()) { showToast('Bu iÅŸlem iÃ§in menÃ¼ reddetme yetkisi gerekli.', 'error'); return; }
   document.getElementById('menuRedNotu').value = '';
   document.getElementById('menuRedError').style.display = 'none';
   document.getElementById('menuRedModal').classList.add('open');
@@ -8683,32 +8683,32 @@ async function menuReddetApply(not) {
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
-    showToast('Menü bekleyen durumda değil.', 'error');
+    showToast('MenÃ¼ bekleyen durumda deÄŸil.', 'error');
     return;
   }
   const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
   ctx.weekData._durum = { durum: MENU_DURUMLAR.REDDEDILDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: not };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_reddet', displayName + ' ' + ctx.weekKey + ' menüsünü reddetti: ' + not);
+  logIslem('menu_reddet', displayName + ' ' + ctx.weekKey + ' menÃ¼sÃ¼nÃ¼ reddetti: ' + not);
   showToast(t('menuRejectedMsg'), 'success');
   await renderMenu();
 }
 
 async function menuOnayGeriCek() {
-  if (getRole() !== ROLE_ADMIN) { showToast('Bu işlem için admin yetkisi gerekli.', 'error'); return; }
-  if (!confirm('Menünün onayı kaldırılsın mı? Tekrar düzenleme ve onaya gönderme mümkün olacak.')) return;
+  if (getRole() !== ROLE_ADMIN) { showToast('Bu iÅŸlem iÃ§in admin yetkisi gerekli.', 'error'); return; }
+  if (!confirm('MenÃ¼nÃ¼n onayÄ± kaldÄ±rÄ±lsÄ±n mÄ±? Tekrar dÃ¼zenleme ve onaya gÃ¶nderme mÃ¼mkÃ¼n olacak.')) return;
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (meta.durum !== MENU_DURUMLAR.ONAYLANDI && meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
-    showToast('Onayı kaldırılacak bir durum yok.', 'error');
+    showToast('OnayÄ± kaldÄ±rÄ±lacak bir durum yok.', 'error');
     return;
   }
   ctx.weekData._durum = { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_onay_kaldir', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünün onayını kaldırdı');
-  showToast('Onay kaldırıldı, menü düzenlemeye açık.', 'success');
+  logIslem('menu_onay_kaldir', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menÃ¼sÃ¼nÃ¼n onayÄ±nÄ± kaldÄ±rdÄ±');
+  showToast('Onay kaldÄ±rÄ±ldÄ±, menÃ¼ dÃ¼zenlemeye aÃ§Ä±k.', 'success');
   await renderMenu();
 }
 
@@ -8720,7 +8720,7 @@ async function menuOnayBildirim() {
       return getMenuDurumMeta(allData[k]).durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
     });
     if (bekleyen.length > 0) {
-      showToast(bekleyen.length + ' haftanın menüsü onay bekliyor.', 'info');
+      showToast(bekleyen.length + ' haftanÄ±n menÃ¼sÃ¼ onay bekliyor.', 'info');
     }
   } catch (_) {}
 }
@@ -8739,7 +8739,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
 
   let badgeText = menuDurumLabel(durumMeta.durum);
   if (durumMeta.onaylayan && (durumMeta.durum === MENU_DURUMLAR.ONAYLANDI || durumMeta.durum === MENU_DURUMLAR.REDDEDILDI)) {
-    badgeText += ' · ' + durumMeta.onaylayan;
+    badgeText += ' Â· ' + durumMeta.onaylayan;
   }
   if (badge) {
     badge.className = badgeClass;
@@ -8780,7 +8780,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
     const isCurrentPending = durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
     if (isApprover && !isCurrentPending && pendingCount > 0) {
       warn.style.display = '';
-      if (warnMetin) warnMetin.textContent = pendingCount + ' haftanın menüsü onay bekliyor. Bekleyen haftaya gidip onaylayabilirsiniz.';
+      if (warnMetin) warnMetin.textContent = pendingCount + ' haftanÄ±n menÃ¼sÃ¼ onay bekliyor. Bekleyen haftaya gidip onaylayabilirsiniz.';
       if (pendingGoBtn) pendingGoBtn.style.display = '';
     } else {
       if (pendingGoBtn) pendingGoBtn.style.display = 'none';
@@ -8794,7 +8794,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
           if (durumMeta.onay_notu) metin += ': ' + durumMeta.onay_notu;
           metin += t('menuRejectedSuffix');
         } else if (durumMeta.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
-          metin = 'Bu menü onay bekliyor. Onaylanmadan üretim listesinde "onaysız" olarak işaretlenir.';
+          metin = 'Bu menÃ¼ onay bekliyor. Onaylanmadan Ã¼retim listesinde "onaysÄ±z" olarak iÅŸaretlenir.';
         }
         if (warnMetin) warnMetin.textContent = metin;
       }
@@ -8841,7 +8841,7 @@ async function renderMenu() {
   }).length;
   const canEdit = renderMenuDurumBar(currentMenuDurumMeta, pendingCount);
 
-  // Gün verilerini topla
+  // GÃ¼n verilerini topla
   const days = getGUNLER().map((gun, i) => {
     const tarih = new Date(monday);
     tarih.setDate(monday.getDate() + i);
@@ -8852,20 +8852,20 @@ async function renderMenu() {
     return { gun, key, tarih, data: dayData };
   });
 
-  // Başlık satırı
+  // BaÅŸlÄ±k satÄ±rÄ±
   const thead = document.getElementById('menuThead');
   thead.innerHTML = `<tr>
     <th style="width:100px">${t('menuVariety')}</th>
     ${days.map(d => `<th>${escapeHtml(d.gun)}<br><span style="display:inline-block;margin-top:0.3rem;font-size:0.74rem;font-weight:800;background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:#fff;padding:0.18rem 0.65rem;border-radius:999px;box-shadow:0 2px 6px rgba(99,102,241,0.3)">${formatDateStrTR(d.tarih)}</span></th>`).join('')}
   </tr>`;
 
-  // Cache henüz dolmamışsa 500ms sonra tekrar dene
+  // Cache henÃ¼z dolmamÄ±ÅŸsa 500ms sonra tekrar dene
   if (!yemeklerCache.length) {
     if (window._menuRetryTimer) clearTimeout(window._menuRetryTimer);
     window._menuRetryTimer = setTimeout(refreshMenuProduction, 500);
   }
 
-  // Gövde: her çeşit için bir satır + kişi sayısı satırı
+  // GÃ¶vde: her Ã§eÅŸit iÃ§in bir satÄ±r + kiÅŸi sayÄ±sÄ± satÄ±rÄ±
   const cesitler = [t('menuVariety1'), t('menuVariety2'), t('menuVariety3'), t('menuVariety4'), t('menuVariety5')];
   const tbody = document.getElementById('menuTbody');
   tbody.innerHTML = cesitler.map((label, ci) => {
@@ -8882,9 +8882,9 @@ async function renderMenu() {
       return `<td><input type="number" class="kisi-input" id="mk_${di}" value="${Number(d.data.kisi) || 0}" min="0" placeholder="0" oninput="refreshMenuProduction()" onclick="event.stopPropagation()" /></td>`;
     }).join('')}
   </tr>`;
-  // Not satırları: sadece visibleNoteCount kadar göster
+  // Not satÄ±rlarÄ±: sadece visibleNoteCount kadar gÃ¶ster
   let visibleNoteCount = window._menuNoteCount || 1;
-  // Kaydedilmiş notlar varsa, onları da göster
+  // KaydedilmiÅŸ notlar varsa, onlarÄ± da gÃ¶ster
   days.forEach(d => {
     if (d.data.notlar) {
       for (let i = 0; i < d.data.notlar.length; i++) {
@@ -8900,7 +8900,7 @@ async function renderMenu() {
     tr.id = 'noteRow_' + ni;
     tr.onclick = function(e) { e.stopPropagation(); };
     tr.innerHTML = `<td onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()"><strong>${t('noteLabel')}${ni + 1}</strong>
-      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();removeNoteRow(${ni})" title="${t('deleteNote')}" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">−</button>
+      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();removeNoteRow(${ni})" title="${t('deleteNote')}" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red);${visibleNoteCount <= 1 ? 'display:none' : ''}">âˆ’</button>
     </td>
       ${days.map((d, di) => {
         const val = escapeHtml((d.data.notlar && d.data.notlar[ni]) || '');
@@ -8908,7 +8908,7 @@ async function renderMenu() {
       }).join('')}`;
     tbody.appendChild(tr);
   }
-  // + butonu satırı
+  // + butonu satÄ±rÄ±
   let addRow = document.createElement('tr');
   addRow.id = 'noteAddRow';
   addRow.onclick = function(e) { e.stopPropagation(); };
@@ -8917,7 +8917,7 @@ async function renderMenu() {
   </td>
   ${days.map(() => `<td></td>`).join('')}`;
   tbody.appendChild(addRow);
-  // yemek seçici: her hücreye doğrudan listener + event delegation
+  // yemek seÃ§ici: her hÃ¼creye doÄŸrudan listener + event delegation
   if (canEdit) {
     for (let ci = 0; ci < 5; ci++) {
       for (let ci2 = 0; ci2 < 5; ci2++) {
@@ -8934,7 +8934,7 @@ async function renderMenu() {
       }
     }
   }
-  // Menü kilitliyse düzenleme engellensin
+  // MenÃ¼ kilitliyse dÃ¼zenleme engellensin
   if (!canEdit) {
     for (let ci = 0; ci < 5; ci++) {
       for (let di = 0; di < 5; di++) {
@@ -8966,7 +8966,7 @@ async function openMealPicker() {
     await syncDishesFromSupabase();
     list = loadYemekler();
   }
-  if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
+  if (!list.length) { showToast('Yemek listesi boÅŸ. Ã–nce Yemek Listesi\'ne CSV yÃ¼kleyin.', 'warning'); return; }
   const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   const mevcut = cell ? cell.textContent.trim().split('\n')[0] : '';
   // picker overlay
@@ -8983,7 +8983,7 @@ async function openMealPicker() {
       <h3 style="font-size:1rem;font-weight:600">${t('mealPickerTitle')}</h3>
       <div style="display:flex;gap:0.5rem;align-items:center">
         <button class="btn btn-sm" style="background:var(--color-danger, #e53e3e);color:#fff;border:none;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem" onclick="clearMenuCell()">${t('clearLabel')}</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mealPickerOverlay').style.display='none'">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mealPickerOverlay').style.display='none'">âœ•</button>
       </div>
     </div>
     <input type="text" id="mealPickerSearch" placeholder="${t('searchMealPlaceholder')}" style="padding:0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);margin-bottom:0.75rem" oninput="renderMealPickerList()" />
@@ -9035,8 +9035,8 @@ function autoResizeTextarea(el) {
   el.style.height = el.scrollHeight + 2 + 'px';
 }
 
-// ─── MENU HELPERS ──────────────────────────────────────────────────────────
-const GUNLER_TR = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+// â”€â”€â”€ MENU HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const GUNLER_TR = ['Pazartesi', 'SalÄ±', 'Ã‡arÅŸamba', 'PerÅŸembe', 'Cuma'];
 function getGUNLER() { return t('dayNames'); }
 let menuWeekOffset = 0;
 
@@ -9065,15 +9065,15 @@ function getWeekStartDate(offset) {
 
 async function saveWeeklyMenu() {
   var role = getRole();
-  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (role !== ROLE_ADMIN && role !== ROLE_DIYETISYEN) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (!canMenuDuzenle(meta.durum)) {
-    showToast('Menü onay sürecinde; düzenlemek için önce onayı kaldırın.', 'error');
+    showToast('MenÃ¼ onay sÃ¼recinde; dÃ¼zenlemek iÃ§in Ã¶nce onayÄ± kaldÄ±rÄ±n.', 'error');
     return;
   }
   const weekData = collectMenuWeekFromDOM();
-  // Kaydet: durum zaten reddedildiyse gerekçe korunsun, değilse taslak olarak kaydet
+  // Kaydet: durum zaten reddedildiyse gerekÃ§e korunsun, deÄŸilse taslak olarak kaydet
   weekData._durum = meta.durum === MENU_DURUMLAR.REDDEDILDI
     ? { durum: MENU_DURUMLAR.REDDEDILDI, onaylayan: meta.onaylayan, onay_tarihi: meta.onay_tarihi, onay_notu: meta.onay_notu }
     : { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
@@ -9095,13 +9095,13 @@ function addNoteRow() {
   tr.id = 'noteRow_' + ni;
   tr.onclick = function(e) { e.stopPropagation(); };
   tr.innerHTML = `<td><strong>${t('noteLabel')}${ni + 1}</strong>
-    <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="${t('deleteNote')}" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">−</button>
+    <button class="btn btn-ghost btn-sm" onclick="removeNoteRow(${ni})" title="${t('deleteNote')}" style="font-size:0.8rem;padding:0 0.3rem;line-height:1;margin-left:4px;color:var(--accent-red)">âˆ’</button>
   </td>
     ${getGUNLER().map((_, di) => `<td><textarea class="note-input" id="mn_${ni}_${di}" rows="1" placeholder="..." onclick="event.stopPropagation()" onfocus="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="touch-action:manipulation"></textarea></td>`).join('')}`;
   const addRow = document.getElementById('noteAddRow');
   if (addRow) tbody.insertBefore(tr, addRow);
   window._menuNoteCount = ni + 1;
-  // İlk not satırındaki eksi butonunu göster (gizliydi)
+  // Ä°lk not satÄ±rÄ±ndaki eksi butonunu gÃ¶ster (gizliydi)
   const firstRow = document.getElementById('noteRow_0');
   if (firstRow) {
     const btn = firstRow.querySelector('button');
@@ -9113,7 +9113,7 @@ function addNoteRow() {
 function removeNoteRow(ni) {
   if ((window._menuNoteCount || 1) <= 1) return;
   const tbody = document.getElementById('menuTbody');
-  // Değerleri kaydır: silinen nottan sonrakileri bir üst satıra taşı
+  // DeÄŸerleri kaydÄ±r: silinen nottan sonrakileri bir Ã¼st satÄ±ra taÅŸÄ±
   for (let n = ni + 1; n < (window._menuNoteCount || 1); n++) {
     getGUNLER().forEach((_, di) => {
       const fromEl = document.getElementById('mn_' + n + '_' + di);
@@ -9121,11 +9121,11 @@ function removeNoteRow(ni) {
       if (fromEl && toEl) toEl.value = fromEl.value;
     });
   }
-  // En son satırı sil
+  // En son satÄ±rÄ± sil
   const lastRow = document.getElementById('noteRow_' + ((window._menuNoteCount || 1) - 1));
   if (lastRow) lastRow.remove();
   window._menuNoteCount--;
-  // Sadece 1 not kaldıysa eksi butonunu gizle
+  // Sadece 1 not kaldÄ±ysa eksi butonunu gizle
   if (window._menuNoteCount <= 1) {
     const firstRow = document.getElementById('noteRow_0');
     if (firstRow) {
@@ -9136,8 +9136,8 @@ function removeNoteRow(ni) {
   showToast(t('noteLabel') + (ni + 1) + ' silindi.', 'success');
 }
 
-function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu haftanın menüsünü temizlemek istediğinize emin misiniz?')) return;
+function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu haftanÄ±n menÃ¼sÃ¼nÃ¼ temizlemek istediÄŸinize emin misiniz?')) return;
   const monday = getWeekStartDate(menuWeekOffset);
   getGUNLER().forEach((_, i) => {
     for (let c = 0; c < 5; c++) {
@@ -9165,7 +9165,7 @@ async function exportMenuJSON() {
   link.download = `menu_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Menü JSON olarak indirildi.', 'success');
+  showToast('MenÃ¼ JSON olarak indirildi.', 'success');
 }
 
 function importMenuJSON(event) { if (!requireAdmin()) return;
@@ -9177,9 +9177,9 @@ function importMenuJSON(event) { if (!requireAdmin()) return;
       const data = JSON.parse(ev.target.result);
       await saveMenuData(data);
       await renderMenu();
-      showToast('Menü yüklendi.', 'success');
+      showToast('MenÃ¼ yÃ¼klendi.', 'success');
     } catch (err) {
-      showToast('Menü yükleme hatası: ' + err.message, 'error');
+      showToast('MenÃ¼ yÃ¼kleme hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
@@ -9194,28 +9194,28 @@ function importMenuCSV(event) { if (!requireAdmin()) return;
     try {
       const text = ev.target.result;
       const lines = text.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) throw new Error('CSV en az 2 satır içermelidir (başlık + veri)');
+      if (lines.length < 2) throw new Error('CSV en az 2 satÄ±r iÃ§ermelidir (baÅŸlÄ±k + veri)');
       const headers = parseCSVLine(lines[0]);
-      // gün sütunlarını bul (Pazartesi, Salı, ...)
+      // gÃ¼n sÃ¼tunlarÄ±nÄ± bul (Pazartesi, SalÄ±, ...)
       const gunIdxMap = {};
       getGUNLER().forEach((gun, i) => {
         const idx = headers.findIndex(h => h.toLowerCase().includes(gun.slice(0,3).toLowerCase()) || gun.toLowerCase().includes(h.toLowerCase()));
         if (idx !== -1) gunIdxMap[i] = idx;
       });
-      if (!Object.keys(gunIdxMap).length) throw new Error('Gün sütunları bulunamadı (Pazartesi, Salı, ...)');
+      if (!Object.keys(gunIdxMap).length) throw new Error('GÃ¼n sÃ¼tunlarÄ± bulunamadÄ± (Pazartesi, SalÄ±, ...)');
       const cesitSatirlari = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
       let kisiSatir = -1;
       for (let r = 1; r < lines.length; r++) {
         const cols = parseCSVLine(lines[r]);
         const ilkHuc = (cols[0] || '').trim().toLowerCase();
         for (let c = 1; c <= 5; c++) {
-          if (new RegExp('^\\s*' + c + '\\s*\\.?\\s*çeşit','i').test(ilkHuc) || new RegExp('^\\s*' + c + '\\s*\\.?\\s*cesit','i').test(ilkHuc)) {
+          if (new RegExp('^\\s*' + c + '\\s*\\.?\\s*Ã§eÅŸit','i').test(ilkHuc) || new RegExp('^\\s*' + c + '\\s*\\.?\\s*cesit','i').test(ilkHuc)) {
             cesitSatirlari[String(c)] = r;
           }
         }
-        if (/kişi|kisi/.test(ilkHuc)) kisiSatir = r;
+        if (/kiÅŸi|kisi/.test(ilkHuc)) kisiSatir = r;
       }
-      // şu anki görünen haftanın tarihlerini al
+      // ÅŸu anki gÃ¶rÃ¼nen haftanÄ±n tarihlerini al
       const monday = getWeekStartDate(menuWeekOffset);
       const allData = await fetchMenuData();
       const weekKey = formatDateStr(monday) + '-' + formatDateStr(new Date(monday.getTime() + 4*86400000));
@@ -9242,9 +9242,9 @@ function importMenuCSV(event) { if (!requireAdmin()) return;
       });
       await saveMenuData(allData);
       await renderMenu();
-      showToast('CSV menü yüklendi.', 'success');
+      showToast('CSV menÃ¼ yÃ¼klendi.', 'success');
     } catch (err) {
-      showToast('CSV yükleme hatası: ' + err.message, 'error');
+      showToast('CSV yÃ¼kleme hatasÄ±: ' + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
@@ -9283,7 +9283,7 @@ function parseCSVLine(line) {
   return result;
 }
 
-// ─── ATIK YAG (WASTE OIL) ────────────────────────────────────────────────────
+// â”€â”€â”€ ATIK YAG (WASTE OIL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const YAG_STORAGE_KEY = 'atik_kontrol_yag';
 let yagRecords = [];
 let editingYagId = null;
@@ -9412,7 +9412,7 @@ function renderYagFilterBar() {
     if (yagSelectedYear && years.indexOf(yagSelectedYear) === -1) {
       yagSelectedYear = years.length ? years[years.length - 1] : '';
     }
-    var html = '<option value="">Tümü</option>' + years.map(function(y) {
+    var html = '<option value="">TÃ¼mÃ¼</option>' + years.map(function(y) {
       return '<option value="' + y + '"' + (yagSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
     }).join('');
     sel.innerHTML = html;
@@ -9427,12 +9427,12 @@ function renderYagFilterBar() {
   if (ozet) {
     var parts = [];
     if ((bas && bas.value) || (bit && bit.value)) {
-      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' – ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
+      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' â€“ ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
     }
     if (tur && tur.value) parts.push(t('typeLabel') + tur.value);
     if (yagSelectedYear) parts.push(t('yearLabel') + yagSelectedYear);
     ozet.textContent = parts.length
-      ? t('activeFilterLabel') + parts.join(' · ')
+      ? t('activeFilterLabel') + parts.join(' Â· ')
       : t('noFilterMessage');
   }
 }
@@ -9468,7 +9468,7 @@ function renderYagTable() {
   }
   empty.querySelector('p').textContent = t('noWasteOilRecord');
 
-  // Filtrelenmiş özet kartları
+  // FiltrelenmiÅŸ Ã¶zet kartlarÄ±
   renderYagOzet(filtered);
 
   empty.style.display = 'none';
@@ -9485,7 +9485,7 @@ function renderYagTable() {
     const dateStr = displayDate(r.tarih);
     var actionCell = canEditYag
       ? '<td>' +
-        '<button class="btn-icon" onclick="editYagRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon" onclick="editYagRecord(' + r.id + ')" title="DÃ¼zenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
         '<button class="btn-icon" onclick="deleteYagRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
@@ -9495,10 +9495,10 @@ function renderYagTable() {
       : '<td></td>';
     return `<tr>
       <td>${dateStr}</td>
-      <td>${escapeHtml(r.makbuzNo || '—')}</td>
-      <td>${escapeHtml(r.tur || '—')}</td>
+      <td>${escapeHtml(r.makbuzNo || 'â€”')}</td>
+      <td>${escapeHtml(r.tur || 'â€”')}</td>
       <td>${(r.miktar || 0).toFixed(1)}</td>
-      <td>${escapeHtml(r.not || '—')}</td>
+      <td>${escapeHtml(r.not || 'â€”')}</td>
       ${actionCell}
     </tr>`;
   }).join('');
@@ -9507,11 +9507,11 @@ function renderYagTable() {
   if (pagination) {
     if (totalPages > 1) {
       pagination.innerHTML =
-        '<button class="btn-icon" data-yag-page="' + (yagPage - 1) + '"' + (yagPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        '<button class="btn-icon" data-yag-page="' + (yagPage - 1) + '"' + (yagPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>â€¹</button>' +
         Array.from({length: totalPages}, function(_, i) {
           return '<button class="btn-icon" data-yag-page="' + i + '"' + (i === yagPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
         }).join('') +
-        '<button class="btn-icon" data-yag-page="' + (yagPage + 1) + '"' + (yagPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+        '<button class="btn-icon" data-yag-page="' + (yagPage + 1) + '"' + (yagPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>â€º</button>';
     } else {
       pagination.innerHTML = '';
     }
@@ -9522,9 +9522,9 @@ function renderYagTable() {
 
 function openYagModal(id) {
   if (id) {
-    if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditYagRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddYagRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
   editingYagId = id || null;
   const overlay = document.getElementById('yagModal');
@@ -9560,9 +9560,9 @@ function closeYagModal() {
 function saveYagRecord(e) {
   e.preventDefault();
   if (editingYagId) {
-    if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditYagRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddYagRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
 
   const rec = {
@@ -9577,11 +9577,11 @@ function saveYagRecord(e) {
   if (editingYagId) {
     const idx = yagRecords.findIndex(r => r.id === editingYagId);
     if (idx !== -1) yagRecords[idx] = rec;
-    showToast('Atık yağ kaydı güncellendi.', 'success');
-    logIslem('kayit_duzenle', 'yag #' + editingYagId + ' güncellendi');
+    showToast('AtÄ±k yaÄŸ kaydÄ± gÃ¼ncellendi.', 'success');
+    logIslem('kayit_duzenle', 'yag #' + editingYagId + ' gÃ¼ncellendi');
   } else {
     yagRecords.push(rec);
-    showToast('Atık yağ kaydı eklendi.', 'success');
+    showToast('AtÄ±k yaÄŸ kaydÄ± eklendi.', 'success');
     logIslem('yeni_kayit', 'yag ' + (rec.tur || '') + ' ' + rec.miktar + ' lt eklendi');
   }
 
@@ -9594,8 +9594,8 @@ function saveYagRecord(e) {
 function editYagRecord(id) { openYagModal(id); }
 
 async function deleteYagRecord(id) {
-  if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
+  if (!canEditYagRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu atÄ±k yaÄŸ kaydÄ±nÄ± silmek istediÄŸinize emin misiniz?')) return;
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
   if (supabaseClient) {
@@ -9603,7 +9603,7 @@ async function deleteYagRecord(id) {
   }
   renderYagTable();
   syncYagSilent();
-  showToast('Atık yağ kaydı silindi.', 'success');
+  showToast('AtÄ±k yaÄŸ kaydÄ± silindi.', 'success');
   logIslem('kayit_sil', 'yag #' + id + ' silindi');
 }
 
@@ -9828,7 +9828,7 @@ function drawYagTurChart(list) {
 }
 
 
-// ─── AMBALAJ ATIKLARI ────────────────────────────────────────────────────
+// â”€â”€â”€ AMBALAJ ATIKLARI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const AMBALAJ_STORAGE_KEY = 'atik_kontrol_ambalaj';
 let ambalajRecords = [];
 let editingAmbalajId = null;
@@ -10007,7 +10007,7 @@ function renderAmbalajFilterBar() {
     if (ambalajSelectedYear && years.indexOf(ambalajSelectedYear) === -1) {
       ambalajSelectedYear = years.length ? years[years.length - 1] : '';
     }
-    var html = '<option value="">Tümü</option>' + years.map(function(y) {
+    var html = '<option value="">TÃ¼mÃ¼</option>' + years.map(function(y) {
       return '<option value="' + y + '"' + (ambalajSelectedYear === y ? ' selected' : '') + '>' + y + '</option>';
     }).join('');
     sel.innerHTML = html;
@@ -10022,12 +10022,12 @@ function renderAmbalajFilterBar() {
   if (ozet) {
     var parts = [];
     if ((bas && bas.value) || (bit && bit.value)) {
-      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' – ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
+      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' â€“ ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
     }
     if (tur && tur.value) parts.push(t('typeLabel') + tur.value);
     if (ambalajSelectedYear) parts.push(t('yearLabel') + ambalajSelectedYear);
     ozet.textContent = parts.length
-      ? t('activeFilterLabel') + parts.join(' · ')
+      ? t('activeFilterLabel') + parts.join(' Â· ')
       : t('noFilterMessagePackaging');
   }
 }
@@ -10063,7 +10063,7 @@ function renderAmbalajTable() {
   }
   empty.querySelector('p').textContent = t('noWastePackagingRecord');
 
-  // Filtrelenmiş özet kartları
+  // FiltrelenmiÅŸ Ã¶zet kartlarÄ±
   renderAmbalajOzet(filtered);
 
   empty.style.display = 'none';
@@ -10081,7 +10081,7 @@ function renderAmbalajTable() {
     const dateStr = displayDate(r.tarih);
     var actionCell = canEditAmbalaj
       ? '<td>' +
-        '<button class="btn-icon" onclick="editAmbalajRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon" onclick="editAmbalajRecord(' + r.id + ')" title="DÃ¼zenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
         '<button class="btn-icon" onclick="deleteAmbalajRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
@@ -10091,9 +10091,9 @@ function renderAmbalajTable() {
       : '<td></td>';
     return `<tr>
       <td>${dateStr}</td>
-      <td>${escapeHtml(r.tur || '—')}</td>
+      <td>${escapeHtml(r.tur || 'â€”')}</td>
       <td>${(r.miktar || 0) < 1 && (r.birim || 'kg') === 'kg' ? (r.miktar || 0).toFixed(3) : (r.miktar || 0).toFixed(1)} <span style="font-size:0.7rem;color:var(--text-muted)">${(r.birim || 'kg') === 'g' ? 'gr' : 'kg'}</span></td>
-      <td>${escapeHtml(r.not || '—')}</td>
+      <td>${escapeHtml(r.not || 'â€”')}</td>
       ${actionCell}
     </tr>`;
   }).join('');
@@ -10102,11 +10102,11 @@ function renderAmbalajTable() {
   if (pagination) {
     if (totalPages > 1) {
       pagination.innerHTML =
-        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage - 1) + '"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage - 1) + '"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>â€¹</button>' +
         Array.from({length: totalPages}, function(_, i) {
           return '<button class="btn-icon" data-ambalaj-page="' + i + '"' + (i === ambalajPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
         }).join('') +
-        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage + 1) + '"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage + 1) + '"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>â€º</button>';
     } else {
       pagination.innerHTML = '';
     }
@@ -10117,9 +10117,9 @@ function renderAmbalajTable() {
 
 function openAmbalajModal(id) {
   if (id) {
-    if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditAmbalajRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddAmbalajRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
   editingAmbalajId = id || null;
   const overlay = document.getElementById('ambalajModal');
@@ -10168,9 +10168,9 @@ function closeAmbalajModal() {
 function saveAmbalajRecord(e) {
   e.preventDefault();
   if (editingAmbalajId) {
-    if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditAmbalajRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddAmbalajRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
 
   var rawMiktar = parseFloat(document.getElementById('afMiktar').value) || 0;
@@ -10187,11 +10187,11 @@ function saveAmbalajRecord(e) {
   if (editingAmbalajId) {
     const idx = ambalajRecords.findIndex(r => r.id === editingAmbalajId);
     if (idx !== -1) ambalajRecords[idx] = rec;
-    showToast('Ambalaj atığı kaydı güncellendi.', 'success');
-    logIslem('kayit_duzenle', 'ambalaj #' + editingAmbalajId + ' güncellendi');
+    showToast('Ambalaj atÄ±ÄŸÄ± kaydÄ± gÃ¼ncellendi.', 'success');
+    logIslem('kayit_duzenle', 'ambalaj #' + editingAmbalajId + ' gÃ¼ncellendi');
   } else {
     ambalajRecords.push(rec);
-    showToast('Ambalaj atığı kaydı eklendi.', 'success');
+    showToast('Ambalaj atÄ±ÄŸÄ± kaydÄ± eklendi.', 'success');
     logIslem('yeni_kayit', 'ambalaj ' + (rec.tur || '') + ' ' + rec.miktar + ' ' + (rec.birim || 'kg'));
   }
 
@@ -10204,8 +10204,8 @@ function saveAmbalajRecord(e) {
 function editAmbalajRecord(id) { openAmbalajModal(id); }
 
 async function deleteAmbalajRecord(id) {
-  if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
+  if (!canEditAmbalajRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu ambalaj atÄ±ÄŸÄ± kaydÄ±nÄ± silmek istediÄŸinize emin misiniz?')) return;
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();
   if (supabaseClient) {
@@ -10213,7 +10213,7 @@ async function deleteAmbalajRecord(id) {
   }
   renderAmbalajTable();
   syncAmbalajSilent();
-  showToast('Ambalaj atığı kaydı silindi.', 'success');
+  showToast('Ambalaj atÄ±ÄŸÄ± kaydÄ± silindi.', 'success');
   logIslem('kayit_sil', 'ambalaj #' + id + ' silindi');
 }
 
@@ -10490,7 +10490,7 @@ function buildExportHTML() {
   };
   var normBirim = normBirimGlobal;
   var fmt = function(total, birim) {
-    if (total <= 0) return '—';
+    if (total <= 0) return 'â€”';
     if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
     if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
     if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
@@ -10532,13 +10532,13 @@ function buildExportHTML() {
           dayAgg[key].cesitler++;
         }
       });
-      dayCesitler += '<div class="pcol pcol-c' + (ci + 1) + '"><div class="pces">' + escapeHtml(ci + 1 + '. Çeşit: ' + name) + '</div>' + ingHtml + '</div>';
+      dayCesitler += '<div class="pcol pcol-c' + (ci + 1) + '"><div class="pces">' + escapeHtml(ci + 1 + '. Ã‡eÅŸit: ' + name) + '</div>' + ingHtml + '</div>';
     }
     if (dayHasAny) {
       var dayTotalHtml = '';
       var dayEntries = Object.values(dayAgg).filter(function(e) { return e.total > 0; });
       if (dayEntries.length) {
-        dayTotalHtml = '<div class="pdt"><div class="pdth">' + t('stockDeductionList') + ' – ' + gunler[di] + '</div>';
+        dayTotalHtml = '<div class="pdt"><div class="pdth">' + t('stockDeductionList') + ' â€“ ' + gunler[di] + '</div>';
         dayEntries.forEach(function(e) {
           var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' ' + t('inVarieties') + ')</small>' : '';
           dayTotalHtml += '<div class="pdting"><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span></div>';
@@ -10554,7 +10554,7 @@ function buildExportHTML() {
   var weekEntries = Object.values(weekAgg).filter(function(e) { return e.total > 0; });
   if (weekEntries.length) {
     weekEntries.sort(function(a, b) { return a.ad.localeCompare(b.ad); });
-    weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div><div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
+    weeklyHtml = '<div class="s-title">HaftalÄ±k Toplam Ä°htiyaÃ§ Listesi</div><div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
     weekEntries.forEach(function(e) {
       weeklyHtml += '<div class="wit"><span class="wn">' + escapeHtml(e.ad) + '</span><span class="wq">' + fmt(e.total, e.birim) + '</span></div>';
     });
@@ -10598,15 +10598,15 @@ function buildExportHTML() {
     '</style>';
 
   // Title + Menu table (must fit on 1 page)
-  html += '<h1>Haftalık Menü Listesi</h1><div class="sub">' + escapeHtml(weekLabel) + '</div>';
+  html += '<h1>HaftalÄ±k MenÃ¼ Listesi</h1><div class="sub">' + escapeHtml(weekLabel) + '</div>';
   var durum = currentMenuDurumMeta || {};
-  var durumNot = 'Menü Durumu: TASLAK (ONAYSIZ)';
+  var durumNot = 'MenÃ¼ Durumu: TASLAK (ONAYSIZ)';
   if (durum.durum === MENU_DURUMLAR.ONAYLANDI) {
-    durumNot = 'Menü Durumu: ONAYLANDI' + (durum.onaylayan ? ' - ' + durum.onaylayan : '');
+    durumNot = 'MenÃ¼ Durumu: ONAYLANDI' + (durum.onaylayan ? ' - ' + durum.onaylayan : '');
   } else if (durum.durum === MENU_DURUMLAR.ONAY_BEKLIYOR) {
-    durumNot = 'Menü Durumu: ONAY BEKLİYOR (ONAYSIZ)';
+    durumNot = 'MenÃ¼ Durumu: ONAY BEKLÄ°YOR (ONAYSIZ)';
   } else if (durum.durum === MENU_DURUMLAR.REDDEDILDI) {
-    durumNot = 'Menü Durumu: REDDEDİLDİ' + (durum.onay_notu ? ' - ' + durum.onay_notu : '');
+    durumNot = 'MenÃ¼ Durumu: REDDEDÄ°LDÄ°' + (durum.onay_notu ? ' - ' + durum.onay_notu : '');
   }
   html += '<div class="sub" style="color:#b45309;font-weight:700">' + escapeHtml(durumNot) + '</div>';
   html += '<table class="menu-table"><thead><tr><th></th>';
@@ -10629,7 +10629,7 @@ function buildExportHTML() {
 
   // Per-day product lists
   if (prodDaysHtml) {
-    html += '<div class="s-title" style="page-break-before:always">Ürün İhtiyaç Listesi</div>' + prodDaysHtml;
+    html += '<div class="s-title" style="page-break-before:always">ÃœrÃ¼n Ä°htiyaÃ§ Listesi</div>' + prodDaysHtml;
   }
 
   // Weekly total (last)
@@ -10638,13 +10638,13 @@ function buildExportHTML() {
     html += weeklyHtml;
   }
 
-  html += '<div class="fot">Kırşehir Ahi Evran Üniversitesi - Beslenme Hizmetleri Yönetim Sistemi</div>';
+  html += '<div class="fot">KÄ±rÅŸehir Ahi Evran Ãœniversitesi - Beslenme Hizmetleri YÃ¶netim Sistemi</div>';
   html += '</div>';
   return html;
 }
 
 function printYagList() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var list = yagRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('yagTarihBas');
   var bit = document.getElementById('yagTarihBit');
@@ -10654,41 +10654,41 @@ function printYagList() {
   if (tur && tur.value) list = list.filter(function(r) { return r.tur === tur.value; });
   if (yagSelectedYear) list = list.filter(function(r) { return (r.tarih || '').slice(0, 4) === yagSelectedYear; });
   list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
-  if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
+  if (!list.length) { showToast('Listelenecek kayÄ±t bulunamadÄ±.', 'error'); return; }
   var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
-  html += '<h1 style="font-size:14px;margin:0 0 4px">Atık Yağ Kayıtları</h1>';
+  html += '<h1 style="font-size:14px;margin:0 0 4px">AtÄ±k YaÄŸ KayÄ±tlarÄ±</h1>';
   html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
   html += '<thead><tr>';
-  ['Tarih','Makbuz No','Yağ Türü','Miktar (lt)','Not'].forEach(function(h) {
+  ['Tarih','Makbuz No','YaÄŸ TÃ¼rÃ¼','Miktar (lt)','Not'].forEach(function(h) {
     html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
   });
   html += '</tr></thead><tbody>';
   list.forEach(function(r) {
     html += '<tr>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.tarih) + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.makbuzNo || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.makbuzNo || 'â€”') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || 'â€”') + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed(1) + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || 'â€”') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
   var total = list.reduce(function(s, r) { return s + (r.miktar || 0); }, 0);
   html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">' + t('total') + ': ' + total.toFixed(1) + ' lt</div>';
-  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Atık Yağ Kayıt Listesi</div>';
+  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">AtÄ±k YaÄŸ KayÄ±t Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
-  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!win) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   win.document.open();
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Atık Yağ Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AtÄ±k YaÄŸ KayÄ±tlarÄ±</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
   triggerPrint(win);
 }
 
 function printAmbalajList() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var list = ambalajRecords.filter(function(r) { return r.tarih; });
   var bas = document.getElementById('ambalajTarihBas');
   var bit = document.getElementById('ambalajTarihBit');
@@ -10698,13 +10698,13 @@ function printAmbalajList() {
   if (tur && tur.value) list = list.filter(function(r) { return r.tur === tur.value; });
   if (ambalajSelectedYear) list = list.filter(function(r) { return (r.tarih || '').slice(0, 4) === ambalajSelectedYear; });
   list.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
-  if (!list.length) { showToast('Listelenecek kayıt bulunamadı.', 'error'); return; }
+  if (!list.length) { showToast('Listelenecek kayÄ±t bulunamadÄ±.', 'error'); return; }
   var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
-  html += '<h1 style="font-size:14px;margin:0 0 4px">Ambalaj Atıkları Kayıtları</h1>';
+  html += '<h1 style="font-size:14px;margin:0 0 4px">Ambalaj AtÄ±klarÄ± KayÄ±tlarÄ±</h1>';
   html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
   html += '<thead><tr>';
-  ['Tarih','Atık Türü','Miktar (kg)','Not'].forEach(function(h) {
+  ['Tarih','AtÄ±k TÃ¼rÃ¼','Miktar (kg)','Not'].forEach(function(h) {
     html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
   });
   html += '</tr></thead><tbody>';
@@ -10712,38 +10712,38 @@ function printAmbalajList() {
     var birimLabel = (r.birim || 'kg') === 'g' ? ' gr' : ' kg';
     html += '<tr>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.tarih) + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.tur || 'â€”') + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + (r.miktar || 0).toFixed((r.birim || 'kg') === 'g' ? 0 : 1) + birimLabel + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.not || 'â€”') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
   var totalKg = list.reduce(function(s, r) { return s + ((r.birim === 'g') ? (Number(r.miktar) || 0) / 1000 : (Number(r.miktar) || 0)); }, 0);
   html += '<div style="margin-top:6px;font-size:10px;font-weight:700;text-align:right">' + t('total') + ': ' + totalKg.toFixed(1) + ' kg</div>';
-  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Ambalaj Atığı Kayıt Listesi</div>';
+  html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Ambalaj AtÄ±ÄŸÄ± KayÄ±t Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
-  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!win) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   win.document.open();
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ambalaj Atıkları Kayıtları</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ambalaj AtÄ±klarÄ± KayÄ±tlarÄ±</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
   triggerPrint(win);
 }
 
 function printMenu() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var html = buildExportHTML();
   var win = window.open('', '_blank', 'width=900,height=700');
-  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!win) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   win.document.open();
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Haftalık Menü</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HaftalÄ±k MenÃ¼</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
   win.focus();
   triggerPrint(win);
 }
 
-// ─── KALİBRASYONA TABİ CİHAZLAR ──────────────────────────────────────────────
+// â”€â”€â”€ KALÄ°BRASYONA TABÄ° CÄ°HAZLAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KALIBRASYON_STORAGE_KEY = 'atik_kontrol_kalibrasyon';
 let kalibrasyonCihazlari = [];
 let editingKalibrasyonId = null;
@@ -10924,7 +10924,7 @@ function renderKalibrasyon() {
     var kalB = getKalibrasyonDurumBilgi(r);
     var actionCell = canEditK
       ? '<td>' +
-        '<button class="btn-icon" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon" onclick="editKalibrasyonRecord(' + r.id + ')" title="DÃ¼zenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
         '<button class="btn-icon" onclick="deleteKalibrasyonRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
@@ -10933,16 +10933,16 @@ function renderKalibrasyon() {
         '</td>'
       : '<td></td>';
     return `<tr>
-      <td>${escapeHtml(r.cihazAdi || '—')}</td>
-      <td>${escapeHtml(r.markaModel || '—')}</td>
-      <td>${escapeHtml(r.sicilNo || '—')}</td>
+      <td>${escapeHtml(r.cihazAdi || 'â€”')}</td>
+      <td>${escapeHtml(r.markaModel || 'â€”')}</td>
+      <td>${escapeHtml(r.sicilNo || 'â€”')}</td>
       <td><span class="${durumB.cls}">${durumB.text}</span></td>
       <td><span class="${kalB.cls}">${kalB.text}</span></td>
       <td>${displayDate(r.sonKalibrasyon)}</td>
       <td>${displayDate(r.sonrakiKalibrasyon)}</td>
-      <td>${escapeHtml(r.konum || '—')}</td>
-      <td>${escapeHtml(r.sorumlu || '—')}</td>
-      <td>${escapeHtml(r.not || '—')}</td>
+      <td>${escapeHtml(r.konum || 'â€”')}</td>
+      <td>${escapeHtml(r.sorumlu || 'â€”')}</td>
+      <td>${escapeHtml(r.not || 'â€”')}</td>
       ${actionCell}
     </tr>`;
   }).join('');
@@ -10953,11 +10953,11 @@ function renderKalibrasyon() {
       var fp = kalibrasyonPage === 0;
       var lp = kalibrasyonPage >= totalPages - 1;
       pagination.innerHTML =
-        '<button class="btn-icon" data-kalibrasyon-page="0"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>«</button>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="0"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>Â«</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>â€¹</button>' +
         '<span style="font-weight:600;margin:0 4px">' + (kalibrasyonPage + 1) + ' / ' + totalPages + '</span>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>›</button>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>»</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>â€º</button>' +
+        '<button class="btn-icon" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>Â»</button>' +
         '<span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">' + filtered.length + ' ' + t('deviceCount') + '</span>';
     } else {
       pagination.innerHTML = '';
@@ -10967,9 +10967,9 @@ function renderKalibrasyon() {
 
 function openKalibrasyonModal(id) {
   if (id) {
-    if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditKalibrasyonRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddKalibrasyonRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
   editingKalibrasyonId = id || null;
   const overlay = document.getElementById('kalibrasyonModal');
@@ -11010,13 +11010,13 @@ function closeKalibrasyonModal() {
 function saveKalibrasyonRecord(e) {
   e.preventDefault();
   if (editingKalibrasyonId) {
-    if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canEditKalibrasyonRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   } else {
-    if (!canAddKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+    if (!canAddKalibrasyonRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   }
 
   var cihazAdi = document.getElementById('kfCihazAdi').value.trim();
-  if (!cihazAdi) { showToast('Cihaz adı gerekli.', 'error'); return; }
+  if (!cihazAdi) { showToast('Cihaz adÄ± gerekli.', 'error'); return; }
 
   var rec = {
     id: editingKalibrasyonId || Date.now(),
@@ -11035,11 +11035,11 @@ function saveKalibrasyonRecord(e) {
   if (editingKalibrasyonId) {
     const idx = kalibrasyonCihazlari.findIndex(r => r.id === editingKalibrasyonId);
     if (idx !== -1) kalibrasyonCihazlari[idx] = rec;
-    showToast('Cihaz bilgisi güncellendi.', 'success');
-    logIslem('kayit_duzenle', 'kalibrasyon #' + editingKalibrasyonId + ' güncellendi');
+    showToast('Cihaz bilgisi gÃ¼ncellendi.', 'success');
+    logIslem('kayit_duzenle', 'kalibrasyon #' + editingKalibrasyonId + ' gÃ¼ncellendi');
   } else {
     kalibrasyonCihazlari.push(rec);
-    showToast('Cihaz kaydı eklendi.', 'success');
+    showToast('Cihaz kaydÄ± eklendi.', 'success');
     logIslem('yeni_kayit', 'kalibrasyon ' + (rec.cihazAdi || ''));
   }
 
@@ -11053,8 +11053,8 @@ function saveKalibrasyonRecord(e) {
 function editKalibrasyonRecord(id) { openKalibrasyonModal(id); }
 
 async function deleteKalibrasyonRecord(id) {
-  if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu cihaz kaydını silmek istediğinize emin misiniz?')) return;
+  if (!canEditKalibrasyonRecords()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (!confirm('Bu cihaz kaydÄ±nÄ± silmek istediÄŸinize emin misiniz?')) return;
   kalibrasyonCihazlari = kalibrasyonCihazlari.filter(r => r.id !== id);
   saveKalibrasyonData();
   if (supabaseClient) {
@@ -11063,14 +11063,14 @@ async function deleteKalibrasyonRecord(id) {
   renderKalibrasyon();
   renderKPIs();
   syncKalibrasyonSilent();
-  showToast('Cihaz kaydı silindi.', 'success');
+  showToast('Cihaz kaydÄ± silindi.', 'success');
   logIslem('kayit_sil', 'kalibrasyon #' + id + ' silindi');
 }
 
 function exportKalibrasyonCSV() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (kalibrasyonCihazlari.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
-  var headers = ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Cihaz Durumu', 'Kalibrasyon Durumu', 'Doğrulama', 'Son Kalibrasyon', 'Bir Sonraki Kalibrasyon', 'Bölüm', 'Sorumlu', 'Not', 'id'];
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
+  if (kalibrasyonCihazlari.length === 0) { showToast('Ä°ndirilecek kayÄ±t yok.', 'error'); return; }
+  var headers = ['Cihaz AdÄ±', 'Marka-Model', 'Sicil No', 'Cihaz Durumu', 'Kalibrasyon Durumu', 'DoÄŸrulama', 'Son Kalibrasyon', 'Bir Sonraki Kalibrasyon', 'BÃ¶lÃ¼m', 'Sorumlu', 'Not', 'id'];
   var rows = [headers.join(',')];
   kalibrasyonCihazlari.forEach(function(r) {
     var cihazB = getCihazDurumBilgi(r);
@@ -11095,19 +11095,19 @@ function exportKalibrasyonCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast(kalibrasyonCihazlari.length + ' kayıt CSV olarak indirildi.', 'success');
+  showToast(kalibrasyonCihazlari.length + ' kayÄ±t CSV olarak indirildi.', 'success');
 }
 
 function printKalibrasyonList() {
-  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canExport()) { showToast('Bu iÅŸlem iÃ§in yetkiniz yok.', 'error'); return; }
   var list = [...kalibrasyonCihazlari].sort(function(a, b) { return (a.cihazAdi || '').localeCompare(b.cihazAdi || ''); });
-  if (!list.length) { showToast('Listelenecek cihaz bulunamadı.', 'error'); return; }
+  if (!list.length) { showToast('Listelenecek cihaz bulunamadÄ±.', 'error'); return; }
   var html = '<div style="padding:10px 14px;font-family:Arial,sans-serif;font-size:11px">';
   html += '<h1 style="font-size:14px;margin:0 0 4px">Kalibrasyona Tabi Cihazlar</h1>';
   html += '<div style="font-size:10px;color:#888;margin-bottom:6px">' + new Date().toLocaleDateString('tr-TR') + '</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:10px">';
   html += '<thead><tr>';
-  ['Cihaz Adı', 'Marka-Model', 'Sicil No', 'Durum', 'Kal.', 'Son Kal.', 'Bir Sonraki', 'Bölüm', 'Sorumlu'].forEach(function(h) {
+  ['Cihaz AdÄ±', 'Marka-Model', 'Sicil No', 'Durum', 'Kal.', 'Son Kal.', 'Bir Sonraki', 'BÃ¶lÃ¼m', 'Sorumlu'].forEach(function(h) {
     html += '<th style="border:1px solid #bbb;padding:4px 6px;background:#eee;text-align:left;font-weight:700">' + h + '</th>';
   });
   html += '</tr></thead><tbody>';
@@ -11117,15 +11117,15 @@ function printKalibrasyonList() {
     var renkC = cihazB.cls.indexOf('err') !== -1 ? '#ef4444' : cihazB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
     var renkK = kalB.cls.indexOf('err') !== -1 ? '#ef4444' : kalB.cls.indexOf('warn') !== -1 ? '#f59e0b' : '#10b981';
     html += '<tr>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.cihazAdi || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.markaModel || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sicilNo || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.cihazAdi || 'â€”') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.markaModel || 'â€”') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sicilNo || 'â€”') + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renkC + '">' + cihazB.text + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px;font-weight:700;color:' + renkK + '">' + kalB.text + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonKalibrasyon) + '</td>';
     html += '<td style="border:1px solid #ddd;padding:3px 6px">' + displayDate(r.sonrakiKalibrasyon) + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.konum || '—') + '</td>';
-    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sorumlu || '—') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.konum || 'â€”') + '</td>';
+    html += '<td style="border:1px solid #ddd;padding:3px 6px">' + escapeHtml(r.sorumlu || 'â€”') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -11133,7 +11133,7 @@ function printKalibrasyonList() {
   html += '<div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;padding-top:4px;border-top:1px solid #ddd">Kalibrasyona Tabi Cihaz Listesi</div>';
   html += '</div>';
   var win = window.open('', '_blank', 'width=800,height=600');
-  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  if (!win) { showToast('Pop-up engelleyiciyi kapatÄ±n.', 'error'); return; }
   win.document.open();
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kalibrasyona Tabi Cihazlar</title></head><body style="margin:0;background:#fff">' + html + '</body></html>');
   win.document.close();
@@ -11141,7 +11141,7 @@ function printKalibrasyonList() {
   triggerPrint(win);
 }
 
-// ─── YUKARI ÇIK BUTONU ──────────────────────────────────────────────────────
+// â”€â”€â”€ YUKARI Ã‡IK BUTONU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (function() {
   function getScroller() {
     var active = document.querySelector('.tab-content.active');
@@ -11165,7 +11165,7 @@ function printKalibrasyonList() {
     var btn = document.getElementById('scrollTopBtn');
     if (btn) btn.classList.remove('visible');
   };
-  // capture=true: iç konteynerlerin scroll olaylarını da yakalar
+  // capture=true: iÃ§ konteynerlerin scroll olaylarÄ±nÄ± da yakalar
   document.addEventListener('scroll', updateBtn, true);
   window.addEventListener('scroll', updateBtn);
   document.addEventListener('click', function() { setTimeout(updateBtn, 400); });
@@ -11173,655 +11173,655 @@ function printKalibrasyonList() {
   else updateBtn();
 })();
 
-// ─── I18N TRANSLATIONS ─────────────────────────────────────────────────────────
+// â”€â”€â”€ I18N TRANSLATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var I18N = {
   tr: {
-    loginSub: "BESLENME HİZMETLERİ YÖNETİM SİSTEMİ",
-    loginFormSub: "Oturum Açınız",
-    loginUsername: "Kullanıcı",
-    loginSelectUser: "Kullanıcı Seçin",
-    loginPassword: "Şifre",
-    loginBtn: "Giriş Yap",
-    loginHint: "Şifrenizi yöneticinizden alabilirsiniz",
-    loginFeature1: "Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi",
-    loginFeature2: "Detaylı Raporlama",
-    loginFeature3: "Canlı Panel ve Grafikler",
-    menuLabel: "Menü",
-    headerSubtitle: "Beslenme Hizmetleri Yönetim Sistemi",
-    btnLogout: "Çıkış",
-    btnPrev: "Önceki",
+    loginSub: "BESLENME HÄ°ZMETLERÄ° YÃ–NETÄ°M SÄ°STEMÄ°",
+    loginFormSub: "Oturum AÃ§Ä±nÄ±z",
+    loginUsername: "KullanÄ±cÄ±",
+    loginSelectUser: "KullanÄ±cÄ± SeÃ§in",
+    loginPassword: "Åifre",
+    loginBtn: "GiriÅŸ Yap",
+    loginHint: "Åifrenizi yÃ¶neticinizden alabilirsiniz",
+    loginFeature1: "MenÃ¼ PlanlamasÄ±, GÃ¼nlÃ¼k Ãœretim, TÃ¼ketim ve AtÄ±k Takibi",
+    loginFeature2: "DetaylÄ± Raporlama",
+    loginFeature3: "CanlÄ± Panel ve Grafikler",
+    menuLabel: "MenÃ¼",
+    headerSubtitle: "Beslenme Hizmetleri YÃ¶netim Sistemi",
+    btnLogout: "Ã‡Ä±kÄ±ÅŸ",
+    btnPrev: "Ã–nceki",
     btnNext: "Sonraki",
-    loading: "Yükleniyor...",
+    loading: "YÃ¼kleniyor...",
     loadingText: "Veriler senkronize ediliyor...",
-    loadingSub: "Supabase bağlantısı kontrol ediliyor",
-    loadingSkip: "Tıklayarak geç",
-    versionLabel: "Uygulama Sürümü",
+    loadingSub: "Supabase baÄŸlantÄ±sÄ± kontrol ediliyor",
+    loadingSkip: "TÄ±klayarak geÃ§",
+    versionLabel: "Uygulama SÃ¼rÃ¼mÃ¼",
     sidebarPanel: "Panel",
-    sidebarMenu: "Haftalık Menü",
-    sidebarRecords: "Kayıtlar",
+    sidebarMenu: "HaftalÄ±k MenÃ¼",
+    sidebarRecords: "KayÄ±tlar",
     sidebarReport: "Rapor",
-    sidebarHaccp: "Gıda Güvenliği",
+    sidebarHaccp: "GÄ±da GÃ¼venliÄŸi",
     sidebarCalibration: "Kalibrasyon",
-    sidebarOil: "Atık Yağ",
-    sidebarPackaging: "Ambalaj Atıkları",
+    sidebarOil: "AtÄ±k YaÄŸ",
+    sidebarPackaging: "Ambalaj AtÄ±klarÄ±",
     sidebarCharts: "Grafikler",
-    sidebarYearly: "Yıllık Karşılaştırma",
+    sidebarYearly: "YÄ±llÄ±k KarÅŸÄ±laÅŸtÄ±rma",
     sidebarSpending: "Harcama",
     sidebarUnitPrice: "Birim Fiyatlar",
-    sidebarDownload: "Tümünü İndir",
+    sidebarDownload: "TÃ¼mÃ¼nÃ¼ Ä°ndir",
     sidebarBackup: "Supabase'e Yedekle",
-    sidebarRestore: "Supabase'ten Çek",
-    sidebarAdmin: "Yönetim",
-    sidebarLogs: "Log Kayıtları",
+    sidebarRestore: "Supabase'ten Ã‡ek",
+    sidebarAdmin: "YÃ¶netim",
+    sidebarLogs: "Log KayÄ±tlarÄ±",
     sidebarTheme: "Tema",
-    sidebarManual: "Kullanım Kılavuzu",
-    dashboardPrintPdf: "PDF Yazdır",
-    kpiTotalRecords: "Toplam Üretim Günü",
-    kpiTodayProduction: "Bugünkü Üretim",
-    kpiHaccpAlarm: "Soğuk Hava Depo Sıcaklık Alarmı",
-    kpiCalibrationAlarm: "Kalibrasyon Alarmı",
-    kpiAvgWaste: "Ort. Atık (kg)",
-    kpiTotalPasses: "Turnikeden Toplam Geçiş Rakamı",
-    kpiTotalWaste: "Toplam Atık (kg)",
-    kpiWasteRate: "Atık Oranı",
-    weeklyPrevBtn: "Önceki Hafta",
-    weeklySummary: "Haftalık Özet",
+    sidebarManual: "KullanÄ±m KÄ±lavuzu",
+    dashboardPrintPdf: "PDF YazdÄ±r",
+    kpiTotalRecords: "Toplam Ãœretim GÃ¼nÃ¼",
+    kpiTodayProduction: "BugÃ¼nkÃ¼ Ãœretim",
+    kpiHaccpAlarm: "SoÄŸuk Hava Depo SÄ±caklÄ±k AlarmÄ±",
+    kpiCalibrationAlarm: "Kalibrasyon AlarmÄ±",
+    kpiAvgWaste: "Ort. AtÄ±k (kg)",
+    kpiTotalPasses: "Turnikeden Toplam GeÃ§iÅŸ RakamÄ±",
+    kpiTotalWaste: "Toplam AtÄ±k (kg)",
+    kpiWasteRate: "AtÄ±k OranÄ±",
+    weeklyPrevBtn: "Ã–nceki Hafta",
+    weeklySummary: "HaftalÄ±k Ã–zet",
     weeklyNextBtn: "Sonraki Hafta",
     weeklyBadge: "Bu Hafta",
-    dailyPrevBtn: "Önceki Gün",
-    dailySummary: "Günlük Detay",
-    dailyNextBtn: "Sonraki Gün",
-    weeklyCompTitle: "Haftalık Karşılaştırma",
-    monthlyCompTitle: "Aylık Karşılaştırma",
+    dailyPrevBtn: "Ã–nceki GÃ¼n",
+    dailySummary: "GÃ¼nlÃ¼k Detay",
+    dailyNextBtn: "Sonraki GÃ¼n",
+    weeklyCompTitle: "HaftalÄ±k KarÅŸÄ±laÅŸtÄ±rma",
+    monthlyCompTitle: "AylÄ±k KarÅŸÄ±laÅŸtÄ±rma",
     monthlyBadge: "Bu Ay",
-    yearlyBadge: "Bu Yıl",
+    yearlyBadge: "Bu YÄ±l",
     anomalyTitle: "Anomali Tespiti",
-    anomalyBadge: "Anormal Atık Günleri",
-    lastRecordsTitle: "Son Kayıtlar",
-    dashboardGoToRecords: "Kayıtlara Git",
-    emptyDashboard: "Henüz kayıt yok...",
-    formulaTitle: "ATIK HESAPLAMA FORMÜLÜ",
-    recordsEntryBtn: "Üretim Tüketim Gir",
-    recordsImportBtn: "İçe Aktar",
+    anomalyBadge: "Anormal AtÄ±k GÃ¼nleri",
+    lastRecordsTitle: "Son KayÄ±tlar",
+    dashboardGoToRecords: "KayÄ±tlara Git",
+    emptyDashboard: "HenÃ¼z kayÄ±t yok...",
+    formulaTitle: "ATIK HESAPLAMA FORMÃœLÃœ",
+    recordsEntryBtn: "Ãœretim TÃ¼ketim Gir",
+    recordsImportBtn: "Ä°Ã§e Aktar",
     recordsPrintPdf: "PDF",
-    recordsCsvBtn: "CSV İndir",
-    recordsDeleteBtn: "Seçilileri Sil",
-    emptyRecords: "Gösterilecek kayıt bulunamadı.",
+    recordsCsvBtn: "CSV Ä°ndir",
+    recordsDeleteBtn: "SeÃ§ilileri Sil",
+    emptyRecords: "GÃ¶sterilecek kayÄ±t bulunamadÄ±.",
     thDate: "Tarih",
-    thProducedPerson: "Üretilen Yemek (Kişi)",
+    thProducedPerson: "Ãœretilen Yemek (KiÅŸi)",
     thWaste10: "%10 Fire",
-    thBeneficiary: "Yemek Hiz. Yararlanan Personel ve Öğrenci",
+    thBeneficiary: "Yemek Hiz. Yararlanan Personel ve Ã–ÄŸrenci",
     thPortionGr: "Porsiyon (gr)",
-    thWasteKg: "Atık (kg)",
-    thWastedPortion: "Çöpe Giden (pors.)",
-    thFoodType: "Yemek Türü",
-    thAction: "İşlem",
-    thAcademicStaff: "Turnikeden Geçen Akademik ve İdari Personel",
-    thStudentCount: "Turnikeden Geçen Öğrenci Sayısı",
-    thBeneficiaryTotal: "Yemek Hiz. Yararlanan Toplam Kişi",
+    thWasteKg: "AtÄ±k (kg)",
+    thWastedPortion: "Ã‡Ã¶pe Giden (pors.)",
+    thFoodType: "Yemek TÃ¼rÃ¼",
+    thAction: "Ä°ÅŸlem",
+    thAcademicStaff: "Turnikeden GeÃ§en Akademik ve Ä°dari Personel",
+    thStudentCount: "Turnikeden GeÃ§en Ã–ÄŸrenci SayÄ±sÄ±",
+    thBeneficiaryTotal: "Yemek Hiz. Yararlanan Toplam KiÅŸi",
     sksStaff: "SKS Yemek Hizmeti Personeli",
-    summaryReport: "Özet Rapor",
-    reportPdfBtn: "PDF Aç",
-    allRecordsPrint: "Tüm Kayıtlar (Yazdırma Görünümü)",
-    rTotalRecords: "Toplam Kayıt Sayısı",
-    rTotalMeals: "Toplam Üretilen Yemek",
+    summaryReport: "Ã–zet Rapor",
+    reportPdfBtn: "PDF AÃ§",
+    allRecordsPrint: "TÃ¼m KayÄ±tlar (YazdÄ±rma GÃ¶rÃ¼nÃ¼mÃ¼)",
+    rTotalRecords: "Toplam KayÄ±t SayÄ±sÄ±",
+    rTotalMeals: "Toplam Ãœretilen Yemek",
     rTotalWaste10: "Toplam %10 Fire",
-    rTotalAfterWaste: "Toplam %10 Fire Sonrası Yemek",
-    rTotalTurnstile: "Toplam Turnike Geçisi",
-    rTotalBeneficiary: "Yemek Hiz. Yararlanan Toplam Kişi",
+    rTotalAfterWaste: "Toplam %10 Fire SonrasÄ± Yemek",
+    rTotalTurnstile: "Toplam Turnike GeÃ§isi",
+    rTotalBeneficiary: "Yemek Hiz. Yararlanan Toplam KiÅŸi",
     rTotalStaff: "Yararlanan Toplam SKS Personeli",
-    rPortionSize: "Porsiyon Miktarı (gr)",
+    rPortionSize: "Porsiyon MiktarÄ± (gr)",
     rTotalPortion: "Toplam Porsiyon (gr)",
-    rWastedPortion: "Çöpe Giden Porsiyon",
-    rMaxWeeklyBeneficiary: "En Yüksek Haftalık Yararlanan Kişi",
-    rTotalWasteKg: "Toplam Atık Miktarı (kg)",
-    rAvgWasteKg: "Ort. Atık Miktarı (kg)",
-    rTotalStudents: "Toplam Öğrenci Sayısı",
-    rMaxWaste: "En Yüksek Atık (kg)",
-    rMinWaste: "En Düşük Atık (kg)",
-    rWasteTrend: "Atık Trendi (son 7 gün)",
-    rBeneficiaryTrend: "Yemek Hiz. Yararlanan Trendi (son 7 gün)",
-    wasteByFoodTitle: "Yemek Türü Bazında Atık Analizi",
-    wasteByFoodEmpty: "Yemek türü verisi girilen kayıt bulunamadı.",
-    wasteByFoodRecords: "Kayıt Sayısı",
-    wasteByFoodRate: "Atık Oranı",
-    wasteByFoodPerPerson: "Kişi Başı Atık (kg)",
-    wsProducedMeal: "Üretilen Yemek (Kişi)",
-    wsTotalPasses: "Toplam Geçiş",
+    rWastedPortion: "Ã‡Ã¶pe Giden Porsiyon",
+    rMaxWeeklyBeneficiary: "En YÃ¼ksek HaftalÄ±k Yararlanan KiÅŸi",
+    rTotalWasteKg: "Toplam AtÄ±k MiktarÄ± (kg)",
+    rAvgWasteKg: "Ort. AtÄ±k MiktarÄ± (kg)",
+    rTotalStudents: "Toplam Ã–ÄŸrenci SayÄ±sÄ±",
+    rMaxWaste: "En YÃ¼ksek AtÄ±k (kg)",
+    rMinWaste: "En DÃ¼ÅŸÃ¼k AtÄ±k (kg)",
+    rWasteTrend: "AtÄ±k Trendi (son 7 gÃ¼n)",
+    rBeneficiaryTrend: "Yemek Hiz. Yararlanan Trendi (son 7 gÃ¼n)",
+    wasteByFoodTitle: "Yemek TÃ¼rÃ¼ BazÄ±nda AtÄ±k Analizi",
+    wasteByFoodEmpty: "Yemek tÃ¼rÃ¼ verisi girilen kayÄ±t bulunamadÄ±.",
+    wasteByFoodRecords: "KayÄ±t SayÄ±sÄ±",
+    wasteByFoodRate: "AtÄ±k OranÄ±",
+    wasteByFoodPerPerson: "KiÅŸi BaÅŸÄ± AtÄ±k (kg)",
+    wsProducedMeal: "Ãœretilen Yemek (KiÅŸi)",
+    wsTotalPasses: "Toplam GeÃ§iÅŸ",
     wsTurnstile: "Turnike",
     wsStaffSKS: "Y. Hiz. Yr. SKS",
-    wsWasteAmount: "Atık Miktarı",
-    wsWastedPortion: "Çöpe Giden",
-    wsStudents: "Y.H. Yar. Öğrenci",
-    wsNoRecordsYet: "Henüz kayıt yok",
-    wsNoRecordThisWeek: "Bu hafta kayıt yok",
-    wsNoRecordToday: "Kayıt yok",
-    wsTodayDetail: "Bugünün Detayı",
-    wsDailyDetail: "Günlük Detay",
+    wsWasteAmount: "AtÄ±k MiktarÄ±",
+    wsWastedPortion: "Ã‡Ã¶pe Giden",
+    wsStudents: "Y.H. Yar. Ã–ÄŸrenci",
+    wsNoRecordsYet: "HenÃ¼z kayÄ±t yok",
+    wsNoRecordThisWeek: "Bu hafta kayÄ±t yok",
+    wsNoRecordToday: "KayÄ±t yok",
+    wsTodayDetail: "BugÃ¼nÃ¼n DetayÄ±",
+    wsDailyDetail: "GÃ¼nlÃ¼k Detay",
     wsWaste: "Fire",
     wsPortion: "porsiyon",
-    wsProduced: "Üretilen",
-    wsTurnstileCount: "Turnike Geçiş",
+    wsProduced: "Ãœretilen",
+    wsTurnstileCount: "Turnike GeÃ§iÅŸ",
     wsStaffCount: "Personel",
-    menuTitle: "Haftalık Menü Listesi",
+    menuTitle: "HaftalÄ±k MenÃ¼ Listesi",
     menuStatusBadge: "Durum",
     menuSaveBtn: "Kaydet",
-    menuSendBtn: "Onaya Gönder",
+    menuSendBtn: "Onaya GÃ¶nder",
     menuApproveBtn: "Onayla",
     menuRejectBtn: "Reddet",
-    menuWithdrawBtn: "Onayı Kaldır",
+    menuWithdrawBtn: "OnayÄ± KaldÄ±r",
     menuClearBtn: "Tabloyu Temizle",
-    menuPrintBtn: "Yazdır",
+    menuPrintBtn: "YazdÄ±r",
     menuFoodListBtn: "Yemek Listesi",
-    menuFoodListUploadBtn: "CSV Yükle",
-    menuFoodListCsvBtn: "CSV İndir",
-    menuWarningPrefix: "Onaysız Menü:",
-    menuWarningText: "Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.",
-    menuHintText: "Yemek isimlerini yazın...",
-    productNeedsTitle: "Ürün İhtiyaç Listesi",
-    weeklyNeedsTitle: "Haftalık Toplam İhtiyaç Listesi",
+    menuFoodListUploadBtn: "CSV YÃ¼kle",
+    menuFoodListCsvBtn: "CSV Ä°ndir",
+    menuWarningPrefix: "OnaysÄ±z MenÃ¼:",
+    menuWarningText: "Bu haftanÄ±n menÃ¼sÃ¼ henÃ¼z gÄ±da mÃ¼hendisi tarafÄ±ndan onaylanmadÄ±.",
+    menuHintText: "Yemek isimlerini yazÄ±n...",
+    productNeedsTitle: "ÃœrÃ¼n Ä°htiyaÃ§ Listesi",
+    weeklyNeedsTitle: "HaftalÄ±k Toplam Ä°htiyaÃ§ Listesi",
     foodListTitle: "Yemek Listesi",
-    modalRejectMenu: "Menüyü Reddet",
-    modalRejectDesc: "Red gerekçesi zorunludur.",
+    modalRejectMenu: "MenÃ¼yÃ¼ Reddet",
+    modalRejectDesc: "Red gerekÃ§esi zorunludur.",
     menuRejectConfirm: "Reddet",
-    haccpTitle: "Gıda Güvenliği Yönetimi",
-    haccpCsvBtn: "CSV İndir",
-    haccpColdStorage: "Soğuk Depo Sıcaklık Kayıtları",
-    haccpNewBtn: "Yeni Kayıt",
-    haccpDepotBtn: "Depo Adları",
-    haccpDepoQrNote: "Depo adlarını düzenleyip QR butonuyla her depo için QR kod oluşturabilirsiniz.",
-    haccpModalTitle: "Yeni Kayıt",
+    haccpTitle: "GÄ±da GÃ¼venliÄŸi YÃ¶netimi",
+    haccpCsvBtn: "CSV Ä°ndir",
+    haccpColdStorage: "SoÄŸuk Depo SÄ±caklÄ±k KayÄ±tlarÄ±",
+    haccpNewBtn: "Yeni KayÄ±t",
+    haccpDepotBtn: "Depo AdlarÄ±",
+    haccpDepoQrNote: "Depo adlarÄ±nÄ± dÃ¼zenleyip QR butonuyla her depo iÃ§in QR kod oluÅŸturabilirsiniz.",
+    haccpModalTitle: "Yeni KayÄ±t",
     filterDepot: "Depo Filtresi:",
-    filterAll: "Tümü",
-    filterDateRange: "Tarih Aralığı:",
-    emptyHaccp: "Henüz sıcaklık kaydı girilmemiş.",
-    btnDeleteSelectedHaccp: "Seçili Sil",
+    filterAll: "TÃ¼mÃ¼",
+    filterDateRange: "Tarih AralÄ±ÄŸÄ±:",
+    emptyHaccp: "HenÃ¼z sÄ±caklÄ±k kaydÄ± girilmemiÅŸ.",
+    btnDeleteSelectedHaccp: "SeÃ§ili Sil",
     btnPdf: "PDF",
-    depoNamesTitle: "Depo Adları",
-    oilNewBtn: "Yeni Kayıt",
+    depoNamesTitle: "Depo AdlarÄ±",
+    oilNewBtn: "Yeni KayÄ±t",
     oilListBtn: "Liste",
-    oilFilterTitle: "Atık Yağ Filtreleri",
-    filterOilType: "Yağ Türü:",
-    btnReset: "Sıfırla",
-    oilSummaryTitle: "Atık Yağ Özeti",
-    oilChartTitle: "Atık Yağ Grafikleri",
-    oilChartSubtitle: "Aylık Atık Yağ Miktarı (lt)",
-    oilChartEmpty: "Atık yağ kaydı girildiğinde grafik gösterilecek",
-    oilChartNote: "Tarih, yağ türü ve yıl filtrelerine göre aylık atık yağ toplamları",
-    oilRecordsTitle: "Atık Yağ Kayıtları",
-    oilModalTitle: "Atık Yağ Kaydı",
-    emptyOil: "Henüz atık yağ kaydı girilmemiş.",
-    ambalajNewBtn: "Yeni Kayıt",
+    oilFilterTitle: "AtÄ±k YaÄŸ Filtreleri",
+    filterOilType: "YaÄŸ TÃ¼rÃ¼:",
+    btnReset: "SÄ±fÄ±rla",
+    oilSummaryTitle: "AtÄ±k YaÄŸ Ã–zeti",
+    oilChartTitle: "AtÄ±k YaÄŸ Grafikleri",
+    oilChartSubtitle: "AylÄ±k AtÄ±k YaÄŸ MiktarÄ± (lt)",
+    oilChartEmpty: "AtÄ±k yaÄŸ kaydÄ± girildiÄŸinde grafik gÃ¶sterilecek",
+    oilChartNote: "Tarih, yaÄŸ tÃ¼rÃ¼ ve yÄ±l filtrelerine gÃ¶re aylÄ±k atÄ±k yaÄŸ toplamlarÄ±",
+    oilRecordsTitle: "AtÄ±k YaÄŸ KayÄ±tlarÄ±",
+    oilModalTitle: "AtÄ±k YaÄŸ KaydÄ±",
+    emptyOil: "HenÃ¼z atÄ±k yaÄŸ kaydÄ± girilmemiÅŸ.",
+    ambalajNewBtn: "Yeni KayÄ±t",
     ambalajListBtn: "Liste",
-    packagingFilterTitle: "Ambalaj Atığı Filtreleri",
-    filterWasteType: "Atık Türü:",
-    packagingSummaryTitle: "Ambalaj Atığı Özeti",
-    packagingChartTitle: "Ambalaj Atığı Grafikleri",
-    packagingChartSubtitle: "Aylık Ambalaj Atığı Miktarı (kg)",
-    packagingChartEmpty: "Ambalaj atığı kaydı girildiğinde grafik gösterilecek",
-    packagingChartNote: "Tarih, atık türü ve yıl filtrelerine göre aylık ambalaj atığı toplamları (kg)",
-    packagingRecordsTitle: "Ambalaj Atıkları Kayıtları",
-    packagingModalTitle: "Ambalaj Atığı Kaydı",
-    emptyPackaging: "Henüz ambalaj atığı kaydı girilmemiş.",
+    packagingFilterTitle: "Ambalaj AtÄ±ÄŸÄ± Filtreleri",
+    filterWasteType: "AtÄ±k TÃ¼rÃ¼:",
+    packagingSummaryTitle: "Ambalaj AtÄ±ÄŸÄ± Ã–zeti",
+    packagingChartTitle: "Ambalaj AtÄ±ÄŸÄ± Grafikleri",
+    packagingChartSubtitle: "AylÄ±k Ambalaj AtÄ±ÄŸÄ± MiktarÄ± (kg)",
+    packagingChartEmpty: "Ambalaj atÄ±ÄŸÄ± kaydÄ± girildiÄŸinde grafik gÃ¶sterilecek",
+    packagingChartNote: "Tarih, atÄ±k tÃ¼rÃ¼ ve yÄ±l filtrelerine gÃ¶re aylÄ±k ambalaj atÄ±ÄŸÄ± toplamlarÄ± (kg)",
+    packagingRecordsTitle: "Ambalaj AtÄ±klarÄ± KayÄ±tlarÄ±",
+    packagingModalTitle: "Ambalaj AtÄ±ÄŸÄ± KaydÄ±",
+    emptyPackaging: "HenÃ¼z ambalaj atÄ±ÄŸÄ± kaydÄ± girilmemiÅŸ.",
     kalibrasyonNewBtn: "Yeni Cihaz",
     kalibrasyonListBtn: "Liste",
-    kalibrasyonCsvBtn: "CSV İndir",
-    calibrationSummary: "Kalibrasyon Özeti",
+    kalibrasyonCsvBtn: "CSV Ä°ndir",
+    calibrationSummary: "Kalibrasyon Ã–zeti",
     calibrationDevices: "Kalibrasyona Tabi Cihazlar",
     calibrationModalTitle: "Kalibrasyona Tabi Cihaz",
     filterStatus: "Durum:",
-    filterDepartment: "Bölüm:",
+    filterDepartment: "BÃ¶lÃ¼m:",
     btnWordExport: "Word'e Aktar",
-    btnPrint: "PDF Yazdır",
-    chartProdWaste: "Üretim - Geçiş - Atık Karşılaştırması",
-    chartEmpty: "Veri girildiğinde grafik gösterilecek",
-    chartProdWasteNote: "Üretim, turnike geçisi ve Çöpe Giden porsiyonun aylık karşılaştırması",
-    chartStudentCount: "Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı",
-    yearTotal: "Yıl Toplamı",
-    chartStudentNote: "Günlük öğrenci geçişlerinin aylık toplamı",
-    chartStaffTotal: "Akademik ve İdari + SKS Personeli Toplamı",
-    chartStaffNote: "Akademik ve İdari (Turnike - Öğrenci) ile SKS Yemek Hizmeti Personeli toplamı",
-    chartMonthlyProd: "Aylık Yemek Üretimi",
-    chartMonthlyProdNote: "Günlük üretilen yemek sayılarının aylık toplamı",
-    chartMonthlyTurnstile: "Aylık Turnike Geçiş Sayıları",
-    chartTurnstileNote: "Öğrenci + personel + dış geçiş toplamı",
-    chartMonthlyWaste: "Aylık Atık Miktarı (kg)",
-    chartMonthlyWasteNote: "Günlük atıkların aylık toplamı (kg)",
-    chartMonthlyWastePortion: "Aylık Atık Miktarı (porsiyon)",
-    chartWastePortionNote: "Günlük Çöpe Giden porsiyonların aylık toplamı",
-    chartDiff: "Üretim ile Geçis Arasındaki Fark",
-    chartDiffNote: "Üretilen yemek sayısı ile turnike geçisi arasındaki fark",
-    chartWasteRatio: "Üretilen Yemeğe Oranla Atık %",
-    yearAverage: "Yıl Ortalaması",
-    chartWasteRatioNote: "Üretilen yemeğin yüzde kaçı atık oluyor",
-    chartWastePerPerson: "Kişi Başı Atık (kg/kişi)",
-    chartWastePerPersonNote: "Yemekhaneye giren kişi başına düşen ortalama atık",
-    chartMonthlyTemp: "Aylık Ortalama Depo Sıcaklıkları (°C)",
-    chartTempEmpty: "Sıcaklık kaydı girildiğinde grafik gösterilecek",
-    chartTempNote: "Her deponun aylık ortalama sıcaklığı",
-    yearlyPdfBtn: "PDF Yazdır",
-    yearlyTotalProd: "Toplam Üretim Karşılaştırması",
-    yearlyTotalProdNote: "Yıl toplamı - 1. yıl vs 2. yıl (porsiyon)",
-    yearlyTotalBen: "Yemek Hiz. Yararlanan Toplam Kişi",
-    yearlyTotalBenNote: "Yıl toplamı - 1. yıl vs 2. yıl (toplam kişi)",
-    yearlyStudentComp: "Yemek Hizmetinden Yararlanan Öğrenci Karşılaştırması",
-    yearlyStudentNote: "Yıl toplamı - 1. yıl vs 2. yıl (öğrenci)",
-    yearlyWasteComp: "Atık Karşılaştırması (kg)",
-    yearlyWasteNote: "Yıl toplamı - 1. yıl vs 2. yıl (kg)",
-    yearlyMonthlyProd: "Aylık Üretim Karşılaştırması",
-    yearlyMonthlyProdNote: "1. yıl vs 2. yıl - üretilen yemek sayısı (porsiyon)",
-    yearlyMonthlyTurnstile: "Aylık Turnike Geçiş Karşılaştırması",
-    yearlyMonthlyTurnstileNote: "1. yıl vs 2. yıl - turnike geçiş sayısı",
-    yearlyMonthlyStudent: "Aylık Öğrenci Turnike Geçisi Karşılaştırması",
-    yearlyMonthlyStudentNote: "1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı",
-    yearlyMonthlyWaste: "Aylık Atık Karşılaştırması (kg)",
-    yearlyMonthlyWasteNote: "1. yıl vs 2. yıl - atık miktarı (kg)",
-    yearlyWasteListTitle: "Yıllık Atık Listesi",
-    spendingRatesTitle: "Kişi Başı Harcama Oranları (Öğrenci, Personel & Yemek)",
-    spendingStudentRate: "Öğrenci Başı Harcama Tutarı (TL)",
-    btnSaveStudentRate: "Ögr. Tutar Kaydet",
-    spendingStaffRate: "Personel Başı Harcama Tutarı (TL)",
+    btnPrint: "PDF YazdÄ±r",
+    chartProdWaste: "Ãœretim - GeÃ§iÅŸ - AtÄ±k KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    chartEmpty: "Veri girildiÄŸinde grafik gÃ¶sterilecek",
+    chartProdWasteNote: "Ãœretim, turnike geÃ§isi ve Ã‡Ã¶pe Giden porsiyonun aylÄ±k karÅŸÄ±laÅŸtÄ±rmasÄ±",
+    chartStudentCount: "Beslenme Hizmetlerinden Yararlanan Ã–ÄŸrenci SayÄ±sÄ±",
+    yearTotal: "YÄ±l ToplamÄ±",
+    chartStudentNote: "GÃ¼nlÃ¼k Ã¶ÄŸrenci geÃ§iÅŸlerinin aylÄ±k toplamÄ±",
+    chartStaffTotal: "Akademik ve Ä°dari + SKS Personeli ToplamÄ±",
+    chartStaffNote: "Akademik ve Ä°dari (Turnike - Ã–ÄŸrenci) ile SKS Yemek Hizmeti Personeli toplamÄ±",
+    chartMonthlyProd: "AylÄ±k Yemek Ãœretimi",
+    chartMonthlyProdNote: "GÃ¼nlÃ¼k Ã¼retilen yemek sayÄ±larÄ±nÄ±n aylÄ±k toplamÄ±",
+    chartMonthlyTurnstile: "AylÄ±k Turnike GeÃ§iÅŸ SayÄ±larÄ±",
+    chartTurnstileNote: "Ã–ÄŸrenci + personel + dÄ±ÅŸ geÃ§iÅŸ toplamÄ±",
+    chartMonthlyWaste: "AylÄ±k AtÄ±k MiktarÄ± (kg)",
+    chartMonthlyWasteNote: "GÃ¼nlÃ¼k atÄ±klarÄ±n aylÄ±k toplamÄ± (kg)",
+    chartMonthlyWastePortion: "AylÄ±k AtÄ±k MiktarÄ± (porsiyon)",
+    chartWastePortionNote: "GÃ¼nlÃ¼k Ã‡Ã¶pe Giden porsiyonlarÄ±n aylÄ±k toplamÄ±",
+    chartDiff: "Ãœretim ile GeÃ§is ArasÄ±ndaki Fark",
+    chartDiffNote: "Ãœretilen yemek sayÄ±sÄ± ile turnike geÃ§isi arasÄ±ndaki fark",
+    chartWasteRatio: "Ãœretilen YemeÄŸe Oranla AtÄ±k %",
+    yearAverage: "YÄ±l OrtalamasÄ±",
+    chartWasteRatioNote: "Ãœretilen yemeÄŸin yÃ¼zde kaÃ§Ä± atÄ±k oluyor",
+    chartWastePerPerson: "KiÅŸi BaÅŸÄ± AtÄ±k (kg/kiÅŸi)",
+    chartWastePerPersonNote: "Yemekhaneye giren kiÅŸi baÅŸÄ±na dÃ¼ÅŸen ortalama atÄ±k",
+    chartMonthlyTemp: "AylÄ±k Ortalama Depo SÄ±caklÄ±klarÄ± (Â°C)",
+    chartTempEmpty: "SÄ±caklÄ±k kaydÄ± girildiÄŸinde grafik gÃ¶sterilecek",
+    chartTempNote: "Her deponun aylÄ±k ortalama sÄ±caklÄ±ÄŸÄ±",
+    yearlyPdfBtn: "PDF YazdÄ±r",
+    yearlyTotalProd: "Toplam Ãœretim KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    yearlyTotalProdNote: "YÄ±l toplamÄ± - 1. yÄ±l vs 2. yÄ±l (porsiyon)",
+    yearlyTotalBen: "Yemek Hiz. Yararlanan Toplam KiÅŸi",
+    yearlyTotalBenNote: "YÄ±l toplamÄ± - 1. yÄ±l vs 2. yÄ±l (toplam kiÅŸi)",
+    yearlyStudentComp: "Yemek Hizmetinden Yararlanan Ã–ÄŸrenci KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    yearlyStudentNote: "YÄ±l toplamÄ± - 1. yÄ±l vs 2. yÄ±l (Ã¶ÄŸrenci)",
+    yearlyWasteComp: "AtÄ±k KarÅŸÄ±laÅŸtÄ±rmasÄ± (kg)",
+    yearlyWasteNote: "YÄ±l toplamÄ± - 1. yÄ±l vs 2. yÄ±l (kg)",
+    yearlyMonthlyProd: "AylÄ±k Ãœretim KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    yearlyMonthlyProdNote: "1. yÄ±l vs 2. yÄ±l - Ã¼retilen yemek sayÄ±sÄ± (porsiyon)",
+    yearlyMonthlyTurnstile: "AylÄ±k Turnike GeÃ§iÅŸ KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    yearlyMonthlyTurnstileNote: "1. yÄ±l vs 2. yÄ±l - turnike geÃ§iÅŸ sayÄ±sÄ±",
+    yearlyMonthlyStudent: "AylÄ±k Ã–ÄŸrenci Turnike GeÃ§isi KarÅŸÄ±laÅŸtÄ±rmasÄ±",
+    yearlyMonthlyStudentNote: "1. yÄ±l vs 2. yÄ±l - Ã¶ÄŸrenci turnike geÃ§iÅŸ sayÄ±sÄ±",
+    yearlyMonthlyWaste: "AylÄ±k AtÄ±k KarÅŸÄ±laÅŸtÄ±rmasÄ± (kg)",
+    yearlyMonthlyWasteNote: "1. yÄ±l vs 2. yÄ±l - atÄ±k miktarÄ± (kg)",
+    yearlyWasteListTitle: "YÄ±llÄ±k AtÄ±k Listesi",
+    spendingRatesTitle: "KiÅŸi BaÅŸÄ± Harcama OranlarÄ± (Ã–ÄŸrenci, Personel & Yemek)",
+    spendingStudentRate: "Ã–ÄŸrenci BaÅŸÄ± Harcama TutarÄ± (TL)",
+    btnSaveStudentRate: "Ã–gr. Tutar Kaydet",
+    spendingStaffRate: "Personel BaÅŸÄ± Harcama TutarÄ± (TL)",
     btnSaveStaffRate: "Pers. Tutar Kaydet",
-    spendingMealRate: "Yemek Başı Harcama Tutarı (TL)",
+    spendingMealRate: "Yemek BaÅŸÄ± Harcama TutarÄ± (TL)",
     btnSaveMealRate: "Yemek Tutar Kaydet",
-    spendingDesc: "Öğrenci Harcama = Öğrenci Sayısı × Öğrenci Başı Tutar",
-    spendingStudentTitle: "Öğrenci Harcama Tutarı (TL)",
-    spendingChartEmpty: "Kayıt girildiğinde grafik gösterilecek",
-    spendingStudentNote: "Öğrenci Harcama (TL) = Öğrenci Sayısı × Öğrenci Başı Harcama Tutarı",
-    spendingStaffTitle: "Personel Harcama Tutarı (TL)",
-    spendingStaffNote: "Personel Harcama (TL) = Personel Sayısı × Personel Başı Harcama Tutarı",
-    spendingMealTitle: "Yemek Harcama Tutarı (TL)",
-    spendingMealNote: "Yemek Harcama (TL) = Üretilen Yemek Sayısı × Yemek Başı Harcama Tutarı",
+    spendingDesc: "Ã–ÄŸrenci Harcama = Ã–ÄŸrenci SayÄ±sÄ± Ã— Ã–ÄŸrenci BaÅŸÄ± Tutar",
+    spendingStudentTitle: "Ã–ÄŸrenci Harcama TutarÄ± (TL)",
+    spendingChartEmpty: "KayÄ±t girildiÄŸinde grafik gÃ¶sterilecek",
+    spendingStudentNote: "Ã–ÄŸrenci Harcama (TL) = Ã–ÄŸrenci SayÄ±sÄ± Ã— Ã–ÄŸrenci BaÅŸÄ± Harcama TutarÄ±",
+    spendingStaffTitle: "Personel Harcama TutarÄ± (TL)",
+    spendingStaffNote: "Personel Harcama (TL) = Personel SayÄ±sÄ± Ã— Personel BaÅŸÄ± Harcama TutarÄ±",
+    spendingMealTitle: "Yemek Harcama TutarÄ± (TL)",
+    spendingMealNote: "Yemek Harcama (TL) = Ãœretilen Yemek SayÄ±sÄ± Ã— Yemek BaÅŸÄ± Harcama TutarÄ±",
     spendingTableTitle: "Harcama Hesaplama Tablosu",
     syncTitle: "Supabase Senkronizasyon",
     syncCloseBtn: "Kapat",
-    modalNewRecord: "Yeni Kayıt Ekle",
+    modalNewRecord: "Yeni KayÄ±t Ekle",
     formDate: "Tarih",
-    formProducedCount: "Üretilen Yemek Sayısı",
-    formTurnstileCount: "Turnike Geçiş Sayısı",
-    formStudentCount: "Yemek Hiz. Yar. Öğr. Sayısı",
-    formFoodType: "Yemek Türü",
+    formProducedCount: "Ãœretilen Yemek SayÄ±sÄ±",
+    formTurnstileCount: "Turnike GeÃ§iÅŸ SayÄ±sÄ±",
+    formStudentCount: "Yemek Hiz. Yar. Ã–ÄŸr. SayÄ±sÄ±",
+    formFoodType: "Yemek TÃ¼rÃ¼",
     formAutoCalc: "Otomatik Hesaplamalar",
     badgeAutomatic: "Otomatik",
     badgeFixed: "Sabit",
-    badgeAutoEditable: "Otomatik + Düzenlenebilir",
-    btnCancel: "İptal",
+    badgeAutoEditable: "Otomatik + DÃ¼zenlenebilir",
+    btnCancel: "Ä°ptal",
     entryFormSubmit: "Kaydet",
     formReceiptNo: "Makbuz No",
-    formOilType: "Yağ Türü",
+    formOilType: "YaÄŸ TÃ¼rÃ¼",
     formAmountLt: "Miktar (lt)",
     formNote: "Not",
-    formWasteType: "Atık Türü",
+    formWasteType: "AtÄ±k TÃ¼rÃ¼",
     formAmount: "Miktar",
-    formDeviceName: "Cihaz Adı",
+    formDeviceName: "Cihaz AdÄ±",
     formBrandModel: "Marka-Model",
     formSerialNo: "Sicil No",
     formStatus: "Durum",
-    formVerification: "Doğrulama",
+    formVerification: "DoÄŸrulama",
     formLastCalibration: "Son Kalibrasyon",
     formNextCalibration: "Bir Sonraki Kalibrasyon",
-    formLocation: "Bulunduğu Yer/Bölüm",
-    formResponsible: "Sorumlu Kişi",
+    formLocation: "BulunduÄŸu Yer/BÃ¶lÃ¼m",
+    formResponsible: "Sorumlu KiÅŸi",
     btnSave: "Kaydet",
     btnAdd: "Ekle",
     btnClose: "Kapat",
     qrTitle: "QR Kod",
-    qrHint: "QR kodu depo kapılarına asmak için yazdırın.",
-    adminTitle: "Yönetim Paneli",
-    adminReAuthText: "Admin paneline erişim için lütfen admin şifrenizi girin.",
-    adminPassword: "Admin Şifresi",
-    btnVerify: "Doğrula",
-    adminSessionRole: "Oturum Rolü",
-    adminLastLogin: "Son Giriş",
-    adminAuthMethod: "Auth Yöntemi",
-    adminStorage: "Şifre Deposu",
-    adminDataSource: "Veri Kaynağı",
-    adminUserMgmt: "Kullanıcı Yönetimi",
-    adminUserMgmtDesc: "Kullanıcıları ekleyin, düzenleyin veya silin.",
-    adminAddUser: "Yeni Kullanıcı Ekle",
-    adminUsername: "Kullanıcı Adı",
-    adminDisplayName: "Görünen Ad",
-    adminPasswordLabel: "Şifre",
+    qrHint: "QR kodu depo kapÄ±larÄ±na asmak iÃ§in yazdÄ±rÄ±n.",
+    adminTitle: "YÃ¶netim Paneli",
+    adminReAuthText: "Admin paneline eriÅŸim iÃ§in lÃ¼tfen admin ÅŸifrenizi girin.",
+    adminPassword: "Admin Åifresi",
+    btnVerify: "DoÄŸrula",
+    adminSessionRole: "Oturum RolÃ¼",
+    adminLastLogin: "Son GiriÅŸ",
+    adminAuthMethod: "Auth YÃ¶ntemi",
+    adminStorage: "Åifre Deposu",
+    adminDataSource: "Veri KaynaÄŸÄ±",
+    adminUserMgmt: "KullanÄ±cÄ± YÃ¶netimi",
+    adminUserMgmtDesc: "KullanÄ±cÄ±larÄ± ekleyin, dÃ¼zenleyin veya silin.",
+    adminAddUser: "Yeni KullanÄ±cÄ± Ekle",
+    adminUsername: "KullanÄ±cÄ± AdÄ±",
+    adminDisplayName: "GÃ¶rÃ¼nen Ad",
+    adminPasswordLabel: "Åifre",
     adminRole: "Rol",
-    adminAddUserBtn: "Kullanıcı Ekle",
-    adminRolePerms: "Rol Bazlı İzin Ayarları",
-    adminRolePermsDesc: "Her rol için hangi sekmeleri görebileceğini ayarlayın.",
-    adminSecurity: "Oturum Güvenliği",
-    adminSecurityDesc: "Belirtilen süre boyunca hiçbir işlem yapılmazsa oturum kapanır.",
-    adminInactivityTimeout: "Hareketsizlik Kapanma Süresi",
-    adminLogsTitle: "İşlem Log Kayıtları",
-    adminLogsDesc: "Kullanıcı giriş/çıkış ve kayıt işlemleri",
+    adminAddUserBtn: "KullanÄ±cÄ± Ekle",
+    adminRolePerms: "Rol BazlÄ± Ä°zin AyarlarÄ±",
+    adminRolePermsDesc: "Her rol iÃ§in hangi sekmeleri gÃ¶rebileceÄŸini ayarlayÄ±n.",
+    adminSecurity: "Oturum GÃ¼venliÄŸi",
+    adminSecurityDesc: "Belirtilen sÃ¼re boyunca hiÃ§bir iÅŸlem yapÄ±lmazsa oturum kapanÄ±r.",
+    adminInactivityTimeout: "Hareketsizlik Kapanma SÃ¼resi",
+    adminLogsTitle: "Ä°ÅŸlem Log KayÄ±tlarÄ±",
+    adminLogsDesc: "KullanÄ±cÄ± giriÅŸ/Ã§Ä±kÄ±ÅŸ ve kayÄ±t iÅŸlemleri",
     btnRefresh: "Yenile",
-    adminSaveBtn: "Ayarları Kaydet",
-    adminFooterNote: "Şifreler sunucuda kalıcı olarak saklanır.",
+    adminSaveBtn: "AyarlarÄ± Kaydet",
+    adminFooterNote: "Åifreler sunucuda kalÄ±cÄ± olarak saklanÄ±r.",
     adminCloseBtn: "Kapat",
     logFilterDelete: "Silme",
-    logFilterAddUser: "Kullanıcı Ekle",
-    logFilterDeleteUser: "Kullanıcı Sil",
+    logFilterAddUser: "KullanÄ±cÄ± Ekle",
+    logFilterDeleteUser: "KullanÄ±cÄ± Sil",
     adminRefreshBtn: "Yenile",
-    manualTitle: "Kullanım Kılavuzu",
-    manualSubtitle: "Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi",
-    compDataType: "Veri Türü",
-    compLastWeek: "Geçen Hafta",
+    manualTitle: "KullanÄ±m KÄ±lavuzu",
+    manualSubtitle: "Yemekhane Ãœretim, TÃ¼ketim ve AtÄ±k Kontrol Sistemi",
+    compDataType: "Veri TÃ¼rÃ¼",
+    compLastWeek: "GeÃ§en Hafta",
     compThisWeek: "Bu Hafta",
-    compLastMonth: "Geçen Ay",
+    compLastMonth: "GeÃ§en Ay",
     compThisMonth: "Bu Ay",
-    compLastYear: "Geçen Yıl",
-    compThisYear: "Bu Yıl",
+    compLastYear: "GeÃ§en YÄ±l",
+    compThisYear: "Bu YÄ±l",
     compDiff: "Fark",
-    compTotalWaste: "Toplam Atık (kg)",
-    compTotalProduction: "Toplam Üretim",
-    compTurnstilePasses: "Turnike Geçiş",
-    compStudentCount: "Öğrenci Sayısı",
-    compWastePerPerson: "Kişi Başı Atık (gr)",
-    monthlyCompDesc: "Bu ay ile geçen ay karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
-    yearlyCompDesc: "Bu yıl (yılbaşından bugüne) ile geçen yılın aynı dönemi karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.",
-    monthNames: ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"],
+    compTotalWaste: "Toplam AtÄ±k (kg)",
+    compTotalProduction: "Toplam Ãœretim",
+    compTurnstilePasses: "Turnike GeÃ§iÅŸ",
+    compStudentCount: "Ã–ÄŸrenci SayÄ±sÄ±",
+    compWastePerPerson: "KiÅŸi BaÅŸÄ± AtÄ±k (gr)",
+    monthlyCompDesc: "Bu ay ile geÃ§en ay karÅŸÄ±laÅŸtÄ±rÄ±lÄ±r. â†‘ artÄ±ÅŸ, â†“ azalÄ±ÅŸ. AtÄ±k ve kiÅŸi baÅŸÄ± atÄ±kta dÃ¼ÅŸÃ¼ÅŸ (â†“) iyidir.",
+    yearlyCompDesc: "Bu yÄ±l (yÄ±lbaÅŸÄ±ndan bugÃ¼ne) ile geÃ§en yÄ±lÄ±n aynÄ± dÃ¶nemi karÅŸÄ±laÅŸtÄ±rÄ±lÄ±r. â†‘ artÄ±ÅŸ, â†“ azalÄ±ÅŸ. AtÄ±k ve kiÅŸi baÅŸÄ± atÄ±kta dÃ¼ÅŸÃ¼ÅŸ (â†“) iyidir.",
+    monthNames: ["Ocak","Åubat","Mart","Nisan","MayÄ±s","Haziran","Temmuz","AÄŸustos","EylÃ¼l","Ekim","KasÄ±m","AralÄ±k"],
     haccpColDate: "Tarih",
     haccpColTime: "Saat",
-    haccpColDepot: "Depo Adı",
-    haccpColTemp: "Sıcaklık (°C)",
+    haccpColDepot: "Depo AdÄ±",
+    haccpColTemp: "SÄ±caklÄ±k (Â°C)",
     haccpColHumidity: "Nem (%)",
     haccpColNote: "Not",
-    haccpColAction: "İşlem",
-    dayNames: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"],
-    menuVariety: "Çeşit",
-    menuVariety1: "1. Çeşit",
-    menuVariety2: "2. Çeşit",
-    menuVariety3: "3. Çeşit",
-    menuVariety4: "4. Çeşit",
-    menuVariety5: "5. Çeşit",
-    menuPersonCount: "Kişi Sayısı",
-    stockDeductionList: "Stok Düşüm Listesi",
+    haccpColAction: "Ä°ÅŸlem",
+    dayNames: ["Pazartesi", "SalÄ±", "Ã‡arÅŸamba", "PerÅŸembe", "Cuma"],
+    menuVariety: "Ã‡eÅŸit",
+    menuVariety1: "1. Ã‡eÅŸit",
+    menuVariety2: "2. Ã‡eÅŸit",
+    menuVariety3: "3. Ã‡eÅŸit",
+    menuVariety4: "4. Ã‡eÅŸit",
+    menuVariety5: "5. Ã‡eÅŸit",
+    menuPersonCount: "KiÅŸi SayÄ±sÄ±",
+    stockDeductionList: "Stok DÃ¼ÅŸÃ¼m Listesi",
     total: "Toplam",
-    inVarieties: "çeşitte",
-    person: "kişi",
-    weeklyGrandTotal: "Haftalık Genel Toplam",
-    dailyAverage: "Günlük Ortalama",
-    avgPerPerson: "Kişi Başı Ortalama",
-    totalPersonDays: "Toplam Kişi/Gün",
-    colDay: "Gün",
+    inVarieties: "Ã§eÅŸitte",
+    person: "kiÅŸi",
+    weeklyGrandTotal: "HaftalÄ±k Genel Toplam",
+    dailyAverage: "GÃ¼nlÃ¼k Ortalama",
+    avgPerPerson: "KiÅŸi BaÅŸÄ± Ortalama",
+    totalPersonDays: "Toplam KiÅŸi/GÃ¼n",
+    colDay: "GÃ¼n",
     colDate: "Tarih",
-    colPerson: "Kişi",
-    dailyMaterialCost: "Günlük Malzeme Maliyeti",
-    perPerson: "Kişi Başı",
+    colPerson: "KiÅŸi",
+    dailyMaterialCost: "GÃ¼nlÃ¼k Malzeme Maliyeti",
+    perPerson: "KiÅŸi BaÅŸÄ±",
     ingredients: "Malzemeler",
-    perPersonGram: "(kişi başı gram)",
+    perPersonGram: "(kiÅŸi baÅŸÄ± gram)",
     colIngredient: "Malzeme",
-    colPerPerson: "/kişi",
+    colPerPerson: "/kiÅŸi",
     colUnit: "Birim",
     addIngredient: "+ Malzeme Ekle",
-    foodName: "Yemek Adı",
+    foodName: "Yemek AdÄ±",
     allergen: "Alerjen",
-    recipePerPerson: "Reçete (kişi başı)",
+    recipePerPerson: "ReÃ§ete (kiÅŸi baÅŸÄ±)",
     devices: "cihaz",
-    chartMonthlyProduction: "Aylık Üretim (kişi)",
-    chartMonthlyPasses: "Aylık Geçiş (kişi)",
-    chartMonthlyWaste: "Aylık Çöpe Giden (porsiyon)",
-    chartLastYearWaste: "Geçen Yıl Çöpe Giden (porsiyon)",
-    chartMonthlyWasteKg: "Aylık Atık (kg)",
-    chartMonthlyWastePortion: "Aylık Atık (porsiyon)",
-    chartMonthlyMealCount: "Aylık Üretim Sayısı",
-    chartMonthlyTurnstile: "Aylık Turnike Geçisi",
-    chartMonthlyWasteRate: "Aylık Atık Oranı %",
-    chartMonthlyStudent: "Aylık Öğrenci Sayısı",
-    chartWastePerPersonLabel: "Kişi Başı Atık (kg/kişi)",
+    chartMonthlyProduction: "AylÄ±k Ãœretim (kiÅŸi)",
+    chartMonthlyPasses: "AylÄ±k GeÃ§iÅŸ (kiÅŸi)",
+    chartMonthlyWaste: "AylÄ±k Ã‡Ã¶pe Giden (porsiyon)",
+    chartLastYearWaste: "GeÃ§en YÄ±l Ã‡Ã¶pe Giden (porsiyon)",
+    chartMonthlyWasteKg: "AylÄ±k AtÄ±k (kg)",
+    chartMonthlyWastePortion: "AylÄ±k AtÄ±k (porsiyon)",
+    chartMonthlyMealCount: "AylÄ±k Ãœretim SayÄ±sÄ±",
+    chartMonthlyTurnstile: "AylÄ±k Turnike GeÃ§isi",
+    chartMonthlyWasteRate: "AylÄ±k AtÄ±k OranÄ± %",
+    chartMonthlyStudent: "AylÄ±k Ã–ÄŸrenci SayÄ±sÄ±",
+    chartWastePerPersonLabel: "KiÅŸi BaÅŸÄ± AtÄ±k (kg/kiÅŸi)",
     maliTablo: "Mali Tablo",
-    maliTabloSubtitle: "Haftalık Malzeme Maliyeti Özeti",
-    maliUnitPriceMissing: "malzemenin birim fiyatı tanımlı değil",
-    maliUnitPriceHint: "Birim Fiyatlar sekmesinden tanımlayabilirsiniz",
+    maliTabloSubtitle: "HaftalÄ±k Malzeme Maliyeti Ã–zeti",
+    maliUnitPriceMissing: "malzemenin birim fiyatÄ± tanÄ±mlÄ± deÄŸil",
+    maliUnitPriceHint: "Birim Fiyatlar sekmesinden tanÄ±mlayabilirsiniz",
     weeklyTotal: "HAFTALIK TOPLAM",
-    categoryDistribution: "Kategori Dağılımı",
-    weeklyTotalList: "Haftalık Toplam İhtiyaç Listesi",
+    categoryDistribution: "Kategori DaÄŸÄ±lÄ±mÄ±",
+    weeklyTotalList: "HaftalÄ±k Toplam Ä°htiyaÃ§ Listesi",
     totalCost: "Toplam Maliyet",
-    catMeat: "Et Ürünleri",
-    catDairy: "Süt Ürünleri",
+    catMeat: "Et ÃœrÃ¼nleri",
+    catDairy: "SÃ¼t ÃœrÃ¼nleri",
     catLegumes: "Kuru Bakliyat",
     catSpices: "Baharatlar",
     catVegetable: "Sebze ve Meyve",
-    catOther: "Diğer",
-    month1: "Ocak", month2: "Şubat", month3: "Mart", month4: "Nisan",
-    month5: "Mayıs", month6: "Haziran", month7: "Temmuz", month8: "Ağustos",
-    month9: "Eylül", month10: "Ekim", month11: "Kasım", month12: "Aralık",
-    menuListTitle: "MENÜ LİSTESİ",
+    catOther: "DiÄŸer",
+    month1: "Ocak", month2: "Åubat", month3: "Mart", month4: "Nisan",
+    month5: "MayÄ±s", month6: "Haziran", month7: "Temmuz", month8: "AÄŸustos",
+    month9: "EylÃ¼l", month10: "Ekim", month11: "KasÄ±m", month12: "AralÄ±k",
+    menuListTitle: "MENÃœ LÄ°STESÄ°",
     totalDevices: "Toplam Cihaz",
-    statusWorking: "Çalışır Durumda",
-    statusDefective: "Arızalı",
-    statusMaintenance: "Bakım Yapılacak",
-    statusScrap: "Hurdaya Ayrılacak",
-    calibrationValid: "Kalibrasyonu Geçerli",
-    calibrationApproaching: "Kalibrasyonu Yaklaşan (30 Gün)",
-    differentDepartments: "Farklı Bölüm",
-    statusApproaching: "Yaklaşıyor",
-    statusExpired: "Süresi Doldu",
-    statusNotDone: "Yapılmadı",
-    statusValid: "Geçerli",
-    noDeviceFound: "Bu filtreleme kriterlerine uygun cihaz bulunamadı.",
-    noDeviceRecord: "Henüz kalibrasyona tabi cihaz kaydı girilmemiş.",
+    statusWorking: "Ã‡alÄ±ÅŸÄ±r Durumda",
+    statusDefective: "ArÄ±zalÄ±",
+    statusMaintenance: "BakÄ±m YapÄ±lacak",
+    statusScrap: "Hurdaya AyrÄ±lacak",
+    calibrationValid: "Kalibrasyonu GeÃ§erli",
+    calibrationApproaching: "Kalibrasyonu YaklaÅŸan (30 GÃ¼n)",
+    differentDepartments: "FarklÄ± BÃ¶lÃ¼m",
+    statusApproaching: "YaklaÅŸÄ±yor",
+    statusExpired: "SÃ¼resi Doldu",
+    statusNotDone: "YapÄ±lmadÄ±",
+    statusValid: "GeÃ§erli",
+    noDeviceFound: "Bu filtreleme kriterlerine uygun cihaz bulunamadÄ±.",
+    noDeviceRecord: "HenÃ¼z kalibrasyona tabi cihaz kaydÄ± girilmemiÅŸ.",
     deviceCount: "cihaz",
     deviceCountSuffix: " cihaz",
-    editDeviceTitle: "Kalibrasyona Tabi Cihazı Düzenle",
+    editDeviceTitle: "Kalibrasyona Tabi CihazÄ± DÃ¼zenle",
     newDeviceTitle: "Yeni Kalibrasyona Tabi Cihaz",
     kpiBeneficiary: "Yararlanan: ",
-    kpiNoRecordToday: "Bugün kayıt yok",
-    kpiAlertsCount: "uyarı var",
-    kpiAllValuesOk: "Tüm değerler uygun",
+    kpiNoRecordToday: "BugÃ¼n kayÄ±t yok",
+    kpiAlertsCount: "uyarÄ± var",
+    kpiAllValuesOk: "TÃ¼m deÄŸerler uygun",
     kpiDeviceInAlarm: "cihaz alarmda",
-    kpiApproaching: "yaklaşıyor",
-    kpiAllCalibrationsValid: "Tüm kalibrasyonlar geçerli",
-    filterAll: "Tümü",
-    colDeviceName: "Cihaz Adı",
+    kpiApproaching: "yaklaÅŸÄ±yor",
+    kpiAllCalibrationsValid: "TÃ¼m kalibrasyonlar geÃ§erli",
+    filterAll: "TÃ¼mÃ¼",
+    colDeviceName: "Cihaz AdÄ±",
     colBrandModel: "Marka-Model",
     colSerialNo: "Sicil No",
     colDeviceStatus: "Cihaz Durumu",
     colCalibration: "Kalibrasyon",
     colLastCalibration: "Son Kalibrasyon",
     colNextCalibration: "Bir Sonraki",
-    colDepartment: "Bölüm",
+    colDepartment: "BÃ¶lÃ¼m",
     colResponsible: "Sorumlu",
     colNote: "Not",
-    colAction: "İşlem",
+    colAction: "Ä°ÅŸlem",
     unitPriceList: "Birim Fiyat Listesi",
-    registeredProducts: "Kayıtlı Ürün",
+    registeredProducts: "KayÄ±tlÄ± ÃœrÃ¼n",
     totalAmount: "Toplam Tutar",
     avgUnitPrice: "Ortalama Birim Fiyat",
-    selectedYear: "Seçili Yıl",
-    duplicateWarning: "üründe tekrar eden kayıt bulundu. Fiyat hesaplamalarında hata olabilir.",
+    selectedYear: "SeÃ§ili YÄ±l",
+    duplicateWarning: "Ã¼rÃ¼nde tekrar eden kayÄ±t bulundu. Fiyat hesaplamalarÄ±nda hata olabilir.",
     cleanDuplicates: "Tek Tek Temizle",
-    colProductName: "Ürün Adı",
+    colProductName: "ÃœrÃ¼n AdÄ±",
     colUnit: "Birim",
-    colUnitPrice: "Birim Fiyat (₺)",
+    colUnitPrice: "Birim Fiyat (â‚º)",
     colUnitEquals: "1 Birim =",
-    colYear: "Yıl",
-    noProductsThisYear: "Bu yıl için henüz ürün eklenmemiş.",
-    btnEdit: "Düzenle",
+    colYear: "YÄ±l",
+    noProductsThisYear: "Bu yÄ±l iÃ§in henÃ¼z Ã¼rÃ¼n eklenmemiÅŸ.",
+    btnEdit: "DÃ¼zenle",
     btnDelete: "Sil",
     pageLabel: "Sayfa",
     totalProductsLabel: "Toplam",
-    totalProductsSuffix: " ürün",
-    priceYearNote: "Fiyatlar yıl bazlıdır. Eşleşme: Malzeme adı normalize edilerek otomatik eşleştirilir.",
-    btnAddNewProduct: "+ Yeni Ürün",
-    btnDownloadCSV: "CSV İndir",
-    btnPrint: "Yazdır",
-    btnUploadCSV: "CSV Yükle",
-    clickToSelectYear: "Tıkla, yıl seç",
-    selectYear: "Yıl Seç",
-    dataInfoRecord: "kayıt",
-    dataInfoProduction: "üretim",
-    dataInfoWaste: "atık",
+    totalProductsSuffix: " Ã¼rÃ¼n",
+    priceYearNote: "Fiyatlar yÄ±l bazlÄ±dÄ±r. EÅŸleÅŸme: Malzeme adÄ± normalize edilerek otomatik eÅŸleÅŸtirilir.",
+    btnAddNewProduct: "+ Yeni ÃœrÃ¼n",
+    btnDownloadCSV: "CSV Ä°ndir",
+    btnPrint: "YazdÄ±r",
+    btnUploadCSV: "CSV YÃ¼kle",
+    clickToSelectYear: "TÄ±kla, yÄ±l seÃ§",
+    selectYear: "YÄ±l SeÃ§",
+    dataInfoRecord: "kayÄ±t",
+    dataInfoProduction: "Ã¼retim",
+    dataInfoWaste: "atÄ±k",
     portion: "porsiyon",
-    abnormalDays: "anormal gün",
-    noRecordsToDisplay: "Gösterilecek kayıt bulunamadı.",
-    colYearLabel: "Yıl",
+    abnormalDays: "anormal gÃ¼n",
+    noRecordsToDisplay: "GÃ¶sterilecek kayÄ±t bulunamadÄ±.",
+    colYearLabel: "YÄ±l",
     avgPortion400: "400 gr",
-    recordsNot400: "kayıt 400 değil",
+    recordsNot400: "kayÄ±t 400 deÄŸil",
     gram: " gr",
-    personLabel: "Kişi",
-    last7RecordsPrev7: "son 7 kayıt / önceki 7",
+    personLabel: "KiÅŸi",
+    last7RecordsPrev7: "son 7 kayÄ±t / Ã¶nceki 7",
     tempAppropriate: "Uygun",
-    tempLow: "Düşük",
-    tempHigh: "Yüksek",
+    tempLow: "DÃ¼ÅŸÃ¼k",
+    tempHigh: "YÃ¼ksek",
     lowerLimit: "Alt Limit: ",
-    upperLimit: "Üst Limit: ",
+    upperLimit: "Ãœst Limit: ",
     unknownDepo: "Bilinmeyen",
     tempMin: "Min: ",
     tempAvg: "Ort: ",
     tempMax: "Maks: ",
     humidity: "Nem: ",
     depot: "Depo",
-    selectedCount: " seçili",
+    selectedCount: " seÃ§ili",
     pageRecords: "Sayfa ",
-    recordCount: " kayıt)",
-    tempRecordsTitle: "Soğuk Depo Sıcaklık Kayıtları",
+    recordCount: " kayÄ±t)",
+    tempRecordsTitle: "SoÄŸuk Depo SÄ±caklÄ±k KayÄ±tlarÄ±",
     dateRangeLabel: " | Tarih:",
-    allDepots: "Tüm depolar",
+    allDepots: "TÃ¼m depolar",
     colTime: "Saat",
     colDepot: "Depo",
-    colTemperature: "Sıcaklık",
+    colTemperature: "SÄ±caklÄ±k",
     colStatus: "Durum",
-    depotTempRecordTitle: "Depo Sıcaklık Kaydı",
+    depotTempRecordTitle: "Depo SÄ±caklÄ±k KaydÄ±",
     formDate: "Tarih",
     formTime: "Saat",
-    formDepotName: "Depo Adı",
-    formTemperature: "Sıcaklık (°C)",
-    tempPlaceholder: "0.0 (boş bırakılabilir)",
+    formDepotName: "Depo AdÄ±",
+    formTemperature: "SÄ±caklÄ±k (Â°C)",
+    tempPlaceholder: "0.0 (boÅŸ bÄ±rakÄ±labilir)",
     formHumidity: "Nem (%)",
-    formNoteOptional: "İsteğe bağlı",
-    deleteConfirm: "Bu kaydı silmek istediğinize emin misiniz?",
-    deleteSelectedConfirm: "Seçili ",
-    deleteSelectedConfirmSuffix: " kaydı silmek istediğinize emin misiniz?",
-    tempHistory: " Sıcaklık Geçmişi",
-    weeklyAvgTempNote: "Haftalık ortalama sıcaklık değerleri — alt ve üst limit çizgileriyle birlikte",
-    upperLimitLabel: "Üst Limit (",
+    formNoteOptional: "Ä°steÄŸe baÄŸlÄ±",
+    deleteConfirm: "Bu kaydÄ± silmek istediÄŸinize emin misiniz?",
+    deleteSelectedConfirm: "SeÃ§ili ",
+    deleteSelectedConfirmSuffix: " kaydÄ± silmek istediÄŸinize emin misiniz?",
+    tempHistory: " SÄ±caklÄ±k GeÃ§miÅŸi",
+    weeklyAvgTempNote: "HaftalÄ±k ortalama sÄ±caklÄ±k deÄŸerleri â€” alt ve Ã¼st limit Ã§izgileriyle birlikte",
+    upperLimitLabel: "Ãœst Limit (",
     lowerLimitLabel: "Alt Limit (",
-    totalRecordCount: "Toplam Kayıt",
-    totalWasteOil: "Toplam Atık Yağ",
-    avgAmountPerRecord: "Ort. Miktar / Kayıt",
-    highestAmount: "En Yüksek Miktar",
-    lowestAmount: "En Düşük Miktar",
-    oilTypeCount: "Yağ Türü Çeşidi",
+    totalRecordCount: "Toplam KayÄ±t",
+    totalWasteOil: "Toplam AtÄ±k YaÄŸ",
+    avgAmountPerRecord: "Ort. Miktar / KayÄ±t",
+    highestAmount: "En YÃ¼ksek Miktar",
+    lowestAmount: "En DÃ¼ÅŸÃ¼k Miktar",
+    oilTypeCount: "YaÄŸ TÃ¼rÃ¼ Ã‡eÅŸidi",
     yearTotalSuffix: " Toplam",
-    startDate: "Başlangıç",
-    endDate: "Bitiş",
-    typeLabel: "Tür: ",
-    yearLabel: "Yıl: ",
+    startDate: "BaÅŸlangÄ±Ã§",
+    endDate: "BitiÅŸ",
+    typeLabel: "TÃ¼r: ",
+    yearLabel: "YÄ±l: ",
     activeFilterLabel: "Aktif filtre: ",
-    noFilterMessage: "Filtre yok — tüm atık yağ kayıtları gösteriliyor.",
-    noWasteOilRecord: "Henüz atık yağ kaydı girilmemiş.",
-    noMatchingFilterRecord: "Bu filtreleme kriterlerine uygun kayıt bulunamadı.",
-    editWasteOilRecord: "Atık Yağ Kaydını Düzenle",
-    newWasteOilRecord: "Yeni Atık Yağ Kaydı",
-    wasteOilChartLabel: "Atık Yağ",
-    previousYearLabel: "Önceki Yıl",
-    undefinedType: "Belirtilmemiş",
-    totalWastePackaging: "Toplam Ambalaj Atığı",
-    wasteTypeCount: "Atık Türü Çeşidi",
-    noWastePackagingRecord: "Henüz ambalaj atığı kaydı girilmemiş.",
-    noMatchingFilterPackage: "Bu filtreleme kriterlerine uygun kayıt bulunamadı.",
-    noFilterMessagePackaging: "Filtre yok — tüm ambalaj atığı kayıtları gösteriliyor.",
-    editWastePackagingRecord: "Ambalaj Atığı Kaydını Düzenle",
-    newWastePackagingRecord: "Yeni Ambalaj Atığı Kaydı",
-    wastePackagingChartLabel: "Ambalaj Atığı",
-    chartDetailEmpty: "Bu dönem için kayıt bulunamadı.",
+    noFilterMessage: "Filtre yok â€” tÃ¼m atÄ±k yaÄŸ kayÄ±tlarÄ± gÃ¶steriliyor.",
+    noWasteOilRecord: "HenÃ¼z atÄ±k yaÄŸ kaydÄ± girilmemiÅŸ.",
+    noMatchingFilterRecord: "Bu filtreleme kriterlerine uygun kayÄ±t bulunamadÄ±.",
+    editWasteOilRecord: "AtÄ±k YaÄŸ KaydÄ±nÄ± DÃ¼zenle",
+    newWasteOilRecord: "Yeni AtÄ±k YaÄŸ KaydÄ±",
+    wasteOilChartLabel: "AtÄ±k YaÄŸ",
+    previousYearLabel: "Ã–nceki YÄ±l",
+    undefinedType: "BelirtilmemiÅŸ",
+    totalWastePackaging: "Toplam Ambalaj AtÄ±ÄŸÄ±",
+    wasteTypeCount: "AtÄ±k TÃ¼rÃ¼ Ã‡eÅŸidi",
+    noWastePackagingRecord: "HenÃ¼z ambalaj atÄ±ÄŸÄ± kaydÄ± girilmemiÅŸ.",
+    noMatchingFilterPackage: "Bu filtreleme kriterlerine uygun kayÄ±t bulunamadÄ±.",
+    noFilterMessagePackaging: "Filtre yok â€” tÃ¼m ambalaj atÄ±ÄŸÄ± kayÄ±tlarÄ± gÃ¶steriliyor.",
+    editWastePackagingRecord: "Ambalaj AtÄ±ÄŸÄ± KaydÄ±nÄ± DÃ¼zenle",
+    newWastePackagingRecord: "Yeni Ambalaj AtÄ±ÄŸÄ± KaydÄ±",
+    wastePackagingChartLabel: "Ambalaj AtÄ±ÄŸÄ±",
+    chartDetailEmpty: "Bu dÃ¶nem iÃ§in kayÄ±t bulunamadÄ±.",
     chartClose: "Kapat",
-    chartColProduction: "Üretim",
-    chartColPasses: "Geçiş",
-    chartColWaste: "Atık",
-    chartColStudent: "Öğrenci",
-    chartColFoodType: "Yemek Türü",
-    chartProductionVsTurnstile: "Üretim ile Turnike Geçişi Arasındaki Fark",
-    chartStaffTotal: "Akademik ve İdari + SKS Personeli",
-    yearFilterLabel: "Yıl:",
+    chartColProduction: "Ãœretim",
+    chartColPasses: "GeÃ§iÅŸ",
+    chartColWaste: "AtÄ±k",
+    chartColStudent: "Ã–ÄŸrenci",
+    chartColFoodType: "Yemek TÃ¼rÃ¼",
+    chartProductionVsTurnstile: "Ãœretim ile Turnike GeÃ§iÅŸi ArasÄ±ndaki Fark",
+    chartStaffTotal: "Akademik ve Ä°dari + SKS Personeli",
+    yearFilterLabel: "YÄ±l:",
     monthFilterLabel: "Ay:",
-    chartSelectYear: "Seçiniz",
-    year1Label: "1. Yıl:",
-    year2Label: "2. Yıl:",
-    noComparison: "Karşılaştırma Yok",
+    chartSelectYear: "SeÃ§iniz",
+    year1Label: "1. YÄ±l:",
+    year2Label: "2. YÄ±l:",
+    noComparison: "KarÅŸÄ±laÅŸtÄ±rma Yok",
     newLabel: "Yeni",
-    foodTypeLabel: "Yemek Türü",
-    productionLabel: " Üretim",
-    wasteKgLabel: " Atık (kg)",
-    wasteGrPortionLabel: " Atık (gr/pors.)",
+    foodTypeLabel: "Yemek TÃ¼rÃ¼",
+    productionLabel: " Ãœretim",
+    wasteKgLabel: " AtÄ±k (kg)",
+    wasteGrPortionLabel: " AtÄ±k (gr/pors.)",
     diffKgLabel: "Fark (kg)",
     totalRow: "TOPLAM",
-    registeredRate: "Kayıtlı oran: ",
-    unsavedChanges: " (kaydedilmemiş değişiklik)",
-    kpiTotalStudentSpending: "Toplam Öğrenci Harcama",
+    registeredRate: "KayÄ±tlÄ± oran: ",
+    unsavedChanges: " (kaydedilmemiÅŸ deÄŸiÅŸiklik)",
+    kpiTotalStudentSpending: "Toplam Ã–ÄŸrenci Harcama",
     kpiTotalStaffSpending: "Toplam Personel Harcama",
-    kpiAvgMonthlyStudentSpending: "Ort. Aylık Öğr. Harcama",
-    kpiAvgMonthlyStaffSpending: "Ort. Aylık Pers. Harcama",
-    kpiTotalStudents: "Toplam Öğrenci",
+    kpiAvgMonthlyStudentSpending: "Ort. AylÄ±k Ã–ÄŸr. Harcama",
+    kpiAvgMonthlyStaffSpending: "Ort. AylÄ±k Pers. Harcama",
+    kpiTotalStudents: "Toplam Ã–ÄŸrenci",
     kpiTotalStaff: "Toplam Personel",
-    kpiHighestStudentMonth: "En Yüksek Öğr. Ay",
-    kpiHighestStaffMonth: "En Yüksek Pers. Ay",
+    kpiHighestStudentMonth: "En YÃ¼ksek Ã–ÄŸr. Ay",
+    kpiHighestStaffMonth: "En YÃ¼ksek Pers. Ay",
     kpiTotalMealSpending: "Toplam Yemek Harcama",
-    kpiAvgMonthlyMealSpending: "Ort. Aylık Yemek Harcama",
-    kpiTotalMealsProduced: "Toplam Üretilen Yemek",
-    kpiHighestMealMonth: "En Yüksek Yemek Ay",
-    chartStudentSpending: "Öğrenci Harcama (₺)",
-    chartStaffSpending: "Personel Harcama (₺)",
-    chartMealSpending: "Yemek Harcama (₺)",
-    noRecordsYet: "Henüz kayıt yok.",
-    invalidRate: "Geçerli bir oran girin!",
+    kpiAvgMonthlyMealSpending: "Ort. AylÄ±k Yemek Harcama",
+    kpiTotalMealsProduced: "Toplam Ãœretilen Yemek",
+    kpiHighestMealMonth: "En YÃ¼ksek Yemek Ay",
+    chartStudentSpending: "Ã–ÄŸrenci Harcama (â‚º)",
+    chartStaffSpending: "Personel Harcama (â‚º)",
+    chartMealSpending: "Yemek Harcama (â‚º)",
+    noRecordsYet: "HenÃ¼z kayÄ±t yok.",
+    invalidRate: "GeÃ§erli bir oran girin!",
     rateSaved: "Oran kaydedildi: ",
     menuStatusDraft: "Taslak",
     menuStatusPending: "Onay Bekliyor",
-    menuStatusApproved: "Onaylandı",
+    menuStatusApproved: "OnaylandÄ±",
     menuStatusRejected: "Reddedildi",
-    menuApprove: "Menüyü onayla",
-    menuApproveDisabled: "Menü henüz onaya gönderilmedi. Diyetisyen \"Onaya Gönder\"e bastığında buradan onaylayabilirsiniz.",
-    menuReject: "Menüyü gerekçeli olarak reddet",
-    menuRejectDisabled: "Menü henüz onaya gönderilmedi. Diyetisyen \"Onaya Gönder\"e bastığında buradan reddedebilirsiniz.",
-    menuPendingCount: " haftanın menüsü onay bekliyor. Bekleyen haftaya gidip onaylayabilirsiniz.",
-    menuNotApproved: "Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.",
-    menuRejected: "Bu menü reddedildi",
-    menuRejectedSuffix: ". Diyetisyen düzelttikten sonra yeniden onaya gönderebilir.",
-    menuAwaitingApproval: "Bu menü onay bekliyor. Onaylanmadan üretim listesinde \"onaysız\" olarak işaretlenir.",
+    menuApprove: "MenÃ¼yÃ¼ onayla",
+    menuApproveDisabled: "MenÃ¼ henÃ¼z onaya gÃ¶nderilmedi. Diyetisyen \"Onaya GÃ¶nder\"e bastÄ±ÄŸÄ±nda buradan onaylayabilirsiniz.",
+    menuReject: "MenÃ¼yÃ¼ gerekÃ§eli olarak reddet",
+    menuRejectDisabled: "MenÃ¼ henÃ¼z onaya gÃ¶nderilmedi. Diyetisyen \"Onaya GÃ¶nder\"e bastÄ±ÄŸÄ±nda buradan reddedebilirsiniz.",
+    menuPendingCount: " haftanÄ±n menÃ¼sÃ¼ onay bekliyor. Bekleyen haftaya gidip onaylayabilirsiniz.",
+    menuNotApproved: "Bu haftanÄ±n menÃ¼sÃ¼ henÃ¼z gÄ±da mÃ¼hendisi tarafÄ±ndan onaylanmadÄ±.",
+    menuRejected: "Bu menÃ¼ reddedildi",
+    menuRejectedSuffix: ". Diyetisyen dÃ¼zelttikten sonra yeniden onaya gÃ¶nderebilir.",
+    menuAwaitingApproval: "Bu menÃ¼ onay bekliyor. Onaylanmadan Ã¼retim listesinde \"onaysÄ±z\" olarak iÅŸaretlenir.",
     noteLabel: "Not ",
     deleteNote: "Bu notu sil",
     addNote: "Yeni not ekle",
-    mealPickerTitle: "Yemek Seç",
-    clearLabel: "🗑 Temizle",
+    mealPickerTitle: "Yemek SeÃ§",
+    clearLabel: "ğŸ—‘ Temizle",
     searchMealPlaceholder: "Yemek ara...",
-    noMatchingMeal: "Eşleşen yemek bulunamadı.",
-    varietyLabel: " Çeşit: ",
-    addRecord: "Yeni Kayıt Ekle",
-    editRecord: "Kaydı Düzenle",
-    btnUpdate: "Güncelle",
-    recordAdded: "Kayıt başarıyla eklendi.",
-    recordUpdated: "Kayıt başarıyla güncellendi.",
-    recordDeleted: "Kayıt silindi.",
-    allRecordsDeleted: "Tüm kayıtlar silindi.",
-    selectedRecordsDeleted: "Seçili kayıtlar silindi.",
-    noRecordToDelete: "Silinecek kayıt yok.",
-    noSelectedRecord: "Hiç kayıt seçilmedi.",
-    deleteAllConfirm: "TÜM kayıtları silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!",
-    deleteFoodConfirm: "Bu yemeği silmek istediğinize emin misiniz?",
-    selected: " seçili",
-    negMeals: "Üretilen yemek sayısı negatif olamaz.",
-    negTurnstile: "Turnike geçiş sayısı negatif olamaz.",
-    negStaff: "Personel sayısı negatif olamaz.",
-    negPortion: "Porsiyon miktarı negatif olamaz.",
-    negStudent: "Öğrenci sayısı negatif olamaz.",
-    unsavedConfirm: "Kaydedilmemiş değişiklikler var. Kapatmak istediğinize emin misiniz?",
-    selectUser: "Lütfen kullanıcı seçin.",
-    wrongCredentials: "Kullanıcı adı veya şifre hatalı.",
-    tooManyAttempts: "Çok fazla deneme. Lütfen bekleyin.",
-    editable: "Düzenlenebilir",
+    noMatchingMeal: "EÅŸleÅŸen yemek bulunamadÄ±.",
+    varietyLabel: " Ã‡eÅŸit: ",
+    addRecord: "Yeni KayÄ±t Ekle",
+    editRecord: "KaydÄ± DÃ¼zenle",
+    btnUpdate: "GÃ¼ncelle",
+    recordAdded: "KayÄ±t baÅŸarÄ±yla eklendi.",
+    recordUpdated: "KayÄ±t baÅŸarÄ±yla gÃ¼ncellendi.",
+    recordDeleted: "KayÄ±t silindi.",
+    allRecordsDeleted: "TÃ¼m kayÄ±tlar silindi.",
+    selectedRecordsDeleted: "SeÃ§ili kayÄ±tlar silindi.",
+    noRecordToDelete: "Silinecek kayÄ±t yok.",
+    noSelectedRecord: "HiÃ§ kayÄ±t seÃ§ilmedi.",
+    deleteAllConfirm: "TÃœM kayÄ±tlarÄ± silmek istediÄŸinize emin misiniz?\nBu iÅŸlem geri alÄ±namaz!",
+    deleteFoodConfirm: "Bu yemeÄŸi silmek istediÄŸinize emin misiniz?",
+    selected: " seÃ§ili",
+    negMeals: "Ãœretilen yemek sayÄ±sÄ± negatif olamaz.",
+    negTurnstile: "Turnike geÃ§iÅŸ sayÄ±sÄ± negatif olamaz.",
+    negStaff: "Personel sayÄ±sÄ± negatif olamaz.",
+    negPortion: "Porsiyon miktarÄ± negatif olamaz.",
+    negStudent: "Ã–ÄŸrenci sayÄ±sÄ± negatif olamaz.",
+    unsavedConfirm: "KaydedilmemiÅŸ deÄŸiÅŸiklikler var. Kapatmak istediÄŸinize emin misiniz?",
+    selectUser: "LÃ¼tfen kullanÄ±cÄ± seÃ§in.",
+    wrongCredentials: "KullanÄ±cÄ± adÄ± veya ÅŸifre hatalÄ±.",
+    tooManyAttempts: "Ã‡ok fazla deneme. LÃ¼tfen bekleyin.",
+    editable: "DÃ¼zenlenebilir",
     fixed: "Sabit",
-    menuSentForApproval: "Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.",
-    menuApproved: "Menü onaylandı.",
-    menuRejectedMsg: "Menü gerekçeli olarak reddedildi.",
-    menuDraftSaved: "Menü taslak olarak kaydedildi.",
-    menuCleared: "Menü temizlendi.",
+    menuSentForApproval: "MenÃ¼ onaya gÃ¶nderildi. GÄ±da MÃ¼hendisi/Admin onayÄ± bekleniyor.",
+    menuApproved: "MenÃ¼ onaylandÄ±.",
+    menuRejectedMsg: "MenÃ¼ gerekÃ§eli olarak reddedildi.",
+    menuDraftSaved: "MenÃ¼ taslak olarak kaydedildi.",
+    menuCleared: "MenÃ¼ temizlendi.",
     monthShort1: "Oca",
-    monthShort2: "Şub",
+    monthShort2: "Åub",
     monthShort3: "Mar",
     monthShort4: "Nis",
     monthShort5: "May",
     monthShort6: "Haz",
     monthShort7: "Tem",
-    monthShort8: "Ağu",
+    monthShort8: "AÄŸu",
     monthShort9: "Eyl",
     monthShort10: "Eki",
     monthShort11: "Kas",
@@ -12048,7 +12048,7 @@ var I18N = {
     chartWasteRatioNote: "Percentage of produced meals that become waste",
     chartWastePerPerson: "Waste per Person (kg/person)",
     chartWastePerPersonNote: "Average waste per person entering the dining hall",
-    chartMonthlyTemp: "Monthly Average Depot Temperatures (°C)",
+    chartMonthlyTemp: "Monthly Average Depot Temperatures (Â°C)",
     chartTempEmpty: "Charts will appear when temperature records are entered",
     chartTempNote: "Monthly average temperature of each depot",
     yearlyPdfBtn: "Print PDF",
@@ -12076,14 +12076,14 @@ var I18N = {
     btnSaveStaffRate: "Save Staff Amount",
     spendingMealRate: "Per Meal Spending Amount (TL)",
     btnSaveMealRate: "Save Meal Amount",
-    spendingDesc: "Student Spending = Student Count × Student Per Person Amount",
+    spendingDesc: "Student Spending = Student Count Ã— Student Per Person Amount",
     spendingStudentTitle: "Student Spending Amount (TL)",
     spendingChartEmpty: "Charts will appear when records are entered",
-    spendingStudentNote: "Student Spending (TL) = Student Count × Student Per Person Spending Amount",
+    spendingStudentNote: "Student Spending (TL) = Student Count Ã— Student Per Person Spending Amount",
     spendingStaffTitle: "Staff Spending Amount (TL)",
-    spendingStaffNote: "Staff Spending (TL) = Staff Count × Staff Per Person Spending Amount",
+    spendingStaffNote: "Staff Spending (TL) = Staff Count Ã— Staff Per Person Spending Amount",
     spendingMealTitle: "Meal Spending Amount (TL)",
-    spendingMealNote: "Meal Spending (TL) = Meals Produced × Per Meal Spending Amount",
+    spendingMealNote: "Meal Spending (TL) = Meals Produced Ã— Per Meal Spending Amount",
     spendingTableTitle: "Spending Calculation Table",
     syncTitle: "Supabase Synchronization",
     syncCloseBtn: "Close",
@@ -12166,13 +12166,13 @@ var I18N = {
     compTurnstilePasses: "Turnstile Passes",
     compStudentCount: "Student Count",
     compWastePerPerson: "Waste per Person (gr)",
-    monthlyCompDesc: "Comparing this month with last month. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
-    yearlyCompDesc: "Comparing this year (year-to-date) with the same period last year. ↑ increase, ↓ decrease. A decrease (↓) in waste and waste per person is good.",
+    monthlyCompDesc: "Comparing this month with last month. â†‘ increase, â†“ decrease. A decrease (â†“) in waste and waste per person is good.",
+    yearlyCompDesc: "Comparing this year (year-to-date) with the same period last year. â†‘ increase, â†“ decrease. A decrease (â†“) in waste and waste per person is good.",
     monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
     haccpColDate: "Date",
     haccpColTime: "Time",
     haccpColDepot: "Depot Name",
-    haccpColTemp: "Temperature (°C)",
+    haccpColTemp: "Temperature (Â°C)",
     haccpColHumidity: "Humidity (%)",
     haccpColNote: "Note",
     haccpColAction: "Action",
@@ -12282,7 +12282,7 @@ var I18N = {
     cleanDuplicates: "Clean One by One",
     colProductName: "Product Name",
     colUnit: "Unit",
-    colUnitPrice: "Unit Price (₺)",
+    colUnitPrice: "Unit Price (â‚º)",
     colUnitEquals: "1 Unit =",
     colYear: "Year",
     noProductsThisYear: "No products added for this year yet.",
@@ -12335,7 +12335,7 @@ var I18N = {
     formDate: "Date",
     formTime: "Time",
     formDepotName: "Depot Name",
-    formTemperature: "Temperature (°C)",
+    formTemperature: "Temperature (Â°C)",
     tempPlaceholder: "0.0 (can be left empty)",
     formHumidity: "Humidity (%)",
     formNoteOptional: "Optional",
@@ -12343,7 +12343,7 @@ var I18N = {
     deleteSelectedConfirm: "Are you sure you want to delete ",
     deleteSelectedConfirmSuffix: " selected records?",
     tempHistory: " Temperature History",
-    weeklyAvgTempNote: "Weekly average temperature values — with upper and lower limit lines",
+    weeklyAvgTempNote: "Weekly average temperature values â€” with upper and lower limit lines",
     upperLimitLabel: "Upper Limit (",
     lowerLimitLabel: "Lower Limit (",
     totalRecordCount: "Total Records",
@@ -12358,7 +12358,7 @@ var I18N = {
     typeLabel: "Type: ",
     yearLabel: "Year: ",
     activeFilterLabel: "Active filter: ",
-    noFilterMessage: "No filter — showing all waste oil records.",
+    noFilterMessage: "No filter â€” showing all waste oil records.",
     noWasteOilRecord: "No waste oil records entered yet.",
     noMatchingFilterRecord: "No records found matching these filter criteria.",
     editWasteOilRecord: "Edit Waste Oil Record",
@@ -12370,7 +12370,7 @@ var I18N = {
     wasteTypeCount: "Waste Type Count",
     noWastePackagingRecord: "No packaging waste records entered yet.",
     noMatchingFilterPackage: "No records found matching these filter criteria.",
-    noFilterMessagePackaging: "No filter — showing all packaging waste records.",
+    noFilterMessagePackaging: "No filter â€” showing all packaging waste records.",
     editWastePackagingRecord: "Edit Packaging Waste Record",
     newWastePackagingRecord: "New Packaging Waste Record",
     wastePackagingChartLabel: "Packaging Waste",
@@ -12410,9 +12410,9 @@ var I18N = {
     kpiAvgMonthlyMealSpending: "Avg. Monthly Meal Spending",
     kpiTotalMealsProduced: "Total Meals Produced",
     kpiHighestMealMonth: "Highest Meal Month",
-    chartStudentSpending: "Student Spending (₺)",
-    chartStaffSpending: "Staff Spending (₺)",
-    chartMealSpending: "Meal Spending (₺)",
+    chartStudentSpending: "Student Spending (â‚º)",
+    chartStaffSpending: "Staff Spending (â‚º)",
+    chartMealSpending: "Meal Spending (â‚º)",
     noRecordsYet: "No records yet.",
     invalidRate: "Please enter a valid rate!",
     rateSaved: "Rate saved: ",
@@ -12433,7 +12433,7 @@ var I18N = {
     deleteNote: "Delete this note",
     addNote: "Add new note",
     mealPickerTitle: "Select Meal",
-    clearLabel: "🗑 Clear",
+    clearLabel: "ğŸ—‘ Clear",
     searchMealPlaceholder: "Search meals...",
     noMatchingMeal: "No matching meals found.",
     varietyLabel: " Variety: ",
@@ -12480,640 +12480,648 @@ var I18N = {
     monthShort12: "Dec"
   },
   az: {
-    loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
+    loginSub: "QIDA XÄ°DMÆTLÆRÄ° Ä°DARÆETMÆ SÄ°STEMÄ°",
     loginFormSub: "Daxil olun",
-    loginUsername: "İstifadəçi",
-    loginSelectUser: "İstifadəçi seçin",
-    loginPassword: "Şifrə",
+    loginUsername: "Ä°stifadÉ™Ã§i",
+    loginSelectUser: "Ä°stifadÉ™Ã§i seÃ§in",
+    loginPassword: "ÅifrÉ™",
     loginBtn: "Daxil ol",
-    loginHint: "Şifrənizi administratorunuzdan ala bilərsiniz",
-    loginFeature1: "Menyu Planlaması, Günlük İstehsal, İstehlak və Tullantı İzləmə",
-    loginFeature2: "Ətraflı Hesabatlar",
-    loginFeature3: "Canlı Panel və Qrafiklər",
+    loginHint: "ÅifrÉ™nizi administratorunuzdan ala bilÉ™rsiniz",
+    loginFeature1: "Menyu PlanlamasÄ±, GÃ¼nlÃ¼k Ä°stehsal, Ä°stehlak vÉ™ TullantÄ± Ä°zlÉ™mÉ™",
+    loginFeature2: "ÆtraflÄ± Hesabatlar",
+    loginFeature3: "CanlÄ± Panel vÉ™ QrafiklÉ™r",
     menuLabel: "Menyu",
-    headerSubtitle: "Qida Xidmətləri İdarəetmə Sistemi",
-    btnLogout: "Çıxış",
-    btnPrev: "Əvvəlki",
-    btnNext: "Növbəti",
-    loading: "Yüklənir...",
-    loadingText: "Məlumatlar sinxronlaşdırılır...",
-    loadingSub: "Supabase bağlantısı yoxlanılır",
-    loadingSkip: "Keçmək üçün klikləyin",
-    versionLabel: "Tətbiq Versiyası",
+    headerSubtitle: "Qida XidmÉ™tlÉ™ri Ä°darÉ™etmÉ™ Sistemi",
+    btnLogout: "Ã‡Ä±xÄ±ÅŸ",
+    btnPrev: "ÆvvÉ™lki",
+    btnNext: "NÃ¶vbÉ™ti",
+    loading: "YÃ¼klÉ™nir...",
+    loadingText: "MÉ™lumatlar sinxronlaÅŸdÄ±rÄ±lÄ±r...",
+    loadingSub: "Supabase baÄŸlantÄ±sÄ± yoxlanÄ±lÄ±r",
+    loadingSkip: "KeÃ§mÉ™k Ã¼Ã§Ã¼n kliklÉ™yin",
+    versionLabel: "TÉ™tbiq VersiyasÄ±",
     sidebarPanel: "Panel",
-    sidebarMenu: "Həftəlik Menyu",
-    sidebarRecords: "Qeydlər",
+    sidebarMenu: "HÉ™ftÉ™lik Menyu",
+    sidebarRecords: "QeydlÉ™r",
     sidebarReport: "Hesabat",
-    sidebarHaccp: "Qida Təhlükəsizliyi",
-    sidebarCalibration: "Kalibrləmə",
-    sidebarOil: "Tullantı Yağı",
-    sidebarPackaging: "Qablaşdırma Tullantıları",
-    sidebarCharts: "Qrafiklər",
-    sidebarYearly: "İllik Müqayisə",
-    sidebarSpending: "Xərclər",
-    sidebarUnitPrice: "Vahid Qiymətlər",
-    sidebarDownload: "Hamısını Yüklə",
-    sidebarBackup: "Supabase-ə Yedeklə",
-    sidebarRestore: "Supabase-dən Çək",
-    sidebarAdmin: "İdarəetmə",
-    sidebarLogs: "Jurnal Qeydləri",
-    sidebarTheme: "Mövzu",
-    sidebarManual: "İstifadəçi Təlimatı",
-    dashboardPrintPdf: "PDF Çap Et",
-    kpiTotalRecords: "Ümumi İstehsal Günü",
-    kpiTodayProduction: "Bu günün İstehsalı",
-    kpiHaccpAlarm: "Soyuducu Anbar Temperaturu Alarmı",
-    kpiCalibrationAlarm: "Kalibrləmə Alarmı",
-    kpiAvgWaste: "Ort. Tullantı (kg)",
-    kpiTotalPasses: "Toplam Turnike Keçidi",
-    kpiTotalWaste: "Ümumi Tullantı (kg)",
-    kpiWasteRate: "Tullantı Nisbəti",
-    weeklyPrevBtn: "Əvvəlki Həftə",
-    weeklySummary: "Həftəlik Xülasə",
-    weeklyNextBtn: "Növbəti Həftə",
-    weeklyBadge: "Bu Həftə",
-    dailyPrevBtn: "Əvvəlki Gün",
-    dailySummary: "Günlük Detay",
-    dailyNextBtn: "Növbəti Gün",
-    weeklyCompTitle: "Həftəlik Müqayisə",
-    monthlyCompTitle: "Aylıq Müqayisə",
+    sidebarHaccp: "Qida TÉ™hlÃ¼kÉ™sizliyi",
+    sidebarCalibration: "KalibrlÉ™mÉ™",
+    sidebarOil: "TullantÄ± YaÄŸÄ±",
+    sidebarPackaging: "QablaÅŸdÄ±rma TullantÄ±larÄ±",
+    sidebarCharts: "QrafiklÉ™r",
+    sidebarYearly: "Ä°llik MÃ¼qayisÉ™",
+    sidebarSpending: "XÉ™rclÉ™r",
+    sidebarUnitPrice: "Vahid QiymÉ™tlÉ™r",
+    sidebarDownload: "HamÄ±sÄ±nÄ± YÃ¼klÉ™",
+    sidebarBackup: "Supabase-É™ YedeklÉ™",
+    sidebarRestore: "Supabase-dÉ™n Ã‡É™k",
+    sidebarAdmin: "Ä°darÉ™etmÉ™",
+    sidebarLogs: "Jurnal QeydlÉ™ri",
+    sidebarTheme: "MÃ¶vzu",
+    sidebarManual: "Ä°stifadÉ™Ã§i TÉ™limatÄ±",
+    dashboardPrintPdf: "PDF Ã‡ap Et",
+    kpiTotalRecords: "Ãœmumi Ä°stehsal GÃ¼nÃ¼",
+    kpiTodayProduction: "Bu gÃ¼nÃ¼n Ä°stehsalÄ±",
+    kpiHaccpAlarm: "Soyuducu Anbar Temperaturu AlarmÄ±",
+    kpiCalibrationAlarm: "KalibrlÉ™mÉ™ AlarmÄ±",
+    kpiAvgWaste: "Ort. TullantÄ± (kg)",
+    kpiTotalPasses: "Toplam Turnike KeÃ§idi",
+    kpiTotalWaste: "Ãœmumi TullantÄ± (kg)",
+    kpiWasteRate: "TullantÄ± NisbÉ™ti",
+    weeklyPrevBtn: "ÆvvÉ™lki HÉ™ftÉ™",
+    weeklySummary: "HÉ™ftÉ™lik XÃ¼lasÉ™",
+    weeklyNextBtn: "NÃ¶vbÉ™ti HÉ™ftÉ™",
+    weeklyBadge: "Bu HÉ™ftÉ™",
+    dailyPrevBtn: "ÆvvÉ™lki GÃ¼n",
+    dailySummary: "GÃ¼nlÃ¼k Detay",
+    dailyNextBtn: "NÃ¶vbÉ™ti GÃ¼n",
+    weeklyCompTitle: "HÉ™ftÉ™lik MÃ¼qayisÉ™",
+    monthlyCompTitle: "AylÄ±q MÃ¼qayisÉ™",
     monthlyBadge: "Bu Ay",
-    yearlyBadge: "Bu İl",
-    anomalyTitle: "Anomaliya Aşkarlanması",
-    anomalyBadge: "Anormal Tullantı Günləri",
-    lastRecordsTitle: "Son Qeydlər",
-    dashboardGoToRecords: "Qeydlərə Get",
-    emptyDashboard: "Hələ qeyd yoxdur...",
+    yearlyBadge: "Bu Ä°l",
+    anomalyTitle: "Anomaliya AÅŸkarlanmasÄ±",
+    anomalyBadge: "Anormal TullantÄ± GÃ¼nlÉ™ri",
+    lastRecordsTitle: "Son QeydlÉ™r",
+    dashboardGoToRecords: "QeydlÉ™rÉ™ Get",
+    emptyDashboard: "HÉ™lÉ™ qeyd yoxdur...",
     formulaTitle: "TULLANTI HESABLAMA FORMULU",
-    recordsEntryBtn: "İstehsal İstehlak Gir",
-    recordsImportBtn: "İdxal",
+    recordsEntryBtn: "Ä°stehsal Ä°stehlak Gir",
+    recordsImportBtn: "Ä°dxal",
     recordsPrintPdf: "PDF",
-    recordsCsvBtn: "CSV Yüklə",
-    recordsDeleteBtn: "Seçilənləri Sil",
-    emptyRecords: "Göstəriləcək qeyd tapılmadı.",
+    recordsCsvBtn: "CSV YÃ¼klÉ™",
+    recordsDeleteBtn: "SeÃ§ilÉ™nlÉ™ri Sil",
+    emptyRecords: "GÃ¶stÉ™rilÉ™cÉ™k qeyd tapÄ±lmadÄ±.",
     thDate: "Tarix",
-    thProducedPerson: "İstehsal olunan Yemək (Şəxs)",
-    thWaste10: "%10 Tullantı",
-    thBeneficiary: "Yemək Xidm. Faydalanan Personnel və Tələbə",
+    thProducedPerson: "Ä°stehsal olunan YemÉ™k (ÅÉ™xs)",
+    thWaste10: "%10 TullantÄ±",
+    thBeneficiary: "YemÉ™k Xidm. Faydalanan Personnel vÉ™ TÉ™lÉ™bÉ™",
     thPortionGr: "Porsiyon (g)",
-    thWasteKg: "Tullantı (kg)",
-    thWastedPortion: "Zibilə gedən (pors.)",
-    thFoodType: "Yemək Növü",
-    thAction: "Əməliyyat",
-    thAcademicStaff: "Turnikə Keçən Akademik və İdarəçi Personnel",
-    thStudentCount: "Turnikə Keçən Tələbə sayı",
-    thBeneficiaryTotal: "Yemək Xidm. Faydalanan Toplam Şəxs",
-    sksStaff: "SKS Yemək Xidməti Personnelı",
-    summaryReport: "Xülasə Hesabatı",
-    reportPdfBtn: "PDF Aç",
-    allRecordsPrint: "Bütün Qeydlər (Çap Görünüşü)",
-    rTotalRecords: "Toplam Qeyd sayı",
-    rTotalMeals: "Toplam İstehsal Olunan Yemək",
-    rTotalWaste10: "Toplam %10 Tullantı",
-    rTotalAfterWaste: "Toplam %10 Tullantı Sonrası Yemək",
-    rTotalTurnstile: "Toplam Turnike Keçidi",
-    rTotalBeneficiary: "Yemək Xidm. Faydalanan Toplam Şəxs",
-    rTotalStaff: "Faydalanan Toplam SKS Personnelı",
-    rPortionSize: "Porsiyon Həcmi (g)",
+    thWasteKg: "TullantÄ± (kg)",
+    thWastedPortion: "ZibilÉ™ gedÉ™n (pors.)",
+    thFoodType: "YemÉ™k NÃ¶vÃ¼",
+    thAction: "ÆmÉ™liyyat",
+    thAcademicStaff: "TurnikÉ™ KeÃ§É™n Akademik vÉ™ Ä°darÉ™Ã§i Personnel",
+    thStudentCount: "TurnikÉ™ KeÃ§É™n TÉ™lÉ™bÉ™ sayÄ±",
+    thBeneficiaryTotal: "YemÉ™k Xidm. Faydalanan Toplam ÅÉ™xs",
+    sksStaff: "SKS YemÉ™k XidmÉ™ti PersonnelÄ±",
+    summaryReport: "XÃ¼lasÉ™ HesabatÄ±",
+    reportPdfBtn: "PDF AÃ§",
+    allRecordsPrint: "BÃ¼tÃ¼n QeydlÉ™r (Ã‡ap GÃ¶rÃ¼nÃ¼ÅŸÃ¼)",
+    rTotalRecords: "Toplam Qeyd sayÄ±",
+    rTotalMeals: "Toplam Ä°stehsal Olunan YemÉ™k",
+    rTotalWaste10: "Toplam %10 TullantÄ±",
+    rTotalAfterWaste: "Toplam %10 TullantÄ± SonrasÄ± YemÉ™k",
+    rTotalTurnstile: "Toplam Turnike KeÃ§idi",
+    rTotalBeneficiary: "YemÉ™k Xidm. Faydalanan Toplam ÅÉ™xs",
+    rTotalStaff: "Faydalanan Toplam SKS PersonnelÄ±",
+    rPortionSize: "Porsiyon HÉ™cmi (g)",
     rTotalPortion: "Toplam Porsiyon (g)",
-    rWastedPortion: "Zibilə Gedən Porsiyon",
-    rMaxWeeklyBeneficiary: "Ən Yüksək Həftəlik Faydalanan Şəxs",
-    rTotalWasteKg: "Toplam Tullantı Miqdarı (kg)",
-    rAvgWasteKg: "Ort. Tullantı Miqdarı (kg)",
-    rTotalStudents: "Toplam Tələbə sayı",
-    rMaxWaste: "Ən Yüksək Tullantı (kg)",
-    rMinWaste: "Ən aşağı Tullantı (kg)",
-    rWasteTrend: "Tullantı Trendi (son 7 gün)",
-    rBeneficiaryTrend: "Faydalanan Trendi (son 7 gün)",
-    wasteByFoodTitle: "Yemək Növü üzrə Tullantı Təhlili",
-    wasteByFoodEmpty: "Yemək növü məlumatı olan qeyd tapılmadı.",
-    wasteByFoodRecords: "Qeyd sayı",
-    wasteByFoodRate: "Tullantı nisbəti",
-    wasteByFoodPerPerson: "Şəxs başına tullantı (kg)",
-    wsProducedMeal: "İstehsal olunan yemək (nəfər)",
-    wsTotalPasses: "Ümumi keçiş",
+    rWastedPortion: "ZibilÉ™ GedÉ™n Porsiyon",
+    rMaxWeeklyBeneficiary: "Æn YÃ¼ksÉ™k HÉ™ftÉ™lik Faydalanan ÅÉ™xs",
+    rTotalWasteKg: "Toplam TullantÄ± MiqdarÄ± (kg)",
+    rAvgWasteKg: "Ort. TullantÄ± MiqdarÄ± (kg)",
+    rTotalStudents: "Toplam TÉ™lÉ™bÉ™ sayÄ±",
+    rMaxWaste: "Æn YÃ¼ksÉ™k TullantÄ± (kg)",
+    rMinWaste: "Æn aÅŸaÄŸÄ± TullantÄ± (kg)",
+    rWasteTrend: "TullantÄ± Trendi (son 7 gÃ¼n)",
+    rBeneficiaryTrend: "Faydalanan Trendi (son 7 gÃ¼n)",
+    wasteByFoodTitle: "YemÉ™k NÃ¶vÃ¼ Ã¼zrÉ™ TullantÄ± TÉ™hlili",
+    wasteByFoodEmpty: "YemÉ™k nÃ¶vÃ¼ mÉ™lumatÄ± olan qeyd tapÄ±lmadÄ±.",
+    wasteByFoodRecords: "Qeyd sayÄ±",
+    wasteByFoodRate: "TullantÄ± nisbÉ™ti",
+    wasteByFoodPerPerson: "ÅÉ™xs baÅŸÄ±na tullantÄ± (kg)",
+    wsProducedMeal: "Ä°stehsal olunan yemÉ™k (nÉ™fÉ™r)",
+    wsTotalPasses: "Ãœmumi keÃ§iÅŸ",
     wsTurnstile: "Turniket",
-    wsStaffSKS: "SKS personalı",
-    wsWasteAmount: "Tullantı miqdarı",
-    wsWastedPortion: "Çöpe gedən",
-    wsStudents: "Yemək xidm. tələbələri",
-    wsNoRecordsYet: "Hələ qeyd yoxdur",
-    wsNoRecordThisWeek: "Bu həftə qeyd yoxdur",
+    wsStaffSKS: "SKS personalÄ±",
+    wsWasteAmount: "TullantÄ± miqdarÄ±",
+    wsWastedPortion: "Ã‡Ã¶pe gedÉ™n",
+    wsStudents: "YemÉ™k xidm. tÉ™lÉ™bÉ™lÉ™ri",
+    wsNoRecordsYet: "HÉ™lÉ™ qeyd yoxdur",
+    wsNoRecordThisWeek: "Bu hÉ™ftÉ™ qeyd yoxdur",
     wsNoRecordToday: "Qeyd yoxdur",
-    wsTodayDetail: "Bu günün təfərrüatı",
-    wsDailyDetail: "Günlük təfərrüat",
-    wsWaste: "İtki",
+    wsTodayDetail: "Bu gÃ¼nÃ¼n tÉ™fÉ™rrÃ¼atÄ±",
+    wsDailyDetail: "GÃ¼nlÃ¼k tÉ™fÉ™rrÃ¼at",
+    wsWaste: "Ä°tki",
     wsPortion: "porsiya",
-    wsProduced: "İstehsal",
-    wsTurnstileCount: "Turniket keçidi",
+    wsProduced: "Ä°stehsal",
+    wsTurnstileCount: "Turniket keÃ§idi",
     wsStaffCount: "Personal",
-    menuTitle: "Həftəlik Menyu Siyahısı",
-    menuStatusBadge: "Vəziyyət",
+    menuTitle: "HÉ™ftÉ™lik Menyu SiyahÄ±sÄ±",
+    menuStatusBadge: "VÉ™ziyyÉ™t",
     menuSaveBtn: "Saxla",
-    menuSendBtn: "Təsdiqə Göndər",
-    menuApproveBtn: "Təsdiqlə",
-    menuRejectBtn: "Rədd et",
-    menuWithdrawBtn: "Təsdiqi Geri Al",
-    menuClearBtn: "Cədvəli Təmizlə",
-    menuPrintBtn: "Çap Et",
-    menuFoodListBtn: "Yemək Siyahısı",
-    menuFoodListUploadBtn: "CSV Yüklə",
-    menuFoodListCsvBtn: "CSV Yüklə",
-    menuWarningPrefix: "Təsdiqlənməmiş Menyu:",
-    menuWarningText: "Bu həftənin menyusu hələ qida mühəndisi tərəfindən təsdiqlənməyib.",
-    menuHintText: "Yemək adlarını yazın...",
-    productNeedsTitle: "Məhsul Ehtiyatı Siyahısı",
-    weeklyNeedsTitle: "Həftəlik Toplam Ehtiyat Siyahısı",
-    foodListTitle: "Yemək Siyahısı",
-    modalRejectMenu: "Menyunu Rədd Et",
-    modalRejectDesc: "Rədd səbəbi məcburidir.",
-    menuRejectConfirm: "Rədd et",
-    haccpTitle: "Qida Təhlükəsizliyi İdarəetməsi",
-    haccpCsvBtn: "CSV Yüklə",
-    haccpColdStorage: "Soyuducu Anbar Temperaturu Qeydləri",
+    menuSendBtn: "TÉ™sdiqÉ™ GÃ¶ndÉ™r",
+    menuApproveBtn: "TÉ™sdiqlÉ™",
+    menuRejectBtn: "RÉ™dd et",
+    menuWithdrawBtn: "TÉ™sdiqi Geri Al",
+    menuClearBtn: "CÉ™dvÉ™li TÉ™mizlÉ™",
+    menuPrintBtn: "Ã‡ap Et",
+    menuFoodListBtn: "YemÉ™k SiyahÄ±sÄ±",
+    menuFoodListUploadBtn: "CSV YÃ¼klÉ™",
+    menuFoodListCsvBtn: "CSV YÃ¼klÉ™",
+    menuWarningPrefix: "TÉ™sdiqlÉ™nmÉ™miÅŸ Menyu:",
+    menuWarningText: "Bu hÉ™ftÉ™nin menyusu hÉ™lÉ™ qida mÃ¼hÉ™ndisi tÉ™rÉ™findÉ™n tÉ™sdiqlÉ™nmÉ™yib.",
+    menuHintText: "YemÉ™k adlarÄ±nÄ± yazÄ±n...",
+    productNeedsTitle: "MÉ™hsul EhtiyatÄ± SiyahÄ±sÄ±",
+    weeklyNeedsTitle: "HÉ™ftÉ™lik Toplam Ehtiyat SiyahÄ±sÄ±",
+    foodListTitle: "YemÉ™k SiyahÄ±sÄ±",
+    modalRejectMenu: "Menyunu RÉ™dd Et",
+    modalRejectDesc: "RÉ™dd sÉ™bÉ™bi mÉ™cburidir.",
+    menuRejectConfirm: "RÉ™dd et",
+    haccpTitle: "Qida TÉ™hlÃ¼kÉ™sizliyi Ä°darÉ™etmÉ™si",
+    haccpCsvBtn: "CSV YÃ¼klÉ™",
+    haccpColdStorage: "Soyuducu Anbar Temperaturu QeydlÉ™ri",
     haccpNewBtn: "Yeni Qeyd",
-    haccpDepotBtn: "Anbar Adları",
-    haccpDepoQrNote: "Anbar adlarını redaktə edib QR düyməsi ilə hər anbar üçün QR kod yarada bilərsiniz.",
+    haccpDepotBtn: "Anbar AdlarÄ±",
+    haccpDepoQrNote: "Anbar adlarÄ±nÄ± redaktÉ™ edib QR dÃ¼ymÉ™si ilÉ™ hÉ™r anbar Ã¼Ã§Ã¼n QR kod yarada bilÉ™rsiniz.",
     haccpModalTitle: "Yeni Qeyd",
     filterDepot: "Anbar Filtri:",
-    filterAll: "Hamısı",
-    filterDateRange: "Tarix Aralığı:",
-    emptyHaccp: "Hələ temperatur qeydi daxil edilməyib.",
-    btnDeleteSelectedHaccp: "Seçilənləri Sil",
+    filterAll: "HamÄ±sÄ±",
+    filterDateRange: "Tarix AralÄ±ÄŸÄ±:",
+    emptyHaccp: "HÉ™lÉ™ temperatur qeydi daxil edilmÉ™yib.",
+    btnDeleteSelectedHaccp: "SeÃ§ilÉ™nlÉ™ri Sil",
     btnPdf: "PDF",
-    depoNamesTitle: "Anbar Adları",
+    depoNamesTitle: "Anbar AdlarÄ±",
     oilNewBtn: "Yeni Qeyd",
-    oilListBtn: "Siyahı",
-    oilFilterTitle: "Tullantı Yağı Filtrləri",
-    filterOilType: "Yağ Növü:",
-    btnReset: "Sıfırla",
-    oilSummaryTitle: "Tullantı Yağı Xülasəsi",
-    oilChartTitle: "Tullantı Yağı Qrafikləri",
-    oilChartSubtitle: "Aylıq Tullantı Yağı Miqdarı (lt)",
-    oilChartEmpty: "Tullantı yağı qeydi daxil edildikdə qrafik göstəriləcək",
-    oilChartNote: "Tarix, yağ növü və il filtrlərinə görə aylıq tullantı yağı cəmləri",
-    oilRecordsTitle: "Tullantı Yağı Qeydləri",
-    oilModalTitle: "Tullantı Yağı Qeydi",
-    emptyOil: "Hələ tullantı yağı qeydi daxil edilməyib.",
+    oilListBtn: "SiyahÄ±",
+    oilFilterTitle: "TullantÄ± YaÄŸÄ± FiltrlÉ™ri",
+    filterOilType: "YaÄŸ NÃ¶vÃ¼:",
+    btnReset: "SÄ±fÄ±rla",
+    oilSummaryTitle: "TullantÄ± YaÄŸÄ± XÃ¼lasÉ™si",
+    oilChartTitle: "TullantÄ± YaÄŸÄ± QrafiklÉ™ri",
+    oilChartSubtitle: "AylÄ±q TullantÄ± YaÄŸÄ± MiqdarÄ± (lt)",
+    oilChartEmpty: "TullantÄ± yaÄŸÄ± qeydi daxil edildikdÉ™ qrafik gÃ¶stÉ™rilÉ™cÉ™k",
+    oilChartNote: "Tarix, yaÄŸ nÃ¶vÃ¼ vÉ™ il filtrlÉ™rinÉ™ gÃ¶rÉ™ aylÄ±q tullantÄ± yaÄŸÄ± cÉ™mlÉ™ri",
+    oilRecordsTitle: "TullantÄ± YaÄŸÄ± QeydlÉ™ri",
+    oilModalTitle: "TullantÄ± YaÄŸÄ± Qeydi",
+    emptyOil: "HÉ™lÉ™ tullantÄ± yaÄŸÄ± qeydi daxil edilmÉ™yib.",
     ambalajNewBtn: "Yeni Qeyd",
-    ambalajListBtn: "Siyahı",
-    packagingFilterTitle: "Qablaşdırma Tullantısı Filtrləri",
-    filterWasteType: "Tullantı Növü:",
-    packagingSummaryTitle: "Qablaşdırma Tullantısı Xülasəsi",
-    packagingChartTitle: "Qablaşdırma Tullantısı Qrafikləri",
-    packagingChartSubtitle: "Aylıq Qablaşdırma Tullantısı Miqdarı (kg)",
-    packagingChartEmpty: "Qablaşdırma tullantısı qeydi daxil edildikdə qrafik göstəriləcək",
-    packagingChartNote: "Tarix, tullantı növü və il filtrlərinə görə aylıq qablaşdırma tullantısı cəmləri (kg)",
-    packagingRecordsTitle: "Qablaşdırma Tullantıları Qeydləri",
-    packagingModalTitle: "Qablaşdırma Tullantısı Qeydi",
-    emptyPackaging: "Hələ qablaşdırma tullantısı qeydi daxil edilməyib.",
+    ambalajListBtn: "SiyahÄ±",
+    packagingFilterTitle: "QablaÅŸdÄ±rma TullantÄ±sÄ± FiltrlÉ™ri",
+    filterWasteType: "TullantÄ± NÃ¶vÃ¼:",
+    packagingSummaryTitle: "QablaÅŸdÄ±rma TullantÄ±sÄ± XÃ¼lasÉ™si",
+    packagingChartTitle: "QablaÅŸdÄ±rma TullantÄ±sÄ± QrafiklÉ™ri",
+    packagingChartSubtitle: "AylÄ±q QablaÅŸdÄ±rma TullantÄ±sÄ± MiqdarÄ± (kg)",
+    packagingChartEmpty: "QablaÅŸdÄ±rma tullantÄ±sÄ± qeydi daxil edildikdÉ™ qrafik gÃ¶stÉ™rilÉ™cÉ™k",
+    packagingChartNote: "Tarix, tullantÄ± nÃ¶vÃ¼ vÉ™ il filtrlÉ™rinÉ™ gÃ¶rÉ™ aylÄ±q qablaÅŸdÄ±rma tullantÄ±sÄ± cÉ™mlÉ™ri (kg)",
+    packagingRecordsTitle: "QablaÅŸdÄ±rma TullantÄ±larÄ± QeydlÉ™ri",
+    packagingModalTitle: "QablaÅŸdÄ±rma TullantÄ±sÄ± Qeydi",
+    emptyPackaging: "HÉ™lÉ™ qablaÅŸdÄ±rma tullantÄ±sÄ± qeydi daxil edilmÉ™yib.",
     kalibrasyonNewBtn: "Yeni Cihaz",
-    kalibrasyonListBtn: "Siyahı",
-    kalibrasyonCsvBtn: "CSV Yüklə",
-    calibrationSummary: "Kalibrləmə Xülasəsi",
-    calibrationDevices: "Kalibrləməyə Tabi Cihazlar",
-    calibrationModalTitle: "Kalibrləməyə Tabi Cihaz",
-    filterStatus: "Vəziyyət:",
-    filterDepartment: "Şöbə:",
-    btnWordExport: "Word-ə İxrac",
-    btnPrint: "PDF Çap Et",
-    chartProdWaste: "İstehsal - Keçid - Tullantı Müqayisəsi",
-    chartEmpty: "Məlumat daxil edildikdə qrafik göstəriləcək",
-    chartProdWasteNote: "İstehsal, turnike keçidi və Zibilə Gedən porsiyonun aylıq müqayisəsi",
-    chartStudentCount: "Qida Xidmətlərindən Faydalan Tələbə sayı",
-    yearTotal: "İl Cəmi",
-    chartStudentNote: "Günlük tələbə keçidlərinin aylıq cəmi",
-    chartStaffTotal: "Akademik və İdarəçi + SKS Personnel Cəmi",
-    chartStaffNote: "Akademik və İdarəçi (Turnike - Tələbə) ilə SKS Yemək Xidməti Personnelı cəmi",
-    chartMonthlyProd: "Aylıq Yemək İstehsalı",
-    chartMonthlyProdNote: "Günlük istehsal olunan yemək sayılarının aylıq cəmi",
-    chartMonthlyTurnstile: "Aylıq Turnike Keçid Sayları",
-    chartTurnstileNote: "Tələbə + personnel + xarici keçid cəmi",
-    chartMonthlyWaste: "Aylıq Tullantı Miqdarı (kg)",
-    chartMonthlyWasteNote: "Günlük tullantıların aylıq cəmi (kg)",
-    chartMonthlyWastePortion: "Aylıq Tullantı Miqdarı (porsiyon)",
-    chartWastePortionNote: "Günlük Zibilə Gedən porsiyonların aylıq cəmi",
-    chartDiff: "İstehsal ilə Keçid Arasındakı Fərq",
-    chartDiffNote: "İstehsal olunan yemək sayı ilə turnike keçidi arasındakı fərq",
-    chartWasteRatio: "İstehsal Olunan Yeməyə Oranla Tullantı %",
-    yearAverage: "İl Ortalaması",
-    chartWasteRatioNote: "İstehsal olunan yeməyin faizi nə qədər tullantı olur",
-    chartWastePerPerson: "Şəxs Başına Tullantı (kg/şəxs)",
-    chartWastePerPersonNote: "Müəssisəyə daxil olan şəxs başına düşən orta tullantı",
-    chartMonthlyTemp: "Aylıq Ortalama Anbar Temperaturları (°C)",
-    chartTempEmpty: "Temperatur qeydi daxil edildikdə qrafik göstəriləcək",
-    chartTempNote: "Hər anbarın aylıq orta temperaturu",
-    yearlyPdfBtn: "PDF Çap Et",
-    yearlyTotalProd: "Toplam İstehsal Müqayisəsi",
-    yearlyTotalProdNote: "İl cəmi - 1. il vs 2. il (porsiyon)",
-    yearlyTotalBen: "Yemək Xidm. Faydalanan Toplam Şəxs",
-    yearlyTotalBenNote: "İl cəmi - 1. il vs 2. il (toplam şəxs)",
-    yearlyStudentComp: "Yemək Xidmətindən Faydalan Tələbə Müqayisəsi",
-    yearlyStudentNote: "İl cəmi - 1. il vs 2. il (tələbə)",
-    yearlyWasteComp: "Tullantı Müqayisəsi (kg)",
-    yearlyWasteNote: "İl cəmi - 1. il vs 2. il (kg)",
-    yearlyMonthlyProd: "Aylıq İstehsal Müqayisəsi",
-    yearlyMonthlyProdNote: "1. il vs 2. il - istehsal olunan yemək sayı (porsiyon)",
-    yearlyMonthlyTurnstile: "Aylıq Turnike Keçid Müqayisəsi",
-    yearlyMonthlyTurnstileNote: "1. il vs 2. il - turnike keçid sayı",
-    yearlyMonthlyStudent: "Aylıq Tələbə Turnike Keçidi Müqayisəsi",
-    yearlyMonthlyStudentNote: "1. il vs 2. il - tələbə turnike keçid sayı",
-    yearlyMonthlyWaste: "Aylıq Tullantı Müqayisəsi (kg)",
-    yearlyMonthlyWasteNote: "1. il vs 2. il - tullantı miqdarı (kg)",
-    yearlyWasteListTitle: "İllik Tullantı Siyahısı",
-    spendingRatesTitle: "Şəxs Başına Xərc Nisbətləri (Tələbə, Personnel & Yemək)",
-    spendingStudentRate: "Tələbə Başına Xərc Məbləği (TL)",
-    btnSaveStudentRate: "Tələbə Məbləğini Saxla",
-    spendingStaffRate: "Personnel Başına Xərc Məbləği (TL)",
-    btnSaveStaffRate: "Personnel Məbləğini Saxla",
-    spendingMealRate: "Yemək Başına Xərc Məbləği (TL)",
-    btnSaveMealRate: "Yemək Məbləğini Saxla",
-    spendingDesc: "Tələbə Xərci = Tələbə sayı × Tələbə Başına Məbləğ",
-    spendingStudentTitle: "Tələbə Xərc Məbləği (TL)",
-    spendingChartEmpty: "Qeyd daxil edildikdə qrafik göstəriləcək",
-    spendingStudentNote: "Tələbə Xərci (TL) = Tələbə sayı × Tələbə Başına Xərc Məbləği",
-    spendingStaffTitle: "Personnel Xərc Məbləği (TL)",
-    spendingStaffNote: "Personnel Xərci (TL) = Personnel sayı × Personnel Başına Xərc Məbləği",
-    spendingMealTitle: "Yemək Xərc Məbləği (TL)",
-    spendingMealNote: "Yemək Xərci (TL) = İstehsal olunan Yemək sayı × Yemək Başına Xərc Məbləği",
-    spendingTableTitle: "Xərc Hesablama Cədvəli",
-    syncTitle: "Supabase Sinxronizasiyası",
-    syncCloseBtn: "Bağla",
-    modalNewRecord: "Yeni Qeyd Əlavə Et",
+    kalibrasyonListBtn: "SiyahÄ±",
+    kalibrasyonCsvBtn: "CSV YÃ¼klÉ™",
+    calibrationSummary: "KalibrlÉ™mÉ™ XÃ¼lasÉ™si",
+    calibrationDevices: "KalibrlÉ™mÉ™yÉ™ Tabi Cihazlar",
+    calibrationModalTitle: "KalibrlÉ™mÉ™yÉ™ Tabi Cihaz",
+    filterStatus: "VÉ™ziyyÉ™t:",
+    filterDepartment: "ÅÃ¶bÉ™:",
+    btnWordExport: "Word-É™ Ä°xrac",
+    btnPrint: "PDF Ã‡ap Et",
+    chartProdWaste: "Ä°stehsal - KeÃ§id - TullantÄ± MÃ¼qayisÉ™si",
+    chartEmpty: "MÉ™lumat daxil edildikdÉ™ qrafik gÃ¶stÉ™rilÉ™cÉ™k",
+    chartProdWasteNote: "Ä°stehsal, turnike keÃ§idi vÉ™ ZibilÉ™ GedÉ™n porsiyonun aylÄ±q mÃ¼qayisÉ™si",
+    chartStudentCount: "Qida XidmÉ™tlÉ™rindÉ™n Faydalan TÉ™lÉ™bÉ™ sayÄ±",
+    yearTotal: "Ä°l CÉ™mi",
+    chartStudentNote: "GÃ¼nlÃ¼k tÉ™lÉ™bÉ™ keÃ§idlÉ™rinin aylÄ±q cÉ™mi",
+    chartStaffTotal: "Akademik vÉ™ Ä°darÉ™Ã§i + SKS Personnel CÉ™mi",
+    chartStaffNote: "Akademik vÉ™ Ä°darÉ™Ã§i (Turnike - TÉ™lÉ™bÉ™) ilÉ™ SKS YemÉ™k XidmÉ™ti PersonnelÄ± cÉ™mi",
+    chartMonthlyProd: "AylÄ±q YemÉ™k Ä°stehsalÄ±",
+    chartMonthlyProdNote: "GÃ¼nlÃ¼k istehsal olunan yemÉ™k sayÄ±larÄ±nÄ±n aylÄ±q cÉ™mi",
+    chartMonthlyTurnstile: "AylÄ±q Turnike KeÃ§id SaylarÄ±",
+    chartTurnstileNote: "TÉ™lÉ™bÉ™ + personnel + xarici keÃ§id cÉ™mi",
+    chartMonthlyWaste: "AylÄ±q TullantÄ± MiqdarÄ± (kg)",
+    chartMonthlyWasteNote: "GÃ¼nlÃ¼k tullantÄ±larÄ±n aylÄ±q cÉ™mi (kg)",
+    chartMonthlyWastePortion: "AylÄ±q TullantÄ± MiqdarÄ± (porsiyon)",
+    chartWastePortionNote: "GÃ¼nlÃ¼k ZibilÉ™ GedÉ™n porsiyonlarÄ±n aylÄ±q cÉ™mi",
+    chartDiff: "Ä°stehsal ilÉ™ KeÃ§id ArasÄ±ndakÄ± FÉ™rq",
+    chartDiffNote: "Ä°stehsal olunan yemÉ™k sayÄ± ilÉ™ turnike keÃ§idi arasÄ±ndakÄ± fÉ™rq",
+    chartWasteRatio: "Ä°stehsal Olunan YemÉ™yÉ™ Oranla TullantÄ± %",
+    yearAverage: "Ä°l OrtalamasÄ±",
+    chartWasteRatioNote: "Ä°stehsal olunan yemÉ™yin faizi nÉ™ qÉ™dÉ™r tullantÄ± olur",
+    chartWastePerPerson: "ÅÉ™xs BaÅŸÄ±na TullantÄ± (kg/ÅŸÉ™xs)",
+    chartWastePerPersonNote: "MÃ¼É™ssisÉ™yÉ™ daxil olan ÅŸÉ™xs baÅŸÄ±na dÃ¼ÅŸÉ™n orta tullantÄ±",
+    chartMonthlyTemp: "AylÄ±q Ortalama Anbar TemperaturlarÄ± (Â°C)",
+    chartTempEmpty: "Temperatur qeydi daxil edildikdÉ™ qrafik gÃ¶stÉ™rilÉ™cÉ™k",
+    chartTempNote: "HÉ™r anbarÄ±n aylÄ±q orta temperaturu",
+    yearlyPdfBtn: "PDF Ã‡ap Et",
+    yearlyTotalProd: "Toplam Ä°stehsal MÃ¼qayisÉ™si",
+    yearlyTotalProdNote: "Ä°l cÉ™mi - 1. il vs 2. il (porsiyon)",
+    yearlyTotalBen: "YemÉ™k Xidm. Faydalanan Toplam ÅÉ™xs",
+    yearlyTotalBenNote: "Ä°l cÉ™mi - 1. il vs 2. il (toplam ÅŸÉ™xs)",
+    yearlyStudentComp: "YemÉ™k XidmÉ™tindÉ™n Faydalan TÉ™lÉ™bÉ™ MÃ¼qayisÉ™si",
+    yearlyStudentNote: "Ä°l cÉ™mi - 1. il vs 2. il (tÉ™lÉ™bÉ™)",
+    yearlyWasteComp: "TullantÄ± MÃ¼qayisÉ™si (kg)",
+    yearlyWasteNote: "Ä°l cÉ™mi - 1. il vs 2. il (kg)",
+    yearlyMonthlyProd: "AylÄ±q Ä°stehsal MÃ¼qayisÉ™si",
+    yearlyMonthlyProdNote: "1. il vs 2. il - istehsal olunan yemÉ™k sayÄ± (porsiyon)",
+    yearlyMonthlyTurnstile: "AylÄ±q Turnike KeÃ§id MÃ¼qayisÉ™si",
+    yearlyMonthlyTurnstileNote: "1. il vs 2. il - turnike keÃ§id sayÄ±",
+    yearlyMonthlyStudent: "AylÄ±q TÉ™lÉ™bÉ™ Turnike KeÃ§idi MÃ¼qayisÉ™si",
+    yearlyMonthlyStudentNote: "1. il vs 2. il - tÉ™lÉ™bÉ™ turnike keÃ§id sayÄ±",
+    yearlyMonthlyWaste: "AylÄ±q TullantÄ± MÃ¼qayisÉ™si (kg)",
+    yearlyMonthlyWasteNote: "1. il vs 2. il - tullantÄ± miqdarÄ± (kg)",
+    yearlyWasteListTitle: "Ä°llik TullantÄ± SiyahÄ±sÄ±",
+    spendingRatesTitle: "ÅÉ™xs BaÅŸÄ±na XÉ™rc NisbÉ™tlÉ™ri (TÉ™lÉ™bÉ™, Personnel & YemÉ™k)",
+    spendingStudentRate: "TÉ™lÉ™bÉ™ BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    btnSaveStudentRate: "TÉ™lÉ™bÉ™ MÉ™blÉ™ÄŸini Saxla",
+    spendingStaffRate: "Personnel BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    btnSaveStaffRate: "Personnel MÉ™blÉ™ÄŸini Saxla",
+    spendingMealRate: "YemÉ™k BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    btnSaveMealRate: "YemÉ™k MÉ™blÉ™ÄŸini Saxla",
+    spendingDesc: "TÉ™lÉ™bÉ™ XÉ™rci = TÉ™lÉ™bÉ™ sayÄ± Ã— TÉ™lÉ™bÉ™ BaÅŸÄ±na MÉ™blÉ™ÄŸ",
+    spendingStudentTitle: "TÉ™lÉ™bÉ™ XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    spendingChartEmpty: "Qeyd daxil edildikdÉ™ qrafik gÃ¶stÉ™rilÉ™cÉ™k",
+    spendingStudentNote: "TÉ™lÉ™bÉ™ XÉ™rci (TL) = TÉ™lÉ™bÉ™ sayÄ± Ã— TÉ™lÉ™bÉ™ BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi",
+    spendingStaffTitle: "Personnel XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    spendingStaffNote: "Personnel XÉ™rci (TL) = Personnel sayÄ± Ã— Personnel BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi",
+    spendingMealTitle: "YemÉ™k XÉ™rc MÉ™blÉ™ÄŸi (TL)",
+    spendingMealNote: "YemÉ™k XÉ™rci (TL) = Ä°stehsal olunan YemÉ™k sayÄ± Ã— YemÉ™k BaÅŸÄ±na XÉ™rc MÉ™blÉ™ÄŸi",
+    spendingTableTitle: "XÉ™rc Hesablama CÉ™dvÉ™li",
+    syncTitle: "Supabase SinxronizasiyasÄ±",
+    syncCloseBtn: "BaÄŸla",
+    modalNewRecord: "Yeni Qeyd ÆlavÉ™ Et",
     formDate: "Tarix",
-    formProducedCount: "İstehsal Olunan Yemək sayı",
-    formTurnstileCount: "Turnike Keçid sayı",
-    formStudentCount: "Yemək Xidm. Fayd. Tələbə sayı",
-    formFoodType: "Yemək Növü",
+    formProducedCount: "Ä°stehsal Olunan YemÉ™k sayÄ±",
+    formTurnstileCount: "Turnike KeÃ§id sayÄ±",
+    formStudentCount: "YemÉ™k Xidm. Fayd. TÉ™lÉ™bÉ™ sayÄ±",
+    formFoodType: "YemÉ™k NÃ¶vÃ¼",
     formAutoCalc: "Avtomatik Hesablamalar",
     badgeAutomatic: "Avtomatik",
     badgeFixed: "Sabit",
-    badgeAutoEditable: "Avtomatik + Redaktə Edilə bilən",
-    btnCancel: "Ləğv et",
+    badgeAutoEditable: "Avtomatik + RedaktÉ™ EdilÉ™ bilÉ™n",
+    btnCancel: "LÉ™ÄŸv et",
     entryFormSubmit: "Saxla",
-    formReceiptNo: "Qəbuz Nömrəsi",
-    formOilType: "Yağ Növü",
+    formReceiptNo: "QÉ™buz NÃ¶mrÉ™si",
+    formOilType: "YaÄŸ NÃ¶vÃ¼",
     formAmountLt: "Miqdar (lt)",
     formNote: "Qeyd",
-    formWasteType: "Tullantı Növü",
+    formWasteType: "TullantÄ± NÃ¶vÃ¼",
     formAmount: "Miqdar",
-    formDeviceName: "Cihaz Adı",
+    formDeviceName: "Cihaz AdÄ±",
     formBrandModel: "Brend-Model",
-    formSerialNo: "Seriya Nömrəsi",
-    formStatus: "Vəziyyət",
-    formVerification: "Doğrulama",
-    formLastCalibration: "Son Kalibrləmə",
-    formNextCalibration: "Növbəti Kalibrləmə",
-    formLocation: "Yer/Şöbə",
-    formResponsible: "Məsul Şəxs",
+    formSerialNo: "Seriya NÃ¶mrÉ™si",
+    formStatus: "VÉ™ziyyÉ™t",
+    formVerification: "DoÄŸrulama",
+    formLastCalibration: "Son KalibrlÉ™mÉ™",
+    formNextCalibration: "NÃ¶vbÉ™ti KalibrlÉ™mÉ™",
+    formLocation: "Yer/ÅÃ¶bÉ™",
+    formResponsible: "MÉ™sul ÅÉ™xs",
     btnSave: "Saxla",
-    btnAdd: "Əlavə et",
-    btnClose: "Bağla",
+    btnAdd: "ÆlavÉ™ et",
+    btnClose: "BaÄŸla",
     qrTitle: "QR Kod",
-    qrHint: "QR kodu anbar qapılarına asmaq üçün çap edin.",
-    adminTitle: "İdarəetmə Paneli",
-    adminReAuthText: "İdarəetmə panelinə daxil olmaq üçün admin şifrənizi daxil edin.",
-    adminPassword: "Admin Şifrəsi",
-    btnVerify: "Doğrula",
+    qrHint: "QR kodu anbar qapÄ±larÄ±na asmaq Ã¼Ã§Ã¼n Ã§ap edin.",
+    adminTitle: "Ä°darÉ™etmÉ™ Paneli",
+    adminReAuthText: "Ä°darÉ™etmÉ™ panelinÉ™ daxil olmaq Ã¼Ã§Ã¼n admin ÅŸifrÉ™nizi daxil edin.",
+    adminPassword: "Admin ÅifrÉ™si",
+    btnVerify: "DoÄŸrula",
     adminSessionRole: "Oturum Rollu",
-    adminLastLogin: "Son Giriş",
+    adminLastLogin: "Son GiriÅŸ",
     adminAuthMethod: "Auth Metodu",
-    adminStorage: "Şifrə Anbarı",
-    adminDataSource: "Məlumat Mənbəyi",
-    adminUserMgmt: "İstifadəçi İdarəetməsi",
-    adminUserMgmtDesc: "İstifadəçiləri əlavə edin, redaktə edin və ya silin.",
-    adminAddUser: "Yeni İstifadəçi Əlavə Et",
-    adminUsername: "İstifadəçi Adı",
-    adminDisplayName: "Görünən Ad",
-    adminPasswordLabel: "Şifrə",
+    adminStorage: "ÅifrÉ™ AnbarÄ±",
+    adminDataSource: "MÉ™lumat MÉ™nbÉ™yi",
+    adminUserMgmt: "Ä°stifadÉ™Ã§i Ä°darÉ™etmÉ™si",
+    adminUserMgmtDesc: "Ä°stifadÉ™Ã§ilÉ™ri É™lavÉ™ edin, redaktÉ™ edin vÉ™ ya silin.",
+    adminAddUser: "Yeni Ä°stifadÉ™Ã§i ÆlavÉ™ Et",
+    adminUsername: "Ä°stifadÉ™Ã§i AdÄ±",
+    adminDisplayName: "GÃ¶rÃ¼nÉ™n Ad",
+    adminPasswordLabel: "ÅifrÉ™",
     adminRole: "Rol",
-    adminAddUserBtn: "İstifadəçi Əlavə Et",
-    adminRolePerms: "Rollara Əsaslanan İzin Parametrləri",
-    adminRolePermsDesc: "Hər rol üçün hansı sekmeleri görə biləcəyini təyin edin.",
-    adminSecurity: "Oturum Təhlükəsizliyi",
-    adminSecurityDesc: "Göstərilən müddət ərzində heç bir əməliyyat aparılmazsa oturum bağlanacaq.",
-    adminInactivityTimeout: "Hərəkətsizlik Bağlanma Müddəti",
-    adminLogsTitle: "Əməliyyat Jurnal Qeydləri",
-    adminLogsDesc: "İstifadəçi giriş/çixış və qeyd əməliyyatları",
-    btnRefresh: "Yenilə",
-    adminSaveBtn: "Parametrləri Saxla",
-    adminFooterNote: "Şifrələr serverdə daimi olaraq saxlanılır.",
-    adminCloseBtn: "Bağla",
-    logFilterDelete: "Silmə",
-    logFilterAddUser: "İstifadəçi Əlavə Et",
-    logFilterDeleteUser: "İstifadəçi Sil",
-    adminRefreshBtn: "Yenilə",
-    manualTitle: "İstifadəçi Təlimatı",
-    manualSubtitle: "Müəssisə İstehsalı, İstehlakı və Tullantı Nəzarət Sistemi",
-    compDataType: "Məlumat Növü",
-    compLastWeek: "Keçən Həftə",
-    compThisWeek: "Bu Həftə",
-    compLastMonth: "Keçən Ay",
+    adminAddUserBtn: "Ä°stifadÉ™Ã§i ÆlavÉ™ Et",
+    adminRolePerms: "Rollara Æsaslanan Ä°zin ParametrlÉ™ri",
+    adminRolePermsDesc: "HÉ™r rol Ã¼Ã§Ã¼n hansÄ± sekmeleri gÃ¶rÉ™ bilÉ™cÉ™yini tÉ™yin edin.",
+    adminSecurity: "Oturum TÉ™hlÃ¼kÉ™sizliyi",
+    adminSecurityDesc: "GÃ¶stÉ™rilÉ™n mÃ¼ddÉ™t É™rzindÉ™ heÃ§ bir É™mÉ™liyyat aparÄ±lmazsa oturum baÄŸlanacaq.",
+    adminInactivityTimeout: "HÉ™rÉ™kÉ™tsizlik BaÄŸlanma MÃ¼ddÉ™ti",
+    adminLogsTitle: "ÆmÉ™liyyat Jurnal QeydlÉ™ri",
+    adminLogsDesc: "Ä°stifadÉ™Ã§i giriÅŸ/Ã§ixÄ±ÅŸ vÉ™ qeyd É™mÉ™liyyatlarÄ±",
+    btnRefresh: "YenilÉ™",
+    adminSaveBtn: "ParametrlÉ™ri Saxla",
+    adminFooterNote: "ÅifrÉ™lÉ™r serverdÉ™ daimi olaraq saxlanÄ±lÄ±r.",
+    adminCloseBtn: "BaÄŸla",
+    logFilterDelete: "SilmÉ™",
+    logFilterAddUser: "Ä°stifadÉ™Ã§i ÆlavÉ™ Et",
+    logFilterDeleteUser: "Ä°stifadÉ™Ã§i Sil",
+    adminRefreshBtn: "YenilÉ™",
+    manualTitle: "Ä°stifadÉ™Ã§i TÉ™limatÄ±",
+    manualSubtitle: "MÃ¼É™ssisÉ™ Ä°stehsalÄ±, Ä°stehlakÄ± vÉ™ TullantÄ± NÉ™zarÉ™t Sistemi",
+    compDataType: "MÉ™lumat NÃ¶vÃ¼",
+    compLastWeek: "KeÃ§É™n HÉ™ftÉ™",
+    compThisWeek: "Bu HÉ™ftÉ™",
+    compLastMonth: "KeÃ§É™n Ay",
     compThisMonth: "Bu Ay",
-    compLastYear: "Keçən İl",
-    compThisYear: "Bu İl",
-    compDiff: "Fərq",
-    compTotalWaste: "Ümumi Tullantı (kg)",
-    compTotalProduction: "Ümumi İstehsal",
-    compTurnstilePasses: "Turnike Keçidi",
-    compStudentCount: "Tələbə Sayı",
-    compWastePerPerson: "Adambaşına Tullantı (qr)",
-    monthlyCompDesc: "Bu ay keçən ay ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
-    yearlyCompDesc: "Bu il (ilin əvvəlindən bu günə) keçən ilin eyni dövrü ilə müqayisə olunur. ↑ artım, ↓ azalma. Tullantı və adambaşına tullantıda azalma (↓) yaxşıdır.",
-    monthNames: ["Yanvar","Fevral","Mart","Aprel","May","İyun","İyul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"],
+    compLastYear: "KeÃ§É™n Ä°l",
+    compThisYear: "Bu Ä°l",
+    compDiff: "FÉ™rq",
+    compTotalWaste: "Ãœmumi TullantÄ± (kg)",
+    compTotalProduction: "Ãœmumi Ä°stehsal",
+    compTurnstilePasses: "Turnike KeÃ§idi",
+    compStudentCount: "TÉ™lÉ™bÉ™ SayÄ±",
+    compWastePerPerson: "AdambaÅŸÄ±na TullantÄ± (qr)",
+    monthlyCompDesc: "Bu ay keÃ§É™n ay ilÉ™ mÃ¼qayisÉ™ olunur. â†‘ artÄ±m, â†“ azalma. TullantÄ± vÉ™ adambaÅŸÄ±na tullantÄ±da azalma (â†“) yaxÅŸÄ±dÄ±r.",
+    yearlyCompDesc: "Bu il (ilin É™vvÉ™lindÉ™n bu gÃ¼nÉ™) keÃ§É™n ilin eyni dÃ¶vrÃ¼ ilÉ™ mÃ¼qayisÉ™ olunur. â†‘ artÄ±m, â†“ azalma. TullantÄ± vÉ™ adambaÅŸÄ±na tullantÄ±da azalma (â†“) yaxÅŸÄ±dÄ±r.",
+    monthNames: ["Yanvar","Fevral","Mart","Aprel","May","Ä°yun","Ä°yul","Avqust","Sentyabr","Oktyabr","Noyabr","Dekabr"],
     haccpColDate: "Tarix",
     haccpColTime: "Saat",
-    haccpColDepot: "Anbar adı",
-    haccpColTemp: "Temperatur (°C)",
-    haccpColHumidity: "Rütubət (%)",
+    haccpColDepot: "Anbar adÄ±",
+    haccpColTemp: "Temperatur (Â°C)",
+    haccpColHumidity: "RÃ¼tubÉ™t (%)",
     haccpColNote: "Qeyd",
-    haccpColAction: "Əməliyyat",
-    dayNames: ["Bazar ertəsi", "Çərşənbə axşamı", "Çərşənbə", "Cümə axşamı", "Cümə"],
-    menuVariety: "Növ",
-    menuVariety1: "1 növ",
-    menuVariety2: "2 növ",
-    menuVariety3: "3 növ",
-    menuVariety4: "4 növ",
-    menuVariety5: "5 növ",
-    menuPersonCount: "Şəxs sayı",
-    stockDeductionList: "Stok Siyahısı",
-    total: "Cəmi",
-    inVarieties: "növdə",
-    person: "nəfər",
-    weeklyGrandTotal: "Həftəlik Ümumi Cəmi",
-    dailyAverage: "Günlük Orta",
-    avgPerPerson: "Nəfər Başına Orta",
-    totalPersonDays: "Cəmi Nəfər/Gün",
-    colDay: "Gün",
+    haccpColAction: "ÆmÉ™liyyat",
+    dayNames: ["Bazar ertÉ™si", "Ã‡É™rÅŸÉ™nbÉ™ axÅŸamÄ±", "Ã‡É™rÅŸÉ™nbÉ™", "CÃ¼mÉ™ axÅŸamÄ±", "CÃ¼mÉ™"],
+    menuVariety: "NÃ¶v",
+    menuVariety1: "1 nÃ¶v",
+    menuVariety2: "2 nÃ¶v",
+    menuVariety3: "3 nÃ¶v",
+    menuVariety4: "4 nÃ¶v",
+    menuVariety5: "5 nÃ¶v",
+    menuPersonCount: "ÅÉ™xs sayÄ±",
+    stockDeductionList: "Stok SiyahÄ±sÄ±",
+    total: "CÉ™mi",
+    inVarieties: "nÃ¶vdÉ™",
+    person: "nÉ™fÉ™r",
+    weeklyGrandTotal: "HÉ™ftÉ™lik Ãœmumi CÉ™mi",
+    dailyAverage: "GÃ¼nlÃ¼k Orta",
+    avgPerPerson: "NÉ™fÉ™r BaÅŸÄ±na Orta",
+    totalPersonDays: "CÉ™mi NÉ™fÉ™r/GÃ¼n",
+    colDay: "GÃ¼n",
     colDate: "Tarix",
-    colPerson: "Nəfər",
-    dailyMaterialCost: "Günlük Material Xərci",
-    perPerson: "Nəfər Başına",
+    colPerson: "NÉ™fÉ™r",
+    dailyMaterialCost: "GÃ¼nlÃ¼k Material XÉ™rci",
+    perPerson: "NÉ™fÉ™r BaÅŸÄ±na",
     ingredients: "Materiallar",
-    perPersonGram: "(nəfər başı qr)",
+    perPersonGram: "(nÉ™fÉ™r baÅŸÄ± qr)",
     colIngredient: "Material",
-    colPerPerson: "/nəfər",
+    colPerPerson: "/nÉ™fÉ™r",
     colUnit: "Vahid",
-    addIngredient: "+ Material Əlavə Et",
-    foodName: "Yeməyin Adı",
+    addIngredient: "+ Material ÆlavÉ™ Et",
+    foodName: "YemÉ™yin AdÄ±",
     allergen: "Allergen",
-    recipePerPerson: "Resept (nəfər başı)",
+    recipePerPerson: "Resept (nÉ™fÉ™r baÅŸÄ±)",
     devices: "cihaz",
-    maliTablo: "Mali Cədvəl",
-    maliTabloSubtitle: "Həftəlik Material Xərcləri Xülasəsi",
-    maliUnitPriceMissing: "materialın vahid qiyməti təyin olunmayıb",
-    maliUnitPriceHint: "Vahid Qiymətlər bölməsindən təyin edə bilərsiniz",
-    weeklyTotal: "HƏFTƏLİK CƏMİ",
-    categoryDistribution: "Kateqoriya Paylanması",
-    weeklyTotalList: "Həftəlik Ümumi Ehtiyac Siyahısı",
-    totalCost: "Ümumi Xərc",
-    catMeat: "Ət Məhsulları",
-    catDairy: "Süt Məhsulları",
+    chartMonthlyProduction: "Aylýq Ýstehsal (nǽfǽr)",
+    chartMonthlyPasses: "Aylýq Keçid (nǽfǽr)",
+    chartLastYearWaste: "Keçǽn Ýl Çöpǽ Gedǽn (porsiya)",
+    chartMonthlyWasteKg: "Aylýq Tullantý (kg)",
+    chartMonthlyMealCount: "Aylýq Ýstehsal Sayý",
+    chartMonthlyWasteRate: "Aylýq Tullantý Nisbǽti %",
+    chartMonthlyStudent: "Aylýq Tǽlǽbǽ Sayý",
+    chartWastePerPersonLabel: "Nǽfǽr Baþýna Tullantý (kg/nǽfǽr)",
+    maliTablo: "Mali CÉ™dvÉ™l",
+    maliTabloSubtitle: "HÉ™ftÉ™lik Material XÉ™rclÉ™ri XÃ¼lasÉ™si",
+    maliUnitPriceMissing: "materialÄ±n vahid qiymÉ™ti tÉ™yin olunmayÄ±b",
+    maliUnitPriceHint: "Vahid QiymÉ™tlÉ™r bÃ¶lmÉ™sindÉ™n tÉ™yin edÉ™ bilÉ™rsiniz",
+    weeklyTotal: "HÆFTÆLÄ°K CÆMÄ°",
+    categoryDistribution: "Kateqoriya PaylanmasÄ±",
+    weeklyTotalList: "HÉ™ftÉ™lik Ãœmumi Ehtiyac SiyahÄ±sÄ±",
+    totalCost: "Ãœmumi XÉ™rc",
+    catMeat: "Æt MÉ™hsullarÄ±",
+    catDairy: "SÃ¼t MÉ™hsullarÄ±",
     catLegumes: "Quru Bulqar",
-    catSpices: "Ədviyyatlar",
-    catVegetable: "Tərəvəz və Meyvə",
-    catOther: "Digər",
+    catSpices: "Ædviyyatlar",
+    catVegetable: "TÉ™rÉ™vÉ™z vÉ™ MeyvÉ™",
+    catOther: "DigÉ™r",
     month1: "Yanvar", month2: "Fevral", month3: "Mart", month4: "Aprel",
-    month5: "May", month6: "İyun", month7: "İyul", month8: "Avqust",
+    month5: "May", month6: "Ä°yun", month7: "Ä°yul", month8: "Avqust",
     month9: "Sentyabr", month10: "Oktyabr", month11: "Noyabr", month12: "Dekabr",
-    menuListTitle: "MENYU SİYAHISI",
-    totalDevices: "Ümumi Cihaz",
-    statusWorking: "İşləyir",
+    menuListTitle: "MENYU SÄ°YAHISI",
+    totalDevices: "Ãœmumi Cihaz",
+    statusWorking: "Ä°ÅŸlÉ™yir",
     statusDefective: "Nasaz",
-    statusMaintenance: "Təmir Lazım",
-    statusScrap: "Xarabaya Çıkarılacaq",
-    calibrationValid: "Kalibrləmə Keçərli",
-    calibrationApproaching: "Kalibrləmə Yaxınlaşır (30 Gün)",
-    differentDepartments: "Fərqli Bölmə",
-    statusApproaching: "Yaxınlaşır",
-    statusExpired: "Müddəti Bitdi",
-    statusNotDone: "Edilməyib",
-    statusValid: "Keçərli",
-    noDeviceFound: "Bu filtrləmə meyarlarına uyğun cihaz tapılmadı.",
-    noDeviceRecord: "Hələ kalibrləməyə tabe cihaz qeydi daxil edilməyib.",
+    statusMaintenance: "TÉ™mir LazÄ±m",
+    statusScrap: "Xarabaya Ã‡Ä±karÄ±lacaq",
+    calibrationValid: "KalibrlÉ™mÉ™ KeÃ§É™rli",
+    calibrationApproaching: "KalibrlÉ™mÉ™ YaxÄ±nlaÅŸÄ±r (30 GÃ¼n)",
+    differentDepartments: "FÉ™rqli BÃ¶lmÉ™",
+    statusApproaching: "YaxÄ±nlaÅŸÄ±r",
+    statusExpired: "MÃ¼ddÉ™ti Bitdi",
+    statusNotDone: "EdilmÉ™yib",
+    statusValid: "KeÃ§É™rli",
+    noDeviceFound: "Bu filtrlÉ™mÉ™ meyarlarÄ±na uyÄŸun cihaz tapÄ±lmadÄ±.",
+    noDeviceRecord: "HÉ™lÉ™ kalibrlÉ™mÉ™yÉ™ tabe cihaz qeydi daxil edilmÉ™yib.",
     deviceCount: "cihaz",
     deviceCountSuffix: " cihaz",
-    editDeviceTitle: "Kalibrləmə Cihazını Redaktə Et",
-    newDeviceTitle: "Yeni Kalibrləmə Cihazı",
-    kpiBeneficiary: "Faydalanılan: ",
-    kpiNoRecordToday: "Bu gün qeyd yoxdur",
-    kpiAlertsCount: "xəbərdarlıq var",
-    kpiAllValuesOk: "Bütün dəyərlər uyğundur",
+    editDeviceTitle: "KalibrlÉ™mÉ™ CihazÄ±nÄ± RedaktÉ™ Et",
+    newDeviceTitle: "Yeni KalibrlÉ™mÉ™ CihazÄ±",
+    kpiBeneficiary: "FaydalanÄ±lan: ",
+    kpiNoRecordToday: "Bu gÃ¼n qeyd yoxdur",
+    kpiAlertsCount: "xÉ™bÉ™rdarlÄ±q var",
+    kpiAllValuesOk: "BÃ¼tÃ¼n dÉ™yÉ™rlÉ™r uyÄŸundur",
     kpiDeviceInAlarm: "cihaz alarmda",
-    kpiApproaching: "yaxınlaşır",
-    kpiAllCalibrationsValid: "Bütün kalibrləmələr keçərlidir",
-    filterAll: "Hamısı",
-    colDeviceName: "Cihaz Adı",
+    kpiApproaching: "yaxÄ±nlaÅŸÄ±r",
+    kpiAllCalibrationsValid: "BÃ¼tÃ¼n kalibrlÉ™mÉ™lÉ™r keÃ§É™rlidir",
+    filterAll: "HamÄ±sÄ±",
+    colDeviceName: "Cihaz AdÄ±",
     colBrandModel: "Marka-Model",
-    colSerialNo: "Sicil Nömrəsi",
-    colDeviceStatus: "Cihaz Vəziyyəti",
-    colCalibration: "Kalibrləmə",
-    colLastCalibration: "Son Kalibrləmə",
-    colNextCalibration: "Növbəti",
-    colDepartment: "Bölmə",
-    colResponsible: "Məsul",
+    colSerialNo: "Sicil NÃ¶mrÉ™si",
+    colDeviceStatus: "Cihaz VÉ™ziyyÉ™ti",
+    colCalibration: "KalibrlÉ™mÉ™",
+    colLastCalibration: "Son KalibrlÉ™mÉ™",
+    colNextCalibration: "NÃ¶vbÉ™ti",
+    colDepartment: "BÃ¶lmÉ™",
+    colResponsible: "MÉ™sul",
     colNote: "Qeyd",
-    colAction: "Əməliyyat",
-    unitPriceList: "Vahid Qiymət Siyahısı",
-    registeredProducts: "Qeydiyyatlı Məhsul",
-    totalAmount: "Ümumi Məbləğ",
-    avgUnitPrice: "Orta Vahid Qiymət",
-    selectedYear: "Seçilmiş İl",
-    duplicateWarning: "məhsulda təkrar qeyd tapıldı. Qiymət hesablamalarında xəta ola bilər.",
-    cleanDuplicates: "Tək-tək Təmizlə",
-    colProductName: "Məhsul Adı",
+    colAction: "ÆmÉ™liyyat",
+    unitPriceList: "Vahid QiymÉ™t SiyahÄ±sÄ±",
+    registeredProducts: "QeydiyyatlÄ± MÉ™hsul",
+    totalAmount: "Ãœmumi MÉ™blÉ™ÄŸ",
+    avgUnitPrice: "Orta Vahid QiymÉ™t",
+    selectedYear: "SeÃ§ilmiÅŸ Ä°l",
+    duplicateWarning: "mÉ™hsulda tÉ™krar qeyd tapÄ±ldÄ±. QiymÉ™t hesablamalarÄ±nda xÉ™ta ola bilÉ™r.",
+    cleanDuplicates: "TÉ™k-tÉ™k TÉ™mizlÉ™",
+    colProductName: "MÉ™hsul AdÄ±",
     colUnit: "Vahid",
-    colUnitPrice: "Vahid Qiymət (₺)",
+    colUnitPrice: "Vahid QiymÉ™t (â‚º)",
     colUnitEquals: "1 Vahid =",
-    colYear: "İl",
-    noProductsThisYear: "Bu il üçün hələ məhsul əlavə edilməyib.",
-    btnEdit: "Redaktə",
+    colYear: "Ä°l",
+    noProductsThisYear: "Bu il Ã¼Ã§Ã¼n hÉ™lÉ™ mÉ™hsul É™lavÉ™ edilmÉ™yib.",
+    btnEdit: "RedaktÉ™",
     btnDelete: "Sil",
-    pageLabel: "Səhifə",
-    totalProductsLabel: "Ümumi",
-    totalProductsSuffix: " məhsul",
-    priceYearNote: "Qiymətlər il üzrədir. Eşleşmə: Material adı avtomatik normallaşdırılır.",
-    btnAddNewProduct: "+ Yeni Məhsul",
-    btnDownloadCSV: "CSV Yüklə",
-    btnPrint: "Çap",
-    btnUploadCSV: "CSV Yüklə",
-    clickToSelectYear: "İl seçmək üçün basın",
-    selectYear: "İl Seç",
+    pageLabel: "SÉ™hifÉ™",
+    totalProductsLabel: "Ãœmumi",
+    totalProductsSuffix: " mÉ™hsul",
+    priceYearNote: "QiymÉ™tlÉ™r il Ã¼zrÉ™dir. EÅŸleÅŸmÉ™: Material adÄ± avtomatik normallaÅŸdÄ±rÄ±lÄ±r.",
+    btnAddNewProduct: "+ Yeni MÉ™hsul",
+    btnDownloadCSV: "CSV YÃ¼klÉ™",
+    btnPrint: "Ã‡ap",
+    btnUploadCSV: "CSV YÃ¼klÉ™",
+    clickToSelectYear: "Ä°l seÃ§mÉ™k Ã¼Ã§Ã¼n basÄ±n",
+    selectYear: "Ä°l SeÃ§",
     dataInfoRecord: "qeyd",
     dataInfoProduction: "istehsal",
-    dataInfoWaste: "tullantı",
+    dataInfoWaste: "tullantÄ±",
     portion: "porsiya",
-    abnormalDays: "anormal gün",
-    noRecordsToDisplay: "Göstəriləcək qeyd tapılmadı.",
-    colYearLabel: "İl",
+    abnormalDays: "anormal gÃ¼n",
+    noRecordsToDisplay: "GÃ¶stÉ™rilÉ™cÉ™k qeyd tapÄ±lmadÄ±.",
+    colYearLabel: "Ä°l",
     avgPortion400: "400 q",
     recordsNot400: "qeyd 400 deyil",
     gram: " q",
-    personLabel: "Şəxs",
-    last7RecordsPrev7: "son 7 qeyd / əvvəlki 7",
-    tempAppropriate: "Uyğun",
-    tempLow: "Aşağı",
-    tempHigh: "Yüksək",
+    personLabel: "ÅÉ™xs",
+    last7RecordsPrev7: "son 7 qeyd / É™vvÉ™lki 7",
+    tempAppropriate: "UyÄŸun",
+    tempLow: "AÅŸaÄŸÄ±",
+    tempHigh: "YÃ¼ksÉ™k",
     lowerLimit: "Alt Limit: ",
-    upperLimit: "Üst Limit: ",
-    unknownDepo: "Naməlum",
+    upperLimit: "Ãœst Limit: ",
+    unknownDepo: "NamÉ™lum",
     tempMin: "Min: ",
     tempAvg: "Orta: ",
     tempMax: "Maks: ",
-    humidity: "Nəmlik: ",
+    humidity: "NÉ™mlik: ",
     depot: "Anbar",
-    selectedCount: " seçildi",
-    pageRecords: "Səhifə ",
+    selectedCount: " seÃ§ildi",
+    pageRecords: "SÉ™hifÉ™ ",
     recordCount: " qeyd)",
-    tempRecordsTitle: "Soyuducu Anbar Temperatur Qeydləri",
+    tempRecordsTitle: "Soyuducu Anbar Temperatur QeydlÉ™ri",
     dateRangeLabel: " | Tarix:",
-    allDepots: "Bütün anbarlar",
+    allDepots: "BÃ¼tÃ¼n anbarlar",
     colTime: "Vaxt",
     colDepot: "Anbar",
     colTemperature: "Temperatur",
-    colStatus: "Vəziyyət",
+    colStatus: "VÉ™ziyyÉ™t",
     depotTempRecordTitle: "Anbar Temperatur Qeydi",
     formDate: "Tarix",
     formTime: "Vaxt",
-    formDepotName: "Anbar Adı",
-    formTemperature: "Temperatur (°C)",
-    tempPlaceholder: "0.0 (boş qoya bilərsiniz)",
-    formHumidity: "Nəmlik (%)",
-    formNoteOptional: "İstəyə görə",
-    deleteConfirm: "Bu qeydi silmək istədiyinizə əminsiniz?",
-    deleteSelectedConfirm: "Seçilmiş ",
-    deleteSelectedConfirmSuffix: " qeydi silmək istədiyinizə əminsiniz?",
-    tempHistory: " Temperatur Tarixçəsi",
-    weeklyAvgTempNote: "Həftəlik orta temperatur dəyərləri — alt və üst limit xətləri ilə",
-    upperLimitLabel: "Üst Limit (",
+    formDepotName: "Anbar AdÄ±",
+    formTemperature: "Temperatur (Â°C)",
+    tempPlaceholder: "0.0 (boÅŸ qoya bilÉ™rsiniz)",
+    formHumidity: "NÉ™mlik (%)",
+    formNoteOptional: "Ä°stÉ™yÉ™ gÃ¶rÉ™",
+    deleteConfirm: "Bu qeydi silmÉ™k istÉ™diyinizÉ™ É™minsiniz?",
+    deleteSelectedConfirm: "SeÃ§ilmiÅŸ ",
+    deleteSelectedConfirmSuffix: " qeydi silmÉ™k istÉ™diyinizÉ™ É™minsiniz?",
+    tempHistory: " Temperatur TarixÃ§É™si",
+    weeklyAvgTempNote: "HÉ™ftÉ™lik orta temperatur dÉ™yÉ™rlÉ™ri â€” alt vÉ™ Ã¼st limit xÉ™tlÉ™ri ilÉ™",
+    upperLimitLabel: "Ãœst Limit (",
     lowerLimitLabel: "Alt Limit (",
-    totalRecordCount: "Ümumi Qeyd",
-    totalWasteOil: "Ümumi Atık Yağ",
+    totalRecordCount: "Ãœmumi Qeyd",
+    totalWasteOil: "Ãœmumi AtÄ±k YaÄŸ",
     avgAmountPerRecord: "Ort. Miqdar / Qeyd",
-    highestAmount: "Ən Yüksək Miqdar",
-    lowestAmount: "Ən Aşağı Miqdar",
-    oilTypeCount: "Yağ Növü Sayı",
-    yearTotalSuffix: " Cəmi",
-    startDate: "Başlanğıc",
-    endDate: "Bitiş",
-    typeLabel: "Növ: ",
-    yearLabel: "İl: ",
+    highestAmount: "Æn YÃ¼ksÉ™k Miqdar",
+    lowestAmount: "Æn AÅŸaÄŸÄ± Miqdar",
+    oilTypeCount: "YaÄŸ NÃ¶vÃ¼ SayÄ±",
+    yearTotalSuffix: " CÉ™mi",
+    startDate: "BaÅŸlanÄŸÄ±c",
+    endDate: "BitiÅŸ",
+    typeLabel: "NÃ¶v: ",
+    yearLabel: "Ä°l: ",
     activeFilterLabel: "Aktiv filter: ",
-    noFilterMessage: "Filter yox — bütün atık yağ qeydləri göstərilir.",
-    noWasteOilRecord: "Hələ atık yağ qeydi daxil edilməyib.",
-    noMatchingFilterRecord: "Bu filter meyarlarına uyğun qeyd tapılmadı.",
-    editWasteOilRecord: "Atık Yağ Qeydini Redaktə Et",
-    newWasteOilRecord: "Yeni Atık Yağ Qeydi",
-    wasteOilChartLabel: "Atık Yağ",
-    previousYearLabel: "Əvvəlki İl",
-    undefinedType: "Müəyyən edilməyib",
-    totalWastePackaging: "Ümumi Ambalaj Atığı",
-    wasteTypeCount: "Atık Növü Sayı",
-    noWastePackagingRecord: "Hələ ambalaj atığı qeydi daxil edilməyib.",
-    noMatchingFilterPackage: "Bu filter meyarlarına uyğun qeyd tapılmadı.",
-    noFilterMessagePackaging: "Filter yox — bütün ambalaj atığı qeydləri göstərilir.",
-    editWastePackagingRecord: "Ambalaj Atığı Qeydini Redaktə Et",
-    newWastePackagingRecord: "Yeni Ambalaj Atığı Qeydi",
-    wastePackagingChartLabel: "Ambalaj Atığı",
-    chartDetailEmpty: "Bu dövr üçün qeyd tapılmadı.",
-    chartClose: "Bağla",
-    chartColProduction: "İstehsal",
-    chartColPasses: "Keçiş",
-    chartColWaste: "Atık",
-    chartColStudent: "Tələbə",
-    chartColFoodType: "Yemək Növü",
-    chartProductionVsTurnstile: "İstehsal ilə Turnike Keçişi Arasındakı Fərq",
-    chartStaffTotal: "Akademik və İdari + SKS Personalı",
-    yearFilterLabel: "İl:",
+    noFilterMessage: "Filter yox â€” bÃ¼tÃ¼n atÄ±k yaÄŸ qeydlÉ™ri gÃ¶stÉ™rilir.",
+    noWasteOilRecord: "HÉ™lÉ™ atÄ±k yaÄŸ qeydi daxil edilmÉ™yib.",
+    noMatchingFilterRecord: "Bu filter meyarlarÄ±na uyÄŸun qeyd tapÄ±lmadÄ±.",
+    editWasteOilRecord: "AtÄ±k YaÄŸ Qeydini RedaktÉ™ Et",
+    newWasteOilRecord: "Yeni AtÄ±k YaÄŸ Qeydi",
+    wasteOilChartLabel: "AtÄ±k YaÄŸ",
+    previousYearLabel: "ÆvvÉ™lki Ä°l",
+    undefinedType: "MÃ¼É™yyÉ™n edilmÉ™yib",
+    totalWastePackaging: "Ãœmumi Ambalaj AtÄ±ÄŸÄ±",
+    wasteTypeCount: "AtÄ±k NÃ¶vÃ¼ SayÄ±",
+    noWastePackagingRecord: "HÉ™lÉ™ ambalaj atÄ±ÄŸÄ± qeydi daxil edilmÉ™yib.",
+    noMatchingFilterPackage: "Bu filter meyarlarÄ±na uyÄŸun qeyd tapÄ±lmadÄ±.",
+    noFilterMessagePackaging: "Filter yox â€” bÃ¼tÃ¼n ambalaj atÄ±ÄŸÄ± qeydlÉ™ri gÃ¶stÉ™rilir.",
+    editWastePackagingRecord: "Ambalaj AtÄ±ÄŸÄ± Qeydini RedaktÉ™ Et",
+    newWastePackagingRecord: "Yeni Ambalaj AtÄ±ÄŸÄ± Qeydi",
+    wastePackagingChartLabel: "Ambalaj AtÄ±ÄŸÄ±",
+    chartDetailEmpty: "Bu dÃ¶vr Ã¼Ã§Ã¼n qeyd tapÄ±lmadÄ±.",
+    chartClose: "BaÄŸla",
+    chartColProduction: "Ä°stehsal",
+    chartColPasses: "KeÃ§iÅŸ",
+    chartColWaste: "AtÄ±k",
+    chartColStudent: "TÉ™lÉ™bÉ™",
+    chartColFoodType: "YemÉ™k NÃ¶vÃ¼",
+    chartProductionVsTurnstile: "Ä°stehsal ilÉ™ Turnike KeÃ§iÅŸi ArasÄ±ndakÄ± FÉ™rq",
+    chartStaffTotal: "Akademik vÉ™ Ä°dari + SKS PersonalÄ±",
+    yearFilterLabel: "Ä°l:",
     monthFilterLabel: "Ay:",
-    chartSelectYear: "Seçin",
-    year1Label: "1. İl:",
-    year2Label: "2. İl:",
-    noComparison: "Müqayisə Yoxdur",
+    chartSelectYear: "SeÃ§in",
+    year1Label: "1. Ä°l:",
+    year2Label: "2. Ä°l:",
+    noComparison: "MÃ¼qayisÉ™ Yoxdur",
     newLabel: "Yeni",
-    foodTypeLabel: "Yemək Növü",
-    productionLabel: " İstehsal",
-    wasteKgLabel: " Atık (kq)",
-    wasteGrPortionLabel: " Atık (q/porsiya)",
-    diffKgLabel: "Fərq (kq)",
-    totalRow: "CƏMİ",
-    registeredRate: "Qeydiyyatlı nisbət: ",
-    unsavedChanges: " (yadda saxlanılmamış dəyişiklik)",
-    kpiTotalStudentSpending: "Ümumi Tələbə Xərci",
-    kpiTotalStaffSpending: "Ümumi Personal Xərci",
-    kpiAvgMonthlyStudentSpending: "Ort. Aylıq Tələbə Xərci",
-    kpiAvgMonthlyStaffSpending: "Ort. Aylıq Personal Xərci",
-    kpiTotalStudents: "Ümumi Tələbə",
-    kpiTotalStaff: "Ümumi Personal",
-    kpiHighestStudentMonth: "Ən Yüksək Tələbə Ayı",
-    kpiHighestStaffMonth: "Ən Yüksək Personal Ayı",
-    kpiTotalMealSpending: "Ümumi Yemək Xərci",
-    kpiAvgMonthlyMealSpending: "Ort. Aylıq Yemək Xərci",
-    kpiTotalMealsProduced: "Ümumi İstehsal Olunmuş Yemək",
-    kpiHighestMealMonth: "Ən Yüksək Yemək Ayı",
-    chartStudentSpending: "Tələbə Xərci (₺)",
-    chartStaffSpending: "Personal Xərci (₺)",
-    chartMealSpending: "Yemək Xərci (₺)",
-    noRecordsYet: "Hələ qeyd yoxdur.",
-    invalidRate: "Keçərli nisbət daxil edin!",
-    rateSaved: "Nisbət yadda saxlandı: ",
+    foodTypeLabel: "YemÉ™k NÃ¶vÃ¼",
+    productionLabel: " Ä°stehsal",
+    wasteKgLabel: " AtÄ±k (kq)",
+    wasteGrPortionLabel: " AtÄ±k (q/porsiya)",
+    diffKgLabel: "FÉ™rq (kq)",
+    totalRow: "CÆMÄ°",
+    registeredRate: "QeydiyyatlÄ± nisbÉ™t: ",
+    unsavedChanges: " (yadda saxlanÄ±lmamÄ±ÅŸ dÉ™yiÅŸiklik)",
+    kpiTotalStudentSpending: "Ãœmumi TÉ™lÉ™bÉ™ XÉ™rci",
+    kpiTotalStaffSpending: "Ãœmumi Personal XÉ™rci",
+    kpiAvgMonthlyStudentSpending: "Ort. AylÄ±q TÉ™lÉ™bÉ™ XÉ™rci",
+    kpiAvgMonthlyStaffSpending: "Ort. AylÄ±q Personal XÉ™rci",
+    kpiTotalStudents: "Ãœmumi TÉ™lÉ™bÉ™",
+    kpiTotalStaff: "Ãœmumi Personal",
+    kpiHighestStudentMonth: "Æn YÃ¼ksÉ™k TÉ™lÉ™bÉ™ AyÄ±",
+    kpiHighestStaffMonth: "Æn YÃ¼ksÉ™k Personal AyÄ±",
+    kpiTotalMealSpending: "Ãœmumi YemÉ™k XÉ™rci",
+    kpiAvgMonthlyMealSpending: "Ort. AylÄ±q YemÉ™k XÉ™rci",
+    kpiTotalMealsProduced: "Ãœmumi Ä°stehsal OlunmuÅŸ YemÉ™k",
+    kpiHighestMealMonth: "Æn YÃ¼ksÉ™k YemÉ™k AyÄ±",
+    chartStudentSpending: "TÉ™lÉ™bÉ™ XÉ™rci (â‚º)",
+    chartStaffSpending: "Personal XÉ™rci (â‚º)",
+    chartMealSpending: "YemÉ™k XÉ™rci (â‚º)",
+    noRecordsYet: "HÉ™lÉ™ qeyd yoxdur.",
+    invalidRate: "KeÃ§É™rli nisbÉ™t daxil edin!",
+    rateSaved: "NisbÉ™t yadda saxlandÄ±: ",
     menuStatusDraft: "Qaralama",
-    menuStatusPending: "Təsdiq Gözləyir",
-    menuStatusApproved: "Təsdiqləndi",
-    menuStatusRejected: "Rədd edildi",
-    menuApprove: "Menyunu təsdiqlə",
-    menuApproveDisabled: "Menyu hələ təsdiqə göndərilməyib. Diyetoloq \"Təsdiqə Göndər\"ə basanda buradan təsdiqləyə bilərsiniz.",
-    menuReject: "Menyunu əsaslandıraraq rədd et",
-    menuRejectDisabled: "Menyu hələ təsdiqə göndərilməyib. Diyetoloq \"Təsdiqə Göndər\"ə basanda buradan rədd edə bilərsiniz.",
-    menuPendingCount: " həftə menyusu təsdiq gözləyir. Gözləyən həftəyə gedib təsdiqləyə bilərsiniz.",
-    menuNotApproved: "Bu həftənin menyusu hələ qida mühəndisi tərəfindən təsdiqlənməyib.",
-    menuRejected: "Bu menyu rədd edilib",
-    menuRejectedSuffix: ". Diyetoloq düzəliş edib yenidən göndərə bilər.",
-    menuAwaitingApproval: "Bu menyu təsdiq gözləyir. Təsdiqlənmədən istehsal siyahısında \"təsdiqsiz\" kimi qeyd olunur.",
+    menuStatusPending: "TÉ™sdiq GÃ¶zlÉ™yir",
+    menuStatusApproved: "TÉ™sdiqlÉ™ndi",
+    menuStatusRejected: "RÉ™dd edildi",
+    menuApprove: "Menyunu tÉ™sdiqlÉ™",
+    menuApproveDisabled: "Menyu hÉ™lÉ™ tÉ™sdiqÉ™ gÃ¶ndÉ™rilmÉ™yib. Diyetoloq \"TÉ™sdiqÉ™ GÃ¶ndÉ™r\"É™ basanda buradan tÉ™sdiqlÉ™yÉ™ bilÉ™rsiniz.",
+    menuReject: "Menyunu É™saslandÄ±raraq rÉ™dd et",
+    menuRejectDisabled: "Menyu hÉ™lÉ™ tÉ™sdiqÉ™ gÃ¶ndÉ™rilmÉ™yib. Diyetoloq \"TÉ™sdiqÉ™ GÃ¶ndÉ™r\"É™ basanda buradan rÉ™dd edÉ™ bilÉ™rsiniz.",
+    menuPendingCount: " hÉ™ftÉ™ menyusu tÉ™sdiq gÃ¶zlÉ™yir. GÃ¶zlÉ™yÉ™n hÉ™ftÉ™yÉ™ gedib tÉ™sdiqlÉ™yÉ™ bilÉ™rsiniz.",
+    menuNotApproved: "Bu hÉ™ftÉ™nin menyusu hÉ™lÉ™ qida mÃ¼hÉ™ndisi tÉ™rÉ™findÉ™n tÉ™sdiqlÉ™nmÉ™yib.",
+    menuRejected: "Bu menyu rÉ™dd edilib",
+    menuRejectedSuffix: ". Diyetoloq dÃ¼zÉ™liÅŸ edib yenidÉ™n gÃ¶ndÉ™rÉ™ bilÉ™r.",
+    menuAwaitingApproval: "Bu menyu tÉ™sdiq gÃ¶zlÉ™yir. TÉ™sdiqlÉ™nmÉ™dÉ™n istehsal siyahÄ±sÄ±nda \"tÉ™sdiqsiz\" kimi qeyd olunur.",
     noteLabel: "Qeyd ",
     deleteNote: "Bu qeydi sil",
-    addNote: "Yeni qeyd əlavə et",
-    mealPickerTitle: "Yemək Seç",
-    clearLabel: "🗑 Təmizlə",
-    searchMealPlaceholder: "Yemək axtar...",
-    noMatchingMeal: "Uyğun yemək tapılmadı.",
-    varietyLabel: " Növ: ",
-    addRecord: "Yeni Qeyd Əlavə Et",
-    editRecord: "Qeydi Redaktə Et",
-    btnUpdate: "Yenilə",
-    recordAdded: "Qeyd uğurla əlavə olundu.",
-    recordUpdated: "Qeyd uğurla yeniləndi.",
+    addNote: "Yeni qeyd É™lavÉ™ et",
+    mealPickerTitle: "YemÉ™k SeÃ§",
+    clearLabel: "ğŸ—‘ TÉ™mizlÉ™",
+    searchMealPlaceholder: "YemÉ™k axtar...",
+    noMatchingMeal: "UyÄŸun yemÉ™k tapÄ±lmadÄ±.",
+    varietyLabel: " NÃ¶v: ",
+    addRecord: "Yeni Qeyd ÆlavÉ™ Et",
+    editRecord: "Qeydi RedaktÉ™ Et",
+    btnUpdate: "YenilÉ™",
+    recordAdded: "Qeyd uÄŸurla É™lavÉ™ olundu.",
+    recordUpdated: "Qeyd uÄŸurla yenilÉ™ndi.",
     recordDeleted: "Qeyd silindi.",
-    allRecordsDeleted: "Bütün qeydlər silindi.",
-    selectedRecordsDeleted: "Seçilmiş qeydlər silindi.",
-    noRecordToDelete: "Silmək üçün qeyd yoxdur.",
-    noSelectedRecord: "Heç bir qeyd seçilməyib.",
-    deleteAllConfirm: "Bütün qeydləri silmək istədiyinizə əminsiniz?\nBu əməliyyat geri alına bilməz!",
-    deleteFoodConfirm: "Bu yeməyi silmək istədiyinizə əminsiniz?",
-    selected: " seçilmiş",
-    negMeals: "İstehsal olunan yemək sayı mənfi ola bilməz.",
-    negTurnstile: "Turniket sayı mənfi ola bilməz.",
-    negStaff: "Heyət sayı mənfi ola bilməz.",
-    negPortion: "Porsiya miqdarı mənfi ola bilməz.",
-    negStudent: "Tələbə sayı mənfi ola bilməz.",
-    unsavedConfirm: "Qeyd edilməmiş dəyişikliklər var. Bağlamaq istədiyinizə əminsiniz?",
-    selectUser: "Zəhmət olmasa istifadəçi seçin.",
-    wrongCredentials: "İstifadəçi adı və ya şifrə yanlışdır.",
-    tooManyAttempts: "Çox sayda cəhd. Zəhmət olmasa gözləyin.",
-    editable: "Redaktə oluna bilər",
+    allRecordsDeleted: "BÃ¼tÃ¼n qeydlÉ™r silindi.",
+    selectedRecordsDeleted: "SeÃ§ilmiÅŸ qeydlÉ™r silindi.",
+    noRecordToDelete: "SilmÉ™k Ã¼Ã§Ã¼n qeyd yoxdur.",
+    noSelectedRecord: "HeÃ§ bir qeyd seÃ§ilmÉ™yib.",
+    deleteAllConfirm: "BÃ¼tÃ¼n qeydlÉ™ri silmÉ™k istÉ™diyinizÉ™ É™minsiniz?\nBu É™mÉ™liyyat geri alÄ±na bilmÉ™z!",
+    deleteFoodConfirm: "Bu yemÉ™yi silmÉ™k istÉ™diyinizÉ™ É™minsiniz?",
+    selected: " seÃ§ilmiÅŸ",
+    negMeals: "Ä°stehsal olunan yemÉ™k sayÄ± mÉ™nfi ola bilmÉ™z.",
+    negTurnstile: "Turniket sayÄ± mÉ™nfi ola bilmÉ™z.",
+    negStaff: "HeyÉ™t sayÄ± mÉ™nfi ola bilmÉ™z.",
+    negPortion: "Porsiya miqdarÄ± mÉ™nfi ola bilmÉ™z.",
+    negStudent: "TÉ™lÉ™bÉ™ sayÄ± mÉ™nfi ola bilmÉ™z.",
+    unsavedConfirm: "Qeyd edilmÉ™miÅŸ dÉ™yiÅŸikliklÉ™r var. BaÄŸlamaq istÉ™diyinizÉ™ É™minsiniz?",
+    selectUser: "ZÉ™hmÉ™t olmasa istifadÉ™Ã§i seÃ§in.",
+    wrongCredentials: "Ä°stifadÉ™Ã§i adÄ± vÉ™ ya ÅŸifrÉ™ yanlÄ±ÅŸdÄ±r.",
+    tooManyAttempts: "Ã‡ox sayda cÉ™hd. ZÉ™hmÉ™t olmasa gÃ¶zlÉ™yin.",
+    editable: "RedaktÉ™ oluna bilÉ™r",
     fixed: "Sabit",
-    menuSentForApproval: "Menyu təsdiqə göndərildi. Qida Mühəndisi/İnzibatçı təsdiqi gözlənilir.",
-    menuApproved: "Menyu təsdiqləndi.",
-    menuRejectedMsg: "Menyu əsaslandırılmış olaraq rədd edildi.",
-    menuDraftSaved: "Menyu qaralama olaraq yadda saxlanıldı.",
-    menuCleared: "Menyu təmizləndi.",
+    menuSentForApproval: "Menyu tÉ™sdiqÉ™ gÃ¶ndÉ™rildi. Qida MÃ¼hÉ™ndisi/Ä°nzibatÃ§Ä± tÉ™sdiqi gÃ¶zlÉ™nilir.",
+    menuApproved: "Menyu tÉ™sdiqlÉ™ndi.",
+    menuRejectedMsg: "Menyu É™saslandÄ±rÄ±lmÄ±ÅŸ olaraq rÉ™dd edildi.",
+    menuDraftSaved: "Menyu qaralama olaraq yadda saxlanÄ±ldÄ±.",
+    menuCleared: "Menyu tÉ™mizlÉ™ndi.",
     monthShort1: "Yan",
     monthShort2: "Fev",
     monthShort3: "Mar",
     monthShort4: "Apr",
     monthShort5: "May",
-    monthShort6: "İyun",
-    monthShort7: "İyul",
+    monthShort6: "Ä°yun",
+    monthShort7: "Ä°yul",
     monthShort8: "Avq",
     monthShort9: "Sen",
     monthShort10: "Okt",
@@ -13121,1320 +13129,1336 @@ var I18N = {
     monthShort12: "Dek"
   },
   ru: {
-    loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
-    loginFormSub: "Войти",
-    loginUsername: "Пользователь",
-    loginSelectUser: "Выберите пользователя",
-    loginPassword: "Пароль",
-    loginBtn: "Войти",
-    loginHint: "Пароль можно получить у администратора",
-    loginFeature1: "Меню, ежедневное производство, потребление и отходы",
-    loginFeature2: "Подробные отчёты",
-    loginFeature3: "Живая панель и графики",
-    menuLabel: "Меню",
-    headerSubtitle: "Система управления службами питания",
-    btnLogout: "Выход",
-    btnPrev: "Назад",
-    btnNext: "Далее",
-    loading: "Загрузка...",
-    loadingText: "Синхронизация данных...",
-    loadingSub: "Проверка подключения Supabase",
-    loadingSkip: "Нажмите для пропуска",
-    versionLabel: "Версия приложения",
-    sidebarPanel: "Панель",
-    sidebarMenu: "Меню на неделю",
-    sidebarRecords: "Записи",
-    sidebarReport: "Отчёт",
-    sidebarHaccp: "Безопасность пищи",
-    sidebarCalibration: "Калибровка",
-    sidebarOil: "Отработанное масло",
-    sidebarPackaging: "Упаковочные отходы",
-    sidebarCharts: "Графики",
-    sidebarYearly: "Годовое сравнение",
-    sidebarSpending: "Расходы",
-    sidebarUnitPrice: "Единичные цены",
-    sidebarDownload: "Скачать всё",
-    sidebarBackup: "Резервное копирование",
-    sidebarRestore: "Восстановить из Supabase",
-    sidebarAdmin: "Администрирование",
-    sidebarLogs: "Журналы",
-    sidebarTheme: "Тема",
-    sidebarManual: "Руководство пользователя",
-    dashboardPrintPdf: "Печать PDF",
-    kpiTotalRecords: "Всего дней производства",
-    kpiTodayProduction: "Производство сегодня",
-    kpiHaccpAlarm: "Тревога температуры холодильника",
-    kpiCalibrationAlarm: "Тревога калибровки",
-    kpiAvgWaste: "Средн. отходы (кг)",
-    kpiTotalPasses: "Всего проходов через турникет",
-    kpiTotalWaste: "Всего отходов (кг)",
-    kpiWasteRate: "Процент отходов",
-    weeklyPrevBtn: "Предыдущая неделя",
-    weeklySummary: "Сводка за неделю",
-    weeklyNextBtn: "Следующая неделя",
-    weeklyBadge: "Эта неделя",
-    dailyPrevBtn: "Предыдущий день",
-    dailySummary: "Детали за день",
-    dailyNextBtn: "Следующий день",
-    weeklyCompTitle: "Сравнение по неделям",
-    monthlyCompTitle: "Сравнение по месяцам",
-    monthlyBadge: "Этот месяц",
-    yearlyBadge: "Этот год",
-    anomalyTitle: "Обнаружение аномалий",
-    anomalyBadge: "Дни с аномальными отходами",
-    lastRecordsTitle: "Последние записи",
-    dashboardGoToRecords: "Перейти к записям",
-    emptyDashboard: "Записей пока нет...",
-    formulaTitle: "ФОРМУЛА РАСЧЁТА ОТХОДОВ",
-    recordsEntryBtn: "Ввести производство/потребление",
-    recordsImportBtn: "Импорт",
+    loginSub: "Ğ¡Ğ˜Ğ¡Ğ¢Ğ•ĞœĞ Ğ£ĞŸĞ ĞĞ’Ğ›Ğ•ĞĞ˜Ğ¯ ĞŸĞ˜Ğ¢ĞĞĞ˜Ğ•Ğœ",
+    loginFormSub: "Ğ’Ğ¾Ğ¹Ñ‚Ğ¸",
+    loginUsername: "ĞŸĞ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»ÑŒ",
+    loginSelectUser: "Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    loginPassword: "ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ",
+    loginBtn: "Ğ’Ğ¾Ğ¹Ñ‚Ğ¸",
+    loginHint: "ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ Ğ¼Ğ¾Ğ¶Ğ½Ğ¾ Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ¸Ñ‚ÑŒ Ñƒ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ°",
+    loginFeature1: "ĞœĞµĞ½Ñ, ĞµĞ¶ĞµĞ´Ğ½ĞµĞ²Ğ½Ğ¾Ğµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾, Ğ¿Ğ¾Ñ‚Ñ€ĞµĞ±Ğ»ĞµĞ½Ğ¸Ğµ Ğ¸ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    loginFeature2: "ĞŸĞ¾Ğ´Ñ€Ğ¾Ğ±Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ñ‡Ñ‘Ñ‚Ñ‹",
+    loginFeature3: "Ğ–Ğ¸Ğ²Ğ°Ñ Ğ¿Ğ°Ğ½ĞµĞ»ÑŒ Ğ¸ Ğ³Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸",
+    menuLabel: "ĞœĞµĞ½Ñ",
+    headerSubtitle: "Ğ¡Ğ¸ÑÑ‚ĞµĞ¼Ğ° ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ñ ÑĞ»ÑƒĞ¶Ğ±Ğ°Ğ¼Ğ¸ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    btnLogout: "Ğ’Ñ‹Ñ…Ğ¾Ğ´",
+    btnPrev: "ĞĞ°Ğ·Ğ°Ğ´",
+    btnNext: "Ğ”Ğ°Ğ»ĞµĞµ",
+    loading: "Ğ—Ğ°Ğ³Ñ€ÑƒĞ·ĞºĞ°...",
+    loadingText: "Ğ¡Ğ¸Ğ½Ñ…Ñ€Ğ¾Ğ½Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…...",
+    loadingSub: "ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ Supabase",
+    loadingSkip: "ĞĞ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ Ğ´Ğ»Ñ Ğ¿Ñ€Ğ¾Ğ¿ÑƒÑĞºĞ°",
+    versionLabel: "Ğ’ĞµÑ€ÑĞ¸Ñ Ğ¿Ñ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ",
+    sidebarPanel: "ĞŸĞ°Ğ½ĞµĞ»ÑŒ",
+    sidebarMenu: "ĞœĞµĞ½Ñ Ğ½Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    sidebarRecords: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸",
+    sidebarReport: "ĞÑ‚Ñ‡Ñ‘Ñ‚",
+    sidebarHaccp: "Ğ‘ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚ÑŒ Ğ¿Ğ¸Ñ‰Ğ¸",
+    sidebarCalibration: "ĞšĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ°",
+    sidebarOil: "ĞÑ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğµ Ğ¼Ğ°ÑĞ»Ğ¾",
+    sidebarPackaging: "Ğ£Ğ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    sidebarCharts: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸",
+    sidebarYearly: "Ğ“Ğ¾Ğ´Ğ¾Ğ²Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ",
+    sidebarSpending: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹",
+    sidebarUnitPrice: "Ğ•Ğ´Ğ¸Ğ½Ğ¸Ñ‡Ğ½Ñ‹Ğµ Ñ†ĞµĞ½Ñ‹",
+    sidebarDownload: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ Ğ²ÑÑ‘",
+    sidebarBackup: "Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ¾Ğµ ĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ",
+    sidebarRestore: "Ğ’Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ Ğ¸Ğ· Supabase",
+    sidebarAdmin: "ĞĞ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ",
+    sidebarLogs: "Ğ–ÑƒÑ€Ğ½Ğ°Ğ»Ñ‹",
+    sidebarTheme: "Ğ¢ĞµĞ¼Ğ°",
+    sidebarManual: "Ğ ÑƒĞºĞ¾Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    dashboardPrintPdf: "ĞŸĞµÑ‡Ğ°Ñ‚ÑŒ PDF",
+    kpiTotalRecords: "Ğ’ÑĞµĞ³Ğ¾ Ğ´Ğ½ĞµĞ¹ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°",
+    kpiTodayProduction: "ĞŸÑ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾ ÑĞµĞ³Ğ¾Ğ´Ğ½Ñ",
+    kpiHaccpAlarm: "Ğ¢Ñ€ĞµĞ²Ğ¾Ğ³Ğ° Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹ Ñ…Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸ĞºĞ°",
+    kpiCalibrationAlarm: "Ğ¢Ñ€ĞµĞ²Ğ¾Ğ³Ğ° ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸",
+    kpiAvgWaste: "Ğ¡Ñ€ĞµĞ´Ğ½. Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹ (ĞºĞ³)",
+    kpiTotalPasses: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    kpiTotalWaste: "Ğ’ÑĞµĞ³Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    kpiWasteRate: "ĞŸÑ€Ğ¾Ñ†ĞµĞ½Ñ‚ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    weeklyPrevBtn: "ĞŸÑ€ĞµĞ´Ñ‹Ğ´ÑƒÑ‰Ğ°Ñ Ğ½ĞµĞ´ĞµĞ»Ñ",
+    weeklySummary: "Ğ¡Ğ²Ğ¾Ğ´ĞºĞ° Ğ·Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    weeklyNextBtn: "Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ°Ñ Ğ½ĞµĞ´ĞµĞ»Ñ",
+    weeklyBadge: "Ğ­Ñ‚Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    dailyPrevBtn: "ĞŸÑ€ĞµĞ´Ñ‹Ğ´ÑƒÑ‰Ğ¸Ğ¹ Ğ´ĞµĞ½ÑŒ",
+    dailySummary: "Ğ”ĞµÑ‚Ğ°Ğ»Ğ¸ Ğ·Ğ° Ğ´ĞµĞ½ÑŒ",
+    dailyNextBtn: "Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ¸Ğ¹ Ğ´ĞµĞ½ÑŒ",
+    weeklyCompTitle: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾ Ğ½ĞµĞ´ĞµĞ»ÑĞ¼",
+    monthlyCompTitle: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾ Ğ¼ĞµÑÑÑ†Ğ°Ğ¼",
+    monthlyBadge: "Ğ­Ñ‚Ğ¾Ñ‚ Ğ¼ĞµÑÑÑ†",
+    yearlyBadge: "Ğ­Ñ‚Ğ¾Ñ‚ Ğ³Ğ¾Ğ´",
+    anomalyTitle: "ĞĞ±Ğ½Ğ°Ñ€ÑƒĞ¶ĞµĞ½Ğ¸Ğµ Ğ°Ğ½Ğ¾Ğ¼Ğ°Ğ»Ğ¸Ğ¹",
+    anomalyBadge: "Ğ”Ğ½Ğ¸ Ñ Ğ°Ğ½Ğ¾Ğ¼Ğ°Ğ»ÑŒĞ½Ñ‹Ğ¼Ğ¸ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ°Ğ¼Ğ¸",
+    lastRecordsTitle: "ĞŸĞ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ğµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸",
+    dashboardGoToRecords: "ĞŸĞµÑ€ĞµĞ¹Ñ‚Ğ¸ Ğº Ğ·Ğ°Ğ¿Ğ¸ÑÑĞ¼",
+    emptyDashboard: "Ğ—Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚...",
+    formulaTitle: "Ğ¤ĞĞ ĞœĞ£Ğ›Ğ Ğ ĞĞ¡Ğ§ĞĞ¢Ğ ĞĞ¢Ğ¥ĞĞ”ĞĞ’",
+    recordsEntryBtn: "Ğ’Ğ²ĞµÑÑ‚Ğ¸ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾/Ğ¿Ğ¾Ñ‚Ñ€ĞµĞ±Ğ»ĞµĞ½Ğ¸Ğµ",
+    recordsImportBtn: "Ğ˜Ğ¼Ğ¿Ğ¾Ñ€Ñ‚",
     recordsPrintPdf: "PDF",
-    recordsCsvBtn: "Скачать CSV",
-    recordsDeleteBtn: "Удалить выбранные",
-    emptyRecords: "Записи не найдены.",
-    thDate: "Дата",
-    thProducedPerson: "Приготовлено блюд (чел.)",
-    thWaste10: "10% отходы",
-    thBeneficiary: "Получатели услуг питания",
-    thPortionGr: "Порция (г)",
-    thWasteKg: "Отходы (кг)",
-    thWastedPortion: "Выброшено (порц.)",
-    thFoodType: "Тип блюда",
-    thAction: "Действие",
-    thAcademicStaff: "Академический и административный персонал через турникет",
-    thStudentCount: "Студенты через турникет",
-    thBeneficiaryTotal: "Всего получателей услуг питания",
-    sksStaff: "Персонал СКС",
-    summaryReport: "Сводный отчёт",
-    reportPdfBtn: "Открыть PDF",
-    allRecordsPrint: "Все записи (Печатный вид)",
-    rTotalRecords: "Общее число записей",
-    rTotalMeals: "Всего приготовлено блюд",
-    rTotalWaste10: "Всего 10% отходы",
-    rTotalAfterWaste: "Всего блюд после 10% отходов",
-    rTotalTurnstile: "Всего проходов через турникет",
-    rTotalBeneficiary: "Всего получателей услуг питания",
-    rTotalStaff: "Всего персонала СКС",
-    rPortionSize: "Размер порции (г)",
-    rTotalPortion: "Всего порций (г)",
-    rWastedPortion: "Выброшенные порции",
-    rMaxWeeklyBeneficiary: "Максимум получателей за неделю",
-    rTotalWasteKg: "Общее количество отходов (кг)",
-    rAvgWasteKg: "Средн. количество отходов (кг)",
-    rTotalStudents: "Общее число студентов",
-    rMaxWaste: "Максимум отходов (кг)",
-    rMinWaste: "Минимум отходов (кг)",
-    rWasteTrend: "Динамика отходов (посл. 7 дней)",
-    rBeneficiaryTrend: "Динамика получателей (посл. 7 дней)",
-    wasteByFoodTitle: "Анализ отходов по типу блюда",
-    wasteByFoodEmpty: "Записи с данными о типе блюда не найдены.",
-    wasteByFoodRecords: "Количество записей",
-    wasteByFoodRate: "Процент отходов",
-    wasteByFoodPerPerson: "Отходы на человека (кг)",
-    wsProducedMeal: "Приготовлено блюд (чел.)",
-    wsTotalPasses: "Всего проходов",
-    wsTurnstile: "Турникет",
-    wsStaffSKS: "Персонал СКС",
-    wsWasteAmount: "Количество отходов",
-    wsWastedPortion: "В мусор",
-    wsStudents: "Студенты пит.",
-    wsNoRecordsYet: "Записей пока нет",
-    wsNoRecordThisWeek: "Нет записей за эту неделю",
-    wsNoRecordToday: "Нет записи",
-    wsTodayDetail: "Детали за сегодня",
-    wsDailyDetail: "Дневная сводка",
-    wsWaste: "Потери",
-    wsPortion: "порция",
-    wsProduced: "Выработано",
-    wsTurnstileCount: "Проходы турникета",
-    wsStaffCount: "Персонал",
-    menuTitle: "Меню на неделю",
-    menuStatusBadge: "Статус",
-    menuSaveBtn: "Сохранить",
-    menuSendBtn: "Отправить на согласование",
-    menuApproveBtn: "Согласовать",
-    menuRejectBtn: "Отклонить",
-    menuWithdrawBtn: "Отозвать согласование",
-    menuClearBtn: "Очистить таблицу",
-    menuPrintBtn: "Печать",
-    menuFoodListBtn: "Список блюд",
-    menuFoodListUploadBtn: "Загрузить CSV",
-    menuFoodListCsvBtn: "Скачать CSV",
-    menuWarningPrefix: "Меню без согласования:",
-    menuWarningText: "Меню на эту неделю ещё не утверждено инженером по питанию.",
-    menuHintText: "Введите названия блюд...",
-    productNeedsTitle: "Список необходимых продуктов",
-    weeklyNeedsTitle: "Еженедельный общий список потребностей",
-    foodListTitle: "Список блюд",
-    modalRejectMenu: "Отклонить меню",
-    modalRejectDesc: "Причина отклонения обязательна.",
-    menuRejectConfirm: "Отклонить",
-    haccpTitle: "Управление безопасностью пищевых продуктов",
-    haccpCsvBtn: "Скачать CSV",
-    haccpColdStorage: "Записи температуры холодильника",
-    haccpNewBtn: "Новая запись",
-    haccpDepotBtn: "Названия складов",
-    haccpDepoQrNote: "Вы можете редактировать названия складов и генерировать QR-коды для каждого склада с помощью кнопки QR.",
-    haccpModalTitle: "Новая запись",
-    filterDepot: "Фильтр по складу:",
-    filterAll: "Все",
-    filterDateRange: "Диапазон дат:",
-    emptyHaccp: "Записи температуры ещё не введены.",
-    btnDeleteSelectedHaccp: "Удалить выбранные",
+    recordsCsvBtn: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ CSV",
+    recordsDeleteBtn: "Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğµ",
+    emptyRecords: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    thDate: "Ğ”Ğ°Ñ‚Ğ°",
+    thProducedPerson: "ĞŸÑ€Ğ¸Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ»ĞµĞ½Ğ¾ Ğ±Ğ»ÑĞ´ (Ñ‡ĞµĞ».)",
+    thWaste10: "10% Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    thBeneficiary: "ĞŸĞ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»Ğ¸ ÑƒÑĞ»ÑƒĞ³ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    thPortionGr: "ĞŸĞ¾Ñ€Ñ†Ğ¸Ñ (Ğ³)",
+    thWasteKg: "ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ (ĞºĞ³)",
+    thWastedPortion: "Ğ’Ñ‹Ğ±Ñ€Ğ¾ÑˆĞµĞ½Ğ¾ (Ğ¿Ğ¾Ñ€Ñ†.)",
+    thFoodType: "Ğ¢Ğ¸Ğ¿ Ğ±Ğ»ÑĞ´Ğ°",
+    thAction: "Ğ”ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ",
+    thAcademicStaff: "ĞĞºĞ°Ğ´ĞµĞ¼Ğ¸Ñ‡ĞµÑĞºĞ¸Ğ¹ Ğ¸ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¸Ğ²Ğ½Ñ‹Ğ¹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    thStudentCount: "Ğ¡Ñ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹ Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    thBeneficiaryTotal: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹ ÑƒÑĞ»ÑƒĞ³ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    sksStaff: "ĞŸĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» Ğ¡ĞšĞ¡",
+    summaryReport: "Ğ¡Ğ²Ğ¾Ğ´Ğ½Ñ‹Ğ¹ Ğ¾Ñ‚Ñ‡Ñ‘Ñ‚",
+    reportPdfBtn: "ĞÑ‚ĞºÑ€Ñ‹Ñ‚ÑŒ PDF",
+    allRecordsPrint: "Ğ’ÑĞµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ (ĞŸĞµÑ‡Ğ°Ñ‚Ğ½Ñ‹Ğ¹ Ğ²Ğ¸Ğ´)",
+    rTotalRecords: "ĞĞ±Ñ‰ĞµĞµ Ñ‡Ğ¸ÑĞ»Ğ¾ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹",
+    rTotalMeals: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¸Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ»ĞµĞ½Ğ¾ Ğ±Ğ»ÑĞ´",
+    rTotalWaste10: "Ğ’ÑĞµĞ³Ğ¾ 10% Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    rTotalAfterWaste: "Ğ’ÑĞµĞ³Ğ¾ Ğ±Ğ»ÑĞ´ Ğ¿Ğ¾ÑĞ»Ğµ 10% Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    rTotalTurnstile: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    rTotalBeneficiary: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹ ÑƒÑĞ»ÑƒĞ³ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    rTotalStaff: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° Ğ¡ĞšĞ¡",
+    rPortionSize: "Ğ Ğ°Ğ·Ğ¼ĞµÑ€ Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¸ (Ğ³)",
+    rTotalPortion: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¹ (Ğ³)",
+    rWastedPortion: "Ğ’Ñ‹Ğ±Ñ€Ğ¾ÑˆĞµĞ½Ğ½Ñ‹Ğµ Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¸",
+    rMaxWeeklyBeneficiary: "ĞœĞ°ĞºÑĞ¸Ğ¼ÑƒĞ¼ Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹ Ğ·Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    rTotalWasteKg: "ĞĞ±Ñ‰ĞµĞµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    rAvgWasteKg: "Ğ¡Ñ€ĞµĞ´Ğ½. ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    rTotalStudents: "ĞĞ±Ñ‰ĞµĞµ Ñ‡Ğ¸ÑĞ»Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    rMaxWaste: "ĞœĞ°ĞºÑĞ¸Ğ¼ÑƒĞ¼ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    rMinWaste: "ĞœĞ¸Ğ½Ğ¸Ğ¼ÑƒĞ¼ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    rWasteTrend: "Ğ”Ğ¸Ğ½Ğ°Ğ¼Ğ¸ĞºĞ° Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (Ğ¿Ğ¾ÑĞ». 7 Ğ´Ğ½ĞµĞ¹)",
+    rBeneficiaryTrend: "Ğ”Ğ¸Ğ½Ğ°Ğ¼Ğ¸ĞºĞ° Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹ (Ğ¿Ğ¾ÑĞ». 7 Ğ´Ğ½ĞµĞ¹)",
+    wasteByFoodTitle: "ĞĞ½Ğ°Ğ»Ğ¸Ğ· Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¿Ğ¾ Ñ‚Ğ¸Ğ¿Ñƒ Ğ±Ğ»ÑĞ´Ğ°",
+    wasteByFoodEmpty: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ñ Ğ´Ğ°Ğ½Ğ½Ñ‹Ğ¼Ğ¸ Ğ¾ Ñ‚Ğ¸Ğ¿Ğµ Ğ±Ğ»ÑĞ´Ğ° Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    wasteByFoodRecords: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹",
+    wasteByFoodRate: "ĞŸÑ€Ğ¾Ñ†ĞµĞ½Ñ‚ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    wasteByFoodPerPerson: "ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° (ĞºĞ³)",
+    wsProducedMeal: "ĞŸÑ€Ğ¸Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ»ĞµĞ½Ğ¾ Ğ±Ğ»ÑĞ´ (Ñ‡ĞµĞ».)",
+    wsTotalPasses: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    wsTurnstile: "Ğ¢ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    wsStaffSKS: "ĞŸĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» Ğ¡ĞšĞ¡",
+    wsWasteAmount: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    wsWastedPortion: "Ğ’ Ğ¼ÑƒÑĞ¾Ñ€",
+    wsStudents: "Ğ¡Ñ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹ Ğ¿Ğ¸Ñ‚.",
+    wsNoRecordsYet: "Ğ—Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚",
+    wsNoRecordThisWeek: "ĞĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ·Ğ° ÑÑ‚Ñƒ Ğ½ĞµĞ´ĞµĞ»Ñ",
+    wsNoRecordToday: "ĞĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸",
+    wsTodayDetail: "Ğ”ĞµÑ‚Ğ°Ğ»Ğ¸ Ğ·Ğ° ÑĞµĞ³Ğ¾Ğ´Ğ½Ñ",
+    wsDailyDetail: "Ğ”Ğ½ĞµĞ²Ğ½Ğ°Ñ ÑĞ²Ğ¾Ğ´ĞºĞ°",
+    wsWaste: "ĞŸĞ¾Ñ‚ĞµÑ€Ğ¸",
+    wsPortion: "Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ñ",
+    wsProduced: "Ğ’Ñ‹Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ¾",
+    wsTurnstileCount: "ĞŸÑ€Ğ¾Ñ…Ğ¾Ğ´Ñ‹ Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚Ğ°",
+    wsStaffCount: "ĞŸĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»",
+    menuTitle: "ĞœĞµĞ½Ñ Ğ½Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    menuStatusBadge: "Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ",
+    menuSaveBtn: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ",
+    menuSendBtn: "ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ½Ğ° ÑĞ¾Ğ³Ğ»Ğ°ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ğµ",
+    menuApproveBtn: "Ğ¡Ğ¾Ğ³Ğ»Ğ°ÑĞ¾Ğ²Ğ°Ñ‚ÑŒ",
+    menuRejectBtn: "ĞÑ‚ĞºĞ»Ğ¾Ğ½Ğ¸Ñ‚ÑŒ",
+    menuWithdrawBtn: "ĞÑ‚Ğ¾Ğ·Ğ²Ğ°Ñ‚ÑŒ ÑĞ¾Ğ³Ğ»Ğ°ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ğµ",
+    menuClearBtn: "ĞÑ‡Ğ¸ÑÑ‚Ğ¸Ñ‚ÑŒ Ñ‚Ğ°Ğ±Ğ»Ğ¸Ñ†Ñƒ",
+    menuPrintBtn: "ĞŸĞµÑ‡Ğ°Ñ‚ÑŒ",
+    menuFoodListBtn: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ğ±Ğ»ÑĞ´",
+    menuFoodListUploadBtn: "Ğ—Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ CSV",
+    menuFoodListCsvBtn: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ CSV",
+    menuWarningPrefix: "ĞœĞµĞ½Ñ Ğ±ĞµĞ· ÑĞ¾Ğ³Ğ»Ğ°ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ñ:",
+    menuWarningText: "ĞœĞµĞ½Ñ Ğ½Ğ° ÑÑ‚Ñƒ Ğ½ĞµĞ´ĞµĞ»Ñ ĞµÑ‰Ñ‘ Ğ½Ğµ ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¾ Ğ¸Ğ½Ğ¶ĞµĞ½ĞµÑ€Ğ¾Ğ¼ Ğ¿Ğ¾ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ.",
+    menuHintText: "Ğ’Ğ²ĞµĞ´Ğ¸Ñ‚Ğµ Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ Ğ±Ğ»ÑĞ´...",
+    productNeedsTitle: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ğ½ĞµĞ¾Ğ±Ñ…Ğ¾Ğ´Ğ¸Ğ¼Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ğ´ÑƒĞºÑ‚Ğ¾Ğ²",
+    weeklyNeedsTitle: "Ğ•Ğ¶ĞµĞ½ĞµĞ´ĞµĞ»ÑŒĞ½Ñ‹Ğ¹ Ğ¾Ğ±Ñ‰Ğ¸Ğ¹ ÑĞ¿Ğ¸ÑĞ¾Ğº Ğ¿Ğ¾Ñ‚Ñ€ĞµĞ±Ğ½Ğ¾ÑÑ‚ĞµĞ¹",
+    foodListTitle: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ğ±Ğ»ÑĞ´",
+    modalRejectMenu: "ĞÑ‚ĞºĞ»Ğ¾Ğ½Ğ¸Ñ‚ÑŒ Ğ¼ĞµĞ½Ñ",
+    modalRejectDesc: "ĞŸÑ€Ğ¸Ñ‡Ğ¸Ğ½Ğ° Ğ¾Ñ‚ĞºĞ»Ğ¾Ğ½ĞµĞ½Ğ¸Ñ Ğ¾Ğ±ÑĞ·Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ğ°.",
+    menuRejectConfirm: "ĞÑ‚ĞºĞ»Ğ¾Ğ½Ğ¸Ñ‚ÑŒ",
+    haccpTitle: "Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ±ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚ÑŒÑ Ğ¿Ğ¸Ñ‰ĞµĞ²Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ğ´ÑƒĞºÑ‚Ğ¾Ğ²",
+    haccpCsvBtn: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ CSV",
+    haccpColdStorage: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹ Ñ…Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸ĞºĞ°",
+    haccpNewBtn: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    haccpDepotBtn: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ ÑĞºĞ»Ğ°Ğ´Ğ¾Ğ²",
+    haccpDepoQrNote: "Ğ’Ñ‹ Ğ¼Ğ¾Ğ¶ĞµÑ‚Ğµ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ ÑĞºĞ»Ğ°Ğ´Ğ¾Ğ² Ğ¸ Ğ³ĞµĞ½ĞµÑ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ QR-ĞºĞ¾Ğ´Ñ‹ Ğ´Ğ»Ñ ĞºĞ°Ğ¶Ğ´Ğ¾Ğ³Ğ¾ ÑĞºĞ»Ğ°Ğ´Ğ° Ñ Ğ¿Ğ¾Ğ¼Ğ¾Ñ‰ÑŒÑ ĞºĞ½Ğ¾Ğ¿ĞºĞ¸ QR.",
+    haccpModalTitle: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    filterDepot: "Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€ Ğ¿Ğ¾ ÑĞºĞ»Ğ°Ğ´Ñƒ:",
+    filterAll: "Ğ’ÑĞµ",
+    filterDateRange: "Ğ”Ğ¸Ğ°Ğ¿Ğ°Ğ·Ğ¾Ğ½ Ğ´Ğ°Ñ‚:",
+    emptyHaccp: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    btnDeleteSelectedHaccp: "Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğµ",
     btnPdf: "PDF",
-    depoNamesTitle: "Названия складов",
-    oilNewBtn: "Новая запись",
-    oilListBtn: "Список",
-    oilFilterTitle: "Фильтры отработанного масла",
-    filterOilType: "Тип масла:",
-    btnReset: "Сбросить",
-    oilSummaryTitle: "Сводка по отработанному маслу",
-    oilChartTitle: "Графики отработанного масла",
-    oilChartSubtitle: "Ежемесячное количество отработанного масла (л)",
-    oilChartEmpty: "Графики появятся после ввода записей об отработанном масле",
-    oilChartNote: "Ежемесячные итоги отработанного масла по дате, типу масла и году",
-    oilRecordsTitle: "Записи отработанного масла",
-    oilModalTitle: "Запись отработанного масла",
-    emptyOil: "Записи отработанного масла ещё не введены.",
-    ambalajNewBtn: "Новая запись",
-    ambalajListBtn: "Список",
-    packagingFilterTitle: "Фильтры упаковочных отходов",
-    filterWasteType: "Тип отходов:",
-    packagingSummaryTitle: "Сводка по упаковочным отходам",
-    packagingChartTitle: "Графики упаковочных отходов",
-    packagingChartSubtitle: "Ежемесячное количество упаковочных отходов (кг)",
-    packagingChartEmpty: "Графики появятся после ввода записей об упаковочных отходах",
-    packagingChartNote: "Ежемесячные итоги упаковочных отходов по дате, типу отходов и году (кг)",
-    packagingRecordsTitle: "Записи упаковочных отходов",
-    packagingModalTitle: "Запись упаковочных отходов",
-    emptyPackaging: "Записи упаковочных отходов ещё не введены.",
-    kalibrasyonNewBtn: "Новое устройство",
-    kalibrasyonListBtn: "Список",
-    kalibrasyonCsvBtn: "Скачать CSV",
-    calibrationSummary: "Сводка калибровки",
-    calibrationDevices: "Устройства подлежащие калибровке",
-    calibrationModalTitle: "Устройство для калибровки",
-    filterStatus: "Статус:",
-    filterDepartment: "Отдел:",
-    btnWordExport: "Экспорт в Word",
-    btnPrint: "Печать PDF",
-    chartProdWaste: "Сравнение производства - проходов - отходов",
-    chartEmpty: "Графики появятся после ввода данных",
-    chartProdWasteNote: "Ежемесячное сравнение производства, проходов через турникет и выброшенных порций",
-    chartStudentCount: "Число студентов, пользующихся услугами питания",
-    yearTotal: "Итого за год",
-    chartStudentNote: "Ежемесячный итог дневных проходов студентов",
-    chartStaffTotal: "Академический и административный + персонал СКС",
-    chartStaffNote: "Итог академического и административного (Турникет - Студенты) и персонала СКС",
-    chartMonthlyProd: "Ежемесячное производство блюд",
-    chartMonthlyProdNote: "Ежемесячный итог дневного количества произведённых блюд",
-    chartMonthlyTurnstile: "Ежемесячное количество проходов через турникет",
-    chartTurnstileNote: "Итог студенты + персонал + внешние проходы",
-    chartMonthlyWaste: "Ежемесячное количество отходов (кг)",
-    chartMonthlyWasteNote: "Ежемесячный итог дневных отходов (кг)",
-    chartMonthlyWastePortion: "Ежемесячное количество отходов (порции)",
-    chartWastePortionNote: "Ежемесячный итог дневных выброшенных порций",
-    chartDiff: "Разница между производством и проходами",
-    chartDiffNote: "Разница между произведёнными блюдами и проходами через турникет",
-    chartWasteRatio: "Отходы в % от произведённых блюд",
-    yearAverage: "Среднегодовой показатель",
-    chartWasteRatioNote: "Процент произведённых блюд, которые становятся отходами",
-    chartWastePerPerson: "Отходы на человека (кг/чел.)",
-    chartWastePerPersonNote: "Средние отходы на каждого посетителя столовой",
-    chartMonthlyTemp: "Среднемесячная температура на складах (°C)",
-    chartTempEmpty: "Графики появятся после ввода записей о температуре",
-    chartTempNote: "Среднемесячная температура каждого склада",
-    yearlyPdfBtn: "Печать PDF",
-    yearlyTotalProd: "Сравнение общего производства",
-    yearlyTotalProdNote: "Итого за год - 1-й год vs 2-й год (порции)",
-    yearlyTotalBen: "Всего получателей услуг питания",
-    yearlyTotalBenNote: "Итого за год - 1-й год vs 2-й год (всего человек)",
-    yearlyStudentComp: "Сравнение студентов-получателей",
-    yearlyStudentNote: "Итого за год - 1-й год vs 2-й год (студенты)",
-    yearlyWasteComp: "Сравнение отходов (кг)",
-    yearlyWasteNote: "Итого за год - 1-й год vs 2-й год (кг)",
-    yearlyMonthlyProd: "Ежемесячное сравнение производства",
-    yearlyMonthlyProdNote: "1-й год vs 2-й год - произведённые блюда (порции)",
-    yearlyMonthlyTurnstile: "Ежемесячное сравнение проходов через турникет",
-    yearlyMonthlyTurnstileNote: "1-й год vs 2-й год - количество проходов",
-    yearlyMonthlyStudent: "Ежемесячное сравнение проходов студентов",
-    yearlyMonthlyStudentNote: "1-й год vs 2-й год - количество проходов студентов",
-    yearlyMonthlyWaste: "Ежемесячное сравнение отходов (кг)",
-    yearlyMonthlyWasteNote: "1-й год vs 2-й год - количество отходов (кг)",
-    yearlyWasteListTitle: "Годовой список отходов",
-    spendingRatesTitle: "Расходы на человека (Студенты, персонал и блюда)",
-    spendingStudentRate: "Расходы на студента (TL)",
-    btnSaveStudentRate: "Сохранить сумму студентов",
-    spendingStaffRate: "Расходы на сотрудника (TL)",
-    btnSaveStaffRate: "Сохранить сумму персонала",
-    spendingMealRate: "Расходы на блюдо (TL)",
-    btnSaveMealRate: "Сохранить сумму блюд",
-    spendingDesc: "Расходы студентов = Число студентов × Расходы на студента",
-    spendingStudentTitle: "Расходы на студентов (TL)",
-    spendingChartEmpty: "Графики появятся после ввода записей",
-    spendingStudentNote: "Расходы студентов (TL) = Число студентов × Расходы на студента",
-    spendingStaffTitle: "Расходы на персонал (TL)",
-    spendingStaffNote: "Расходы персонала (TL) = Число персонала × Расходы на сотрудника",
-    spendingMealTitle: "Расходы на блюда (TL)",
-    spendingMealNote: "Расходы на блюда (TL) = Произведённые блюда × Расходы на блюдо",
-    spendingTableTitle: "Таблица расчёта расходов",
-    syncTitle: "Синхронизация с Supabase",
-    syncCloseBtn: "Закрыть",
-    modalNewRecord: "Добавить запись",
-    formDate: "Дата",
-    formProducedCount: "Количество произведённых блюд",
-    formTurnstileCount: "Количество проходов через турникет",
-    formStudentCount: "Число студентов",
-    formFoodType: "Тип блюда",
-    formAutoCalc: "Автоматические расчёты",
-    badgeAutomatic: "Автоматически",
-    badgeFixed: "Фиксировано",
-    badgeAutoEditable: "Автоматически + Редактируемое",
-    btnCancel: "Отмена",
-    entryFormSubmit: "Сохранить",
-    formReceiptNo: "Номер квитанции",
-    formOilType: "Тип масла",
-    formAmountLt: "Количество (л)",
-    formNote: "Примечание",
-    formWasteType: "Тип отходов",
-    formAmount: "Количество",
-    formDeviceName: "Название устройства",
-    formBrandModel: "Бренд-модель",
-    formSerialNo: "Серийный номер",
-    formStatus: "Статус",
-    formVerification: "Поверка",
-    formLastCalibration: "Последняя калибровка",
-    formNextCalibration: "Следующая калибровка",
-    formLocation: "Местоположение/Отдел",
-    formResponsible: "Ответственное лицо",
-    btnSave: "Сохранить",
-    btnAdd: "Добавить",
-    btnClose: "Закрыть",
-    qrTitle: "QR-код",
-    qrHint: "Распечатайте QR-код для размещения на дверях склада.",
-    adminTitle: "Панель администрирования",
-    adminReAuthText: "Пожалуйста, введите пароль администратора для доступа к панели.",
-    adminPassword: "Пароль администратора",
-    btnVerify: "Проверить",
-    adminSessionRole: "Роль сессии",
-    adminLastLogin: "Последний вход",
-    adminAuthMethod: "Метод авторизации",
-    adminStorage: "Хранилище паролей",
-    adminDataSource: "Источник данных",
-    adminUserMgmt: "Управление пользователями",
-    adminUserMgmtDesc: "Добавляйте, редактируйте или удаляйте пользователей.",
-    adminAddUser: "Добавить пользователя",
-    adminUsername: "Имя пользователя",
-    adminDisplayName: "Отображаемое имя",
-    adminPasswordLabel: "Пароль",
-    adminRole: "Роль",
-    adminAddUserBtn: "Добавить пользователя",
-    adminRolePerms: "Настройки прав по ролям",
-    adminRolePermsDesc: "Настройте, какие вкладки доступны каждой роли.",
-    adminSecurity: "Безопасность сессии",
-    adminSecurityDesc: "Сессия будет закрыта, если нет активности в течение указанного времени.",
-    adminInactivityTimeout: "Тайм-аут неактивности",
-    adminLogsTitle: "Журнал действий",
-    adminLogsDesc: "Вход/выход пользователей и операции с записями",
-    btnRefresh: "Обновить",
-    adminSaveBtn: "Сохранить настройки",
-    adminFooterNote: "Пароли хранятся на сервере постоянно.",
-    adminCloseBtn: "Закрыть",
-    logFilterDelete: "Удаление",
-    logFilterAddUser: "Добавление пользователя",
-    logFilterDeleteUser: "Удаление пользователя",
-    adminRefreshBtn: "Обновить",
-    manualTitle: "Руководство пользователя",
-    manualSubtitle: "Система контроля производства, потребления и отходов",
-    compDataType: "Тип данных",
-    compLastWeek: "Прошлая неделя",
-    compThisWeek: "Эта неделя",
-    compLastMonth: "Прошлый месяц",
-    compThisMonth: "Этот месяц",
-    compLastYear: "Прошлый год",
-    compThisYear: "Этот год",
-    compDiff: "Разница",
-    compTotalWaste: "Всего отходов (кг)",
-    compTotalProduction: "Всего произведено",
-    compTurnstilePasses: "Проходы турникета",
-    compStudentCount: "Кол-во студентов",
-    compWastePerPerson: "Отходов на человека (гр)",
-    monthlyCompDesc: "Сравнение текущего месяца с прошлым. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
-    yearlyCompDesc: "Сравнение текущего года (с начала года) с аналогичным периодом прошлого года. ↑ рост, ↓ снижение. Снижение (↓) отходов и отходов на человека — это хорошо.",
-    monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
-    haccpColDate: "Дата",
-    haccpColTime: "Время",
-    haccpColDepot: "Название склада",
-    haccpColTemp: "Температура (°C)",
-    haccpColHumidity: "Влажность (%)",
-    haccpColNote: "Примечание",
-    haccpColAction: "Действие",
-    dayNames: ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"],
-    menuVariety: "Вид",
-    menuVariety1: "1-й вид",
-    menuVariety2: "2-й вид",
-    menuVariety3: "3-й вид",
-    menuVariety4: "4-й вид",
-    menuVariety5: "5-й вид",
-    menuPersonCount: "Кол-во человек",
-    stockDeductionList: "Списание со склада",
-    total: "Итого",
-    inVarieties: "видах",
-    person: "чел.",
-    weeklyGrandTotal: "Итого за неделю",
-    dailyAverage: "Среднее в день",
-    avgPerPerson: "Среднее на человека",
-    totalPersonDays: "Всего человек/дней",
-    colDay: "День",
-    colDate: "Дата",
-    colPerson: "Чел.",
-    dailyMaterialCost: "Суточная стоимость материалов",
-    perPerson: "На человека",
-    ingredients: "Ингредиенты",
-    perPersonGram: "(грамм на человека)",
-    colIngredient: "Ингредиент",
-    colPerPerson: "/чел.",
-    colUnit: "Ед.",
-    addIngredient: "+ Добавить ингредиент",
-    foodName: "Название блюда",
-    allergen: "Аллерген",
-    recipePerPerson: "Рецепт (на человека)",
-    devices: "шт.",
-    maliTablo: "Финансовая Таблица",
-    maliTabloSubtitle: "Сводка недельных затрат на материалы",
-    maliUnitPriceMissing: "единичная цена материала не определена",
-    maliUnitPriceHint: "Можно задать в разделе «Единичные цены»",
-    weeklyTotal: "ИТОГО ЗА НЕДЕЛЮ",
-    categoryDistribution: "Распределение по категориям",
-    weeklyTotalList: "Еженедельный список потребностей",
-    totalCost: "Общая стоимость",
-    catMeat: "Мясные продукты",
-    catDairy: "Молочные продукты",
-    catLegumes: "Сухие бобовые",
-    catSpices: "Специи",
-    catVegetable: "Овощи и фрукты",
-    catOther: "Прочее",
-    month1: "Январь", month2: "Февраль", month3: "Март", month4: "Апрель",
-    month5: "Май", month6: "Июнь", month7: "Июль", month8: "Август",
-    month9: "Сентябрь", month10: "Октябрь", month11: "Ноябрь", month12: "Декабрь",
-    menuListTitle: "СПИСОК МЕНЮ",
-    totalDevices: "Всего устройств",
-    statusWorking: "Исправно",
-    statusDefective: "Неисправно",
-    statusMaintenance: "Требует обслуживания",
-    statusScrap: "Подлежит списанию",
-    calibrationValid: "Калибровка действительна",
-    calibrationApproaching: "Калибровка приближается (30 дней)",
-    differentDepartments: "Разные отделы",
-    statusApproaching: "Приближается",
-    statusExpired: "Срок истёк",
-    statusNotDone: "Не выполнено",
-    statusValid: "Действительно",
-    noDeviceFound: "Устройства, соответствующие этим критериям, не найдены.",
-    noDeviceRecord: "Записи об устройствах для калибровки пока не введены.",
-    deviceCount: "шт.",
-    deviceCountSuffix: " шт.",
-    editDeviceTitle: "Редактировать устройство калибровки",
-    newDeviceTitle: "Новое устройство калибровки",
-    kpiBeneficiary: "Пользуются: ",
-    kpiNoRecordToday: "Нет записи за сегодня",
-    kpiAlertsCount: "предупреждений",
-    kpiAllValuesOk: "Все значения в норме",
-    kpiDeviceInAlarm: "устройств в тревоге",
-    kpiApproaching: "приближается",
-    kpiAllCalibrationsValid: "Все калибровки действительны",
-    filterAll: "Все",
-    colDeviceName: "Название устройства",
-    colBrandModel: "Марка-Модель",
-    colSerialNo: "Серийный номер",
-    colDeviceStatus: "Состояние",
-    colCalibration: "Калибровка",
-    colLastCalibration: "Последняя калибровка",
-    colNextCalibration: "Следующая",
-    colDepartment: "Отдел",
-    colResponsible: "Ответственный",
-    colNote: "Примечание",
-    colAction: "Действие",
-    unitPriceList: "Список единичных цен",
-    registeredProducts: "Зарегистрированные товары",
-    totalAmount: "Общая сумма",
-    avgUnitPrice: "Средняя цена за единицу",
-    selectedYear: "Выбранный год",
-    duplicateWarning: "товаров с дублирующимися записями. Расчёт цен может содержать ошибки.",
-    cleanDuplicates: "Удалить по одному",
-    colProductName: "Название товара",
-    colUnit: "Ед.",
-    colUnitPrice: "Цена за единицу (₺)",
-    colUnitEquals: "1 Ед. =",
-    colYear: "Год",
-    noProductsThisYear: "Товары за этот год ещё не добавлены.",
-    btnEdit: "Редактировать",
-    btnDelete: "Удалить",
-    pageLabel: "Страница",
-    totalProductsLabel: "Итого",
-    totalProductsSuffix: " товаров",
-    priceYearNote: "Цены привязаны к году. Сопоставление: название материала автоматически нормализуется.",
-    btnAddNewProduct: "+ Новый товар",
-    btnDownloadCSV: "Скачать CSV",
-    btnPrint: "Печать",
-    btnUploadCSV: "Загрузить CSV",
-    clickToSelectYear: "Нажмите для выбора года",
-    selectYear: "Выбрать год",
-    dataInfoRecord: "записей",
-    dataInfoProduction: "произведено",
-    dataInfoWaste: "отходы",
-    portion: "порций",
-    abnormalDays: "аномальных дней",
-    noRecordsToDisplay: "Нет записей для отображения.",
-    colYearLabel: "Год",
-    avgPortion400: "400 г",
-    recordsNot400: "записей не 400",
-    gram: " г",
-    personLabel: "Чел",
-    last7RecordsPrev7: "последние 7 записей / предыдущие 7",
-    tempAppropriate: "Норма",
-    tempLow: "Низкая",
-    tempHigh: "Высокая",
-    lowerLimit: "Нижний предел: ",
-    upperLimit: "Верхний предел: ",
-    unknownDepo: "Неизвестно",
-    tempMin: "Мин: ",
-    tempAvg: "Срд: ",
-    tempMax: "Макс: ",
-    humidity: "Влажность: ",
-    depot: "Холодильник",
-    selectedCount: " выбрано",
-    pageRecords: "Страница ",
-    recordCount: " записей)",
-    tempRecordsTitle: "Записи температуры холодильников",
-    dateRangeLabel: " | Дата:",
-    allDepots: "Все холодильники",
-    colTime: "Время",
-    colDepot: "Холодильник",
-    colTemperature: "Температура",
-    colStatus: "Статус",
-    depotTempRecordTitle: "Запись температуры",
-    formDate: "Дата",
-    formTime: "Время",
-    formDepotName: "Название холодильника",
-    formTemperature: "Температура (°C)",
-    tempPlaceholder: "0.0 (можно оставить пустым)",
-    formHumidity: "Влажность (%)",
-    formNoteOptional: "Необязательно",
-    deleteConfirm: "Вы уверены, что хотите удалить эту запись?",
-    deleteSelectedConfirm: "Вы уверены, что хотите удалить ",
-    deleteSelectedConfirmSuffix: " выбранных записей?",
-    tempHistory: " История температуры",
-    weeklyAvgTempNote: "Средние недельные значения температуры — с линиями верхнего и нижнего пределов",
-    upperLimitLabel: "Верхний предел (",
-    lowerLimitLabel: "Нижний предел (",
-    totalRecordCount: "Всего записей",
-    totalWasteOil: "Всего отработанного масла",
-    avgAmountPerRecord: "Срд. количество / запись",
-    highestAmount: "Наибольшее количество",
-    lowestAmount: "Наименьшее количество",
-    oilTypeCount: "Кол-во видов масла",
-    yearTotalSuffix: " Итого",
-    startDate: "Начало",
-    endDate: "Конец",
-    typeLabel: "Тип: ",
-    yearLabel: "Год: ",
-    activeFilterLabel: "Активный фильтр: ",
-    noFilterMessage: "Без фильтра — показаны все записи отработанного масла.",
-    noWasteOilRecord: "Записи отработанного масла пока не введены.",
-    noMatchingFilterRecord: "Записи, соответствующие критериям фильтра, не найдены.",
-    editWasteOilRecord: "Редактировать запись отработанного масла",
-    newWasteOilRecord: "Новая запись отработанного масла",
-    wasteOilChartLabel: "Отработанное масло",
-    previousYearLabel: "Предыдущий год",
-    undefinedType: "Не указано",
-    totalWastePackaging: "Всего упаковочных отходов",
-    wasteTypeCount: "Кол-во видов отходов",
-    noWastePackagingRecord: "Записи упаковочных отходов пока не введены.",
-    noMatchingFilterPackage: "Записи, соответствующие критериям фильтра, не найдены.",
-    noFilterMessagePackaging: "Без фильтра — показаны все записи упаковочных отходов.",
-    editWastePackagingRecord: "Редактировать запись упаковочных отходов",
-    newWastePackagingRecord: "Новая запись упаковочных отходов",
-    wastePackagingChartLabel: "Упаковочные отходы",
-    chartDetailEmpty: "Записи за этот период не найдены.",
-    chartClose: "Закрыть",
-    chartColProduction: "Производство",
-    chartColPasses: "Проходы",
-    chartColWaste: "Отходы",
-    chartColStudent: "Студенты",
-    chartColFoodType: "Вид блюда",
-    chartProductionVsTurnstile: "Разница между производством и проходами через турникет",
-    chartStaffTotal: "Академический + административный + СКС персонал",
-    yearFilterLabel: "Год:",
-    monthFilterLabel: "Месяц:",
-    chartSelectYear: "Выбрать",
-    year1Label: "1. Год:",
-    year2Label: "2. Год:",
-    noComparison: "Без сравнения",
-    newLabel: "Новый",
-    foodTypeLabel: "Вид блюда",
-    productionLabel: " Производство",
-    wasteKgLabel: " Отходы (кг)",
-    wasteGrPortionLabel: " Отходы (г/порция)",
-    diffKgLabel: "Разница (кг)",
-    totalRow: "ИТОГО",
-    registeredRate: "Сохранённая ставка: ",
-    unsavedChanges: " (не сохранённые изменения)",
-    kpiTotalStudentSpending: "Общие расходы студентов",
-    kpiTotalStaffSpending: "Общие расходы персонала",
-    kpiAvgMonthlyStudentSpending: "Срд. месячные расходы студентов",
-    kpiAvgMonthlyStaffSpending: "Срд. месячные расходы персонала",
-    kpiTotalStudents: "Всего студентов",
-    kpiTotalStaff: "Всего персонала",
-    kpiHighestStudentMonth: "Макс. расходы студентов",
-    kpiHighestStaffMonth: "Макс. расходы персонала",
-    kpiTotalMealSpending: "Общие расходы на питание",
-    kpiAvgMonthlyMealSpending: "Срд. месячные расходы на питание",
-    kpiTotalMealsProduced: "Всего произведено блюд",
-    kpiHighestMealMonth: "Макс. расходы на питание",
-    chartStudentSpending: "Расходы студентов (₺)",
-    chartStaffSpending: "Расходы персонала (₺)",
-    chartMealSpending: "Расходы на питание (₺)",
-    noRecordsYet: "Записи пока отсутствуют.",
-    invalidRate: "Введите действительную ставку!",
-    rateSaved: "Ставка сохранена: ",
-    menuStatusDraft: "Черновик",
-    menuStatusPending: "Ожидает утверждения",
-    menuStatusApproved: "Утверждено",
-    menuStatusRejected: "Отклонено",
-    menuApprove: "Утвердить меню",
-    menuApproveDisabled: "Меню ещё не отправлено на утверждение. Когда диетолог нажмёт «Отправить на утверждение», вы сможете утвердить отсюда.",
-    menuReject: "Отклонить меню с обоснованием",
-    menuRejectDisabled: "Меню ещё не отправлено на утверждение. Когда диетолог нажмёт «Отправить на утверждение», вы сможете отклонить отсюда.",
-    menuPendingCount: " меню ожидают утверждения. Перейдите к ожидающей неделе и утвердите.",
-    menuNotApproved: "Меню на эту неделю ещё не утверждено инженером по пищевой безопасности.",
-    menuRejected: "Это меню отклонено",
-    menuRejectedSuffix: ". Диетолог может исправить и отправить повторно.",
-    menuAwaitingApproval: "Это меню ожидает утверждения. Без утверждения оно будет помечено как «неутверждённое» в списке производства.",
-    noteLabel: "Заметка ",
-    deleteNote: "Удалить эту заметку",
-    addNote: "Добавить заметку",
-    mealPickerTitle: "Выбрать блюдо",
-    clearLabel: "🗑 Очистить",
-    searchMealPlaceholder: "Поиск блюда...",
-    noMatchingMeal: "Подходящее блюдо не найдено.",
-    varietyLabel: " Вид: ",
-    addRecord: "Добавить новую запись",
-    editRecord: "Редактировать запись",
-    btnUpdate: "Обновить",
-    recordAdded: "Запись успешно добавлена.",
-    recordUpdated: "Запись успешно обновлена.",
-    recordDeleted: "Запись удалена.",
-    allRecordsDeleted: "Все записи удалены.",
-    selectedRecordsDeleted: "Выбранные записи удалены.",
-    noRecordToDelete: "Нет записей для удаления.",
-    noSelectedRecord: "Записи не выбраны.",
-    deleteAllConfirm: "Вы уверены, что хотите удалить ВСЕ записи?\nЭто действие нельзя отменить!",
-    deleteFoodConfirm: "Вы уверены, что хотите удалить это блюдо?",
-    selected: " выбрано",
-    negMeals: "Количество приготовленных блюд не может быть отрицательным.",
-    negTurnstile: "Количество проходов не может быть отрицательным.",
-    negStaff: "Количество персонала не может быть отрицательным.",
-    negPortion: "Количество порций не может быть отрицательным.",
-    negStudent: "Количество студентов не может быть отрицательным.",
-    unsavedConfirm: "Есть несохранённые изменения. Вы уверены, что хотите закрыть?",
-    selectUser: "Пожалуйста, выберите пользователя.",
-    wrongCredentials: "Неверное имя пользователя или пароль.",
-    tooManyAttempts: "Слишком много попыток. Пожалуйста, подождите.",
-    editable: "Редактируемая",
-    fixed: "Фиксированная",
-    menuSentForApproval: "Меню отправлено на согласование. Ожидается одобрение инженера-технолога/администратора.",
-    menuApproved: "Меню одобрено.",
-    menuRejectedMsg: "Меню отклонено с обоснованием.",
-    menuDraftSaved: "Меню сохранено как черновик.",
-    menuCleared: "Меню очищено.",
-    monthShort1: "Янв",
-    monthShort2: "Фев",
-    monthShort3: "Мар",
-    monthShort4: "Апр",
-    monthShort5: "Май",
-    monthShort6: "Июн",
-    monthShort7: "Июл",
-    monthShort8: "Авг",
-    monthShort9: "Сен",
-    monthShort10: "Окт",
-    monthShort11: "Ноя",
-    monthShort12: "Дек"
+    depoNamesTitle: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ ÑĞºĞ»Ğ°Ğ´Ğ¾Ğ²",
+    oilNewBtn: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    oilListBtn: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº",
+    oilFilterTitle: "Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€Ñ‹ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    filterOilType: "Ğ¢Ğ¸Ğ¿ Ğ¼Ğ°ÑĞ»Ğ°:",
+    btnReset: "Ğ¡Ğ±Ñ€Ğ¾ÑĞ¸Ñ‚ÑŒ",
+    oilSummaryTitle: "Ğ¡Ğ²Ğ¾Ğ´ĞºĞ° Ğ¿Ğ¾ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ¼Ñƒ Ğ¼Ğ°ÑĞ»Ñƒ",
+    oilChartTitle: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    oilChartSubtitle: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ° (Ğ»)",
+    oilChartEmpty: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ²Ğ²Ğ¾Ğ´Ğ° Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ¾Ğ± Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ¼ Ğ¼Ğ°ÑĞ»Ğµ",
+    oilChartNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğµ Ğ¸Ñ‚Ğ¾Ğ³Ğ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ° Ğ¿Ğ¾ Ğ´Ğ°Ñ‚Ğµ, Ñ‚Ğ¸Ğ¿Ñƒ Ğ¼Ğ°ÑĞ»Ğ° Ğ¸ Ğ³Ğ¾Ğ´Ñƒ",
+    oilRecordsTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    oilModalTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    emptyOil: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ° ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    ambalajNewBtn: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    ambalajListBtn: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº",
+    packagingFilterTitle: "Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€Ñ‹ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    filterWasteType: "Ğ¢Ğ¸Ğ¿ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²:",
+    packagingSummaryTitle: "Ğ¡Ğ²Ğ¾Ğ´ĞºĞ° Ğ¿Ğ¾ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ğ¼ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ°Ğ¼",
+    packagingChartTitle: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    packagingChartSubtitle: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    packagingChartEmpty: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ²Ğ²Ğ¾Ğ´Ğ° Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ¾Ğ± ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ°Ñ…",
+    packagingChartNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğµ Ğ¸Ñ‚Ğ¾Ğ³Ğ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¿Ğ¾ Ğ´Ğ°Ñ‚Ğµ, Ñ‚Ğ¸Ğ¿Ñƒ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¸ Ğ³Ğ¾Ğ´Ñƒ (ĞºĞ³)",
+    packagingRecordsTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    packagingModalTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    emptyPackaging: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    kalibrasyonNewBtn: "ĞĞ¾Ğ²Ğ¾Ğµ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ¾",
+    kalibrasyonListBtn: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº",
+    kalibrasyonCsvBtn: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ CSV",
+    calibrationSummary: "Ğ¡Ğ²Ğ¾Ğ´ĞºĞ° ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸",
+    calibrationDevices: "Ğ£ÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ° Ğ¿Ğ¾Ğ´Ğ»ĞµĞ¶Ğ°Ñ‰Ğ¸Ğµ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞµ",
+    calibrationModalTitle: "Ğ£ÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ¾ Ğ´Ğ»Ñ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸",
+    filterStatus: "Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ:",
+    filterDepartment: "ĞÑ‚Ğ´ĞµĞ»:",
+    btnWordExport: "Ğ­ĞºÑĞ¿Ğ¾Ñ€Ñ‚ Ğ² Word",
+    btnPrint: "ĞŸĞµÑ‡Ğ°Ñ‚ÑŒ PDF",
+    chartProdWaste: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ° - Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² - Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    chartEmpty: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ²Ğ²Ğ¾Ğ´Ğ° Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…",
+    chartProdWasteNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°, Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚ Ğ¸ Ğ²Ñ‹Ğ±Ñ€Ğ¾ÑˆĞµĞ½Ğ½Ñ‹Ñ… Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¹",
+    chartStudentCount: "Ğ§Ğ¸ÑĞ»Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ², Ğ¿Ğ¾Ğ»ÑŒĞ·ÑƒÑÑ‰Ğ¸Ñ…ÑÑ ÑƒÑĞ»ÑƒĞ³Ğ°Ğ¼Ğ¸ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    yearTotal: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ³Ğ¾Ğ´",
+    chartStudentNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğ¹ Ğ¸Ñ‚Ğ¾Ğ³ Ğ´Ğ½ĞµĞ²Ğ½Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    chartStaffTotal: "ĞĞºĞ°Ğ´ĞµĞ¼Ğ¸Ñ‡ĞµÑĞºĞ¸Ğ¹ Ğ¸ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¸Ğ²Ğ½Ñ‹Ğ¹ + Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» Ğ¡ĞšĞ¡",
+    chartStaffNote: "Ğ˜Ñ‚Ğ¾Ğ³ Ğ°ĞºĞ°Ğ´ĞµĞ¼Ğ¸Ñ‡ĞµÑĞºĞ¾Ğ³Ğ¾ Ğ¸ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¸Ğ²Ğ½Ğ¾Ğ³Ğ¾ (Ğ¢ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚ - Ğ¡Ñ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹) Ğ¸ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° Ğ¡ĞšĞ¡",
+    chartMonthlyProd: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾ Ğ±Ğ»ÑĞ´",
+    chartMonthlyProdNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğ¹ Ğ¸Ñ‚Ğ¾Ğ³ Ğ´Ğ½ĞµĞ²Ğ½Ğ¾Ğ³Ğ¾ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ° Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ñ… Ğ±Ğ»ÑĞ´",
+    chartMonthlyTurnstile: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    chartTurnstileNote: "Ğ˜Ñ‚Ğ¾Ğ³ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹ + Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» + Ğ²Ğ½ĞµÑˆĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ñ‹",
+    chartMonthlyWaste: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    chartMonthlyWasteNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğ¹ Ğ¸Ñ‚Ğ¾Ğ³ Ğ´Ğ½ĞµĞ²Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    chartMonthlyWastePortion: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¸)",
+    chartWastePortionNote: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğ¹ Ğ¸Ñ‚Ğ¾Ğ³ Ğ´Ğ½ĞµĞ²Ğ½Ñ‹Ñ… Ğ²Ñ‹Ğ±Ñ€Ğ¾ÑˆĞµĞ½Ğ½Ñ‹Ñ… Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¹",
+    chartDiff: "Ğ Ğ°Ğ·Ğ½Ğ¸Ñ†Ğ° Ğ¼ĞµĞ¶Ğ´Ñƒ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾Ğ¼ Ğ¸ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ°Ğ¼Ğ¸",
+    chartDiffNote: "Ğ Ğ°Ğ·Ğ½Ğ¸Ñ†Ğ° Ğ¼ĞµĞ¶Ğ´Ñƒ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ğ¼Ğ¸ Ğ±Ğ»ÑĞ´Ğ°Ğ¼Ğ¸ Ğ¸ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ°Ğ¼Ğ¸ Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    chartWasteRatio: "ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ Ğ² % Ğ¾Ñ‚ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ñ… Ğ±Ğ»ÑĞ´",
+    yearAverage: "Ğ¡Ñ€ĞµĞ´Ğ½ĞµĞ³Ğ¾Ğ´Ğ¾Ğ²Ğ¾Ğ¹ Ğ¿Ğ¾ĞºĞ°Ğ·Ğ°Ñ‚ĞµĞ»ÑŒ",
+    chartWasteRatioNote: "ĞŸÑ€Ğ¾Ñ†ĞµĞ½Ñ‚ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ñ… Ğ±Ğ»ÑĞ´, ĞºĞ¾Ñ‚Ğ¾Ñ€Ñ‹Ğµ ÑÑ‚Ğ°Ğ½Ğ¾Ğ²ÑÑ‚ÑÑ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ°Ğ¼Ğ¸",
+    chartWastePerPerson: "ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° (ĞºĞ³/Ñ‡ĞµĞ».)",
+    chartWastePerPersonNote: "Ğ¡Ñ€ĞµĞ´Ğ½Ğ¸Ğµ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ĞºĞ°Ğ¶Ğ´Ğ¾Ğ³Ğ¾ Ğ¿Ğ¾ÑĞµÑ‚Ğ¸Ñ‚ĞµĞ»Ñ ÑÑ‚Ğ¾Ğ»Ğ¾Ğ²Ğ¾Ğ¹",
+    chartMonthlyTemp: "Ğ¡Ñ€ĞµĞ´Ğ½ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ°Ñ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğ° Ğ½Ğ° ÑĞºĞ»Ğ°Ğ´Ğ°Ñ… (Â°C)",
+    chartTempEmpty: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ²Ğ²Ğ¾Ğ´Ğ° Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ¾ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğµ",
+    chartTempNote: "Ğ¡Ñ€ĞµĞ´Ğ½ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ°Ñ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğ° ĞºĞ°Ğ¶Ğ´Ğ¾Ğ³Ğ¾ ÑĞºĞ»Ğ°Ğ´Ğ°",
+    yearlyPdfBtn: "ĞŸĞµÑ‡Ğ°Ñ‚ÑŒ PDF",
+    yearlyTotalProd: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¾Ğ±Ñ‰ĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°",
+    yearlyTotalProdNote: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ³Ğ¾Ğ´ - 1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ (Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¸)",
+    yearlyTotalBen: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹ ÑƒÑĞ»ÑƒĞ³ Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ñ",
+    yearlyTotalBenNote: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ³Ğ¾Ğ´ - 1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ (Ğ²ÑĞµĞ³Ğ¾ Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞº)",
+    yearlyStudentComp: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²-Ğ¿Ğ¾Ğ»ÑƒÑ‡Ğ°Ñ‚ĞµĞ»ĞµĞ¹",
+    yearlyStudentNote: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ³Ğ¾Ğ´ - 1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ (ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹)",
+    yearlyWasteComp: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    yearlyWasteNote: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ³Ğ¾Ğ´ - 1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ (ĞºĞ³)",
+    yearlyMonthlyProd: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°",
+    yearlyMonthlyProdNote: "1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ - Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ±Ğ»ÑĞ´Ğ° (Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¸)",
+    yearlyMonthlyTurnstile: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    yearlyMonthlyTurnstileNote: "1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ - ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    yearlyMonthlyStudent: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    yearlyMonthlyStudentNote: "1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ - ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    yearlyMonthlyWaste: "Ğ•Ğ¶ĞµĞ¼ĞµÑÑÑ‡Ğ½Ğ¾Ğµ ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    yearlyMonthlyWasteNote: "1-Ğ¹ Ğ³Ğ¾Ğ´ vs 2-Ğ¹ Ğ³Ğ¾Ğ´ - ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    yearlyWasteListTitle: "Ğ“Ğ¾Ğ´Ğ¾Ğ²Ğ¾Ğ¹ ÑĞ¿Ğ¸ÑĞ¾Ğº Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    spendingRatesTitle: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° (Ğ¡Ñ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹, Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» Ğ¸ Ğ±Ğ»ÑĞ´Ğ°)",
+    spendingStudentRate: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ° (TL)",
+    btnSaveStudentRate: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ ÑÑƒĞ¼Ğ¼Ñƒ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    spendingStaffRate: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑĞ¾Ñ‚Ñ€ÑƒĞ´Ğ½Ğ¸ĞºĞ° (TL)",
+    btnSaveStaffRate: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ ÑÑƒĞ¼Ğ¼Ñƒ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ°",
+    spendingMealRate: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ±Ğ»ÑĞ´Ğ¾ (TL)",
+    btnSaveMealRate: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ ÑÑƒĞ¼Ğ¼Ñƒ Ğ±Ğ»ÑĞ´",
+    spendingDesc: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² = Ğ§Ğ¸ÑĞ»Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² Ã— Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ°",
+    spendingStudentTitle: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² (TL)",
+    spendingChartEmpty: "Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ²Ğ²Ğ¾Ğ´Ğ° Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹",
+    spendingStudentNote: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² (TL) = Ğ§Ğ¸ÑĞ»Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² Ã— Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ°",
+    spendingStaffTitle: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ» (TL)",
+    spendingStaffNote: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° (TL) = Ğ§Ğ¸ÑĞ»Ğ¾ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° Ã— Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° ÑĞ¾Ñ‚Ñ€ÑƒĞ´Ğ½Ğ¸ĞºĞ°",
+    spendingMealTitle: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ±Ğ»ÑĞ´Ğ° (TL)",
+    spendingMealNote: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ±Ğ»ÑĞ´Ğ° (TL) = ĞŸÑ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ±Ğ»ÑĞ´Ğ° Ã— Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ±Ğ»ÑĞ´Ğ¾",
+    spendingTableTitle: "Ğ¢Ğ°Ğ±Ğ»Ğ¸Ñ†Ğ° Ñ€Ğ°ÑÑ‡Ñ‘Ñ‚Ğ° Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ğ¾Ğ²",
+    syncTitle: "Ğ¡Ğ¸Ğ½Ñ…Ñ€Ğ¾Ğ½Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ Ñ Supabase",
+    syncCloseBtn: "Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ",
+    modalNewRecord: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    formDate: "Ğ”Ğ°Ñ‚Ğ°",
+    formProducedCount: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´Ñ‘Ğ½Ğ½Ñ‹Ñ… Ğ±Ğ»ÑĞ´",
+    formTurnstileCount: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    formStudentCount: "Ğ§Ğ¸ÑĞ»Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    formFoodType: "Ğ¢Ğ¸Ğ¿ Ğ±Ğ»ÑĞ´Ğ°",
+    formAutoCalc: "ĞĞ²Ñ‚Ğ¾Ğ¼Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸Ğµ Ñ€Ğ°ÑÑ‡Ñ‘Ñ‚Ñ‹",
+    badgeAutomatic: "ĞĞ²Ñ‚Ğ¾Ğ¼Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸",
+    badgeFixed: "Ğ¤Ğ¸ĞºÑĞ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¾",
+    badgeAutoEditable: "ĞĞ²Ñ‚Ğ¾Ğ¼Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸ + Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€ÑƒĞµĞ¼Ğ¾Ğµ",
+    btnCancel: "ĞÑ‚Ğ¼ĞµĞ½Ğ°",
+    entryFormSubmit: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ",
+    formReceiptNo: "ĞĞ¾Ğ¼ĞµÑ€ ĞºĞ²Ğ¸Ñ‚Ğ°Ğ½Ñ†Ğ¸Ğ¸",
+    formOilType: "Ğ¢Ğ¸Ğ¿ Ğ¼Ğ°ÑĞ»Ğ°",
+    formAmountLt: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ (Ğ»)",
+    formNote: "ĞŸÑ€Ğ¸Ğ¼ĞµÑ‡Ğ°Ğ½Ğ¸Ğµ",
+    formWasteType: "Ğ¢Ğ¸Ğ¿ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    formAmount: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾",
+    formDeviceName: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ°",
+    formBrandModel: "Ğ‘Ñ€ĞµĞ½Ğ´-Ğ¼Ğ¾Ğ´ĞµĞ»ÑŒ",
+    formSerialNo: "Ğ¡ĞµÑ€Ğ¸Ğ¹Ğ½Ñ‹Ğ¹ Ğ½Ğ¾Ğ¼ĞµÑ€",
+    formStatus: "Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ",
+    formVerification: "ĞŸĞ¾Ğ²ĞµÑ€ĞºĞ°",
+    formLastCalibration: "ĞŸĞ¾ÑĞ»ĞµĞ´Ğ½ÑÑ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ°",
+    formNextCalibration: "Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ°Ñ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ°",
+    formLocation: "ĞœĞµÑÑ‚Ğ¾Ğ¿Ğ¾Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğµ/ĞÑ‚Ğ´ĞµĞ»",
+    formResponsible: "ĞÑ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ĞµĞ½Ğ½Ğ¾Ğµ Ğ»Ğ¸Ñ†Ğ¾",
+    btnSave: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ",
+    btnAdd: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ",
+    btnClose: "Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ",
+    qrTitle: "QR-ĞºĞ¾Ğ´",
+    qrHint: "Ğ Ğ°ÑĞ¿ĞµÑ‡Ğ°Ñ‚Ğ°Ğ¹Ñ‚Ğµ QR-ĞºĞ¾Ğ´ Ğ´Ğ»Ñ Ñ€Ğ°Ğ·Ğ¼ĞµÑ‰ĞµĞ½Ğ¸Ñ Ğ½Ğ° Ğ´Ğ²ĞµÑ€ÑÑ… ÑĞºĞ»Ğ°Ğ´Ğ°.",
+    adminTitle: "ĞŸĞ°Ğ½ĞµĞ»ÑŒ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ñ",
+    adminReAuthText: "ĞŸĞ¾Ğ¶Ğ°Ğ»ÑƒĞ¹ÑÑ‚Ğ°, Ğ²Ğ²ĞµĞ´Ğ¸Ñ‚Ğµ Ğ¿Ğ°Ñ€Ğ¾Ğ»ÑŒ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ° Ğ´Ğ»Ñ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ° Ğº Ğ¿Ğ°Ğ½ĞµĞ»Ğ¸.",
+    adminPassword: "ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ°",
+    btnVerify: "ĞŸÑ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ",
+    adminSessionRole: "Ğ Ğ¾Ğ»ÑŒ ÑĞµÑÑĞ¸Ğ¸",
+    adminLastLogin: "ĞŸĞ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ğ¹ Ğ²Ñ…Ğ¾Ğ´",
+    adminAuthMethod: "ĞœĞµÑ‚Ğ¾Ğ´ Ğ°Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸",
+    adminStorage: "Ğ¥Ñ€Ğ°Ğ½Ğ¸Ğ»Ğ¸Ñ‰Ğµ Ğ¿Ğ°Ñ€Ğ¾Ğ»ĞµĞ¹",
+    adminDataSource: "Ğ˜ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸Ğº Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…",
+    adminUserMgmt: "Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»ÑĞ¼Ğ¸",
+    adminUserMgmtDesc: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ»ÑĞ¹Ñ‚Ğµ, Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€ÑƒĞ¹Ñ‚Ğµ Ğ¸Ğ»Ğ¸ ÑƒĞ´Ğ°Ğ»ÑĞ¹Ñ‚Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»ĞµĞ¹.",
+    adminAddUser: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    adminUsername: "Ğ˜Ğ¼Ñ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    adminDisplayName: "ĞÑ‚Ğ¾Ğ±Ñ€Ğ°Ğ¶Ğ°ĞµĞ¼Ğ¾Ğµ Ğ¸Ğ¼Ñ",
+    adminPasswordLabel: "ĞŸĞ°Ñ€Ğ¾Ğ»ÑŒ",
+    adminRole: "Ğ Ğ¾Ğ»ÑŒ",
+    adminAddUserBtn: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    adminRolePerms: "ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ¿Ñ€Ğ°Ğ² Ğ¿Ğ¾ Ñ€Ğ¾Ğ»ÑĞ¼",
+    adminRolePermsDesc: "ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹Ñ‚Ğµ, ĞºĞ°ĞºĞ¸Ğµ Ğ²ĞºĞ»Ğ°Ğ´ĞºĞ¸ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ñ‹ ĞºĞ°Ğ¶Ğ´Ğ¾Ğ¹ Ñ€Ğ¾Ğ»Ğ¸.",
+    adminSecurity: "Ğ‘ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚ÑŒ ÑĞµÑÑĞ¸Ğ¸",
+    adminSecurityDesc: "Ğ¡ĞµÑÑĞ¸Ñ Ğ±ÑƒĞ´ĞµÑ‚ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚Ğ°, ĞµÑĞ»Ğ¸ Ğ½ĞµÑ‚ Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ğ¾ÑÑ‚Ğ¸ Ğ² Ñ‚ĞµÑ‡ĞµĞ½Ğ¸Ğµ ÑƒĞºĞ°Ğ·Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ²Ñ€ĞµĞ¼ĞµĞ½Ğ¸.",
+    adminInactivityTimeout: "Ğ¢Ğ°Ğ¹Ğ¼-Ğ°ÑƒÑ‚ Ğ½ĞµĞ°ĞºÑ‚Ğ¸Ğ²Ğ½Ğ¾ÑÑ‚Ğ¸",
+    adminLogsTitle: "Ğ–ÑƒÑ€Ğ½Ğ°Ğ» Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğ¹",
+    adminLogsDesc: "Ğ’Ñ…Ğ¾Ğ´/Ğ²Ñ‹Ñ…Ğ¾Ğ´ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»ĞµĞ¹ Ğ¸ Ğ¾Ğ¿ĞµÑ€Ğ°Ñ†Ğ¸Ğ¸ Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑĞ¼Ğ¸",
+    btnRefresh: "ĞĞ±Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ",
+    adminSaveBtn: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸",
+    adminFooterNote: "ĞŸĞ°Ñ€Ğ¾Ğ»Ğ¸ Ñ…Ñ€Ğ°Ğ½ÑÑ‚ÑÑ Ğ½Ğ° ÑĞµÑ€Ğ²ĞµÑ€Ğµ Ğ¿Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ½Ğ¾.",
+    adminCloseBtn: "Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ",
+    logFilterDelete: "Ğ£Ğ´Ğ°Ğ»ĞµĞ½Ğ¸Ğµ",
+    logFilterAddUser: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    logFilterDeleteUser: "Ğ£Ğ´Ğ°Ğ»ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    adminRefreshBtn: "ĞĞ±Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ",
+    manualTitle: "Ğ ÑƒĞºĞ¾Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ",
+    manualSubtitle: "Ğ¡Ğ¸ÑÑ‚ĞµĞ¼Ğ° ĞºĞ¾Ğ½Ñ‚Ñ€Ğ¾Ğ»Ñ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°, Ğ¿Ğ¾Ñ‚Ñ€ĞµĞ±Ğ»ĞµĞ½Ğ¸Ñ Ğ¸ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    compDataType: "Ğ¢Ğ¸Ğ¿ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…",
+    compLastWeek: "ĞŸÑ€Ğ¾ÑˆĞ»Ğ°Ñ Ğ½ĞµĞ´ĞµĞ»Ñ",
+    compThisWeek: "Ğ­Ñ‚Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    compLastMonth: "ĞŸÑ€Ğ¾ÑˆĞ»Ñ‹Ğ¹ Ğ¼ĞµÑÑÑ†",
+    compThisMonth: "Ğ­Ñ‚Ğ¾Ñ‚ Ğ¼ĞµÑÑÑ†",
+    compLastYear: "ĞŸÑ€Ğ¾ÑˆĞ»Ñ‹Ğ¹ Ğ³Ğ¾Ğ´",
+    compThisYear: "Ğ­Ñ‚Ğ¾Ñ‚ Ğ³Ğ¾Ğ´",
+    compDiff: "Ğ Ğ°Ğ·Ğ½Ğ¸Ñ†Ğ°",
+    compTotalWaste: "Ğ’ÑĞµĞ³Ğ¾ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² (ĞºĞ³)",
+    compTotalProduction: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´ĞµĞ½Ğ¾",
+    compTurnstilePasses: "ĞŸÑ€Ğ¾Ñ…Ğ¾Ğ´Ñ‹ Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚Ğ°",
+    compStudentCount: "ĞšĞ¾Ğ»-Ğ²Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    compWastePerPerson: "ĞÑ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° (Ğ³Ñ€)",
+    monthlyCompDesc: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ñ‚ĞµĞºÑƒÑ‰ĞµĞ³Ğ¾ Ğ¼ĞµÑÑÑ†Ğ° Ñ Ğ¿Ñ€Ğ¾ÑˆĞ»Ñ‹Ğ¼. â†‘ Ñ€Ğ¾ÑÑ‚, â†“ ÑĞ½Ğ¸Ğ¶ĞµĞ½Ğ¸Ğµ. Ğ¡Ğ½Ğ¸Ğ¶ĞµĞ½Ğ¸Ğµ (â†“) Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¸ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° â€” ÑÑ‚Ğ¾ Ñ…Ğ¾Ñ€Ğ¾ÑˆĞ¾.",
+    yearlyCompDesc: "Ğ¡Ñ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ğµ Ñ‚ĞµĞºÑƒÑ‰ĞµĞ³Ğ¾ Ğ³Ğ¾Ğ´Ğ° (Ñ Ğ½Ğ°Ñ‡Ğ°Ğ»Ğ° Ğ³Ğ¾Ğ´Ğ°) Ñ Ğ°Ğ½Ğ°Ğ»Ğ¾Ğ³Ğ¸Ñ‡Ğ½Ñ‹Ğ¼ Ğ¿ĞµÑ€Ğ¸Ğ¾Ğ´Ğ¾Ğ¼ Ğ¿Ñ€Ğ¾ÑˆĞ»Ğ¾Ğ³Ğ¾ Ğ³Ğ¾Ğ´Ğ°. â†‘ Ñ€Ğ¾ÑÑ‚, â†“ ÑĞ½Ğ¸Ğ¶ĞµĞ½Ğ¸Ğµ. Ğ¡Ğ½Ğ¸Ğ¶ĞµĞ½Ğ¸Ğµ (â†“) Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¸ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ° â€” ÑÑ‚Ğ¾ Ñ…Ğ¾Ñ€Ğ¾ÑˆĞ¾.",
+    monthNames: ["Ğ¯Ğ½Ğ²Ğ°Ñ€ÑŒ","Ğ¤ĞµĞ²Ñ€Ğ°Ğ»ÑŒ","ĞœĞ°Ñ€Ñ‚","ĞĞ¿Ñ€ĞµĞ»ÑŒ","ĞœĞ°Ğ¹","Ğ˜ÑĞ½ÑŒ","Ğ˜ÑĞ»ÑŒ","ĞĞ²Ğ³ÑƒÑÑ‚","Ğ¡ĞµĞ½Ñ‚ÑĞ±Ñ€ÑŒ","ĞĞºÑ‚ÑĞ±Ñ€ÑŒ","ĞĞ¾ÑĞ±Ñ€ÑŒ","Ğ”ĞµĞºĞ°Ğ±Ñ€ÑŒ"],
+    haccpColDate: "Ğ”Ğ°Ñ‚Ğ°",
+    haccpColTime: "Ğ’Ñ€ĞµĞ¼Ñ",
+    haccpColDepot: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ ÑĞºĞ»Ğ°Ğ´Ğ°",
+    haccpColTemp: "Ğ¢ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğ° (Â°C)",
+    haccpColHumidity: "Ğ’Ğ»Ğ°Ğ¶Ğ½Ğ¾ÑÑ‚ÑŒ (%)",
+    haccpColNote: "ĞŸÑ€Ğ¸Ğ¼ĞµÑ‡Ğ°Ğ½Ğ¸Ğµ",
+    haccpColAction: "Ğ”ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ",
+    dayNames: ["ĞŸĞ¾Ğ½ĞµĞ´ĞµĞ»ÑŒĞ½Ğ¸Ğº", "Ğ’Ñ‚Ğ¾Ñ€Ğ½Ğ¸Ğº", "Ğ¡Ñ€ĞµĞ´Ğ°", "Ğ§ĞµÑ‚Ğ²ĞµÑ€Ğ³", "ĞŸÑÑ‚Ğ½Ğ¸Ñ†Ğ°"],
+    menuVariety: "Ğ’Ğ¸Ğ´",
+    menuVariety1: "1-Ğ¹ Ğ²Ğ¸Ğ´",
+    menuVariety2: "2-Ğ¹ Ğ²Ğ¸Ğ´",
+    menuVariety3: "3-Ğ¹ Ğ²Ğ¸Ğ´",
+    menuVariety4: "4-Ğ¹ Ğ²Ğ¸Ğ´",
+    menuVariety5: "5-Ğ¹ Ğ²Ğ¸Ğ´",
+    menuPersonCount: "ĞšĞ¾Ğ»-Ğ²Ğ¾ Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞº",
+    stockDeductionList: "Ğ¡Ğ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ ÑĞ¾ ÑĞºĞ»Ğ°Ğ´Ğ°",
+    total: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾",
+    inVarieties: "Ğ²Ğ¸Ğ´Ğ°Ñ…",
+    person: "Ñ‡ĞµĞ».",
+    weeklyGrandTotal: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾ Ğ·Ğ° Ğ½ĞµĞ´ĞµĞ»Ñ",
+    dailyAverage: "Ğ¡Ñ€ĞµĞ´Ğ½ĞµĞµ Ğ² Ğ´ĞµĞ½ÑŒ",
+    avgPerPerson: "Ğ¡Ñ€ĞµĞ´Ğ½ĞµĞµ Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ°",
+    totalPersonDays: "Ğ’ÑĞµĞ³Ğ¾ Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞº/Ğ´Ğ½ĞµĞ¹",
+    colDay: "Ğ”ĞµĞ½ÑŒ",
+    colDate: "Ğ”Ğ°Ñ‚Ğ°",
+    colPerson: "Ğ§ĞµĞ».",
+    dailyMaterialCost: "Ğ¡ÑƒÑ‚Ğ¾Ñ‡Ğ½Ğ°Ñ ÑÑ‚Ğ¾Ğ¸Ğ¼Ğ¾ÑÑ‚ÑŒ Ğ¼Ğ°Ñ‚ĞµÑ€Ğ¸Ğ°Ğ»Ğ¾Ğ²",
+    perPerson: "ĞĞ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ°",
+    ingredients: "Ğ˜Ğ½Ğ³Ñ€ĞµĞ´Ğ¸ĞµĞ½Ñ‚Ñ‹",
+    perPersonGram: "(Ğ³Ñ€Ğ°Ğ¼Ğ¼ Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ°)",
+    colIngredient: "Ğ˜Ğ½Ğ³Ñ€ĞµĞ´Ğ¸ĞµĞ½Ñ‚",
+    colPerPerson: "/Ñ‡ĞµĞ».",
+    colUnit: "Ğ•Ğ´.",
+    addIngredient: "+ Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¸Ğ½Ğ³Ñ€ĞµĞ´Ğ¸ĞµĞ½Ñ‚",
+    foodName: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ Ğ±Ğ»ÑĞ´Ğ°",
+    allergen: "ĞĞ»Ğ»ĞµÑ€Ğ³ĞµĞ½",
+    recipePerPerson: "Ğ ĞµÑ†ĞµĞ¿Ñ‚ (Ğ½Ğ° Ñ‡ĞµĞ»Ğ¾Ğ²ĞµĞºĞ°)",
+    devices: "ÑˆÑ‚.",
+    chartMonthlyProduction: "Ежемесячное производство (чел.)",
+    chartMonthlyPasses: "Ежемесячные проходы (чел.)",
+    chartLastYearWaste: "Прошлый год утилизировано (порций)",
+    chartMonthlyWasteKg: "Ежемесячные отходы (кг)",
+    chartMonthlyMealCount: "Ежемесячное количество приёмов пищи",
+    chartMonthlyWasteRate: "Ежемесячный уровень отходов %",
+    chartMonthlyStudent: "Ежемесячное количество студентов",
+    chartWastePerPersonLabel: "Отходы на человека (кг/чел.)",
+    maliTablo: "Ğ¤Ğ¸Ğ½Ğ°Ğ½ÑĞ¾Ğ²Ğ°Ñ Ğ¢Ğ°Ğ±Ğ»Ğ¸Ñ†Ğ°",
+    maliTabloSubtitle: "Ğ¡Ğ²Ğ¾Ğ´ĞºĞ° Ğ½ĞµĞ´ĞµĞ»ÑŒĞ½Ñ‹Ñ… Ğ·Ğ°Ñ‚Ñ€Ğ°Ñ‚ Ğ½Ğ° Ğ¼Ğ°Ñ‚ĞµÑ€Ğ¸Ğ°Ğ»Ñ‹",
+    maliUnitPriceMissing: "ĞµĞ´Ğ¸Ğ½Ğ¸Ñ‡Ğ½Ğ°Ñ Ñ†ĞµĞ½Ğ° Ğ¼Ğ°Ñ‚ĞµÑ€Ğ¸Ğ°Ğ»Ğ° Ğ½Ğµ Ğ¾Ğ¿Ñ€ĞµĞ´ĞµĞ»ĞµĞ½Ğ°",
+    maliUnitPriceHint: "ĞœĞ¾Ğ¶Ğ½Ğ¾ Ğ·Ğ°Ğ´Ğ°Ñ‚ÑŒ Ğ² Ñ€Ğ°Ğ·Ğ´ĞµĞ»Ğµ Â«Ğ•Ğ´Ğ¸Ğ½Ğ¸Ñ‡Ğ½Ñ‹Ğµ Ñ†ĞµĞ½Ñ‹Â»",
+    weeklyTotal: "Ğ˜Ğ¢ĞĞ“Ğ Ğ—Ğ ĞĞ•Ğ”Ğ•Ğ›Ğ®",
+    categoryDistribution: "Ğ Ğ°ÑĞ¿Ñ€ĞµĞ´ĞµĞ»ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾ ĞºĞ°Ñ‚ĞµĞ³Ğ¾Ñ€Ğ¸ÑĞ¼",
+    weeklyTotalList: "Ğ•Ğ¶ĞµĞ½ĞµĞ´ĞµĞ»ÑŒĞ½Ñ‹Ğ¹ ÑĞ¿Ğ¸ÑĞ¾Ğº Ğ¿Ğ¾Ñ‚Ñ€ĞµĞ±Ğ½Ğ¾ÑÑ‚ĞµĞ¹",
+    totalCost: "ĞĞ±Ñ‰Ğ°Ñ ÑÑ‚Ğ¾Ğ¸Ğ¼Ğ¾ÑÑ‚ÑŒ",
+    catMeat: "ĞœÑÑĞ½Ñ‹Ğµ Ğ¿Ñ€Ğ¾Ğ´ÑƒĞºÑ‚Ñ‹",
+    catDairy: "ĞœĞ¾Ğ»Ğ¾Ñ‡Ğ½Ñ‹Ğµ Ğ¿Ñ€Ğ¾Ğ´ÑƒĞºÑ‚Ñ‹",
+    catLegumes: "Ğ¡ÑƒÑ…Ğ¸Ğµ Ğ±Ğ¾Ğ±Ğ¾Ğ²Ñ‹Ğµ",
+    catSpices: "Ğ¡Ğ¿ĞµÑ†Ğ¸Ğ¸",
+    catVegetable: "ĞĞ²Ğ¾Ñ‰Ğ¸ Ğ¸ Ñ„Ñ€ÑƒĞºÑ‚Ñ‹",
+    catOther: "ĞŸÑ€Ğ¾Ñ‡ĞµĞµ",
+    month1: "Ğ¯Ğ½Ğ²Ğ°Ñ€ÑŒ", month2: "Ğ¤ĞµĞ²Ñ€Ğ°Ğ»ÑŒ", month3: "ĞœĞ°Ñ€Ñ‚", month4: "ĞĞ¿Ñ€ĞµĞ»ÑŒ",
+    month5: "ĞœĞ°Ğ¹", month6: "Ğ˜ÑĞ½ÑŒ", month7: "Ğ˜ÑĞ»ÑŒ", month8: "ĞĞ²Ğ³ÑƒÑÑ‚",
+    month9: "Ğ¡ĞµĞ½Ñ‚ÑĞ±Ñ€ÑŒ", month10: "ĞĞºÑ‚ÑĞ±Ñ€ÑŒ", month11: "ĞĞ¾ÑĞ±Ñ€ÑŒ", month12: "Ğ”ĞµĞºĞ°Ğ±Ñ€ÑŒ",
+    menuListTitle: "Ğ¡ĞŸĞ˜Ğ¡ĞĞš ĞœĞ•ĞĞ®",
+    totalDevices: "Ğ’ÑĞµĞ³Ğ¾ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²",
+    statusWorking: "Ğ˜ÑĞ¿Ñ€Ğ°Ğ²Ğ½Ğ¾",
+    statusDefective: "ĞĞµĞ¸ÑĞ¿Ñ€Ğ°Ğ²Ğ½Ğ¾",
+    statusMaintenance: "Ğ¢Ñ€ĞµĞ±ÑƒĞµÑ‚ Ğ¾Ğ±ÑĞ»ÑƒĞ¶Ğ¸Ğ²Ğ°Ğ½Ğ¸Ñ",
+    statusScrap: "ĞŸĞ¾Ğ´Ğ»ĞµĞ¶Ğ¸Ñ‚ ÑĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ñ",
+    calibrationValid: "ĞšĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ° Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ñ‚ĞµĞ»ÑŒĞ½Ğ°",
+    calibrationApproaching: "ĞšĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ° Ğ¿Ñ€Ğ¸Ğ±Ğ»Ğ¸Ğ¶Ğ°ĞµÑ‚ÑÑ (30 Ğ´Ğ½ĞµĞ¹)",
+    differentDepartments: "Ğ Ğ°Ğ·Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ğ´ĞµĞ»Ñ‹",
+    statusApproaching: "ĞŸÑ€Ğ¸Ğ±Ğ»Ğ¸Ğ¶Ğ°ĞµÑ‚ÑÑ",
+    statusExpired: "Ğ¡Ñ€Ğ¾Ğº Ğ¸ÑÑ‚Ñ‘Ğº",
+    statusNotDone: "ĞĞµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾",
+    statusValid: "Ğ”ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ñ‚ĞµĞ»ÑŒĞ½Ğ¾",
+    noDeviceFound: "Ğ£ÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ°, ÑĞ¾Ğ¾Ñ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ÑƒÑÑ‰Ğ¸Ğµ ÑÑ‚Ğ¸Ğ¼ ĞºÑ€Ğ¸Ñ‚ĞµÑ€Ğ¸ÑĞ¼, Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    noDeviceRecord: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¾Ğ± ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ°Ñ… Ğ´Ğ»Ñ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸ Ğ¿Ğ¾ĞºĞ° Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    deviceCount: "ÑˆÑ‚.",
+    deviceCountSuffix: " ÑˆÑ‚.",
+    editDeviceTitle: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ¾ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸",
+    newDeviceTitle: "ĞĞ¾Ğ²Ğ¾Ğµ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ¾ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸",
+    kpiBeneficiary: "ĞŸĞ¾Ğ»ÑŒĞ·ÑƒÑÑ‚ÑÑ: ",
+    kpiNoRecordToday: "ĞĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ·Ğ° ÑĞµĞ³Ğ¾Ğ´Ğ½Ñ",
+    kpiAlertsCount: "Ğ¿Ñ€ĞµĞ´ÑƒĞ¿Ñ€ĞµĞ¶Ğ´ĞµĞ½Ğ¸Ğ¹",
+    kpiAllValuesOk: "Ğ’ÑĞµ Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ñ Ğ² Ğ½Ğ¾Ñ€Ğ¼Ğµ",
+    kpiDeviceInAlarm: "ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ² Ğ² Ñ‚Ñ€ĞµĞ²Ğ¾Ğ³Ğµ",
+    kpiApproaching: "Ğ¿Ñ€Ğ¸Ğ±Ğ»Ğ¸Ğ¶Ğ°ĞµÑ‚ÑÑ",
+    kpiAllCalibrationsValid: "Ğ’ÑĞµ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ¸ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ñ‚ĞµĞ»ÑŒĞ½Ñ‹",
+    filterAll: "Ğ’ÑĞµ",
+    colDeviceName: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ°",
+    colBrandModel: "ĞœĞ°Ñ€ĞºĞ°-ĞœĞ¾Ğ´ĞµĞ»ÑŒ",
+    colSerialNo: "Ğ¡ĞµÑ€Ğ¸Ğ¹Ğ½Ñ‹Ğ¹ Ğ½Ğ¾Ğ¼ĞµÑ€",
+    colDeviceStatus: "Ğ¡Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ",
+    colCalibration: "ĞšĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ°",
+    colLastCalibration: "ĞŸĞ¾ÑĞ»ĞµĞ´Ğ½ÑÑ ĞºĞ°Ğ»Ğ¸Ğ±Ñ€Ğ¾Ğ²ĞºĞ°",
+    colNextCalibration: "Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ°Ñ",
+    colDepartment: "ĞÑ‚Ğ´ĞµĞ»",
+    colResponsible: "ĞÑ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ĞµĞ½Ğ½Ñ‹Ğ¹",
+    colNote: "ĞŸÑ€Ğ¸Ğ¼ĞµÑ‡Ğ°Ğ½Ğ¸Ğµ",
+    colAction: "Ğ”ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ",
+    unitPriceList: "Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº ĞµĞ´Ğ¸Ğ½Ğ¸Ñ‡Ğ½Ñ‹Ñ… Ñ†ĞµĞ½",
+    registeredProducts: "Ğ—Ğ°Ñ€ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½Ñ‹Ğµ Ñ‚Ğ¾Ğ²Ğ°Ñ€Ñ‹",
+    totalAmount: "ĞĞ±Ñ‰Ğ°Ñ ÑÑƒĞ¼Ğ¼Ğ°",
+    avgUnitPrice: "Ğ¡Ñ€ĞµĞ´Ğ½ÑÑ Ñ†ĞµĞ½Ğ° Ğ·Ğ° ĞµĞ´Ğ¸Ğ½Ğ¸Ñ†Ñƒ",
+    selectedYear: "Ğ’Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğ¹ Ğ³Ğ¾Ğ´",
+    duplicateWarning: "Ñ‚Ğ¾Ğ²Ğ°Ñ€Ğ¾Ğ² Ñ Ğ´ÑƒĞ±Ğ»Ğ¸Ñ€ÑƒÑÑ‰Ğ¸Ğ¼Ğ¸ÑÑ Ğ·Ğ°Ğ¿Ğ¸ÑÑĞ¼Ğ¸. Ğ Ğ°ÑÑ‡Ñ‘Ñ‚ Ñ†ĞµĞ½ Ğ¼Ğ¾Ğ¶ĞµÑ‚ ÑĞ¾Ğ´ĞµÑ€Ğ¶Ğ°Ñ‚ÑŒ Ğ¾ÑˆĞ¸Ğ±ĞºĞ¸.",
+    cleanDuplicates: "Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ Ğ¿Ğ¾ Ğ¾Ğ´Ğ½Ğ¾Ğ¼Ñƒ",
+    colProductName: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ Ñ‚Ğ¾Ğ²Ğ°Ñ€Ğ°",
+    colUnit: "Ğ•Ğ´.",
+    colUnitPrice: "Ğ¦ĞµĞ½Ğ° Ğ·Ğ° ĞµĞ´Ğ¸Ğ½Ğ¸Ñ†Ñƒ (â‚º)",
+    colUnitEquals: "1 Ğ•Ğ´. =",
+    colYear: "Ğ“Ğ¾Ğ´",
+    noProductsThisYear: "Ğ¢Ğ¾Ğ²Ğ°Ñ€Ñ‹ Ğ·Ğ° ÑÑ‚Ğ¾Ñ‚ Ğ³Ğ¾Ğ´ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ñ‹.",
+    btnEdit: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ",
+    btnDelete: "Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ",
+    pageLabel: "Ğ¡Ñ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ğ°",
+    totalProductsLabel: "Ğ˜Ñ‚Ğ¾Ğ³Ğ¾",
+    totalProductsSuffix: " Ñ‚Ğ¾Ğ²Ğ°Ñ€Ğ¾Ğ²",
+    priceYearNote: "Ğ¦ĞµĞ½Ñ‹ Ğ¿Ñ€Ğ¸Ğ²ÑĞ·Ğ°Ğ½Ñ‹ Ğº Ğ³Ğ¾Ğ´Ñƒ. Ğ¡Ğ¾Ğ¿Ğ¾ÑÑ‚Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ: Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ Ğ¼Ğ°Ñ‚ĞµÑ€Ğ¸Ğ°Ğ»Ğ° Ğ°Ğ²Ñ‚Ğ¾Ğ¼Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸ Ğ½Ğ¾Ñ€Ğ¼Ğ°Ğ»Ğ¸Ğ·ÑƒĞµÑ‚ÑÑ.",
+    btnAddNewProduct: "+ ĞĞ¾Ğ²Ñ‹Ğ¹ Ñ‚Ğ¾Ğ²Ğ°Ñ€",
+    btnDownloadCSV: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ CSV",
+    btnPrint: "ĞŸĞµÑ‡Ğ°Ñ‚ÑŒ",
+    btnUploadCSV: "Ğ—Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ CSV",
+    clickToSelectYear: "ĞĞ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ Ğ´Ğ»Ñ Ğ²Ñ‹Ğ±Ğ¾Ñ€Ğ° Ğ³Ğ¾Ğ´Ğ°",
+    selectYear: "Ğ’Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ Ğ³Ğ¾Ğ´",
+    dataInfoRecord: "Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹",
+    dataInfoProduction: "Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´ĞµĞ½Ğ¾",
+    dataInfoWaste: "Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    portion: "Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¹",
+    abnormalDays: "Ğ°Ğ½Ğ¾Ğ¼Ğ°Ğ»ÑŒĞ½Ñ‹Ñ… Ğ´Ğ½ĞµĞ¹",
+    noRecordsToDisplay: "ĞĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ´Ğ»Ñ Ğ¾Ñ‚Ğ¾Ğ±Ñ€Ğ°Ğ¶ĞµĞ½Ğ¸Ñ.",
+    colYearLabel: "Ğ“Ğ¾Ğ´",
+    avgPortion400: "400 Ğ³",
+    recordsNot400: "Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ½Ğµ 400",
+    gram: " Ğ³",
+    personLabel: "Ğ§ĞµĞ»",
+    last7RecordsPrev7: "Ğ¿Ğ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ğµ 7 Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ / Ğ¿Ñ€ĞµĞ´Ñ‹Ğ´ÑƒÑ‰Ğ¸Ğµ 7",
+    tempAppropriate: "ĞĞ¾Ñ€Ğ¼Ğ°",
+    tempLow: "ĞĞ¸Ğ·ĞºĞ°Ñ",
+    tempHigh: "Ğ’Ñ‹ÑĞ¾ĞºĞ°Ñ",
+    lowerLimit: "ĞĞ¸Ğ¶Ğ½Ğ¸Ğ¹ Ğ¿Ñ€ĞµĞ´ĞµĞ»: ",
+    upperLimit: "Ğ’ĞµÑ€Ñ…Ğ½Ğ¸Ğ¹ Ğ¿Ñ€ĞµĞ´ĞµĞ»: ",
+    unknownDepo: "ĞĞµĞ¸Ğ·Ğ²ĞµÑÑ‚Ğ½Ğ¾",
+    tempMin: "ĞœĞ¸Ğ½: ",
+    tempAvg: "Ğ¡Ñ€Ğ´: ",
+    tempMax: "ĞœĞ°ĞºÑ: ",
+    humidity: "Ğ’Ğ»Ğ°Ğ¶Ğ½Ğ¾ÑÑ‚ÑŒ: ",
+    depot: "Ğ¥Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸Ğº",
+    selectedCount: " Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ¾",
+    pageRecords: "Ğ¡Ñ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ğ° ",
+    recordCount: " Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹)",
+    tempRecordsTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹ Ñ…Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸ĞºĞ¾Ğ²",
+    dateRangeLabel: " | Ğ”Ğ°Ñ‚Ğ°:",
+    allDepots: "Ğ’ÑĞµ Ñ…Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸ĞºĞ¸",
+    colTime: "Ğ’Ñ€ĞµĞ¼Ñ",
+    colDepot: "Ğ¥Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸Ğº",
+    colTemperature: "Ğ¢ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğ°",
+    colStatus: "Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ",
+    depotTempRecordTitle: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹",
+    formDate: "Ğ”Ğ°Ñ‚Ğ°",
+    formTime: "Ğ’Ñ€ĞµĞ¼Ñ",
+    formDepotName: "ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ Ñ…Ğ¾Ğ»Ğ¾Ğ´Ğ¸Ğ»ÑŒĞ½Ğ¸ĞºĞ°",
+    formTemperature: "Ğ¢ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ğ° (Â°C)",
+    tempPlaceholder: "0.0 (Ğ¼Ğ¾Ğ¶Ğ½Ğ¾ Ğ¾ÑÑ‚Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿ÑƒÑÑ‚Ñ‹Ğ¼)",
+    formHumidity: "Ğ’Ğ»Ğ°Ğ¶Ğ½Ğ¾ÑÑ‚ÑŒ (%)",
+    formNoteOptional: "ĞĞµĞ¾Ğ±ÑĞ·Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ğ¾",
+    deleteConfirm: "Ğ’Ñ‹ ÑƒĞ²ĞµÑ€ĞµĞ½Ñ‹, Ñ‡Ñ‚Ğ¾ Ñ…Ğ¾Ñ‚Ğ¸Ñ‚Ğµ ÑƒĞ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ ÑÑ‚Ñƒ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ?",
+    deleteSelectedConfirm: "Ğ’Ñ‹ ÑƒĞ²ĞµÑ€ĞµĞ½Ñ‹, Ñ‡Ñ‚Ğ¾ Ñ…Ğ¾Ñ‚Ğ¸Ñ‚Ğµ ÑƒĞ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ ",
+    deleteSelectedConfirmSuffix: " Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ñ… Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹?",
+    tempHistory: " Ğ˜ÑÑ‚Ğ¾Ñ€Ğ¸Ñ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹",
+    weeklyAvgTempNote: "Ğ¡Ñ€ĞµĞ´Ğ½Ğ¸Ğµ Ğ½ĞµĞ´ĞµĞ»ÑŒĞ½Ñ‹Ğµ Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ñ Ñ‚ĞµĞ¼Ğ¿ĞµÑ€Ğ°Ñ‚ÑƒÑ€Ñ‹ â€” Ñ Ğ»Ğ¸Ğ½Ğ¸ÑĞ¼Ğ¸ Ğ²ĞµÑ€Ñ…Ğ½ĞµĞ³Ğ¾ Ğ¸ Ğ½Ğ¸Ğ¶Ğ½ĞµĞ³Ğ¾ Ğ¿Ñ€ĞµĞ´ĞµĞ»Ğ¾Ğ²",
+    upperLimitLabel: "Ğ’ĞµÑ€Ñ…Ğ½Ğ¸Ğ¹ Ğ¿Ñ€ĞµĞ´ĞµĞ» (",
+    lowerLimitLabel: "ĞĞ¸Ğ¶Ğ½Ğ¸Ğ¹ Ğ¿Ñ€ĞµĞ´ĞµĞ» (",
+    totalRecordCount: "Ğ’ÑĞµĞ³Ğ¾ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹",
+    totalWasteOil: "Ğ’ÑĞµĞ³Ğ¾ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    avgAmountPerRecord: "Ğ¡Ñ€Ğ´. ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ / Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    highestAmount: "ĞĞ°Ğ¸Ğ±Ğ¾Ğ»ÑŒÑˆĞµĞµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾",
+    lowestAmount: "ĞĞ°Ğ¸Ğ¼ĞµĞ½ÑŒÑˆĞµĞµ ĞºĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾",
+    oilTypeCount: "ĞšĞ¾Ğ»-Ğ²Ğ¾ Ğ²Ğ¸Ğ´Ğ¾Ğ² Ğ¼Ğ°ÑĞ»Ğ°",
+    yearTotalSuffix: " Ğ˜Ñ‚Ğ¾Ğ³Ğ¾",
+    startDate: "ĞĞ°Ñ‡Ğ°Ğ»Ğ¾",
+    endDate: "ĞšĞ¾Ğ½ĞµÑ†",
+    typeLabel: "Ğ¢Ğ¸Ğ¿: ",
+    yearLabel: "Ğ“Ğ¾Ğ´: ",
+    activeFilterLabel: "ĞĞºÑ‚Ğ¸Ğ²Ğ½Ñ‹Ğ¹ Ñ„Ğ¸Ğ»ÑŒÑ‚Ñ€: ",
+    noFilterMessage: "Ğ‘ĞµĞ· Ñ„Ğ¸Ğ»ÑŒÑ‚Ñ€Ğ° â€” Ğ¿Ğ¾ĞºĞ°Ğ·Ğ°Ğ½Ñ‹ Ğ²ÑĞµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°.",
+    noWasteOilRecord: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ° Ğ¿Ğ¾ĞºĞ° Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    noMatchingFilterRecord: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸, ÑĞ¾Ğ¾Ñ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ÑƒÑÑ‰Ğ¸Ğµ ĞºÑ€Ğ¸Ñ‚ĞµÑ€Ğ¸ÑĞ¼ Ñ„Ğ¸Ğ»ÑŒÑ‚Ñ€Ğ°, Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    editWasteOilRecord: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    newWasteOilRecord: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ Ğ¾Ñ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ğ¼Ğ°ÑĞ»Ğ°",
+    wasteOilChartLabel: "ĞÑ‚Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ğ½Ğ½Ğ¾Ğµ Ğ¼Ğ°ÑĞ»Ğ¾",
+    previousYearLabel: "ĞŸÑ€ĞµĞ´Ñ‹Ğ´ÑƒÑ‰Ğ¸Ğ¹ Ğ³Ğ¾Ğ´",
+    undefinedType: "ĞĞµ ÑƒĞºĞ°Ğ·Ğ°Ğ½Ğ¾",
+    totalWastePackaging: "Ğ’ÑĞµĞ³Ğ¾ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    wasteTypeCount: "ĞšĞ¾Ğ»-Ğ²Ğ¾ Ğ²Ğ¸Ğ´Ğ¾Ğ² Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    noWastePackagingRecord: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ¿Ğ¾ĞºĞ° Ğ½Ğµ Ğ²Ğ²ĞµĞ´ĞµĞ½Ñ‹.",
+    noMatchingFilterPackage: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸, ÑĞ¾Ğ¾Ñ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ÑƒÑÑ‰Ğ¸Ğµ ĞºÑ€Ğ¸Ñ‚ĞµÑ€Ğ¸ÑĞ¼ Ñ„Ğ¸Ğ»ÑŒÑ‚Ñ€Ğ°, Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    noFilterMessagePackaging: "Ğ‘ĞµĞ· Ñ„Ğ¸Ğ»ÑŒÑ‚Ñ€Ğ° â€” Ğ¿Ğ¾ĞºĞ°Ğ·Ğ°Ğ½Ñ‹ Ğ²ÑĞµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ².",
+    editWastePackagingRecord: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    newWastePackagingRecord: "ĞĞ¾Ğ²Ğ°Ñ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒĞ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ñ… Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ğ¾Ğ²",
+    wastePackagingChartLabel: "Ğ£Ğ¿Ğ°ĞºĞ¾Ğ²Ğ¾Ñ‡Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ñ…Ğ¾Ğ´Ñ‹",
+    chartDetailEmpty: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ·Ğ° ÑÑ‚Ğ¾Ñ‚ Ğ¿ĞµÑ€Ğ¸Ğ¾Ğ´ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.",
+    chartClose: "Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ",
+    chartColProduction: "ĞŸÑ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾",
+    chartColPasses: "ĞŸÑ€Ğ¾Ñ…Ğ¾Ğ´Ñ‹",
+    chartColWaste: "ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹",
+    chartColStudent: "Ğ¡Ñ‚ÑƒĞ´ĞµĞ½Ñ‚Ñ‹",
+    chartColFoodType: "Ğ’Ğ¸Ğ´ Ğ±Ğ»ÑĞ´Ğ°",
+    chartProductionVsTurnstile: "Ğ Ğ°Ğ·Ğ½Ğ¸Ñ†Ğ° Ğ¼ĞµĞ¶Ğ´Ñƒ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾Ğ¼ Ğ¸ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ°Ğ¼Ğ¸ Ñ‡ĞµÑ€ĞµĞ· Ñ‚ÑƒÑ€Ğ½Ğ¸ĞºĞµÑ‚",
+    chartStaffTotal: "ĞĞºĞ°Ğ´ĞµĞ¼Ğ¸Ñ‡ĞµÑĞºĞ¸Ğ¹ + Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¸Ğ²Ğ½Ñ‹Ğ¹ + Ğ¡ĞšĞ¡ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»",
+    yearFilterLabel: "Ğ“Ğ¾Ğ´:",
+    monthFilterLabel: "ĞœĞµÑÑÑ†:",
+    chartSelectYear: "Ğ’Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ",
+    year1Label: "1. Ğ“Ğ¾Ğ´:",
+    year2Label: "2. Ğ“Ğ¾Ğ´:",
+    noComparison: "Ğ‘ĞµĞ· ÑÑ€Ğ°Ğ²Ğ½ĞµĞ½Ğ¸Ñ",
+    newLabel: "ĞĞ¾Ğ²Ñ‹Ğ¹",
+    foodTypeLabel: "Ğ’Ğ¸Ğ´ Ğ±Ğ»ÑĞ´Ğ°",
+    productionLabel: " ĞŸÑ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ¾",
+    wasteKgLabel: " ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ (ĞºĞ³)",
+    wasteGrPortionLabel: " ĞÑ‚Ñ…Ğ¾Ğ´Ñ‹ (Ğ³/Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ñ)",
+    diffKgLabel: "Ğ Ğ°Ğ·Ğ½Ğ¸Ñ†Ğ° (ĞºĞ³)",
+    totalRow: "Ğ˜Ğ¢ĞĞ“Ğ",
+    registeredRate: "Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ğ°Ñ ÑÑ‚Ğ°Ğ²ĞºĞ°: ",
+    unsavedChanges: " (Ğ½Ğµ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ¸Ğ·Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ)",
+    kpiTotalStudentSpending: "ĞĞ±Ñ‰Ğ¸Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    kpiTotalStaffSpending: "ĞĞ±Ñ‰Ğ¸Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ°",
+    kpiAvgMonthlyStudentSpending: "Ğ¡Ñ€Ğ´. Ğ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    kpiAvgMonthlyStaffSpending: "Ğ¡Ñ€Ğ´. Ğ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ°",
+    kpiTotalStudents: "Ğ’ÑĞµĞ³Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    kpiTotalStaff: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ°",
+    kpiHighestStudentMonth: "ĞœĞ°ĞºÑ. Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ²",
+    kpiHighestStaffMonth: "ĞœĞ°ĞºÑ. Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ°",
+    kpiTotalMealSpending: "ĞĞ±Ñ‰Ğ¸Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ğµ",
+    kpiAvgMonthlyMealSpending: "Ğ¡Ñ€Ğ´. Ğ¼ĞµÑÑÑ‡Ğ½Ñ‹Ğµ Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ğµ",
+    kpiTotalMealsProduced: "Ğ’ÑĞµĞ³Ğ¾ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²ĞµĞ´ĞµĞ½Ğ¾ Ğ±Ğ»ÑĞ´",
+    kpiHighestMealMonth: "ĞœĞ°ĞºÑ. Ñ€Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ğµ",
+    chartStudentSpending: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² (â‚º)",
+    chartStaffSpending: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° (â‚º)",
+    chartMealSpending: "Ğ Ğ°ÑÑ…Ğ¾Ğ´Ñ‹ Ğ½Ğ° Ğ¿Ğ¸Ñ‚Ğ°Ğ½Ğ¸Ğµ (â‚º)",
+    noRecordsYet: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ¿Ğ¾ĞºĞ° Ğ¾Ñ‚ÑÑƒÑ‚ÑÑ‚Ğ²ÑƒÑÑ‚.",
+    invalidRate: "Ğ’Ğ²ĞµĞ´Ğ¸Ñ‚Ğµ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ñ‚ĞµĞ»ÑŒĞ½ÑƒÑ ÑÑ‚Ğ°Ğ²ĞºÑƒ!",
+    rateSaved: "Ğ¡Ñ‚Ğ°Ğ²ĞºĞ° ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ°: ",
+    menuStatusDraft: "Ğ§ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº",
+    menuStatusPending: "ĞĞ¶Ğ¸Ğ´Ğ°ĞµÑ‚ ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ñ",
+    menuStatusApproved: "Ğ£Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¾",
+    menuStatusRejected: "ĞÑ‚ĞºĞ»Ğ¾Ğ½ĞµĞ½Ğ¾",
+    menuApprove: "Ğ£Ñ‚Ğ²ĞµÑ€Ğ´Ğ¸Ñ‚ÑŒ Ğ¼ĞµĞ½Ñ",
+    menuApproveDisabled: "ĞœĞµĞ½Ñ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ¾Ñ‚Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¾ Ğ½Ğ° ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ğµ. ĞšĞ¾Ğ³Ğ´Ğ° Ğ´Ğ¸ĞµÑ‚Ğ¾Ğ»Ğ¾Ğ³ Ğ½Ğ°Ğ¶Ğ¼Ñ‘Ñ‚ Â«ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ½Ğ° ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸ĞµÂ», Ğ²Ñ‹ ÑĞ¼Ğ¾Ğ¶ĞµÑ‚Ğµ ÑƒÑ‚Ğ²ĞµÑ€Ğ´Ğ¸Ñ‚ÑŒ Ğ¾Ñ‚ÑÑĞ´Ğ°.",
+    menuReject: "ĞÑ‚ĞºĞ»Ğ¾Ğ½Ğ¸Ñ‚ÑŒ Ğ¼ĞµĞ½Ñ Ñ Ğ¾Ğ±Ğ¾ÑĞ½Ğ¾Ğ²Ğ°Ğ½Ğ¸ĞµĞ¼",
+    menuRejectDisabled: "ĞœĞµĞ½Ñ ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ¾Ñ‚Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¾ Ğ½Ğ° ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ğµ. ĞšĞ¾Ğ³Ğ´Ğ° Ğ´Ğ¸ĞµÑ‚Ğ¾Ğ»Ğ¾Ğ³ Ğ½Ğ°Ğ¶Ğ¼Ñ‘Ñ‚ Â«ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ½Ğ° ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸ĞµÂ», Ğ²Ñ‹ ÑĞ¼Ğ¾Ğ¶ĞµÑ‚Ğµ Ğ¾Ñ‚ĞºĞ»Ğ¾Ğ½Ğ¸Ñ‚ÑŒ Ğ¾Ñ‚ÑÑĞ´Ğ°.",
+    menuPendingCount: " Ğ¼ĞµĞ½Ñ Ğ¾Ğ¶Ğ¸Ğ´Ğ°ÑÑ‚ ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ñ. ĞŸĞµÑ€ĞµĞ¹Ğ´Ğ¸Ñ‚Ğµ Ğº Ğ¾Ğ¶Ğ¸Ğ´Ğ°ÑÑ‰ĞµĞ¹ Ğ½ĞµĞ´ĞµĞ»Ğµ Ğ¸ ÑƒÑ‚Ğ²ĞµÑ€Ğ´Ğ¸Ñ‚Ğµ.",
+    menuNotApproved: "ĞœĞµĞ½Ñ Ğ½Ğ° ÑÑ‚Ñƒ Ğ½ĞµĞ´ĞµĞ»Ñ ĞµÑ‰Ñ‘ Ğ½Ğµ ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¾ Ğ¸Ğ½Ğ¶ĞµĞ½ĞµÑ€Ğ¾Ğ¼ Ğ¿Ğ¾ Ğ¿Ğ¸Ñ‰ĞµĞ²Ğ¾Ğ¹ Ğ±ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚Ğ¸.",
+    menuRejected: "Ğ­Ñ‚Ğ¾ Ğ¼ĞµĞ½Ñ Ğ¾Ñ‚ĞºĞ»Ğ¾Ğ½ĞµĞ½Ğ¾",
+    menuRejectedSuffix: ". Ğ”Ğ¸ĞµÑ‚Ğ¾Ğ»Ğ¾Ğ³ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ¸ÑĞ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¸ Ğ¾Ñ‚Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿Ğ¾Ğ²Ñ‚Ğ¾Ñ€Ğ½Ğ¾.",
+    menuAwaitingApproval: "Ğ­Ñ‚Ğ¾ Ğ¼ĞµĞ½Ñ Ğ¾Ğ¶Ğ¸Ğ´Ğ°ĞµÑ‚ ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ñ. Ğ‘ĞµĞ· ÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ñ Ğ¾Ğ½Ğ¾ Ğ±ÑƒĞ´ĞµÑ‚ Ğ¿Ğ¾Ğ¼ĞµÑ‡ĞµĞ½Ğ¾ ĞºĞ°Ğº Â«Ğ½ĞµÑƒÑ‚Ğ²ĞµÑ€Ğ¶Ğ´Ñ‘Ğ½Ğ½Ğ¾ĞµÂ» Ğ² ÑĞ¿Ğ¸ÑĞºĞµ Ğ¿Ñ€Ğ¾Ğ¸Ğ·Ğ²Ğ¾Ğ´ÑÑ‚Ğ²Ğ°.",
+    noteLabel: "Ğ—Ğ°Ğ¼ĞµÑ‚ĞºĞ° ",
+    deleteNote: "Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ ÑÑ‚Ñƒ Ğ·Ğ°Ğ¼ĞµÑ‚ĞºÑƒ",
+    addNote: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ·Ğ°Ğ¼ĞµÑ‚ĞºÑƒ",
+    mealPickerTitle: "Ğ’Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ Ğ±Ğ»ÑĞ´Ğ¾",
+    clearLabel: "ğŸ—‘ ĞÑ‡Ğ¸ÑÑ‚Ğ¸Ñ‚ÑŒ",
+    searchMealPlaceholder: "ĞŸĞ¾Ğ¸ÑĞº Ğ±Ğ»ÑĞ´Ğ°...",
+    noMatchingMeal: "ĞŸĞ¾Ğ´Ñ…Ğ¾Ğ´ÑÑ‰ĞµĞµ Ğ±Ğ»ÑĞ´Ğ¾ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ğ¾.",
+    varietyLabel: " Ğ’Ğ¸Ğ´: ",
+    addRecord: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ½Ğ¾Ğ²ÑƒÑ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    editRecord: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ Ğ·Ğ°Ğ¿Ğ¸ÑÑŒ",
+    btnUpdate: "ĞĞ±Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ",
+    recordAdded: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒÑĞ¿ĞµÑˆĞ½Ğ¾ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ğ°.",
+    recordUpdated: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒÑĞ¿ĞµÑˆĞ½Ğ¾ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ°.",
+    recordDeleted: "Ğ—Ğ°Ğ¿Ğ¸ÑÑŒ ÑƒĞ´Ğ°Ğ»ĞµĞ½Ğ°.",
+    allRecordsDeleted: "Ğ’ÑĞµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ´Ğ°Ğ»ĞµĞ½Ñ‹.",
+    selectedRecordsDeleted: "Ğ’Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ ÑƒĞ´Ğ°Ğ»ĞµĞ½Ñ‹.",
+    noRecordToDelete: "ĞĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹ Ğ´Ğ»Ñ ÑƒĞ´Ğ°Ğ»ĞµĞ½Ğ¸Ñ.",
+    noSelectedRecord: "Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ½Ğµ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ñ‹.",
+    deleteAllConfirm: "Ğ’Ñ‹ ÑƒĞ²ĞµÑ€ĞµĞ½Ñ‹, Ñ‡Ñ‚Ğ¾ Ñ…Ğ¾Ñ‚Ğ¸Ñ‚Ğµ ÑƒĞ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ Ğ’Ğ¡Ğ• Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸?\nĞ­Ñ‚Ğ¾ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ Ğ½ĞµĞ»ÑŒĞ·Ñ Ğ¾Ñ‚Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ!",
+    deleteFoodConfirm: "Ğ’Ñ‹ ÑƒĞ²ĞµÑ€ĞµĞ½Ñ‹, Ñ‡Ñ‚Ğ¾ Ñ…Ğ¾Ñ‚Ğ¸Ñ‚Ğµ ÑƒĞ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ ÑÑ‚Ğ¾ Ğ±Ğ»ÑĞ´Ğ¾?",
+    selected: " Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ¾",
+    negMeals: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¸Ğ³Ğ¾Ñ‚Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ñ‹Ñ… Ğ±Ğ»ÑĞ´ Ğ½Ğµ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ±Ñ‹Ñ‚ÑŒ Ğ¾Ñ‚Ñ€Ğ¸Ñ†Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ñ‹Ğ¼.",
+    negTurnstile: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ñ€Ğ¾Ñ…Ğ¾Ğ´Ğ¾Ğ² Ğ½Ğµ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ±Ñ‹Ñ‚ÑŒ Ğ¾Ñ‚Ñ€Ğ¸Ñ†Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ñ‹Ğ¼.",
+    negStaff: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿ĞµÑ€ÑĞ¾Ğ½Ğ°Ğ»Ğ° Ğ½Ğµ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ±Ñ‹Ñ‚ÑŒ Ğ¾Ñ‚Ñ€Ğ¸Ñ†Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ñ‹Ğ¼.",
+    negPortion: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ Ğ¿Ğ¾Ñ€Ñ†Ğ¸Ğ¹ Ğ½Ğµ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ±Ñ‹Ñ‚ÑŒ Ğ¾Ñ‚Ñ€Ğ¸Ñ†Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ñ‹Ğ¼.",
+    negStudent: "ĞšĞ¾Ğ»Ğ¸Ñ‡ĞµÑÑ‚Ğ²Ğ¾ ÑÑ‚ÑƒĞ´ĞµĞ½Ñ‚Ğ¾Ğ² Ğ½Ğµ Ğ¼Ğ¾Ğ¶ĞµÑ‚ Ğ±Ñ‹Ñ‚ÑŒ Ğ¾Ñ‚Ñ€Ğ¸Ñ†Ğ°Ñ‚ĞµĞ»ÑŒĞ½Ñ‹Ğ¼.",
+    unsavedConfirm: "Ğ•ÑÑ‚ÑŒ Ğ½ĞµÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ¸Ğ·Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ. Ğ’Ñ‹ ÑƒĞ²ĞµÑ€ĞµĞ½Ñ‹, Ñ‡Ñ‚Ğ¾ Ñ…Ğ¾Ñ‚Ğ¸Ñ‚Ğµ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ?",
+    selectUser: "ĞŸĞ¾Ğ¶Ğ°Ğ»ÑƒĞ¹ÑÑ‚Ğ°, Ğ²Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ.",
+    wrongCredentials: "ĞĞµĞ²ĞµÑ€Ğ½Ğ¾Ğµ Ğ¸Ğ¼Ñ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ñ Ğ¸Ğ»Ğ¸ Ğ¿Ğ°Ñ€Ğ¾Ğ»ÑŒ.",
+    tooManyAttempts: "Ğ¡Ğ»Ğ¸ÑˆĞºĞ¾Ğ¼ Ğ¼Ğ½Ğ¾Ğ³Ğ¾ Ğ¿Ğ¾Ğ¿Ñ‹Ñ‚Ğ¾Ğº. ĞŸĞ¾Ğ¶Ğ°Ğ»ÑƒĞ¹ÑÑ‚Ğ°, Ğ¿Ğ¾Ğ´Ğ¾Ğ¶Ğ´Ğ¸Ñ‚Ğµ.",
+    editable: "Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€ÑƒĞµĞ¼Ğ°Ñ",
+    fixed: "Ğ¤Ğ¸ĞºÑĞ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½Ğ°Ñ",
+    menuSentForApproval: "ĞœĞµĞ½Ñ Ğ¾Ñ‚Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¾ Ğ½Ğ° ÑĞ¾Ğ³Ğ»Ğ°ÑĞ¾Ğ²Ğ°Ğ½Ğ¸Ğµ. ĞĞ¶Ğ¸Ğ´Ğ°ĞµÑ‚ÑÑ Ğ¾Ğ´Ğ¾Ğ±Ñ€ĞµĞ½Ğ¸Ğµ Ğ¸Ğ½Ğ¶ĞµĞ½ĞµÑ€Ğ°-Ñ‚ĞµÑ…Ğ½Ğ¾Ğ»Ğ¾Ğ³Ğ°/Ğ°Ğ´Ğ¼Ğ¸Ğ½Ğ¸ÑÑ‚Ñ€Ğ°Ñ‚Ğ¾Ñ€Ğ°.",
+    menuApproved: "ĞœĞµĞ½Ñ Ğ¾Ğ´Ğ¾Ğ±Ñ€ĞµĞ½Ğ¾.",
+    menuRejectedMsg: "ĞœĞµĞ½Ñ Ğ¾Ñ‚ĞºĞ»Ğ¾Ğ½ĞµĞ½Ğ¾ Ñ Ğ¾Ğ±Ğ¾ÑĞ½Ğ¾Ğ²Ğ°Ğ½Ğ¸ĞµĞ¼.",
+    menuDraftSaved: "ĞœĞµĞ½Ñ ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¾ ĞºĞ°Ğº Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº.",
+    menuCleared: "ĞœĞµĞ½Ñ Ğ¾Ñ‡Ğ¸Ñ‰ĞµĞ½Ğ¾.",
+    monthShort1: "Ğ¯Ğ½Ğ²",
+    monthShort2: "Ğ¤ĞµĞ²",
+    monthShort3: "ĞœĞ°Ñ€",
+    monthShort4: "ĞĞ¿Ñ€",
+    monthShort5: "ĞœĞ°Ğ¹",
+    monthShort6: "Ğ˜ÑĞ½",
+    monthShort7: "Ğ˜ÑĞ»",
+    monthShort8: "ĞĞ²Ğ³",
+    monthShort9: "Ğ¡ĞµĞ½",
+    monthShort10: "ĞĞºÑ‚",
+    monthShort11: "ĞĞ¾Ñ",
+    monthShort12: "Ğ”ĞµĞº"
   },
   ar: {
-    loginSub: "نظام إدارة خدمات التغذية",
-    loginFormSub: "تسجيل الدخول",
-    loginUsername: "اسم المستخدم",
-    loginSelectUser: "اختر المستخدم",
-    loginPassword: "كلمة المرور",
-    loginBtn: "تسجيل الدخول",
-    loginHint: "يمكنك الحصول على كلمة المرور من المسؤول",
-    loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
-    loginFeature2: "تقارير مفصلة",
-    loginFeature3: "لوحة مباشرة ورسوم بيانية",
-    menuLabel: "القائمة",
-    headerSubtitle: "نظام إدارة خدمات التغذية",
-    btnLogout: "تسجيل الخروج",
-    btnPrev: "السابق",
-    btnNext: "التالي",
-    loading: "جارٍ التحميل...",
-    loadingText: "مزامنة البيانات...",
-    loadingSub: "التحقق من اتصال Supabase",
-    loadingSkip: "انقر للتخطي",
-    versionLabel: "إصدار التطبيق",
-    sidebarPanel: "لوحة التحكم",
-    sidebarMenu: "القائمة الأسبوعية",
-    sidebarRecords: "السجلات",
-    sidebarReport: "التقرير",
-    sidebarHaccp: "سلامة الغذاء",
-    sidebarCalibration: "المعايرة",
-    sidebarOil: "النفايات الزيتية",
-    sidebarPackaging: "نفايات التغليف",
-    sidebarCharts: "الرسوم البيانية",
-    sidebarYearly: "المقارنة السنوية",
-    sidebarSpending: "المصروفات",
-    sidebarUnitPrice: "الأسعاروحدة",
-    sidebarDownload: "تنزيل الكل",
-    sidebarBackup: "النسخ الاحتياطي إلى Supabase",
-    sidebarRestore: "الاستعادة من Supabase",
-    sidebarAdmin: "الإدارة",
-    sidebarLogs: "سجلات النشاط",
-    sidebarTheme: "المظهر",
-    sidebarManual: "دليل المستخدم",
-    dashboardPrintPdf: "طباعة PDF",
-    kpiTotalRecords: "إجمالي أيام الإنتاج",
-    kpiTodayProduction: "إنتاج اليوم",
-    kpiHaccpAlarm: "تنبيه درجة حرارة التخزين البارد",
-    kpiCalibrationAlarm: "تنبيه المعايرة",
-    kpiAvgWaste: "متوسط النفايات (كغ)",
-    kpiTotalPasses: "إجمالي عبور البوابة الدوّارة",
-    kpiTotalWaste: "إجمالي النفايات (كغ)",
-    kpiWasteRate: "نسبة النفايات",
-    weeklyPrevBtn: "الأسبوع السابق",
-    weeklySummary: "ملخص أسبوعي",
-    weeklyNextBtn: "الأسبوع التالي",
-    weeklyBadge: "هذا الأسبوع",
-    dailyPrevBtn: "اليوم السابق",
-    dailySummary: "تفاصيل يومية",
-    dailyNextBtn: "اليوم التالي",
-    weeklyCompTitle: "مقارنة أسبوعية",
-    monthlyCompTitle: "مقارنة شهرية",
-    monthlyBadge: "هذا الشهر",
-    yearlyBadge: "هذا العام",
-    anomalyTitle: "اكتشاف الشذوذ",
-    anomalyBadge: "أيام النفايات غير الطبيعية",
-    lastRecordsTitle: "آخر السجلات",
-    dashboardGoToRecords: "الذهاب إلى السجلات",
-    emptyDashboard: "لا توجد سجلات بعد...",
-    formulaTitle: "صيغة حساب النفايات",
-    recordsEntryBtn: "إدخال الإنتاج والاستهلاك",
-    recordsImportBtn: "استيراد",
+    loginSub: "Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø®Ø¯Ù…Ø§Øª Ø§Ù„ØªØºØ°ÙŠØ©",
+    loginFormSub: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„",
+    loginUsername: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+    loginSelectUser: "Ø§Ø®ØªØ± Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+    loginPassword: "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±",
+    loginBtn: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„",
+    loginHint: "ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ù…Ù† Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
+    loginFeature1: "ØªØ®Ø·ÙŠØ· Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© ÙˆØ§Ù„Ø¥Ù†ØªØ§Ø¬ Ø§Ù„ÙŠÙˆÙ…ÙŠ ÙˆØ§Ù„Ø§Ø³ØªÙ‡Ù„Ø§Ùƒ ÙˆØ§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    loginFeature2: "ØªÙ‚Ø§Ø±ÙŠØ± Ù…ÙØµÙ„Ø©",
+    loginFeature3: "Ù„ÙˆØ­Ø© Ù…Ø¨Ø§Ø´Ø±Ø© ÙˆØ±Ø³ÙˆÙ… Ø¨ÙŠØ§Ù†ÙŠØ©",
+    menuLabel: "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+    headerSubtitle: "Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø®Ø¯Ù…Ø§Øª Ø§Ù„ØªØºØ°ÙŠØ©",
+    btnLogout: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬",
+    btnPrev: "Ø§Ù„Ø³Ø§Ø¨Ù‚",
+    btnNext: "Ø§Ù„ØªØ§Ù„ÙŠ",
+    loading: "Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...",
+    loadingText: "Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª...",
+    loadingSub: "Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„ Supabase",
+    loadingSkip: "Ø§Ù†Ù‚Ø± Ù„Ù„ØªØ®Ø·ÙŠ",
+    versionLabel: "Ø¥ØµØ¯Ø§Ø± Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
+    sidebarPanel: "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…",
+    sidebarMenu: "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ©",
+    sidebarRecords: "Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    sidebarReport: "Ø§Ù„ØªÙ‚Ø±ÙŠØ±",
+    sidebarHaccp: "Ø³Ù„Ø§Ù…Ø© Ø§Ù„ØºØ°Ø§Ø¡",
+    sidebarCalibration: "Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    sidebarOil: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    sidebarPackaging: "Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    sidebarCharts: "Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ©",
+    sidebarYearly: "Ø§Ù„Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø³Ù†ÙˆÙŠØ©",
+    sidebarSpending: "Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª",
+    sidebarUnitPrice: "Ø§Ù„Ø£Ø³Ø¹Ø§Ø±ÙˆØ­Ø¯Ø©",
+    sidebarDownload: "ØªÙ†Ø²ÙŠÙ„ Ø§Ù„ÙƒÙ„",
+    sidebarBackup: "Ø§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠ Ø¥Ù„Ù‰ Supabase",
+    sidebarRestore: "Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ù…Ù† Supabase",
+    sidebarAdmin: "Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©",
+    sidebarLogs: "Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù†Ø´Ø§Ø·",
+    sidebarTheme: "Ø§Ù„Ù…Ø¸Ù‡Ø±",
+    sidebarManual: "Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+    dashboardPrintPdf: "Ø·Ø¨Ø§Ø¹Ø© PDF",
+    kpiTotalRecords: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø£ÙŠØ§Ù… Ø§Ù„Ø¥Ù†ØªØ§Ø¬",
+    kpiTodayProduction: "Ø¥Ù†ØªØ§Ø¬ Ø§Ù„ÙŠÙˆÙ…",
+    kpiHaccpAlarm: "ØªÙ†Ø¨ÙŠÙ‡ Ø¯Ø±Ø¬Ø© Ø­Ø±Ø§Ø±Ø© Ø§Ù„ØªØ®Ø²ÙŠÙ† Ø§Ù„Ø¨Ø§Ø±Ø¯",
+    kpiCalibrationAlarm: "ØªÙ†Ø¨ÙŠÙ‡ Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    kpiAvgWaste: "Ù…ØªÙˆØ³Ø· Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    kpiTotalPasses: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    kpiTotalWaste: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    kpiWasteRate: "Ù†Ø³Ø¨Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    weeklyPrevBtn: "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ø³Ø§Ø¨Ù‚",
+    weeklySummary: "Ù…Ù„Ø®Øµ Ø£Ø³Ø¨ÙˆØ¹ÙŠ",
+    weeklyNextBtn: "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„ØªØ§Ù„ÙŠ",
+    weeklyBadge: "Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹",
+    dailyPrevBtn: "Ø§Ù„ÙŠÙˆÙ… Ø§Ù„Ø³Ø§Ø¨Ù‚",
+    dailySummary: "ØªÙØ§ØµÙŠÙ„ ÙŠÙˆÙ…ÙŠØ©",
+    dailyNextBtn: "Ø§Ù„ÙŠÙˆÙ… Ø§Ù„ØªØ§Ù„ÙŠ",
+    weeklyCompTitle: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø£Ø³Ø¨ÙˆØ¹ÙŠØ©",
+    monthlyCompTitle: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø´Ù‡Ø±ÙŠØ©",
+    monthlyBadge: "Ù‡Ø°Ø§ Ø§Ù„Ø´Ù‡Ø±",
+    yearlyBadge: "Ù‡Ø°Ø§ Ø§Ù„Ø¹Ø§Ù…",
+    anomalyTitle: "Ø§ÙƒØªØ´Ø§Ù Ø§Ù„Ø´Ø°ÙˆØ°",
+    anomalyBadge: "Ø£ÙŠØ§Ù… Ø§Ù„Ù†ÙØ§ÙŠØ§Øª ØºÙŠØ± Ø§Ù„Ø·Ø¨ÙŠØ¹ÙŠØ©",
+    lastRecordsTitle: "Ø¢Ø®Ø± Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    dashboardGoToRecords: "Ø§Ù„Ø°Ù‡Ø§Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    emptyDashboard: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ø¨Ø¹Ø¯...",
+    formulaTitle: "ØµÙŠØºØ© Ø­Ø³Ø§Ø¨ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    recordsEntryBtn: "Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ù„Ø§Ø³ØªÙ‡Ù„Ø§Ùƒ",
+    recordsImportBtn: "Ø§Ø³ØªÙŠØ±Ø§Ø¯",
     recordsPrintPdf: "PDF",
-    recordsCsvBtn: "تنزيل CSV",
-    recordsDeleteBtn: "حذف المحدد",
-    emptyRecords: "لم يتم العثور على سجلات.",
-    thDate: "التاريخ",
-    thProducedPerson: "الوجبات المُنتجة (شخص)",
-    thWaste10: "نفايات 10%",
-    thBeneficiary: "المستفيدون من خدمة الطعام",
-    thPortionGr: "الحصة (غ)",
-    thWasteKg: "النفايات (كغ)",
-    thWastedPortion: "المُهملة (حصة)",
-    thFoodType: "نوع الطعام",
-    thAction: "الإجراء",
-    thAcademicStaff: "الكاديميون والإداريون عبر البوابة الدوّارة",
-    thStudentCount: "الطلاب عبر البوابة الدوّارة",
-    thBeneficiaryTotal: "إجمالي مستفيدي خدمة الطعام",
-    sksStaff: "موظفو خدمة الطعام (SKS)",
-    summaryReport: "تقرير ملخص",
-    reportPdfBtn: "فتح PDF",
-    allRecordsPrint: "جميع السجلات (عرض الطباعة)",
-    rTotalRecords: "إجمالي عدد السجلات",
-    rTotalMeals: "إجمالي الوجبات المُنتجة",
-    rTotalWaste10: "إجمالي نفايات 10%",
-    rTotalAfterWaste: "إجمالي الوجبات بعد نفايات 10%",
-    rTotalTurnstile: "إجمالي عبور البوابة الدوّارة",
-    rTotalBeneficiary: "إجمالي مستفيدي خدمة الطعام",
-    rTotalStaff: "إجمالي موظفي SKS المستفيدون",
-    rPortionSize: "حجم الحصة (غ)",
-    rTotalPortion: "إجمالي الحصص (غ)",
-    rWastedPortion: "الحصص المُهملة",
-    rMaxWeeklyBeneficiary: "أقصى عدد مستفيدين أسبوعياً",
-    rTotalWasteKg: "إجمالي كمية النفايات (كغ)",
-    rAvgWasteKg: "متوسط كمية النفايات (كغ)",
-    rTotalStudents: "إجمالي عدد الطلاب",
-    rMaxWaste: "أقصى نفايات (كغ)",
-    rMinWaste: "أدنى نفايات (كغ)",
-    rWasteTrend: "اتجاه النفايات (آخر 7 أيام)",
-    rBeneficiaryTrend: "اتجاه المستفيدين (آخر 7 أيام)",
-    wasteByFoodTitle: "تحليل النفايات حسب نوع الطعام",
-    wasteByFoodEmpty: "لم يتم العثور على سجلات تحتوي على بيانات نوع الطعام.",
-    wasteByFoodRecords: "عدد السجلات",
-    wasteByFoodRate: "نسبة النفايات",
-    wasteByFoodPerPerson: "النفايات للشخص (كغ)",
-    wsProducedMeal: "الوجبات المنتجة (فرد)",
-    wsTotalPasses: "إجمالي العبور",
-    wsTurnstile: "البوابة الدوّارة",
-    wsStaffSKS: "موظفو التغذية",
-    wsWasteAmount: "كمية النفايات",
-    wsWastedPortion: "النفايات",
-    wsStudents: "طلاب التغذية",
-    wsNoRecordsYet: "لا توجد سجلات بعد",
-    wsNoRecordThisWeek: "لا سجلات هذا الأسبوع",
-    wsNoRecordToday: "لا سجل",
-    wsTodayDetail: "تفاصيل اليوم",
-    wsDailyDetail: "التفاصيل اليومية",
-    wsWaste: "هدر",
-    wsPortion: "وجبة",
-    wsProduced: "إنتاج",
-    wsTurnstileCount: "عبور البوابة",
-    wsStaffCount: "الموظفون",
-    menuTitle: "قائمة الطعام الأسبوعية",
-    menuStatusBadge: "الحالة",
-    menuSaveBtn: "حفظ",
-    menuSendBtn: "إرسال للموافقة",
-    menuApproveBtn: "موافقة",
-    menuRejectBtn: "رفض",
-    menuWithdrawBtn: "سحب الموافقة",
-    menuClearBtn: "مسح الجدول",
-    menuPrintBtn: "طباعة",
-    menuFoodListBtn: "قائمة الطعام",
-    menuFoodListUploadBtn: "تحميل CSV",
-    menuFoodListCsvBtn: "تنزيل CSV",
-    menuWarningPrefix: "قائمة غير معتمدة:",
-    menuWarningText: "لم تتم الموافقة على قائمة هذا الأسبوع من قِبَل مهندس الأغذية بعد.",
-    menuHintText: "اكتب أسماء الوجبات...",
-    productNeedsTitle: "قائمة احتياجات المنتجات",
-    weeklyNeedsTitle: "القائمة الأسبوعية الإجمالية للاحتياجات",
-    foodListTitle: "قائمة الطعام",
-    modalRejectMenu: "رفض القائمة",
-    modalRejectDesc: "سبب الرفض مطلوب.",
-    menuRejectConfirm: "رفض",
-    haccpTitle: "إدارة سلامة الأغذية",
-    haccpCsvBtn: "تنزيل CSV",
-    haccpColdStorage: "سجلات درجة حرارة التخزين البارد",
-    haccpNewBtn: "سجل جديد",
-    haccpDepotBtn: "أسماء المستودعات",
-    haccpDepoQrNote: "يمكنك تعديل أسماء المستودعات وإنشاء رموز QR لكل مستودع باستخدام زر QR.",
-    haccpModalTitle: "سجل جديد",
-    filterDepot: "تصفية المستودع:",
-    filterAll: "الكل",
-    filterDateRange: "نطاق التاريخ:",
-    emptyHaccp: "لم يتم إدخال سجلات درجة الحرارة بعد.",
-    btnDeleteSelectedHaccp: "حذف المحدد",
+    recordsCsvBtn: "ØªÙ†Ø²ÙŠÙ„ CSV",
+    recordsDeleteBtn: "Ø­Ø°Ù Ø§Ù„Ù…Ø­Ø¯Ø¯",
+    emptyRecords: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª.",
+    thDate: "Ø§Ù„ØªØ§Ø±ÙŠØ®",
+    thProducedPerson: "Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© (Ø´Ø®Øµ)",
+    thWaste10: "Ù†ÙØ§ÙŠØ§Øª 10%",
+    thBeneficiary: "Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙˆÙ† Ù…Ù† Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    thPortionGr: "Ø§Ù„Ø­ØµØ© (Øº)",
+    thWasteKg: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    thWastedPortion: "Ø§Ù„Ù…ÙÙ‡Ù…Ù„Ø© (Ø­ØµØ©)",
+    thFoodType: "Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù…",
+    thAction: "Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡",
+    thAcademicStaff: "Ø§Ù„ÙƒØ§Ø¯ÙŠÙ…ÙŠÙˆÙ† ÙˆØ§Ù„Ø¥Ø¯Ø§Ø±ÙŠÙˆÙ† Ø¹Ø¨Ø± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    thStudentCount: "Ø§Ù„Ø·Ù„Ø§Ø¨ Ø¹Ø¨Ø± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    thBeneficiaryTotal: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…Ø³ØªÙÙŠØ¯ÙŠ Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    sksStaff: "Ù…ÙˆØ¸ÙÙˆ Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù… (SKS)",
+    summaryReport: "ØªÙ‚Ø±ÙŠØ± Ù…Ù„Ø®Øµ",
+    reportPdfBtn: "ÙØªØ­ PDF",
+    allRecordsPrint: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø³Ø¬Ù„Ø§Øª (Ø¹Ø±Ø¶ Ø§Ù„Ø·Ø¨Ø§Ø¹Ø©)",
+    rTotalRecords: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¹Ø¯Ø¯ Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    rTotalMeals: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø©",
+    rTotalWaste10: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù†ÙØ§ÙŠØ§Øª 10%",
+    rTotalAfterWaste: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø¨Ø¹Ø¯ Ù†ÙØ§ÙŠØ§Øª 10%",
+    rTotalTurnstile: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    rTotalBeneficiary: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…Ø³ØªÙÙŠØ¯ÙŠ Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    rTotalStaff: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…ÙˆØ¸ÙÙŠ SKS Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙˆÙ†",
+    rPortionSize: "Ø­Ø¬Ù… Ø§Ù„Ø­ØµØ© (Øº)",
+    rTotalPortion: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø­ØµØµ (Øº)",
+    rWastedPortion: "Ø§Ù„Ø­ØµØµ Ø§Ù„Ù…ÙÙ‡Ù…Ù„Ø©",
+    rMaxWeeklyBeneficiary: "Ø£Ù‚ØµÙ‰ Ø¹Ø¯Ø¯ Ù…Ø³ØªÙÙŠØ¯ÙŠÙ† Ø£Ø³Ø¨ÙˆØ¹ÙŠØ§Ù‹",
+    rTotalWasteKg: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    rAvgWasteKg: "Ù…ØªÙˆØ³Ø· ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    rTotalStudents: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨",
+    rMaxWaste: "Ø£Ù‚ØµÙ‰ Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    rMinWaste: "Ø£Ø¯Ù†Ù‰ Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    rWasteTrend: "Ø§ØªØ¬Ø§Ù‡ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (Ø¢Ø®Ø± 7 Ø£ÙŠØ§Ù…)",
+    rBeneficiaryTrend: "Ø§ØªØ¬Ø§Ù‡ Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙŠÙ† (Ø¢Ø®Ø± 7 Ø£ÙŠØ§Ù…)",
+    wasteByFoodTitle: "ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø­Ø³Ø¨ Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù…",
+    wasteByFoodEmpty: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª ØªØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù….",
+    wasteByFoodRecords: "Ø¹Ø¯Ø¯ Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    wasteByFoodRate: "Ù†Ø³Ø¨Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    wasteByFoodPerPerson: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„Ù„Ø´Ø®Øµ (ÙƒØº)",
+    wsProducedMeal: "Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…Ù†ØªØ¬Ø© (ÙØ±Ø¯)",
+    wsTotalPasses: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¹Ø¨ÙˆØ±",
+    wsTurnstile: "Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    wsStaffSKS: "Ù…ÙˆØ¸ÙÙˆ Ø§Ù„ØªØºØ°ÙŠØ©",
+    wsWasteAmount: "ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    wsWastedPortion: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    wsStudents: "Ø·Ù„Ø§Ø¨ Ø§Ù„ØªØºØ°ÙŠØ©",
+    wsNoRecordsYet: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ø¨Ø¹Ø¯",
+    wsNoRecordThisWeek: "Ù„Ø§ Ø³Ø¬Ù„Ø§Øª Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹",
+    wsNoRecordToday: "Ù„Ø§ Ø³Ø¬Ù„",
+    wsTodayDetail: "ØªÙØ§ØµÙŠÙ„ Ø§Ù„ÙŠÙˆÙ…",
+    wsDailyDetail: "Ø§Ù„ØªÙØ§ØµÙŠÙ„ Ø§Ù„ÙŠÙˆÙ…ÙŠØ©",
+    wsWaste: "Ù‡Ø¯Ø±",
+    wsPortion: "ÙˆØ¬Ø¨Ø©",
+    wsProduced: "Ø¥Ù†ØªØ§Ø¬",
+    wsTurnstileCount: "Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø©",
+    wsStaffCount: "Ø§Ù„Ù…ÙˆØ¸ÙÙˆÙ†",
+    menuTitle: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù… Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ©",
+    menuStatusBadge: "Ø§Ù„Ø­Ø§Ù„Ø©",
+    menuSaveBtn: "Ø­ÙØ¸",
+    menuSendBtn: "Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„Ù…ÙˆØ§ÙÙ‚Ø©",
+    menuApproveBtn: "Ù…ÙˆØ§ÙÙ‚Ø©",
+    menuRejectBtn: "Ø±ÙØ¶",
+    menuWithdrawBtn: "Ø³Ø­Ø¨ Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø©",
+    menuClearBtn: "Ù…Ø³Ø­ Ø§Ù„Ø¬Ø¯ÙˆÙ„",
+    menuPrintBtn: "Ø·Ø¨Ø§Ø¹Ø©",
+    menuFoodListBtn: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    menuFoodListUploadBtn: "ØªØ­Ù…ÙŠÙ„ CSV",
+    menuFoodListCsvBtn: "ØªÙ†Ø²ÙŠÙ„ CSV",
+    menuWarningPrefix: "Ù‚Ø§Ø¦Ù…Ø© ØºÙŠØ± Ù…Ø¹ØªÙ…Ø¯Ø©:",
+    menuWarningText: "Ù„Ù… ØªØªÙ… Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø© Ø¹Ù„Ù‰ Ù‚Ø§Ø¦Ù…Ø© Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ù…Ù† Ù‚ÙØ¨ÙÙ„ Ù…Ù‡Ù†Ø¯Ø³ Ø§Ù„Ø£ØºØ°ÙŠØ© Ø¨Ø¹Ø¯.",
+    menuHintText: "Ø§ÙƒØªØ¨ Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª...",
+    productNeedsTitle: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ø­ØªÙŠØ§Ø¬Ø§Øª Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª",
+    weeklyNeedsTitle: "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ø§Ø­ØªÙŠØ§Ø¬Ø§Øª",
+    foodListTitle: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    modalRejectMenu: "Ø±ÙØ¶ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+    modalRejectDesc: "Ø³Ø¨Ø¨ Ø§Ù„Ø±ÙØ¶ Ù…Ø·Ù„ÙˆØ¨.",
+    menuRejectConfirm: "Ø±ÙØ¶",
+    haccpTitle: "Ø¥Ø¯Ø§Ø±Ø© Ø³Ù„Ø§Ù…Ø© Ø§Ù„Ø£ØºØ°ÙŠØ©",
+    haccpCsvBtn: "ØªÙ†Ø²ÙŠÙ„ CSV",
+    haccpColdStorage: "Ø³Ø¬Ù„Ø§Øª Ø¯Ø±Ø¬Ø© Ø­Ø±Ø§Ø±Ø© Ø§Ù„ØªØ®Ø²ÙŠÙ† Ø§Ù„Ø¨Ø§Ø±Ø¯",
+    haccpNewBtn: "Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    haccpDepotBtn: "Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª",
+    haccpDepoQrNote: "ÙŠÙ…ÙƒÙ†Ùƒ ØªØ¹Ø¯ÙŠÙ„ Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ¥Ù†Ø´Ø§Ø¡ Ø±Ù…ÙˆØ² QR Ù„ÙƒÙ„ Ù…Ø³ØªÙˆØ¯Ø¹ Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø²Ø± QR.",
+    haccpModalTitle: "Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    filterDepot: "ØªØµÙÙŠØ© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹:",
+    filterAll: "Ø§Ù„ÙƒÙ„",
+    filterDateRange: "Ù†Ø·Ø§Ù‚ Ø§Ù„ØªØ§Ø±ÙŠØ®:",
+    emptyHaccp: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø¯Ø±Ø¬Ø© Ø§Ù„Ø­Ø±Ø§Ø±Ø© Ø¨Ø¹Ø¯.",
+    btnDeleteSelectedHaccp: "Ø­Ø°Ù Ø§Ù„Ù…Ø­Ø¯Ø¯",
     btnPdf: "PDF",
-    depoNamesTitle: "أسماء المستودعات",
-    oilNewBtn: "سجل جديد",
-    oilListBtn: "قائمة",
-    oilFilterTitle: "تصفية النفايات الزيتية",
-    filterOilType: "نوع الزيت:",
-    btnReset: "إعادة تعيين",
-    oilSummaryTitle: "ملخص النفايات الزيتية",
-    oilChartTitle: "الرسوم البيانية للنفايات الزيتية",
-    oilChartSubtitle: "كمية النفايات الزيتية الشهرية (لتر)",
-    oilChartEmpty: "ستظهر الروم البيانية عند إدخال سجلات النفايات الزيتية",
-    oilChartNote: "المجاميع الشهرية للنفايات الزيتية حسب التاريخ ونوع الزيت والسنة",
-    oilRecordsTitle: "سجلات النفايات الزيتية",
-    oilModalTitle: "سجل النفايات الزيتية",
-    emptyOil: "لم يتم إدخال سجلات النفايات الزيتية بعد.",
-    ambalajNewBtn: "سجل جديد",
-    ambalajListBtn: "قائمة",
-    packagingFilterTitle: "تصفية نفايات التغليف",
-    filterWasteType: "نوع النفايات:",
-    packagingSummaryTitle: "ملخص نفايات التغليف",
-    packagingChartTitle: "الرسوم البيانية لنفايات التغليف",
-    packagingChartSubtitle: "كمية نفايات التغليف الشهرية (كغ)",
-    packagingChartEmpty: "ستظهر الرسوم البيانية عند إدخال سجلات نفايات التغليف",
-    packagingChartNote: "المجاميع الشهرية لنفايات التغليف حسب التاريخ ونوع النفايات والسنة (كغ)",
-    packagingRecordsTitle: "سجلات نفايات التغليف",
-    packagingModalTitle: "سجل نفايات التغليف",
-    emptyPackaging: "لم يتم إدخال سجلات نفايات التغليف بعد.",
-    kalibrasyonNewBtn: "جهاز جديد",
-    kalibrasyonListBtn: "قائمة",
-    kalibrasyonCsvBtn: "تنزيل CSV",
-    calibrationSummary: "ملخص المعايرة",
-    calibrationDevices: "الأجهزة الخاضعة للمعايرة",
-    calibrationModalTitle: "جهاز للمعايرة",
-    filterStatus: "الحالة:",
-    filterDepartment: "القسم:",
-    btnWordExport: "تصدير إلى Word",
-    btnPrint: "طباعة PDF",
-    chartProdWaste: "مقارنة الإنتاج والعبور والنفايات",
-    chartEmpty: "ستظهر الرسوم البيانية عند إدخال البيانات",
-    chartProdWasteNote: "مقارنة شهرية بين الإنتاج وعبور البوابة الدوّارة والحصص المُهملة",
-    chartStudentCount: "عدد الطلاب المستفيدين من خدمات التغذية",
-    yearTotal: "المجموع السنوي",
-    chartStudentNote: "المجموع الشهري لعبور الطلاب اليومي",
-    chartStaffTotal: "الكاديميون والإداريون + موظفو SKS",
-    chartStaffNote: "مجموع الكاديميين والإداريين (البوابة الدوّارة - الطلاب) وموظفي خدمة الطعام SKS",
-    chartMonthlyProd: "الإنتاج الشهري للوجبات",
-    chartMonthlyProdNote: "المجموع الشهري لعدد الوجبات المُنتجة يومياً",
-    chartMonthlyTurnstile: "عدد عبور البوابة الدوّارة الشهري",
-    chartTurnstileNote: "مجموع الطلاب + الموظفون + العابرون من الخارج",
-    chartMonthlyWaste: "كمية النفايات الشهرية (كغ)",
-    chartMonthlyWasteNote: "المجموع الشهري للنفايات اليومية (كغ)",
-    chartMonthlyWastePortion: "كمية النفايات الشهرية (حصص)",
-    chartWastePortionNote: "المجموع الشهري للحصص المُهملة يومياً",
-    chartDiff: "الفرق بين الإنتاج والعبور",
-    chartDiffNote: "الفرق بين عدد الوجبات المُنتجة وعبور البوابة الدوّارة",
-    chartWasteRatio: "نسبة النفايات من الوجبات المُنتجة",
-    yearAverage: "المتوسط السنوي",
-    chartWasteRatioNote: "نسبة الوجبات المُنتجة التي تتحول إلى نفايات",
-    chartWastePerPerson: "النفايات لكل شخص (كغ/شخص)",
-    chartWastePerPersonNote: "متوسط النفايات لكل شخص يدخل المطعم",
-    chartMonthlyTemp: "متوسط درجات حرارة المستودعات الشهرية (°C)",
-    chartTempEmpty: "ستظهر الرسوم البيانية عند إدخال سجلات درجات الحرارة",
-    chartTempNote: "متوسط درجة الحرارة الشهرية لكل مستودع",
-    yearlyPdfBtn: "طباعة PDF",
-    yearlyTotalProd: "مقارنة الإجمالي السنوي للإنتاج",
-    yearlyTotalProdNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (حصص)",
-    yearlyTotalBen: "إجمالي مستفيدي خدمة الطعام",
-    yearlyTotalBenNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (إجمالي الأشخاص)",
-    yearlyStudentComp: "مقارنة الطلاب المستفيدين من خدمة الطعام",
-    yearlyStudentNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (الطلاب)",
-    yearlyWasteComp: "مقارنة النفايات (كغ)",
-    yearlyWasteNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (كغ)",
-    yearlyMonthlyProd: "مقارنة الإنتاج الشهري",
-    yearlyMonthlyProdNote: "السنة الأولى vs السنة الثانية - الوجبات المُنتجة (حصص)",
-    yearlyMonthlyTurnstile: "مقارنة عبور البوابة الدوّارة الشهري",
-    yearlyMonthlyTurnstileNote: "السنة الأولى vs السنة الثانية - عدد عبور البوابة الدوّارة",
-    yearlyMonthlyStudent: "مقارنة عبور الطلاب الشهري",
-    yearlyMonthlyStudentNote: "السنة الأولى vs السنة الثانية - عدد عبور الطلاب",
-    yearlyMonthlyWaste: "مقارنة النفايات الشهرية (كغ)",
-    yearlyMonthlyWasteNote: "السنة الأولى vs السنة الثانية - كمية النفايات (كغ)",
-    yearlyWasteListTitle: "قائمة النفايات السنوية",
-    spendingRatesTitle: "معدلات الإنفاق لكل شخص (الطلاب والموظفون والوجبات)",
-    spendingStudentRate: "مبلغ إنفاق كل طالب (TL)",
-    btnSaveStudentRate: "حفظ مبلغ الطلاب",
-    spendingStaffRate: "مبلغ إنفاق كل موظف (TL)",
-    btnSaveStaffRate: "حفظ مبلغ الموظفين",
-    spendingMealRate: "مبلغ إنفاق كل وجبة (TL)",
-    btnSaveMealRate: "حفظ مبلغ الوجبات",
-    spendingDesc: "إنفاق الطلاب = عدد الطلاب × مبلغ إنفاق كل طالب",
-    spendingStudentTitle: "مبلغ إنفاق الطلاب (TL)",
-    spendingChartEmpty: "ستظهر الرسوم البيانية عند إدخال السجلات",
-    spendingStudentNote: "إنفاق الطلاب (TL) = عدد الطلاب × مبلغ إنفاق كل طالب",
-    spendingStaffTitle: "مبلغ إنفاق الموظفين (TL)",
-    spendingStaffNote: "إنفاق الموظفين (TL) = عدد الموظفين × مبلغ إنفاق كل موظف",
-    spendingMealTitle: "مبلغ إنفاق الوجبات (TL)",
-    spendingMealNote: "إنفاق الوجبات (TL) = الوجبات المُنتجة × مبلغ إنفاق كل وجبة",
-    spendingTableTitle: "جدول حساب الإنفاق",
-    syncTitle: "مزامنة Supabase",
-    syncCloseBtn: "إغلاق",
-    modalNewRecord: "إضافة سجل جديد",
-    formDate: "التاريخ",
-    formProducedCount: "عدد الوجبات المُنتجة",
-    formTurnstileCount: "عدد عبور البوابة الدوّارة",
-    formStudentCount: "عدد الطلاب المستفيدين",
-    formFoodType: "نوع الطعام",
-    formAutoCalc: "حسابات تلقائية",
-    badgeAutomatic: "تلقائي",
-    badgeFixed: "ثابت",
-    badgeAutoEditable: "تلقائي + قابل للتعديل",
-    btnCancel: "إلغاء",
-    entryFormSubmit: "حفظ",
-    formReceiptNo: "رقم الإيصال",
-    formOilType: "نوع الزيت",
-    formAmountLt: "الكمية (لتر)",
-    formNote: "ملاحظة",
-    formWasteType: "نوع النفايات",
-    formAmount: "الكمية",
-    formDeviceName: "اسم الجهاز",
-    formBrandModel: "العلامة التجارية-الطراز",
-    formSerialNo: "الرقم التسلسلي",
-    formStatus: "الحالة",
-    formVerification: "التحقق",
-    formLastCalibration: "آخر معايرة",
-    formNextCalibration: "المعايرة التالية",
-    formLocation: "الموقع/القسم",
-    formResponsible: "الشخص المسؤول",
-    btnSave: "حفظ",
-    btnAdd: "إضافة",
-    btnClose: "إغلاق",
-    qrTitle: "رمز QR",
-    qrHint: "اطبع رمز QR لتثبيته على أبواب المستودعات.",
-    adminTitle: "لوحة الإدارة",
-    adminReAuthText: "يرجى إدخال كلمة مرور المسؤول للوصول إلى لوحة الإدارة.",
-    adminPassword: "كلمة مرور المسؤول",
-    btnVerify: "تحقق",
-    adminSessionRole: "دور الجلسة",
-    adminLastLogin: "آخر دخول",
-    adminAuthMethod: "طريقة المصادقة",
-    adminStorage: "مخزن كلمات المرور",
-    adminDataSource: "مصدر البيانات",
-    adminUserMgmt: "إدارة المستخدمين",
-    adminUserMgmtDesc: "إضافة أو تعديل أو حذف المستخدمين.",
-    adminAddUser: "إضافة مستخدم جديد",
-    adminUsername: "اسم المستخدم",
-    adminDisplayName: "الاسم الظاهر",
-    adminPasswordLabel: "كلمة المرور",
-    adminRole: "الدور",
-    adminAddUserBtn: "إضافة مستخدم",
-    adminRolePerms: "إعدادات الأذونات حسب الأدوار",
-    adminRolePermsDesc: "تحديد التبويبات التي يمكن لكل دور عرضها.",
-    adminSecurity: "أمان الجلسة",
-    adminSecurityDesc: "ستُغلق الجلسة إذا لم يتم تنفيذ أي نشاط خلال المدة المحددة.",
-    adminInactivityTimeout: "مهلة عدم النشاط",
-    adminLogsTitle: "سجلات النشاط",
-    adminLogsDesc: "تسجيل دخول/خروج المستخدمين وعمليات السجلات",
-    btnRefresh: "تحديث",
-    adminSaveBtn: "حفظ الإعدادات",
-    adminFooterNote: "تُخزّن كلمات المرور بشكل دائم على الخادم.",
-    adminCloseBtn: "إغلاق",
-    logFilterDelete: "حذف",
-    logFilterAddUser: "إضافة مستخدم",
-    logFilterDeleteUser: "حذف مستخدم",
-    adminRefreshBtn: "تحديث",
-    manualTitle: "دليل المستخدم",
-    manualSubtitle: "نظام التحكم في إنتاج واستهلاك ونفايات المطعم",
-    compDataType: "نوع البيانات",
-    compLastWeek: "الأسبوع الماضي",
-    compThisWeek: "هذا الأسبوع",
-    compLastMonth: "الشهر الماضي",
-    compThisMonth: "هذا الشهر",
-    compLastYear: "العام الماضي",
-    compThisYear: "هذا العام",
-    compDiff: "الفرق",
-    compTotalWaste: "إجمالي النفايات (كغ)",
-    compTotalProduction: "إجمالي الإنتاج",
-    compTurnstilePasses: "عبور البوابة",
-    compStudentCount: "عدد الطلاب",
-    compWastePerPerson: "النفايات للفرد (غرام)",
-    monthlyCompDesc: "مقارنة هذا الشهر مع الشهر الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
-    yearlyCompDesc: "مقارنة هذا العام (من بداية السنة حتى الآن) مع نفس الفترة من العام الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
-    monthNames: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
-    haccpColDate: "التاريخ",
-    haccpColTime: "الوقت",
-    haccpColDepot: "اسم المستودع",
-    haccpColTemp: "درجة الحرارة (°م)",
-    haccpColHumidity: "الرطوبة (%)",
-    haccpColNote: "ملاحظة",
-    haccpColAction: "إجراء",
-    dayNames: ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
-    menuVariety: "نوع",
-    menuVariety1: "النوع الأول",
-    menuVariety2: "النوع الثاني",
-    menuVariety3: "النوع الثالث",
-    menuVariety4: "النوع الرابع",
-    menuVariety5: "النوع الخامس",
-    menuPersonCount: "عدد الأشخاص",
-    stockDeductionList: "قائمة خصم المخزون",
-    total: "المجموع",
-    inVarieties: "أنواع",
-    person: "فرد",
-    weeklyGrandTotal: "المجموع الأسبوعي",
-    dailyAverage: "المتوسط اليومي",
-    avgPerPerson: "المتوسط للفرد",
-    totalPersonDays: "إجمالي الأشخاص/أيام",
-    colDay: "اليوم",
-    colDate: "التاريخ",
-    colPerson: "الأشخاص",
-    dailyMaterialCost: "تكلفة المواد اليومية",
-    perPerson: "للفرد",
-    ingredients: "المكونات",
-    perPersonGram: "(غرام للفرد)",
-    colIngredient: "المكون",
-    colPerPerson: "/فرد",
-    colUnit: "الوحدة",
-    addIngredient: "+ إضافة مكون",
-    foodName: "اسم الطبق",
-    allergen: "الallingيرجين",
-    recipePerPerson: "الوصفة (للفرد)",
-    devices: "أجهزة",
-    maliTablo: "الجدول المالي",
-    maliTabloSubtitle: "ملخص تكاليف المواد الأسبوعية",
-    maliUnitPriceMissing: "سعر الوحدة للمادة غير محدد",
-    maliUnitPriceHint: "يمكنك التحديد من تبويب أسعار الوحدة",
-    weeklyTotal: "المجموع الأسبوعي",
-    categoryDistribution: "توزيع الفئات",
-    weeklyTotalList: "قائمة الاحتياجات الأسبوعية الإجمالية",
-    totalCost: "التكلفة الإجمالية",
-    catMeat: "منتجات اللحوم",
-    catDairy: "منتجات الألبان",
-    catLegumes: "البقوليات الجافة",
-    catSpices: "التوابل",
-    catVegetable: "الخضروات والفواكه",
-    catOther: "أخرى",
-    month1: "يناير", month2: "فبراير", month3: "مارس", month4: "أبريل",
-    month5: "مايو", month6: "يونيو", month7: "يوليو", month8: "أغسطس",
-    month9: "سبتمبر", month10: "أكتوبر", month11: "نوفمبر", month12: "ديسمبر",
-    menuListTitle: "قائمة القائمة",
-    totalDevices: "إجمالي الأجهزة",
-    statusWorking: "يعمل",
-    statusDefective: "معطل",
-    statusMaintenance: "يحتاج صيانة",
-    statusScrap: "يجب تجهيزة",
-    calibrationValid: "المعايرة صالحة",
-    calibrationApproaching: "المعايرة تقترب (30 يوم)",
-    differentDepartments: "أقسام مختلفة",
-    statusApproaching: "يقترب",
-    statusExpired: "انتهت الصلاحية",
-    statusNotDone: "لم يتم",
-    statusValid: "صالح",
-    noDeviceFound: "لم يتم العثور على أجهزة تطابق معايير التصفية هذه.",
-    noDeviceRecord: "لم يتم إدخال سجلات أجهزة المعايرة بعد.",
-    deviceCount: "أجهزة",
-    deviceCountSuffix: " أجهزة",
-    editDeviceTitle: "تعديل جهاز المعايرة",
-    newDeviceTitle: "جهاز معايرة جديد",
-    kpiBeneficiary: "المستفيدون: ",
-    kpiNoRecordToday: "لا توجد سجلات اليوم",
-    kpiAlertsCount: "تنبيهات",
-    kpiAllValuesOk: "جميع القيم مقبولة",
-    kpiDeviceInAlarm: "أجهزة في حالة انذار",
-    kpiApproaching: "تقترب",
-    kpiAllCalibrationsValid: "جميع المعايرات صالحة",
-    filterAll: "الكل",
-    colDeviceName: "اسم الجهاز",
-    colBrandModel: "العلامة التجارية-الطراز",
-    colSerialNo: "الرقم التسلسلي",
-    colDeviceStatus: "حالة الجهاز",
-    colCalibration: "المعايرة",
-    colLastCalibration: "آخر معايرة",
-    colNextCalibration: "التالية",
-    colDepartment: "القسم",
-    colResponsible: "المسؤول",
-    colNote: "ملاحظة",
-    colAction: "الإجراء",
-    unitPriceList: "قائمة الأسعاروحدات",
-    registeredProducts: "المنتجات المسجلة",
-    totalAmount: "المبلغ الإجمالي",
-    avgUnitPrice: "متوسط سعر الوحدة",
-    selectedYear: "السنة المحددة",
-    duplicateWarning: "منتجات بها سجلات مكررة. قد تحتوي حسابات الأسعار على أخطاء.",
-    cleanDuplicates: "حذف واحداً تلو الآخر",
-    colProductName: "اسم المنتج",
-    colUnit: "الوحدة",
-    colUnitPrice: "سعر الوحدة (₺)",
-    colUnitEquals: "1 وحدة =",
-    colYear: "السنة",
-    noProductsThisYear: "لم تتم إضافة منتجات لهذه السنة بعد.",
-    btnEdit: "تعديل",
-    btnDelete: "حذف",
-    pageLabel: "صفحة",
-    totalProductsLabel: "المجموع",
-    totalProductsSuffix: " منتجات",
-    priceYearNote: "الأسعار حسب السنة. المطابقة: يتم مطابقة اسم المادة تلقائياً.",
-    btnAddNewProduct: "+ منتج جديد",
-    btnDownloadCSV: "تنزيل CSV",
-    btnPrint: "طباعة",
-    btnUploadCSV: "تحميل CSV",
-    clickToSelectYear: "انقر لاختيار السنة",
-    selectYear: "اختر السنة",
-    dataInfoRecord: "سجل",
-    dataInfoProduction: "إنتاج",
-    dataInfoWaste: "نفايات",
-    portion: "وجبات",
-    abnormalDays: "أيام غير طبيعية",
-    noRecordsToDisplay: "لا توجد سجلات للعرض.",
-    colYearLabel: "السنة",
-    avgPortion400: "400 جرام",
-    recordsNot400: "سجلات ليست 400",
-    gram: " جرام",
-    personLabel: "شخص",
-    last7RecordsPrev7: "آخر 7 سجلات / السابقة 7",
-    tempAppropriate: "مناسب",
-    tempLow: "منخفض",
-    tempHigh: "مرتفع",
-    lowerLimit: "الحد الأدنى: ",
-    upperLimit: "الحد الأقصى: ",
-    unknownDepo: "غير معروف",
-    tempMin: "الحد الأدنى: ",
-    tempAvg: "المتوسط: ",
-    tempMax: "الحد الأقصى: ",
-    humidity: "الرطوبة: ",
-    depot: "مستودع",
-    selectedCount: " محدد",
-    pageRecords: "صفحة ",
-    recordCount: " سجل)",
-    tempRecordsTitle: "سجلات درجة حرارة التخزين البارد",
-    dateRangeLabel: " | التاريخ:",
-    allDepots: "جميع المستودعات",
-    colTime: "الوقت",
-    colDepot: "المستودع",
-    colTemperature: "الحرارة",
-    colStatus: "الحالة",
-    depotTempRecordTitle: "سجل درجة حرارة المستودع",
-    formDate: "التاريخ",
-    formTime: "الوقت",
-    formDepotName: "اسم المستودع",
-    formTemperature: "الحرارة (°م)",
-    tempPlaceholder: "0.0 (يمكن تركه فارغاً)",
-    formHumidity: "الرطوبة (%)",
-    formNoteOptional: "اختياري",
-    deleteConfirm: "هل أنت متأكد من حذف هذا السجل؟",
-    deleteSelectedConfirm: "هل أنت متأكد من حذف ",
-    deleteSelectedConfirmSuffix: " سجلات محددة؟",
-    tempHistory: " سجل الحرارة",
-    weeklyAvgTempNote: "متوسط درجات الحرارة الأسبوعية — مع خطوط الحد الأعلى والأدنى",
-    upperLimitLabel: "الحد الأقصى (",
-    lowerLimitLabel: "الحد الأدنى (",
-    totalRecordCount: "إجمالي السجلات",
-    totalWasteOil: "إجمالي زيت النفايات",
-    avgAmountPerRecord: "متوسط الكمية / سجل",
-    highestAmount: "أعلى كمية",
-    lowestAmount: "أدنى كمية",
-    oilTypeCount: "عدد أنواع الزيت",
-    yearTotalSuffix: " المجموع",
-    startDate: "البداية",
-    endDate: "النهاية",
-    typeLabel: "النوع: ",
-    yearLabel: "السنة: ",
-    activeFilterLabel: "الفلتر النشط: ",
-    noFilterMessage: "بدون فلتر — عرض جميع سجلات زيت النفايات.",
-    noWasteOilRecord: "لم يتم إدخال سجلات زيت النفايات بعد.",
-    noMatchingFilterRecord: "لم يتم العثور على سجلات تطابق معايير الفلتر.",
-    editWasteOilRecord: "تعديل سجل زيت النفايات",
-    newWasteOilRecord: "سجل زيت نفايات جديد",
-    wasteOilChartLabel: "زيت النفايات",
-    previousYearLabel: "السنة السابقة",
-    undefinedType: "غير محدد",
-    totalWastePackaging: "إجمالي نفايات التعبئة",
-    wasteTypeCount: "عدد أنواع النفايات",
-    noWastePackagingRecord: "لم يتم إدخال سجلات نفايات التعبئة بعد.",
-    noMatchingFilterPackage: "لم يتم العثور على سجلات تطابق معايير الفلتر.",
-    noFilterMessagePackaging: "بدون فلتر — عرض جميع سجلات نفايات التعبئة.",
-    editWastePackagingRecord: "تعديل سجل نفايات التعبئة",
-    newWastePackagingRecord: "سجل نفايات تعبئة جديد",
-    wastePackagingChartLabel: "نفايات التعبئة",
-    chartDetailEmpty: "لم يتم العثور على سجلات لهذه الفترة.",
-    chartClose: "إغلاق",
-    chartColProduction: "الإنتاج",
-    chartColPasses: "المرور",
-    chartColWaste: "النفايات",
-    chartColStudent: "الطلاب",
-    chartColFoodType: "نوع الطعام",
-    chartProductionVsTurnstile: "الفرق بين الإنتاج والمرور عبر الدوار",
-    chartStaffTotal: "الهيئة الأكاديمية والإدارية + أساتذة(SK)",
-    yearFilterLabel: "السنة:",
-    monthFilterLabel: "الشهر:",
-    chartSelectYear: "اختيار",
-    year1Label: "السنة 1:",
-    year2Label: "السنة 2:",
-    noComparison: "بدون مقارنة",
-    newLabel: "جديد",
-    foodTypeLabel: "نوع الطعام",
-    productionLabel: " الإنتاج",
-    wasteKgLabel: " نفايات (كجم)",
-    wasteGrPortionLabel: " نفايات (جرام/وجبة)",
-    diffKgLabel: "الفرق (كجم)",
-    totalRow: "المجموع",
-    registeredRate: "المعدل المحفوظ: ",
-    unsavedChanges: " (تغييرات غير محفوظة)",
-    kpiTotalStudentSpending: "إجمالي مصروفات الطلاب",
-    kpiTotalStaffSpending: "إجمالي مصروفات الموظفين",
-    kpiAvgMonthlyStudentSpending: "متوسط مصروفات الطلاب الشهرية",
-    kpiAvgMonthlyStaffSpending: "متوسط مصروفات الموظفين الشهرية",
-    kpiTotalStudents: "إجمالي الطلاب",
-    kpiTotalStaff: "إجمالي الموظفين",
-    kpiHighestStudentMonth: "أعلى شهر للطلاب",
-    kpiHighestStaffMonth: "أعلى شهر للموظفين",
-    kpiTotalMealSpending: "إجمالي مصروفات الطعام",
-    kpiAvgMonthlyMealSpending: "متوسط مصروفات الطعام الشهرية",
-    kpiTotalMealsProduced: "إجمالي الطعام المنتج",
-    kpiHighestMealMonth: "أعلى شهر للطعام",
-    chartStudentSpending: "مصروفات الطلاب (₺)",
-    chartStaffSpending: "مصروفات الموظفين (₺)",
-    chartMealSpending: "مصروفات الطعام (₺)",
-    noRecordsYet: "لا توجد سجلات بعد.",
-    invalidRate: "يرجى إدخال معدل صالح!",
-    rateSaved: "تم حفظ المعدل: ",
-    menuStatusDraft: "مسودة",
-    menuStatusPending: "بانتظار الاعتماد",
-    menuStatusApproved: "معتمد",
-    menuStatusRejected: "مرفوض",
-    menuApprove: "اعتماد القائمة",
-    menuApproveDisabled: "لم يتم تقديم القائمة للاعتماد بعد. عندما يضغط الم nutrition على \"تقديم للاعتماد\" يمكنك الاعتماد من هنا.",
-    menuReject: "رفض القائمة مع التبرير",
-    menuRejectDisabled: "لم يتم تقديم القائمة للاعتماد بعد. عندما يضغط الم nutrition على \"تقديم للاعتماد\" يمكنك الرفض من هنا.",
-    menuPendingCount: " قوائم أ weeks تنتظر الاعتماد. يمكنك الذهاب إلى الأسبوع المتأخر والاعتماد.",
-    menuNotApproved: "قائمة هذا الأسبوع لم يتم اعتمادها من قِبَل مهندس الأغذية بعد.",
-    menuRejected: "تم رفض هذه القائمة",
-    menuRejectedSuffix: ". يمكن للم nutrition التصحيح وإعادة التقديم.",
-    menuAwaitingApproval: "هذه القائمة بانتظار الاعتماد. ستُوضع علامة \"غير معتمدة\" في قائمة الإنتاج.",
-    noteLabel: "ملاحظة ",
-    deleteNote: "حذف هذه الملاحظة",
-    addNote: "إضافة ملاحظة جديدة",
-    mealPickerTitle: "اختيار الطعام",
-    clearLabel: "🗑 مسح",
-    searchMealPlaceholder: "البحث عن طعام...",
-    noMatchingMeal: "لم يتم العثور على طعام مطابق.",
-    varietyLabel: " صنف: ",
-    addRecord: "إضافة سجل جديد",
-    editRecord: "تعديل السجل",
-    btnUpdate: "تحديث",
-    recordAdded: "تمت إضافة السجل بنجاح.",
-    recordUpdated: "تم تحديث السجل بنجاح.",
-    recordDeleted: "تم حذف السجل.",
-    allRecordsDeleted: "تم حذف جميع السجلات.",
-    selectedRecordsDeleted: "تم حذف السجلات المحددة.",
-    noRecordToDelete: "لا توجد سجلات للحذف.",
-    noSelectedRecord: "لم يتم تحديد أي سجل.",
-    deleteAllConfirm: "هل أنت متأكد أنك تريد حذف جميع السجلات؟\nلا يمكن التراجع عن هذا الإجراء!",
-    deleteFoodConfirm: "هل أنت متأكد أنك تريد حذف هذا الطعام؟",
-    selected: " محدد",
-    negMeals: "عدد الوجبات المنتجة لا يمكن أن يكون سالباً.",
-    negTurnstile: "عدد عمليات المرور لا يمكن أن يكون سالباً.",
-    negStaff: "عدد الموظفين لا يمكن أن يكون سالباً.",
-    negPortion: "كمية الحصة لا يمكن أن تكون سالبة.",
-    negStudent: "عدد الطلاب لا يمكن أن يكون سالباً.",
-    unsavedConfirm: "هناك تغييرات غير محفوظة. هل أنت متأكد أنك تريد الإغلاق؟",
-    selectUser: "يرجى تحديد مستخدم.",
-    wrongCredentials: "اسم المستخدم أو كلمة المرور غير صحيحة.",
-    tooManyAttempts: "محاولات كثيرة جداً. يرجى الانتظار.",
-    editable: "قابل للتعديل",
-    fixed: "ثابت",
-    menuSentForApproval: "تم إرسال القائمة للموافقة. في انتظار موافقة مهندس الأغذية/المدير.",
-    menuApproved: "تمت الموافقة على القائمة.",
-    menuRejectedMsg: "تم رفض القائمة مع التبرير.",
-    menuDraftSaved: "تم حفظ القائمة كمسودة.",
-    menuCleared: "تم مسح القائمة.",
-    monthShort1: "يناير",
-    monthShort2: "فبراير",
-    monthShort3: "مارس",
-    monthShort4: "أبريل",
-    monthShort5: "مايو",
-    monthShort6: "يونيو",
-    monthShort7: "يوليو",
-    monthShort8: "أغسطس",
-    monthShort9: "سبتمبر",
-    monthShort10: "أكتوبر",
-    monthShort11: "نوفمبر",
-    monthShort12: "ديسمبر"
+    depoNamesTitle: "Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª",
+    oilNewBtn: "Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    oilListBtn: "Ù‚Ø§Ø¦Ù…Ø©",
+    oilFilterTitle: "ØªØµÙÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    filterOilType: "Ù†ÙˆØ¹ Ø§Ù„Ø²ÙŠØª:",
+    btnReset: "Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ†",
+    oilSummaryTitle: "Ù…Ù„Ø®Øµ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    oilChartTitle: "Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ù„Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    oilChartSubtitle: "ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ© Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (Ù„ØªØ±)",
+    oilChartEmpty: "Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø±ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ø¹Ù†Ø¯ Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    oilChartNote: "Ø§Ù„Ù…Ø¬Ø§Ù…ÙŠØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠØ© Ù„Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ© Ø­Ø³Ø¨ Ø§Ù„ØªØ§Ø±ÙŠØ® ÙˆÙ†ÙˆØ¹ Ø§Ù„Ø²ÙŠØª ÙˆØ§Ù„Ø³Ù†Ø©",
+    oilRecordsTitle: "Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    oilModalTitle: "Ø³Ø¬Ù„ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ©",
+    emptyOil: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø²ÙŠØªÙŠØ© Ø¨Ø¹Ø¯.",
+    ambalajNewBtn: "Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    ambalajListBtn: "Ù‚Ø§Ø¦Ù…Ø©",
+    packagingFilterTitle: "ØªØµÙÙŠØ© Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    filterWasteType: "Ù†ÙˆØ¹ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª:",
+    packagingSummaryTitle: "Ù…Ù„Ø®Øµ Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    packagingChartTitle: "Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    packagingChartSubtitle: "ÙƒÙ…ÙŠØ© Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (ÙƒØº)",
+    packagingChartEmpty: "Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ø¹Ù†Ø¯ Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    packagingChartNote: "Ø§Ù„Ù…Ø¬Ø§Ù…ÙŠØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠØ© Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ Ø­Ø³Ø¨ Ø§Ù„ØªØ§Ø±ÙŠØ® ÙˆÙ†ÙˆØ¹ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª ÙˆØ§Ù„Ø³Ù†Ø© (ÙƒØº)",
+    packagingRecordsTitle: "Ø³Ø¬Ù„Ø§Øª Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    packagingModalTitle: "Ø³Ø¬Ù„ Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ",
+    emptyPackaging: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØºÙ„ÙŠÙ Ø¨Ø¹Ø¯.",
+    kalibrasyonNewBtn: "Ø¬Ù‡Ø§Ø² Ø¬Ø¯ÙŠØ¯",
+    kalibrasyonListBtn: "Ù‚Ø§Ø¦Ù…Ø©",
+    kalibrasyonCsvBtn: "ØªÙ†Ø²ÙŠÙ„ CSV",
+    calibrationSummary: "Ù…Ù„Ø®Øµ Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    calibrationDevices: "Ø§Ù„Ø£Ø¬Ù‡Ø²Ø© Ø§Ù„Ø®Ø§Ø¶Ø¹Ø© Ù„Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    calibrationModalTitle: "Ø¬Ù‡Ø§Ø² Ù„Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    filterStatus: "Ø§Ù„Ø­Ø§Ù„Ø©:",
+    filterDepartment: "Ø§Ù„Ù‚Ø³Ù…:",
+    btnWordExport: "ØªØµØ¯ÙŠØ± Ø¥Ù„Ù‰ Word",
+    btnPrint: "Ø·Ø¨Ø§Ø¹Ø© PDF",
+    chartProdWaste: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ù„Ø¹Ø¨ÙˆØ± ÙˆØ§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    chartEmpty: "Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ø¹Ù†Ø¯ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª",
+    chartProdWasteNote: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø´Ù‡Ø±ÙŠØ© Ø¨ÙŠÙ† Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø© ÙˆØ§Ù„Ø­ØµØµ Ø§Ù„Ù…ÙÙ‡Ù…Ù„Ø©",
+    chartStudentCount: "Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙŠÙ† Ù…Ù† Ø®Ø¯Ù…Ø§Øª Ø§Ù„ØªØºØ°ÙŠØ©",
+    yearTotal: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø³Ù†ÙˆÙŠ",
+    chartStudentNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠ Ù„Ø¹Ø¨ÙˆØ± Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„ÙŠÙˆÙ…ÙŠ",
+    chartStaffTotal: "Ø§Ù„ÙƒØ§Ø¯ÙŠÙ…ÙŠÙˆÙ† ÙˆØ§Ù„Ø¥Ø¯Ø§Ø±ÙŠÙˆÙ† + Ù…ÙˆØ¸ÙÙˆ SKS",
+    chartStaffNote: "Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„ÙƒØ§Ø¯ÙŠÙ…ÙŠÙŠÙ† ÙˆØ§Ù„Ø¥Ø¯Ø§Ø±ÙŠÙŠÙ† (Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø© - Ø§Ù„Ø·Ù„Ø§Ø¨) ÙˆÙ…ÙˆØ¸ÙÙŠ Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù… SKS",
+    chartMonthlyProd: "Ø§Ù„Ø¥Ù†ØªØ§Ø¬ Ø§Ù„Ø´Ù‡Ø±ÙŠ Ù„Ù„ÙˆØ¬Ø¨Ø§Øª",
+    chartMonthlyProdNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠ Ù„Ø¹Ø¯Ø¯ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© ÙŠÙˆÙ…ÙŠØ§Ù‹",
+    chartMonthlyTurnstile: "Ø¹Ø¯Ø¯ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø© Ø§Ù„Ø´Ù‡Ø±ÙŠ",
+    chartTurnstileNote: "Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø·Ù„Ø§Ø¨ + Ø§Ù„Ù…ÙˆØ¸ÙÙˆÙ† + Ø§Ù„Ø¹Ø§Ø¨Ø±ÙˆÙ† Ù…Ù† Ø§Ù„Ø®Ø§Ø±Ø¬",
+    chartMonthlyWaste: "ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (ÙƒØº)",
+    chartMonthlyWasteNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠ Ù„Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ÙŠÙˆÙ…ÙŠØ© (ÙƒØº)",
+    chartMonthlyWastePortion: "ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (Ø­ØµØµ)",
+    chartWastePortionNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø´Ù‡Ø±ÙŠ Ù„Ù„Ø­ØµØµ Ø§Ù„Ù…ÙÙ‡Ù…Ù„Ø© ÙŠÙˆÙ…ÙŠØ§Ù‹",
+    chartDiff: "Ø§Ù„ÙØ±Ù‚ Ø¨ÙŠÙ† Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ù„Ø¹Ø¨ÙˆØ±",
+    chartDiffNote: "Ø§Ù„ÙØ±Ù‚ Ø¨ÙŠÙ† Ø¹Ø¯Ø¯ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© ÙˆØ¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    chartWasteRatio: "Ù†Ø³Ø¨Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ù…Ù† Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø©",
+    yearAverage: "Ø§Ù„Ù…ØªÙˆØ³Ø· Ø§Ù„Ø³Ù†ÙˆÙŠ",
+    chartWasteRatioNote: "Ù†Ø³Ø¨Ø© Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© Ø§Ù„ØªÙŠ ØªØªØ­ÙˆÙ„ Ø¥Ù„Ù‰ Ù†ÙØ§ÙŠØ§Øª",
+    chartWastePerPerson: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„ÙƒÙ„ Ø´Ø®Øµ (ÙƒØº/Ø´Ø®Øµ)",
+    chartWastePerPersonNote: "Ù…ØªÙˆØ³Ø· Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„ÙƒÙ„ Ø´Ø®Øµ ÙŠØ¯Ø®Ù„ Ø§Ù„Ù…Ø·Ø¹Ù…",
+    chartMonthlyTemp: "Ù…ØªÙˆØ³Ø· Ø¯Ø±Ø¬Ø§Øª Ø­Ø±Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (Â°C)",
+    chartTempEmpty: "Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ø¹Ù†Ø¯ Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø¯Ø±Ø¬Ø§Øª Ø§Ù„Ø­Ø±Ø§Ø±Ø©",
+    chartTempNote: "Ù…ØªÙˆØ³Ø· Ø¯Ø±Ø¬Ø© Ø§Ù„Ø­Ø±Ø§Ø±Ø© Ø§Ù„Ø´Ù‡Ø±ÙŠØ© Ù„ÙƒÙ„ Ù…Ø³ØªÙˆØ¯Ø¹",
+    yearlyPdfBtn: "Ø·Ø¨Ø§Ø¹Ø© PDF",
+    yearlyTotalProd: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ù†ÙˆÙŠ Ù„Ù„Ø¥Ù†ØªØ§Ø¬",
+    yearlyTotalProdNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø³Ù†ÙˆÙŠ - Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© (Ø­ØµØµ)",
+    yearlyTotalBen: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…Ø³ØªÙÙŠØ¯ÙŠ Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    yearlyTotalBenNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø³Ù†ÙˆÙŠ - Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© (Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø´Ø®Ø§Øµ)",
+    yearlyStudentComp: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙŠÙ† Ù…Ù† Ø®Ø¯Ù…Ø© Ø§Ù„Ø·Ø¹Ø§Ù…",
+    yearlyStudentNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø³Ù†ÙˆÙŠ - Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© (Ø§Ù„Ø·Ù„Ø§Ø¨)",
+    yearlyWasteComp: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    yearlyWasteNote: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø³Ù†ÙˆÙŠ - Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© (ÙƒØº)",
+    yearlyMonthlyProd: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ø¥Ù†ØªØ§Ø¬ Ø§Ù„Ø´Ù‡Ø±ÙŠ",
+    yearlyMonthlyProdNote: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© - Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© (Ø­ØµØµ)",
+    yearlyMonthlyTurnstile: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø© Ø§Ù„Ø´Ù‡Ø±ÙŠ",
+    yearlyMonthlyTurnstileNote: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© - Ø¹Ø¯Ø¯ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    yearlyMonthlyStudent: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø¹Ø¨ÙˆØ± Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ø´Ù‡Ø±ÙŠ",
+    yearlyMonthlyStudentNote: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© - Ø¹Ø¯Ø¯ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø·Ù„Ø§Ø¨",
+    yearlyMonthlyWaste: "Ù…Ù‚Ø§Ø±Ù†Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø´Ù‡Ø±ÙŠØ© (ÙƒØº)",
+    yearlyMonthlyWasteNote: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ vs Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø«Ø§Ù†ÙŠØ© - ÙƒÙ…ÙŠØ© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    yearlyWasteListTitle: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø§Ù„Ø³Ù†ÙˆÙŠØ©",
+    spendingRatesTitle: "Ù…Ø¹Ø¯Ù„Ø§Øª Ø§Ù„Ø¥Ù†ÙØ§Ù‚ Ù„ÙƒÙ„ Ø´Ø®Øµ (Ø§Ù„Ø·Ù„Ø§Ø¨ ÙˆØ§Ù„Ù…ÙˆØ¸ÙÙˆÙ† ÙˆØ§Ù„ÙˆØ¬Ø¨Ø§Øª)",
+    spendingStudentRate: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ Ø·Ø§Ù„Ø¨ (TL)",
+    btnSaveStudentRate: "Ø­ÙØ¸ Ù…Ø¨Ù„Øº Ø§Ù„Ø·Ù„Ø§Ø¨",
+    spendingStaffRate: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ Ù…ÙˆØ¸Ù (TL)",
+    btnSaveStaffRate: "Ø­ÙØ¸ Ù…Ø¨Ù„Øº Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†",
+    spendingMealRate: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ ÙˆØ¬Ø¨Ø© (TL)",
+    btnSaveMealRate: "Ø­ÙØ¸ Ù…Ø¨Ù„Øº Ø§Ù„ÙˆØ¬Ø¨Ø§Øª",
+    spendingDesc: "Ø¥Ù†ÙØ§Ù‚ Ø§Ù„Ø·Ù„Ø§Ø¨ = Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨ Ã— Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ Ø·Ø§Ù„Ø¨",
+    spendingStudentTitle: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ Ø§Ù„Ø·Ù„Ø§Ø¨ (TL)",
+    spendingChartEmpty: "Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø±Ø³ÙˆÙ… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠØ© Ø¹Ù†Ø¯ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    spendingStudentNote: "Ø¥Ù†ÙØ§Ù‚ Ø§Ù„Ø·Ù„Ø§Ø¨ (TL) = Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨ Ã— Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ Ø·Ø§Ù„Ø¨",
+    spendingStaffTitle: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† (TL)",
+    spendingStaffNote: "Ø¥Ù†ÙØ§Ù‚ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† (TL) = Ø¹Ø¯Ø¯ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† Ã— Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ Ù…ÙˆØ¸Ù",
+    spendingMealTitle: "Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª (TL)",
+    spendingMealNote: "Ø¥Ù†ÙØ§Ù‚ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª (TL) = Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø© Ã— Ù…Ø¨Ù„Øº Ø¥Ù†ÙØ§Ù‚ ÙƒÙ„ ÙˆØ¬Ø¨Ø©",
+    spendingTableTitle: "Ø¬Ø¯ÙˆÙ„ Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¥Ù†ÙØ§Ù‚",
+    syncTitle: "Ù…Ø²Ø§Ù…Ù†Ø© Supabase",
+    syncCloseBtn: "Ø¥ØºÙ„Ø§Ù‚",
+    modalNewRecord: "Ø¥Ø¶Ø§ÙØ© Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    formDate: "Ø§Ù„ØªØ§Ø±ÙŠØ®",
+    formProducedCount: "Ø¹Ø¯Ø¯ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ†ØªØ¬Ø©",
+    formTurnstileCount: "Ø¹Ø¯Ø¯ Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙˆÙ‘Ø§Ø±Ø©",
+    formStudentCount: "Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙŠÙ†",
+    formFoodType: "Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù…",
+    formAutoCalc: "Ø­Ø³Ø§Ø¨Ø§Øª ØªÙ„Ù‚Ø§Ø¦ÙŠØ©",
+    badgeAutomatic: "ØªÙ„Ù‚Ø§Ø¦ÙŠ",
+    badgeFixed: "Ø«Ø§Ø¨Øª",
+    badgeAutoEditable: "ØªÙ„Ù‚Ø§Ø¦ÙŠ + Ù‚Ø§Ø¨Ù„ Ù„Ù„ØªØ¹Ø¯ÙŠÙ„",
+    btnCancel: "Ø¥Ù„ØºØ§Ø¡",
+    entryFormSubmit: "Ø­ÙØ¸",
+    formReceiptNo: "Ø±Ù‚Ù… Ø§Ù„Ø¥ÙŠØµØ§Ù„",
+    formOilType: "Ù†ÙˆØ¹ Ø§Ù„Ø²ÙŠØª",
+    formAmountLt: "Ø§Ù„ÙƒÙ…ÙŠØ© (Ù„ØªØ±)",
+    formNote: "Ù…Ù„Ø§Ø­Ø¸Ø©",
+    formWasteType: "Ù†ÙˆØ¹ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    formAmount: "Ø§Ù„ÙƒÙ…ÙŠØ©",
+    formDeviceName: "Ø§Ø³Ù… Ø§Ù„Ø¬Ù‡Ø§Ø²",
+    formBrandModel: "Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©-Ø§Ù„Ø·Ø±Ø§Ø²",
+    formSerialNo: "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ØªØ³Ù„Ø³Ù„ÙŠ",
+    formStatus: "Ø§Ù„Ø­Ø§Ù„Ø©",
+    formVerification: "Ø§Ù„ØªØ­Ù‚Ù‚",
+    formLastCalibration: "Ø¢Ø®Ø± Ù…Ø¹Ø§ÙŠØ±Ø©",
+    formNextCalibration: "Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø© Ø§Ù„ØªØ§Ù„ÙŠØ©",
+    formLocation: "Ø§Ù„Ù…ÙˆÙ‚Ø¹/Ø§Ù„Ù‚Ø³Ù…",
+    formResponsible: "Ø§Ù„Ø´Ø®Øµ Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
+    btnSave: "Ø­ÙØ¸",
+    btnAdd: "Ø¥Ø¶Ø§ÙØ©",
+    btnClose: "Ø¥ØºÙ„Ø§Ù‚",
+    qrTitle: "Ø±Ù…Ø² QR",
+    qrHint: "Ø§Ø·Ø¨Ø¹ Ø±Ù…Ø² QR Ù„ØªØ«Ø¨ÙŠØªÙ‡ Ø¹Ù„Ù‰ Ø£Ø¨ÙˆØ§Ø¨ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª.",
+    adminTitle: "Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©",
+    adminReAuthText: "ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ Ù„Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©.",
+    adminPassword: "ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
+    btnVerify: "ØªØ­Ù‚Ù‚",
+    adminSessionRole: "Ø¯ÙˆØ± Ø§Ù„Ø¬Ù„Ø³Ø©",
+    adminLastLogin: "Ø¢Ø®Ø± Ø¯Ø®ÙˆÙ„",
+    adminAuthMethod: "Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø©",
+    adminStorage: "Ù…Ø®Ø²Ù† ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ù…Ø±ÙˆØ±",
+    adminDataSource: "Ù…ØµØ¯Ø± Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª",
+    adminUserMgmt: "Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†",
+    adminUserMgmtDesc: "Ø¥Ø¶Ø§ÙØ© Ø£Ùˆ ØªØ¹Ø¯ÙŠÙ„ Ø£Ùˆ Ø­Ø°Ù Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†.",
+    adminAddUser: "Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªØ®Ø¯Ù… Ø¬Ø¯ÙŠØ¯",
+    adminUsername: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+    adminDisplayName: "Ø§Ù„Ø§Ø³Ù… Ø§Ù„Ø¸Ø§Ù‡Ø±",
+    adminPasswordLabel: "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±",
+    adminRole: "Ø§Ù„Ø¯ÙˆØ±",
+    adminAddUserBtn: "Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªØ®Ø¯Ù…",
+    adminRolePerms: "Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø£Ø°ÙˆÙ†Ø§Øª Ø­Ø³Ø¨ Ø§Ù„Ø£Ø¯ÙˆØ§Ø±",
+    adminRolePermsDesc: "ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª Ø§Ù„ØªÙŠ ÙŠÙ…ÙƒÙ† Ù„ÙƒÙ„ Ø¯ÙˆØ± Ø¹Ø±Ø¶Ù‡Ø§.",
+    adminSecurity: "Ø£Ù…Ø§Ù† Ø§Ù„Ø¬Ù„Ø³Ø©",
+    adminSecurityDesc: "Ø³ØªÙØºÙ„Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø© Ø¥Ø°Ø§ Ù„Ù… ÙŠØªÙ… ØªÙ†ÙÙŠØ° Ø£ÙŠ Ù†Ø´Ø§Ø· Ø®Ù„Ø§Ù„ Ø§Ù„Ù…Ø¯Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©.",
+    adminInactivityTimeout: "Ù…Ù‡Ù„Ø© Ø¹Ø¯Ù… Ø§Ù„Ù†Ø´Ø§Ø·",
+    adminLogsTitle: "Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù†Ø´Ø§Ø·",
+    adminLogsDesc: "ØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„/Ø®Ø±ÙˆØ¬ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† ÙˆØ¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    btnRefresh: "ØªØ­Ø¯ÙŠØ«",
+    adminSaveBtn: "Ø­ÙØ¸ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª",
+    adminFooterNote: "ØªÙØ®Ø²Ù‘Ù† ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ù…Ø±ÙˆØ± Ø¨Ø´ÙƒÙ„ Ø¯Ø§Ø¦Ù… Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø§Ø¯Ù….",
+    adminCloseBtn: "Ø¥ØºÙ„Ø§Ù‚",
+    logFilterDelete: "Ø­Ø°Ù",
+    logFilterAddUser: "Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªØ®Ø¯Ù…",
+    logFilterDeleteUser: "Ø­Ø°Ù Ù…Ø³ØªØ®Ø¯Ù…",
+    adminRefreshBtn: "ØªØ­Ø¯ÙŠØ«",
+    manualTitle: "Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…",
+    manualSubtitle: "Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ­ÙƒÙ… ÙÙŠ Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ø³ØªÙ‡Ù„Ø§Ùƒ ÙˆÙ†ÙØ§ÙŠØ§Øª Ø§Ù„Ù…Ø·Ø¹Ù…",
+    compDataType: "Ù†ÙˆØ¹ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª",
+    compLastWeek: "Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù…Ø§Ø¶ÙŠ",
+    compThisWeek: "Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹",
+    compLastMonth: "Ø§Ù„Ø´Ù‡Ø± Ø§Ù„Ù…Ø§Ø¶ÙŠ",
+    compThisMonth: "Ù‡Ø°Ø§ Ø§Ù„Ø´Ù‡Ø±",
+    compLastYear: "Ø§Ù„Ø¹Ø§Ù… Ø§Ù„Ù…Ø§Ø¶ÙŠ",
+    compThisYear: "Ù‡Ø°Ø§ Ø§Ù„Ø¹Ø§Ù…",
+    compDiff: "Ø§Ù„ÙØ±Ù‚",
+    compTotalWaste: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª (ÙƒØº)",
+    compTotalProduction: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¥Ù†ØªØ§Ø¬",
+    compTurnstilePasses: "Ø¹Ø¨ÙˆØ± Ø§Ù„Ø¨ÙˆØ§Ø¨Ø©",
+    compStudentCount: "Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨",
+    compWastePerPerson: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„Ù„ÙØ±Ø¯ (ØºØ±Ø§Ù…)",
+    monthlyCompDesc: "Ù…Ù‚Ø§Ø±Ù†Ø© Ù‡Ø°Ø§ Ø§Ù„Ø´Ù‡Ø± Ù…Ø¹ Ø§Ù„Ø´Ù‡Ø± Ø§Ù„Ù…Ø§Ø¶ÙŠ. â†‘ Ø²ÙŠØ§Ø¯Ø©ØŒ â†“ Ø§Ù†Ø®ÙØ§Ø¶.Ø§Ù†Ø®ÙØ§Ø¶ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª ÙˆØ§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„Ù„ÙØ±Ø¯ (â†“) Ø¬ÙŠØ¯.",
+    yearlyCompDesc: "Ù…Ù‚Ø§Ø±Ù†Ø© Ù‡Ø°Ø§ Ø§Ù„Ø¹Ø§Ù… (Ù…Ù† Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„Ø³Ù†Ø© Ø­ØªÙ‰ Ø§Ù„Ø¢Ù†) Ù…Ø¹ Ù†ÙØ³ Ø§Ù„ÙØªØ±Ø© Ù…Ù† Ø§Ù„Ø¹Ø§Ù… Ø§Ù„Ù…Ø§Ø¶ÙŠ. â†‘ Ø²ÙŠØ§Ø¯Ø©ØŒ â†“ Ø§Ù†Ø®ÙØ§Ø¶.Ø§Ù†Ø®ÙØ§Ø¶ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª ÙˆØ§Ù„Ù†ÙØ§ÙŠØ§Øª Ù„Ù„ÙØ±Ø¯ (â†“) Ø¬ÙŠØ¯.",
+    monthNames: ["ÙŠÙ†Ø§ÙŠØ±","ÙØ¨Ø±Ø§ÙŠØ±","Ù…Ø§Ø±Ø³","Ø£Ø¨Ø±ÙŠÙ„","Ù…Ø§ÙŠÙˆ","ÙŠÙˆÙ†ÙŠÙˆ","ÙŠÙˆÙ„ÙŠÙˆ","Ø£ØºØ³Ø·Ø³","Ø³Ø¨ØªÙ…Ø¨Ø±","Ø£ÙƒØªÙˆØ¨Ø±","Ù†ÙˆÙÙ…Ø¨Ø±","Ø¯ÙŠØ³Ù…Ø¨Ø±"],
+    haccpColDate: "Ø§Ù„ØªØ§Ø±ÙŠØ®",
+    haccpColTime: "Ø§Ù„ÙˆÙ‚Øª",
+    haccpColDepot: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹",
+    haccpColTemp: "Ø¯Ø±Ø¬Ø© Ø§Ù„Ø­Ø±Ø§Ø±Ø© (Â°Ù…)",
+    haccpColHumidity: "Ø§Ù„Ø±Ø·ÙˆØ¨Ø© (%)",
+    haccpColNote: "Ù…Ù„Ø§Ø­Ø¸Ø©",
+    haccpColAction: "Ø¥Ø¬Ø±Ø§Ø¡",
+    dayNames: ["Ø§Ù„Ø§Ø«Ù†ÙŠÙ†", "Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡", "Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡", "Ø§Ù„Ø®Ù…ÙŠØ³", "Ø§Ù„Ø¬Ù…Ø¹Ø©"],
+    menuVariety: "Ù†ÙˆØ¹",
+    menuVariety1: "Ø§Ù„Ù†ÙˆØ¹ Ø§Ù„Ø£ÙˆÙ„",
+    menuVariety2: "Ø§Ù„Ù†ÙˆØ¹ Ø§Ù„Ø«Ø§Ù†ÙŠ",
+    menuVariety3: "Ø§Ù„Ù†ÙˆØ¹ Ø§Ù„Ø«Ø§Ù„Ø«",
+    menuVariety4: "Ø§Ù„Ù†ÙˆØ¹ Ø§Ù„Ø±Ø§Ø¨Ø¹",
+    menuVariety5: "Ø§Ù„Ù†ÙˆØ¹ Ø§Ù„Ø®Ø§Ù…Ø³",
+    menuPersonCount: "Ø¹Ø¯Ø¯ Ø§Ù„Ø£Ø´Ø®Ø§Øµ",
+    stockDeductionList: "Ù‚Ø§Ø¦Ù…Ø© Ø®ØµÙ… Ø§Ù„Ù…Ø®Ø²ÙˆÙ†",
+    total: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹",
+    inVarieties: "Ø£Ù†ÙˆØ§Ø¹",
+    person: "ÙØ±Ø¯",
+    weeklyGrandTotal: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ",
+    dailyAverage: "Ø§Ù„Ù…ØªÙˆØ³Ø· Ø§Ù„ÙŠÙˆÙ…ÙŠ",
+    avgPerPerson: "Ø§Ù„Ù…ØªÙˆØ³Ø· Ù„Ù„ÙØ±Ø¯",
+    totalPersonDays: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø´Ø®Ø§Øµ/Ø£ÙŠØ§Ù…",
+    colDay: "Ø§Ù„ÙŠÙˆÙ…",
+    colDate: "Ø§Ù„ØªØ§Ø±ÙŠØ®",
+    colPerson: "Ø§Ù„Ø£Ø´Ø®Ø§Øµ",
+    dailyMaterialCost: "ØªÙƒÙ„ÙØ© Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„ÙŠÙˆÙ…ÙŠØ©",
+    perPerson: "Ù„Ù„ÙØ±Ø¯",
+    ingredients: "Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª",
+    perPersonGram: "(ØºØ±Ø§Ù… Ù„Ù„ÙØ±Ø¯)",
+    colIngredient: "Ø§Ù„Ù…ÙƒÙˆÙ†",
+    colPerPerson: "/ÙØ±Ø¯",
+    colUnit: "Ø§Ù„ÙˆØ­Ø¯Ø©",
+    addIngredient: "+ Ø¥Ø¶Ø§ÙØ© Ù…ÙƒÙˆÙ†",
+    foodName: "Ø§Ø³Ù… Ø§Ù„Ø·Ø¨Ù‚",
+    allergen: "Ø§Ù„allingÙŠØ±Ø¬ÙŠÙ†",
+    recipePerPerson: "Ø§Ù„ÙˆØµÙØ© (Ù„Ù„ÙØ±Ø¯)",
+    devices: "Ø£Ø¬Ù‡Ø²Ø©",
+    chartMonthlyProduction: "الإنتاج الشهري (فرد)",
+    chartMonthlyPasses: "العبور الشهري (فرد)",
+    chartLastYearWaste: "الهدر من السنة الماضية (وجبات)",
+    chartMonthlyWasteKg: "النفايات الشهرية (كغ)",
+    chartMonthlyMealCount: "عدد الوجبات الشهرية",
+    chartMonthlyWasteRate: "نسبة النفايات الشهرية %",
+    chartMonthlyStudent: "عدد الطلاب الشهري",
+    chartWastePerPersonLabel: "النفايات لكل فرد (كغ/فرد)",
+    maliTablo: "Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ù…Ø§Ù„ÙŠ",
+    maliTabloSubtitle: "Ù…Ù„Ø®Øµ ØªÙƒØ§Ù„ÙŠÙ Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ©",
+    maliUnitPriceMissing: "Ø³Ø¹Ø± Ø§Ù„ÙˆØ­Ø¯Ø© Ù„Ù„Ù…Ø§Ø¯Ø© ØºÙŠØ± Ù…Ø­Ø¯Ø¯",
+    maliUnitPriceHint: "ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„ØªØ­Ø¯ÙŠØ¯ Ù…Ù† ØªØ¨ÙˆÙŠØ¨ Ø£Ø³Ø¹Ø§Ø± Ø§Ù„ÙˆØ­Ø¯Ø©",
+    weeklyTotal: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ",
+    categoryDistribution: "ØªÙˆØ²ÙŠØ¹ Ø§Ù„ÙØ¦Ø§Øª",
+    weeklyTotalList: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø§Ø­ØªÙŠØ§Ø¬Ø§Øª Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ©",
+    totalCost: "Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ©",
+    catMeat: "Ù…Ù†ØªØ¬Ø§Øª Ø§Ù„Ù„Ø­ÙˆÙ…",
+    catDairy: "Ù…Ù†ØªØ¬Ø§Øª Ø§Ù„Ø£Ù„Ø¨Ø§Ù†",
+    catLegumes: "Ø§Ù„Ø¨Ù‚ÙˆÙ„ÙŠØ§Øª Ø§Ù„Ø¬Ø§ÙØ©",
+    catSpices: "Ø§Ù„ØªÙˆØ§Ø¨Ù„",
+    catVegetable: "Ø§Ù„Ø®Ø¶Ø±ÙˆØ§Øª ÙˆØ§Ù„ÙÙˆØ§ÙƒÙ‡",
+    catOther: "Ø£Ø®Ø±Ù‰",
+    month1: "ÙŠÙ†Ø§ÙŠØ±", month2: "ÙØ¨Ø±Ø§ÙŠØ±", month3: "Ù…Ø§Ø±Ø³", month4: "Ø£Ø¨Ø±ÙŠÙ„",
+    month5: "Ù…Ø§ÙŠÙˆ", month6: "ÙŠÙˆÙ†ÙŠÙˆ", month7: "ÙŠÙˆÙ„ÙŠÙˆ", month8: "Ø£ØºØ³Ø·Ø³",
+    month9: "Ø³Ø¨ØªÙ…Ø¨Ø±", month10: "Ø£ÙƒØªÙˆØ¨Ø±", month11: "Ù†ÙˆÙÙ…Ø¨Ø±", month12: "Ø¯ÙŠØ³Ù…Ø¨Ø±",
+    menuListTitle: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+    totalDevices: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø¬Ù‡Ø²Ø©",
+    statusWorking: "ÙŠØ¹Ù…Ù„",
+    statusDefective: "Ù…Ø¹Ø·Ù„",
+    statusMaintenance: "ÙŠØ­ØªØ§Ø¬ ØµÙŠØ§Ù†Ø©",
+    statusScrap: "ÙŠØ¬Ø¨ ØªØ¬Ù‡ÙŠØ²Ø©",
+    calibrationValid: "Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø© ØµØ§Ù„Ø­Ø©",
+    calibrationApproaching: "Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø© ØªÙ‚ØªØ±Ø¨ (30 ÙŠÙˆÙ…)",
+    differentDepartments: "Ø£Ù‚Ø³Ø§Ù… Ù…Ø®ØªÙ„ÙØ©",
+    statusApproaching: "ÙŠÙ‚ØªØ±Ø¨",
+    statusExpired: "Ø§Ù†ØªÙ‡Øª Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ©",
+    statusNotDone: "Ù„Ù… ÙŠØªÙ…",
+    statusValid: "ØµØ§Ù„Ø­",
+    noDeviceFound: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø£Ø¬Ù‡Ø²Ø© ØªØ·Ø§Ø¨Ù‚ Ù…Ø¹Ø§ÙŠÙŠØ± Ø§Ù„ØªØµÙÙŠØ© Ù‡Ø°Ù‡.",
+    noDeviceRecord: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø£Ø¬Ù‡Ø²Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø© Ø¨Ø¹Ø¯.",
+    deviceCount: "Ø£Ø¬Ù‡Ø²Ø©",
+    deviceCountSuffix: " Ø£Ø¬Ù‡Ø²Ø©",
+    editDeviceTitle: "ØªØ¹Ø¯ÙŠÙ„ Ø¬Ù‡Ø§Ø² Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    newDeviceTitle: "Ø¬Ù‡Ø§Ø² Ù…Ø¹Ø§ÙŠØ±Ø© Ø¬Ø¯ÙŠØ¯",
+    kpiBeneficiary: "Ø§Ù„Ù…Ø³ØªÙÙŠØ¯ÙˆÙ†: ",
+    kpiNoRecordToday: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ø§Ù„ÙŠÙˆÙ…",
+    kpiAlertsCount: "ØªÙ†Ø¨ÙŠÙ‡Ø§Øª",
+    kpiAllValuesOk: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù‚ÙŠÙ… Ù…Ù‚Ø¨ÙˆÙ„Ø©",
+    kpiDeviceInAlarm: "Ø£Ø¬Ù‡Ø²Ø© ÙÙŠ Ø­Ø§Ù„Ø© Ø§Ù†Ø°Ø§Ø±",
+    kpiApproaching: "ØªÙ‚ØªØ±Ø¨",
+    kpiAllCalibrationsValid: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø§Øª ØµØ§Ù„Ø­Ø©",
+    filterAll: "Ø§Ù„ÙƒÙ„",
+    colDeviceName: "Ø§Ø³Ù… Ø§Ù„Ø¬Ù‡Ø§Ø²",
+    colBrandModel: "Ø§Ù„Ø¹Ù„Ø§Ù…Ø© Ø§Ù„ØªØ¬Ø§Ø±ÙŠØ©-Ø§Ù„Ø·Ø±Ø§Ø²",
+    colSerialNo: "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ØªØ³Ù„Ø³Ù„ÙŠ",
+    colDeviceStatus: "Ø­Ø§Ù„Ø© Ø§Ù„Ø¬Ù‡Ø§Ø²",
+    colCalibration: "Ø§Ù„Ù…Ø¹Ø§ÙŠØ±Ø©",
+    colLastCalibration: "Ø¢Ø®Ø± Ù…Ø¹Ø§ÙŠØ±Ø©",
+    colNextCalibration: "Ø§Ù„ØªØ§Ù„ÙŠØ©",
+    colDepartment: "Ø§Ù„Ù‚Ø³Ù…",
+    colResponsible: "Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
+    colNote: "Ù…Ù„Ø§Ø­Ø¸Ø©",
+    colAction: "Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡",
+    unitPriceList: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£Ø³Ø¹Ø§Ø±ÙˆØ­Ø¯Ø§Øª",
+    registeredProducts: "Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª Ø§Ù„Ù…Ø³Ø¬Ù„Ø©",
+    totalAmount: "Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ",
+    avgUnitPrice: "Ù…ØªÙˆØ³Ø· Ø³Ø¹Ø± Ø§Ù„ÙˆØ­Ø¯Ø©",
+    selectedYear: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©",
+    duplicateWarning: "Ù…Ù†ØªØ¬Ø§Øª Ø¨Ù‡Ø§ Ø³Ø¬Ù„Ø§Øª Ù…ÙƒØ±Ø±Ø©. Ù‚Ø¯ ØªØ­ØªÙˆÙŠ Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ø¹Ù„Ù‰ Ø£Ø®Ø·Ø§Ø¡.",
+    cleanDuplicates: "Ø­Ø°Ù ÙˆØ§Ø­Ø¯Ø§Ù‹ ØªÙ„Ùˆ Ø§Ù„Ø¢Ø®Ø±",
+    colProductName: "Ø§Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬",
+    colUnit: "Ø§Ù„ÙˆØ­Ø¯Ø©",
+    colUnitPrice: "Ø³Ø¹Ø± Ø§Ù„ÙˆØ­Ø¯Ø© (â‚º)",
+    colUnitEquals: "1 ÙˆØ­Ø¯Ø© =",
+    colYear: "Ø§Ù„Ø³Ù†Ø©",
+    noProductsThisYear: "Ù„Ù… ØªØªÙ… Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬Ø§Øª Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø³Ù†Ø© Ø¨Ø¹Ø¯.",
+    btnEdit: "ØªØ¹Ø¯ÙŠÙ„",
+    btnDelete: "Ø­Ø°Ù",
+    pageLabel: "ØµÙØ­Ø©",
+    totalProductsLabel: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹",
+    totalProductsSuffix: " Ù…Ù†ØªØ¬Ø§Øª",
+    priceYearNote: "Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ø­Ø³Ø¨ Ø§Ù„Ø³Ù†Ø©. Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø©: ÙŠØªÙ… Ù…Ø·Ø§Ø¨Ù‚Ø© Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹.",
+    btnAddNewProduct: "+ Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯",
+    btnDownloadCSV: "ØªÙ†Ø²ÙŠÙ„ CSV",
+    btnPrint: "Ø·Ø¨Ø§Ø¹Ø©",
+    btnUploadCSV: "ØªØ­Ù…ÙŠÙ„ CSV",
+    clickToSelectYear: "Ø§Ù†Ù‚Ø± Ù„Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø³Ù†Ø©",
+    selectYear: "Ø§Ø®ØªØ± Ø§Ù„Ø³Ù†Ø©",
+    dataInfoRecord: "Ø³Ø¬Ù„",
+    dataInfoProduction: "Ø¥Ù†ØªØ§Ø¬",
+    dataInfoWaste: "Ù†ÙØ§ÙŠØ§Øª",
+    portion: "ÙˆØ¬Ø¨Ø§Øª",
+    abnormalDays: "Ø£ÙŠØ§Ù… ØºÙŠØ± Ø·Ø¨ÙŠØ¹ÙŠØ©",
+    noRecordsToDisplay: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ù„Ù„Ø¹Ø±Ø¶.",
+    colYearLabel: "Ø§Ù„Ø³Ù†Ø©",
+    avgPortion400: "400 Ø¬Ø±Ø§Ù…",
+    recordsNot400: "Ø³Ø¬Ù„Ø§Øª Ù„ÙŠØ³Øª 400",
+    gram: " Ø¬Ø±Ø§Ù…",
+    personLabel: "Ø´Ø®Øµ",
+    last7RecordsPrev7: "Ø¢Ø®Ø± 7 Ø³Ø¬Ù„Ø§Øª / Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© 7",
+    tempAppropriate: "Ù…Ù†Ø§Ø³Ø¨",
+    tempLow: "Ù…Ù†Ø®ÙØ¶",
+    tempHigh: "Ù…Ø±ØªÙØ¹",
+    lowerLimit: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰: ",
+    upperLimit: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰: ",
+    unknownDepo: "ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ",
+    tempMin: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰: ",
+    tempAvg: "Ø§Ù„Ù…ØªÙˆØ³Ø·: ",
+    tempMax: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰: ",
+    humidity: "Ø§Ù„Ø±Ø·ÙˆØ¨Ø©: ",
+    depot: "Ù…Ø³ØªÙˆØ¯Ø¹",
+    selectedCount: " Ù…Ø­Ø¯Ø¯",
+    pageRecords: "ØµÙØ­Ø© ",
+    recordCount: " Ø³Ø¬Ù„)",
+    tempRecordsTitle: "Ø³Ø¬Ù„Ø§Øª Ø¯Ø±Ø¬Ø© Ø­Ø±Ø§Ø±Ø© Ø§Ù„ØªØ®Ø²ÙŠÙ† Ø§Ù„Ø¨Ø§Ø±Ø¯",
+    dateRangeLabel: " | Ø§Ù„ØªØ§Ø±ÙŠØ®:",
+    allDepots: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª",
+    colTime: "Ø§Ù„ÙˆÙ‚Øª",
+    colDepot: "Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹",
+    colTemperature: "Ø§Ù„Ø­Ø±Ø§Ø±Ø©",
+    colStatus: "Ø§Ù„Ø­Ø§Ù„Ø©",
+    depotTempRecordTitle: "Ø³Ø¬Ù„ Ø¯Ø±Ø¬Ø© Ø­Ø±Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹",
+    formDate: "Ø§Ù„ØªØ§Ø±ÙŠØ®",
+    formTime: "Ø§Ù„ÙˆÙ‚Øª",
+    formDepotName: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹",
+    formTemperature: "Ø§Ù„Ø­Ø±Ø§Ø±Ø© (Â°Ù…)",
+    tempPlaceholder: "0.0 (ÙŠÙ…ÙƒÙ† ØªØ±ÙƒÙ‡ ÙØ§Ø±ØºØ§Ù‹)",
+    formHumidity: "Ø§Ù„Ø±Ø·ÙˆØ¨Ø© (%)",
+    formNoteOptional: "Ø§Ø®ØªÙŠØ§Ø±ÙŠ",
+    deleteConfirm: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¬Ù„ØŸ",
+    deleteSelectedConfirm: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù ",
+    deleteSelectedConfirmSuffix: " Ø³Ø¬Ù„Ø§Øª Ù…Ø­Ø¯Ø¯Ø©ØŸ",
+    tempHistory: " Ø³Ø¬Ù„ Ø§Ù„Ø­Ø±Ø§Ø±Ø©",
+    weeklyAvgTempNote: "Ù…ØªÙˆØ³Ø· Ø¯Ø±Ø¬Ø§Øª Ø§Ù„Ø­Ø±Ø§Ø±Ø© Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠØ© â€” Ù…Ø¹ Ø®Ø·ÙˆØ· Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¹Ù„Ù‰ ÙˆØ§Ù„Ø£Ø¯Ù†Ù‰",
+    upperLimitLabel: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ (",
+    lowerLimitLabel: "Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰ (",
+    totalRecordCount: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø¬Ù„Ø§Øª",
+    totalWasteOil: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø²ÙŠØª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    avgAmountPerRecord: "Ù…ØªÙˆØ³Ø· Ø§Ù„ÙƒÙ…ÙŠØ© / Ø³Ø¬Ù„",
+    highestAmount: "Ø£Ø¹Ù„Ù‰ ÙƒÙ…ÙŠØ©",
+    lowestAmount: "Ø£Ø¯Ù†Ù‰ ÙƒÙ…ÙŠØ©",
+    oilTypeCount: "Ø¹Ø¯Ø¯ Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ø²ÙŠØª",
+    yearTotalSuffix: " Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹",
+    startDate: "Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©",
+    endDate: "Ø§Ù„Ù†Ù‡Ø§ÙŠØ©",
+    typeLabel: "Ø§Ù„Ù†ÙˆØ¹: ",
+    yearLabel: "Ø§Ù„Ø³Ù†Ø©: ",
+    activeFilterLabel: "Ø§Ù„ÙÙ„ØªØ± Ø§Ù„Ù†Ø´Ø·: ",
+    noFilterMessage: "Ø¨Ø¯ÙˆÙ† ÙÙ„ØªØ± â€” Ø¹Ø±Ø¶ Ø¬Ù…ÙŠØ¹ Ø³Ø¬Ù„Ø§Øª Ø²ÙŠØª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª.",
+    noWasteOilRecord: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ø²ÙŠØª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª Ø¨Ø¹Ø¯.",
+    noMatchingFilterRecord: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª ØªØ·Ø§Ø¨Ù‚ Ù…Ø¹Ø§ÙŠÙŠØ± Ø§Ù„ÙÙ„ØªØ±.",
+    editWasteOilRecord: "ØªØ¹Ø¯ÙŠÙ„ Ø³Ø¬Ù„ Ø²ÙŠØª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    newWasteOilRecord: "Ø³Ø¬Ù„ Ø²ÙŠØª Ù†ÙØ§ÙŠØ§Øª Ø¬Ø¯ÙŠØ¯",
+    wasteOilChartLabel: "Ø²ÙŠØª Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    previousYearLabel: "Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©",
+    undefinedType: "ØºÙŠØ± Ù…Ø­Ø¯Ø¯",
+    totalWastePackaging: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØ¹Ø¨Ø¦Ø©",
+    wasteTypeCount: "Ø¹Ø¯Ø¯ Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    noWastePackagingRecord: "Ù„Ù… ÙŠØªÙ… Ø¥Ø¯Ø®Ø§Ù„ Ø³Ø¬Ù„Ø§Øª Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØ¹Ø¨Ø¦Ø© Ø¨Ø¹Ø¯.",
+    noMatchingFilterPackage: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª ØªØ·Ø§Ø¨Ù‚ Ù…Ø¹Ø§ÙŠÙŠØ± Ø§Ù„ÙÙ„ØªØ±.",
+    noFilterMessagePackaging: "Ø¨Ø¯ÙˆÙ† ÙÙ„ØªØ± â€” Ø¹Ø±Ø¶ Ø¬Ù…ÙŠØ¹ Ø³Ø¬Ù„Ø§Øª Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØ¹Ø¨Ø¦Ø©.",
+    editWastePackagingRecord: "ØªØ¹Ø¯ÙŠÙ„ Ø³Ø¬Ù„ Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØ¹Ø¨Ø¦Ø©",
+    newWastePackagingRecord: "Ø³Ø¬Ù„ Ù†ÙØ§ÙŠØ§Øª ØªØ¹Ø¨Ø¦Ø© Ø¬Ø¯ÙŠØ¯",
+    wastePackagingChartLabel: "Ù†ÙØ§ÙŠØ§Øª Ø§Ù„ØªØ¹Ø¨Ø¦Ø©",
+    chartDetailEmpty: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø³Ø¬Ù„Ø§Øª Ù„Ù‡Ø°Ù‡ Ø§Ù„ÙØªØ±Ø©.",
+    chartClose: "Ø¥ØºÙ„Ø§Ù‚",
+    chartColProduction: "Ø§Ù„Ø¥Ù†ØªØ§Ø¬",
+    chartColPasses: "Ø§Ù„Ù…Ø±ÙˆØ±",
+    chartColWaste: "Ø§Ù„Ù†ÙØ§ÙŠØ§Øª",
+    chartColStudent: "Ø§Ù„Ø·Ù„Ø§Ø¨",
+    chartColFoodType: "Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù…",
+    chartProductionVsTurnstile: "Ø§Ù„ÙØ±Ù‚ Ø¨ÙŠÙ† Ø§Ù„Ø¥Ù†ØªØ§Ø¬ ÙˆØ§Ù„Ù…Ø±ÙˆØ± Ø¹Ø¨Ø± Ø§Ù„Ø¯ÙˆØ§Ø±",
+    chartStaffTotal: "Ø§Ù„Ù‡ÙŠØ¦Ø© Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠØ© ÙˆØ§Ù„Ø¥Ø¯Ø§Ø±ÙŠØ© + Ø£Ø³Ø§ØªØ°Ø©(SK)",
+    yearFilterLabel: "Ø§Ù„Ø³Ù†Ø©:",
+    monthFilterLabel: "Ø§Ù„Ø´Ù‡Ø±:",
+    chartSelectYear: "Ø§Ø®ØªÙŠØ§Ø±",
+    year1Label: "Ø§Ù„Ø³Ù†Ø© 1:",
+    year2Label: "Ø§Ù„Ø³Ù†Ø© 2:",
+    noComparison: "Ø¨Ø¯ÙˆÙ† Ù…Ù‚Ø§Ø±Ù†Ø©",
+    newLabel: "Ø¬Ø¯ÙŠØ¯",
+    foodTypeLabel: "Ù†ÙˆØ¹ Ø§Ù„Ø·Ø¹Ø§Ù…",
+    productionLabel: " Ø§Ù„Ø¥Ù†ØªØ§Ø¬",
+    wasteKgLabel: " Ù†ÙØ§ÙŠØ§Øª (ÙƒØ¬Ù…)",
+    wasteGrPortionLabel: " Ù†ÙØ§ÙŠØ§Øª (Ø¬Ø±Ø§Ù…/ÙˆØ¬Ø¨Ø©)",
+    diffKgLabel: "Ø§Ù„ÙØ±Ù‚ (ÙƒØ¬Ù…)",
+    totalRow: "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹",
+    registeredRate: "Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„Ù…Ø­ÙÙˆØ¸: ",
+    unsavedChanges: " (ØªØºÙŠÙŠØ±Ø§Øª ØºÙŠØ± Ù…Ø­ÙÙˆØ¸Ø©)",
+    kpiTotalStudentSpending: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ù„Ø§Ø¨",
+    kpiTotalStaffSpending: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†",
+    kpiAvgMonthlyStudentSpending: "Ù…ØªÙˆØ³Ø· Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ø´Ù‡Ø±ÙŠØ©",
+    kpiAvgMonthlyStaffSpending: "Ù…ØªÙˆØ³Ø· Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† Ø§Ù„Ø´Ù‡Ø±ÙŠØ©",
+    kpiTotalStudents: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø·Ù„Ø§Ø¨",
+    kpiTotalStaff: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†",
+    kpiHighestStudentMonth: "Ø£Ø¹Ù„Ù‰ Ø´Ù‡Ø± Ù„Ù„Ø·Ù„Ø§Ø¨",
+    kpiHighestStaffMonth: "Ø£Ø¹Ù„Ù‰ Ø´Ù‡Ø± Ù„Ù„Ù…ÙˆØ¸ÙÙŠÙ†",
+    kpiTotalMealSpending: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ø¹Ø§Ù…",
+    kpiAvgMonthlyMealSpending: "Ù…ØªÙˆØ³Ø· Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ø¹Ø§Ù… Ø§Ù„Ø´Ù‡Ø±ÙŠØ©",
+    kpiTotalMealsProduced: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø·Ø¹Ø§Ù… Ø§Ù„Ù…Ù†ØªØ¬",
+    kpiHighestMealMonth: "Ø£Ø¹Ù„Ù‰ Ø´Ù‡Ø± Ù„Ù„Ø·Ø¹Ø§Ù…",
+    chartStudentSpending: "Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ (â‚º)",
+    chartStaffSpending: "Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† (â‚º)",
+    chartMealSpending: "Ù…ØµØ±ÙˆÙØ§Øª Ø§Ù„Ø·Ø¹Ø§Ù… (â‚º)",
+    noRecordsYet: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ø¨Ø¹Ø¯.",
+    invalidRate: "ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ù…Ø¹Ø¯Ù„ ØµØ§Ù„Ø­!",
+    rateSaved: "ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ø¹Ø¯Ù„: ",
+    menuStatusDraft: "Ù…Ø³ÙˆØ¯Ø©",
+    menuStatusPending: "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯",
+    menuStatusApproved: "Ù…Ø¹ØªÙ…Ø¯",
+    menuStatusRejected: "Ù…Ø±ÙÙˆØ¶",
+    menuApprove: "Ø§Ø¹ØªÙ…Ø§Ø¯ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+    menuApproveDisabled: "Ù„Ù… ÙŠØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ù„Ù„Ø§Ø¹ØªÙ…Ø§Ø¯ Ø¨Ø¹Ø¯. Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ¶ØºØ· Ø§Ù„Ù… nutrition Ø¹Ù„Ù‰ \"ØªÙ‚Ø¯ÙŠÙ… Ù„Ù„Ø§Ø¹ØªÙ…Ø§Ø¯\" ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯ Ù…Ù† Ù‡Ù†Ø§.",
+    menuReject: "Ø±ÙØ¶ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ù…Ø¹ Ø§Ù„ØªØ¨Ø±ÙŠØ±",
+    menuRejectDisabled: "Ù„Ù… ÙŠØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ù„Ù„Ø§Ø¹ØªÙ…Ø§Ø¯ Ø¨Ø¹Ø¯. Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ¶ØºØ· Ø§Ù„Ù… nutrition Ø¹Ù„Ù‰ \"ØªÙ‚Ø¯ÙŠÙ… Ù„Ù„Ø§Ø¹ØªÙ…Ø§Ø¯\" ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø±ÙØ¶ Ù…Ù† Ù‡Ù†Ø§.",
+    menuPendingCount: " Ù‚ÙˆØ§Ø¦Ù… Ø£ weeks ØªÙ†ØªØ¸Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø°Ù‡Ø§Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù…ØªØ£Ø®Ø± ÙˆØ§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯.",
+    menuNotApproved: "Ù‚Ø§Ø¦Ù…Ø© Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ù„Ù… ÙŠØªÙ… Ø§Ø¹ØªÙ…Ø§Ø¯Ù‡Ø§ Ù…Ù† Ù‚ÙØ¨ÙÙ„ Ù…Ù‡Ù†Ø¯Ø³ Ø§Ù„Ø£ØºØ°ÙŠØ© Ø¨Ø¹Ø¯.",
+    menuRejected: "ØªÙ… Ø±ÙØ¶ Ù‡Ø°Ù‡ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+    menuRejectedSuffix: ". ÙŠÙ…ÙƒÙ† Ù„Ù„Ù… nutrition Ø§Ù„ØªØµØ­ÙŠØ­ ÙˆØ¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªÙ‚Ø¯ÙŠÙ….",
+    menuAwaitingApproval: "Ù‡Ø°Ù‡ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø¹ØªÙ…Ø§Ø¯. Ø³ØªÙÙˆØ¶Ø¹ Ø¹Ù„Ø§Ù…Ø© \"ØºÙŠØ± Ù…Ø¹ØªÙ…Ø¯Ø©\" ÙÙŠ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¥Ù†ØªØ§Ø¬.",
+    noteLabel: "Ù…Ù„Ø§Ø­Ø¸Ø© ",
+    deleteNote: "Ø­Ø°Ù Ù‡Ø°Ù‡ Ø§Ù„Ù…Ù„Ø§Ø­Ø¸Ø©",
+    addNote: "Ø¥Ø¶Ø§ÙØ© Ù…Ù„Ø§Ø­Ø¸Ø© Ø¬Ø¯ÙŠØ¯Ø©",
+    mealPickerTitle: "Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø·Ø¹Ø§Ù…",
+    clearLabel: "ğŸ—‘ Ù…Ø³Ø­",
+    searchMealPlaceholder: "Ø§Ù„Ø¨Ø­Ø« Ø¹Ù† Ø·Ø¹Ø§Ù…...",
+    noMatchingMeal: "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø·Ø¹Ø§Ù… Ù…Ø·Ø§Ø¨Ù‚.",
+    varietyLabel: " ØµÙ†Ù: ",
+    addRecord: "Ø¥Ø¶Ø§ÙØ© Ø³Ø¬Ù„ Ø¬Ø¯ÙŠØ¯",
+    editRecord: "ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø³Ø¬Ù„",
+    btnUpdate: "ØªØ­Ø¯ÙŠØ«",
+    recordAdded: "ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø³Ø¬Ù„ Ø¨Ù†Ø¬Ø§Ø­.",
+    recordUpdated: "ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø³Ø¬Ù„ Ø¨Ù†Ø¬Ø§Ø­.",
+    recordDeleted: "ØªÙ… Ø­Ø°Ù Ø§Ù„Ø³Ø¬Ù„.",
+    allRecordsDeleted: "ØªÙ… Ø­Ø°Ù Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø³Ø¬Ù„Ø§Øª.",
+    selectedRecordsDeleted: "ØªÙ… Ø­Ø°Ù Ø§Ù„Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©.",
+    noRecordToDelete: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ù„Ù„Ø­Ø°Ù.",
+    noSelectedRecord: "Ù„Ù… ÙŠØªÙ… ØªØ­Ø¯ÙŠØ¯ Ø£ÙŠ Ø³Ø¬Ù„.",
+    deleteAllConfirm: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ø£Ù†Ùƒ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø³Ø¬Ù„Ø§ØªØŸ\nÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡!",
+    deleteFoodConfirm: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ø£Ù†Ùƒ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø·Ø¹Ø§Ù…ØŸ",
+    selected: " Ù…Ø­Ø¯Ø¯",
+    negMeals: "Ø¹Ø¯Ø¯ Ø§Ù„ÙˆØ¬Ø¨Ø§Øª Ø§Ù„Ù…Ù†ØªØ¬Ø© Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø³Ø§Ù„Ø¨Ø§Ù‹.",
+    negTurnstile: "Ø¹Ø¯Ø¯ Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ù…Ø±ÙˆØ± Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø³Ø§Ù„Ø¨Ø§Ù‹.",
+    negStaff: "Ø¹Ø¯Ø¯ Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø³Ø§Ù„Ø¨Ø§Ù‹.",
+    negPortion: "ÙƒÙ…ÙŠØ© Ø§Ù„Ø­ØµØ© Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ØªÙƒÙˆÙ† Ø³Ø§Ù„Ø¨Ø©.",
+    negStudent: "Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø§Ø¨ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø³Ø§Ù„Ø¨Ø§Ù‹.",
+    unsavedConfirm: "Ù‡Ù†Ø§Ùƒ ØªØºÙŠÙŠØ±Ø§Øª ØºÙŠØ± Ù…Ø­ÙÙˆØ¸Ø©. Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ø£Ù†Ùƒ ØªØ±ÙŠØ¯ Ø§Ù„Ø¥ØºÙ„Ø§Ù‚ØŸ",
+    selectUser: "ÙŠØ±Ø¬Ù‰ ØªØ­Ø¯ÙŠØ¯ Ù…Ø³ØªØ®Ø¯Ù….",
+    wrongCredentials: "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.",
+    tooManyAttempts: "Ù…Ø­Ø§ÙˆÙ„Ø§Øª ÙƒØ«ÙŠØ±Ø© Ø¬Ø¯Ø§Ù‹. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±.",
+    editable: "Ù‚Ø§Ø¨Ù„ Ù„Ù„ØªØ¹Ø¯ÙŠÙ„",
+    fixed: "Ø«Ø§Ø¨Øª",
+    menuSentForApproval: "ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ù„Ù„Ù…ÙˆØ§ÙÙ‚Ø©. ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ù…ÙˆØ§ÙÙ‚Ø© Ù…Ù‡Ù†Ø¯Ø³ Ø§Ù„Ø£ØºØ°ÙŠØ©/Ø§Ù„Ù…Ø¯ÙŠØ±.",
+    menuApproved: "ØªÙ…Øª Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø© Ø¹Ù„Ù‰ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©.",
+    menuRejectedMsg: "ØªÙ… Ø±ÙØ¶ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ù…Ø¹ Ø§Ù„ØªØ¨Ø±ÙŠØ±.",
+    menuDraftSaved: "ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© ÙƒÙ…Ø³ÙˆØ¯Ø©.",
+    menuCleared: "ØªÙ… Ù…Ø³Ø­ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©.",
+    monthShort1: "ÙŠÙ†Ø§ÙŠØ±",
+    monthShort2: "ÙØ¨Ø±Ø§ÙŠØ±",
+    monthShort3: "Ù…Ø§Ø±Ø³",
+    monthShort4: "Ø£Ø¨Ø±ÙŠÙ„",
+    monthShort5: "Ù…Ø§ÙŠÙˆ",
+    monthShort6: "ÙŠÙˆÙ†ÙŠÙˆ",
+    monthShort7: "ÙŠÙˆÙ„ÙŠÙˆ",
+    monthShort8: "Ø£ØºØ³Ø·Ø³",
+    monthShort9: "Ø³Ø¨ØªÙ…Ø¨Ø±",
+    monthShort10: "Ø£ÙƒØªÙˆØ¨Ø±",
+    monthShort11: "Ù†ÙˆÙÙ…Ø¨Ø±",
+    monthShort12: "Ø¯ÙŠØ³Ù…Ø¨Ø±"
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
     loginFormSub: "Anmelden",
     loginUsername: "Benutzername",
-    loginSelectUser: "Benutzer auswählen",
+    loginSelectUser: "Benutzer auswÃ¤hlen",
     loginPassword: "Passwort",
     loginBtn: "Anmelden",
     loginHint: "Sie erhalten Ihr Passwort von Ihrem Administrator",
-    loginFeature1: "Menüplanung, tägliche Produktion, Verbrauch & Abfallverfolgung",
+    loginFeature1: "MenÃ¼planung, tÃ¤gliche Produktion, Verbrauch & Abfallverfolgung",
     loginFeature2: "Detaillierte Berichte",
     loginFeature3: "Live-Dashboard & Diagramme",
-    menuLabel: "Menü",
-    headerSubtitle: "Ernährungsdienste-Verwaltungssystem",
+    menuLabel: "MenÃ¼",
+    headerSubtitle: "ErnÃ¤hrungsdienste-Verwaltungssystem",
     btnLogout: "Abmelden",
-    btnPrev: "Zurück",
+    btnPrev: "ZurÃ¼ck",
     btnNext: "Weiter",
     loading: "Laden...",
     loadingText: "Daten werden synchronisiert...",
-    loadingSub: "Supabase-Verbindung wird geprüft",
-    loadingSkip: "Klicken zum Überspringen",
+    loadingSub: "Supabase-Verbindung wird geprÃ¼ft",
+    loadingSkip: "Klicken zum Ãœberspringen",
     versionLabel: "Anwendungsversion",
     sidebarPanel: "Dashboard",
-    sidebarMenu: "Wochenmenü",
+    sidebarMenu: "WochenmenÃ¼",
     sidebarRecords: "Aufzeichnungen",
     sidebarReport: "Bericht",
     sidebarHaccp: "Lebensmittelsicherheit",
     sidebarCalibration: "Kalibrierung",
-    sidebarOil: "Altöl",
+    sidebarOil: "AltÃ¶l",
     sidebarPackaging: "Verpackungsabfall",
     sidebarCharts: "Diagramme",
     sidebarYearly: "Jahresvergleich",
     sidebarSpending: "Ausgaben",
-    sidebarUnitPrice: "Stückpreise",
+    sidebarUnitPrice: "StÃ¼ckpreise",
     sidebarDownload: "Alle herunterladen",
     sidebarBackup: "Bei Supabase sichern",
     sidebarRestore: "Von Supabase wiederherstellen",
@@ -14445,19 +14469,19 @@ var I18N = {
     dashboardPrintPdf: "PDF drucken",
     kpiTotalRecords: "Gesamte Produktions Tage",
     kpiTodayProduction: "Heutige Produktion",
-    kpiHaccpAlarm: "Kühllager-Temperaturalarm",
+    kpiHaccpAlarm: "KÃ¼hllager-Temperaturalarm",
     kpiCalibrationAlarm: "Kalibrierungsalarm",
     kpiAvgWaste: "Durchschn. Abfall (kg)",
-    kpiTotalPasses: "Gesamte Drehkreuzdurchgänge",
+    kpiTotalPasses: "Gesamte DrehkreuzdurchgÃ¤nge",
     kpiTotalWaste: "Gesamter Abfall (kg)",
     kpiWasteRate: "Abfallquote",
     weeklyPrevBtn: "Vorherige Woche",
     weeklySummary: "Wochenzusammenfassung",
-    weeklyNextBtn: "Nächste Woche",
+    weeklyNextBtn: "NÃ¤chste Woche",
     weeklyBadge: "Diese Woche",
     dailyPrevBtn: "Vorheriger Tag",
     dailySummary: "Tagesdetails",
-    dailyNextBtn: "Nächster Tag",
+    dailyNextBtn: "NÃ¤chster Tag",
     weeklyCompTitle: "Wochenvergleich",
     monthlyCompTitle: "Monatsvergleich",
     monthlyBadge: "Dieser Monat",
@@ -14466,118 +14490,118 @@ var I18N = {
     anomalyBadge: "Anormale Abfaltage",
     lastRecordsTitle: "Letzte Aufzeichnungen",
     dashboardGoToRecords: "Zu den Aufzeichnungen",
-    emptyDashboard: "Noch keine Einträge...",
+    emptyDashboard: "Noch keine EintrÃ¤ge...",
     formulaTitle: "ABFALLBERECHNUNGSFORMEL",
     recordsEntryBtn: "Produktion & Verbrauch eingeben",
     recordsImportBtn: "Importieren",
     recordsPrintPdf: "PDF",
     recordsCsvBtn: "CSV herunterladen",
-    recordsDeleteBtn: "Ausgewählte löschen",
+    recordsDeleteBtn: "AusgewÃ¤hlte lÃ¶schen",
     emptyRecords: "Keine Aufzeichnungen gefunden.",
     thDate: "Datum",
     thProducedPerson: "Hergestellte Mahlzeiten (Person)",
     thWaste10: "10% Abfall",
-    thBeneficiary: "Ernährungsdienst-Nutzer",
+    thBeneficiary: "ErnÃ¤hrungsdienst-Nutzer",
     thPortionGr: "Portion (g)",
     thWasteKg: "Abfall (kg)",
     thWastedPortion: "Entsorgt (Portionen)",
     thFoodType: "Essenstyp",
     thAction: "Aktion",
-    thAcademicStaff: "Akademisches & Verwaltungspersonal über Drehkreuz",
-    thStudentCount: "Studierende über Drehkreuz",
-    thBeneficiaryTotal: "Gesamte Ernährungsdienst-Nutzer",
-    sksStaff: "SKS-Ernährungsdienst-Personal",
+    thAcademicStaff: "Akademisches & Verwaltungspersonal Ã¼ber Drehkreuz",
+    thStudentCount: "Studierende Ã¼ber Drehkreuz",
+    thBeneficiaryTotal: "Gesamte ErnÃ¤hrungsdienst-Nutzer",
+    sksStaff: "SKS-ErnÃ¤hrungsdienst-Personal",
     summaryReport: "Zusammenfassungsbericht",
-    reportPdfBtn: "PDF öffnen",
+    reportPdfBtn: "PDF Ã¶ffnen",
     allRecordsPrint: "Alle Aufzeichnungen (Druckansicht)",
     rTotalRecords: "Gesamtzahl der Aufzeichnungen",
     rTotalMeals: "Gesamtzahl hergestellter Mahlzeiten",
     rTotalWaste10: "Gesamter 10%-Abfall",
     rTotalAfterWaste: "Mahlzeiten nach 10%-Abfall",
-    rTotalTurnstile: "Gesamte Drehkreuzdurchgänge",
-    rTotalBeneficiary: "Gesamte Ernährungsdienst-Nutzer",
+    rTotalTurnstile: "Gesamte DrehkreuzdurchgÃ¤nge",
+    rTotalBeneficiary: "Gesamte ErnÃ¤hrungsdienst-Nutzer",
     rTotalStaff: "Gesamtes SKS-Personal",
-    rPortionSize: "Portionsgröße (g)",
+    rPortionSize: "PortionsgrÃ¶ÃŸe (g)",
     rTotalPortion: "Gesamtportionen (g)",
     rWastedPortion: "Entsorgte Portionen",
-    rMaxWeeklyBeneficiary: "Höchste wöchentliche Nutzeranzahl",
+    rMaxWeeklyBeneficiary: "HÃ¶chste wÃ¶chentliche Nutzeranzahl",
     rTotalWasteKg: "Gesamte Abfallmenge (kg)",
     rAvgWasteKg: "Durchschn. Abfallmenge (kg)",
     rTotalStudents: "Gesamte Studierendenzahl",
-    rMaxWaste: "Höchster Abfall (kg)",
+    rMaxWaste: "HÃ¶chster Abfall (kg)",
     rMinWaste: "Niedrigster Abfall (kg)",
     rWasteTrend: "Abfalltrend (letzte 7 Tage)",
     rBeneficiaryTrend: "Nutzertrend (letzte 7 Tage)",
     wasteByFoodTitle: "Abfallanalyse nach Essenstyp",
     wasteByFoodEmpty: "Keine Aufzeichnungen mit Essenstyp-Daten gefunden.",
-    wasteByFoodRecords: "Anzahl Einträge",
+    wasteByFoodRecords: "Anzahl EintrÃ¤ge",
     wasteByFoodRate: "Abfallquote",
     wasteByFoodPerPerson: "Abfall pro Person (kg)",
     wsProducedMeal: "Mahlzeiten produziert (Pers.)",
-    wsTotalPasses: "Gesamte Durchgänge",
+    wsTotalPasses: "Gesamte DurchgÃ¤nge",
     wsTurnstile: "Drehkreuz",
     wsStaffSKS: "Verpflegungspersonal",
     wsWasteAmount: "Abfallmenge",
-    wsWastedPortion: "In den Müll",
-    wsStudents: "Ernährungsstud.",
-    wsNoRecordsYet: "Noch keine Einträge",
-    wsNoRecordThisWeek: "Keine Einträge diese Woche",
+    wsWastedPortion: "In den MÃ¼ll",
+    wsStudents: "ErnÃ¤hrungsstud.",
+    wsNoRecordsYet: "Noch keine EintrÃ¤ge",
+    wsNoRecordThisWeek: "Keine EintrÃ¤ge diese Woche",
     wsNoRecordToday: "Kein Eintrag",
     wsTodayDetail: "Heutige Details",
     wsDailyDetail: "Tagesdetails",
     wsWaste: "Verlust",
     wsPortion: "Portion",
     wsProduced: "Produziert",
-    wsTurnstileCount: "Drehkreuzgänge",
+    wsTurnstileCount: "DrehkreuzgÃ¤nge",
     wsStaffCount: "Personal",
-    menuTitle: "Wochen-Menüliste",
+    menuTitle: "Wochen-MenÃ¼liste",
     menuStatusBadge: "Status",
     menuSaveBtn: "Speichern",
     menuSendBtn: "Zur Genehmigung senden",
     menuApproveBtn: "Genehmigen",
     menuRejectBtn: "Ablehnen",
-    menuWithdrawBtn: "Genehmigung zurückziehen",
+    menuWithdrawBtn: "Genehmigung zurÃ¼ckziehen",
     menuClearBtn: "Tabelle leeren",
     menuPrintBtn: "Drucken",
     menuFoodListBtn: "Speisekarte",
     menuFoodListUploadBtn: "CSV hochladen",
     menuFoodListCsvBtn: "CSV herunterladen",
-    menuWarningPrefix: "Nicht genehmigtes Menü:",
-    menuWarningText: "Das Menü dieser Woche wurde vom Lebensmitteltechnologen noch nicht genehmigt.",
+    menuWarningPrefix: "Nicht genehmigtes MenÃ¼:",
+    menuWarningText: "Das MenÃ¼ dieser Woche wurde vom Lebensmitteltechnologen noch nicht genehmigt.",
     menuHintText: "Essensnamen eingeben...",
     productNeedsTitle: "Produktbedarfsliste",
-    weeklyNeedsTitle: "Wöchentliche Gesamtbedarfsliste",
+    weeklyNeedsTitle: "WÃ¶chentliche Gesamtbedarfsliste",
     foodListTitle: "Speisekarte",
-    modalRejectMenu: "Menü ablehnen",
+    modalRejectMenu: "MenÃ¼ ablehnen",
     modalRejectDesc: "Ablehnungsgrund ist erforderlich.",
     menuRejectConfirm: "Ablehnen",
     haccpTitle: "Lebensmittelsicherheitsmanagement",
     haccpCsvBtn: "CSV herunterladen",
-    haccpColdStorage: "Kühllager-Temperaturaufzeichnungen",
+    haccpColdStorage: "KÃ¼hllager-Temperaturaufzeichnungen",
     haccpNewBtn: "Neuer Eintrag",
     haccpDepotBtn: "Lagerhausnamen",
-    haccpDepoQrNote: "Sie können Lagerhausnamen bearbeiten und mit der QR-Schaltfläche QR-Codes für jedes Lagerhaus generieren.",
+    haccpDepoQrNote: "Sie kÃ¶nnen Lagerhausnamen bearbeiten und mit der QR-SchaltflÃ¤che QR-Codes fÃ¼r jedes Lagerhaus generieren.",
     haccpModalTitle: "Neuer Eintrag",
     filterDepot: "Lagerhausfilter:",
     filterAll: "Alle",
     filterDateRange: "Zeitraum:",
-    emptyHaccp: "Noch keine Temperatureinträge vorhanden.",
-    btnDeleteSelectedHaccp: "Ausgewählte löschen",
+    emptyHaccp: "Noch keine TemperatureintrÃ¤ge vorhanden.",
+    btnDeleteSelectedHaccp: "AusgewÃ¤hlte lÃ¶schen",
     btnPdf: "PDF",
     depoNamesTitle: "Lagerhausnamen",
     oilNewBtn: "Neuer Eintrag",
     oilListBtn: "Liste",
-    oilFilterTitle: "Altöl-Filter",
-    filterOilType: "Öltyp:",
-    btnReset: "Zurücksetzen",
-    oilSummaryTitle: "Altöl-Zusammenfassung",
-    oilChartTitle: "Altöl-Diagramme",
-    oilChartSubtitle: "Monatliche Altöl-Menge (Liter)",
-    oilChartEmpty: "Diagramme werden angezeigt, wenn Altöleinträge erfasst werden",
-    oilChartNote: "Monatliche Altöl-Summen nach Datum, Öltyp und Jahresfilter",
-    oilRecordsTitle: "Altöl-Aufzeichnungen",
-    oilModalTitle: "Altöl-Eintrag",
-    emptyOil: "Noch keine Altöleinträge vorhanden.",
+    oilFilterTitle: "AltÃ¶l-Filter",
+    filterOilType: "Ã–ltyp:",
+    btnReset: "ZurÃ¼cksetzen",
+    oilSummaryTitle: "AltÃ¶l-Zusammenfassung",
+    oilChartTitle: "AltÃ¶l-Diagramme",
+    oilChartSubtitle: "Monatliche AltÃ¶l-Menge (Liter)",
+    oilChartEmpty: "Diagramme werden angezeigt, wenn AltÃ¶leintrÃ¤ge erfasst werden",
+    oilChartNote: "Monatliche AltÃ¶l-Summen nach Datum, Ã–ltyp und Jahresfilter",
+    oilRecordsTitle: "AltÃ¶l-Aufzeichnungen",
+    oilModalTitle: "AltÃ¶l-Eintrag",
+    emptyOil: "Noch keine AltÃ¶leintrÃ¤ge vorhanden.",
     ambalajNewBtn: "Neuer Eintrag",
     ambalajListBtn: "Liste",
     packagingFilterTitle: "Verpackungsabfall-Filter",
@@ -14585,65 +14609,65 @@ var I18N = {
     packagingSummaryTitle: "Verpackungsabfall-Zusammenfassung",
     packagingChartTitle: "Verpackungsabfall-Diagramme",
     packagingChartSubtitle: "Monatliche Verpackungsabfall-Menge (kg)",
-    packagingChartEmpty: "Diagramme werden angezeigt, wenn Verpackungsabfälle erfasst werden",
+    packagingChartEmpty: "Diagramme werden angezeigt, wenn VerpackungsabfÃ¤lle erfasst werden",
     packagingChartNote: "Monatliche Verpackungsabfall-Summen nach Datum, Abfalltyp und Jahresfilter (kg)",
     packagingRecordsTitle: "Verpackungsabfall-Aufzeichnungen",
     packagingModalTitle: "Verpackungsabfall-Eintrag",
-    emptyPackaging: "Noch keine Verpackungsabfall-Einträge vorhanden.",
-    kalibrasyonNewBtn: "Neues Gerät",
+    emptyPackaging: "Noch keine Verpackungsabfall-EintrÃ¤ge vorhanden.",
+    kalibrasyonNewBtn: "Neues GerÃ¤t",
     kalibrasyonListBtn: "Liste",
     kalibrasyonCsvBtn: "CSV herunterladen",
     calibrationSummary: "Kalibrierungszusammenfassung",
-    calibrationDevices: "Zu kalibrierende Geräte",
-    calibrationModalTitle: "Gerät zur Kalibrierung",
+    calibrationDevices: "Zu kalibrierende GerÃ¤te",
+    calibrationModalTitle: "GerÃ¤t zur Kalibrierung",
     filterStatus: "Status:",
     filterDepartment: "Abteilung:",
     btnWordExport: "Nach Word exportieren",
     btnPrint: "PDF drucken",
-    chartProdWaste: "Produktion - Durchgänge - Abfall-Vergleich",
+    chartProdWaste: "Produktion - DurchgÃ¤nge - Abfall-Vergleich",
     chartEmpty: "Diagramme werden angezeigt, wenn Daten eingegeben werden",
-    chartProdWasteNote: "Monatlicher Vergleich von Produktion, Drehkreuzdurchgängen und entsorgten Portionen",
-    chartStudentCount: "Anzahl der Studierenden im Ernährungsdienst",
+    chartProdWasteNote: "Monatlicher Vergleich von Produktion, DrehkreuzdurchgÃ¤ngen und entsorgten Portionen",
+    chartStudentCount: "Anzahl der Studierenden im ErnÃ¤hrungsdienst",
     yearTotal: "Jahresgesamt",
-    chartStudentNote: "Monatliche Summe der täglichen Studierendendurchgänge",
+    chartStudentNote: "Monatliche Summe der tÃ¤glichen StudierendendurchgÃ¤nge",
     chartStaffTotal: "Akademisches & Verwaltungspersonal + SKS-Personal",
-    chartStaffNote: "Summe von Akademischem & Verwaltungspersonal (Drehkreuz - Studierende) und SKS-Ernährungsdienst-Personal",
+    chartStaffNote: "Summe von Akademischem & Verwaltungspersonal (Drehkreuz - Studierende) und SKS-ErnÃ¤hrungsdienst-Personal",
     chartMonthlyProd: "Monatliche Mahlzeitenproduktion",
-    chartMonthlyProdNote: "Monatliche Summe der täglich hergestellten Mahlzeiten",
-    chartMonthlyTurnstile: "Monatliche Drehkreuzdurchgänge",
-    chartTurnstileNote: "Studierende + Personal + externe Durchgänge",
+    chartMonthlyProdNote: "Monatliche Summe der tÃ¤glich hergestellten Mahlzeiten",
+    chartMonthlyTurnstile: "Monatliche DrehkreuzdurchgÃ¤nge",
+    chartTurnstileNote: "Studierende + Personal + externe DurchgÃ¤nge",
     chartMonthlyWaste: "Monatliche Abfallmenge (kg)",
-    chartMonthlyWasteNote: "Monatliche Summe des täglichen Abfalls (kg)",
+    chartMonthlyWasteNote: "Monatliche Summe des tÃ¤glichen Abfalls (kg)",
     chartMonthlyWastePortion: "Monatliche Abfallmenge (Portionen)",
-    chartWastePortionNote: "Monatliche Summe der täglich entsorgten Portionen",
-    chartDiff: "Differenz zwischen Produktion und Durchgängen",
-    chartDiffNote: "Unterschied zwischen hergestellten Mahlzeiten und Drehkreuzdurchgängen",
+    chartWastePortionNote: "Monatliche Summe der tÃ¤glich entsorgten Portionen",
+    chartDiff: "Differenz zwischen Produktion und DurchgÃ¤ngen",
+    chartDiffNote: "Unterschied zwischen hergestellten Mahlzeiten und DrehkreuzdurchgÃ¤ngen",
     chartWasteRatio: "Abfall % der hergestellten Mahlzeiten",
     yearAverage: "Jahresdurchschnitt",
     chartWasteRatioNote: "Prozentsatz der hergestellten Mahlzeiten, die zu Abfall werden",
     chartWastePerPerson: "Abfall pro Person (kg/Person)",
     chartWastePerPersonNote: "Durchschnittlicher Abfall pro Person im Speisesaal",
-    chartMonthlyTemp: "Monatliche durchschnittliche Lagerhaus-Temperaturen (°C)",
-    chartTempEmpty: "Diagramme werden angezeigt, wenn Temperatureinträge erfasst werden",
+    chartMonthlyTemp: "Monatliche durchschnittliche Lagerhaus-Temperaturen (Â°C)",
+    chartTempEmpty: "Diagramme werden angezeigt, wenn TemperatureintrÃ¤ge erfasst werden",
     chartTempNote: "Monatliche Durchschnittstemperatur jedes Lagerhauses",
     yearlyPdfBtn: "PDF drucken",
     yearlyTotalProd: "Gesamtproduktions-Vergleich",
     yearlyTotalProdNote: "Jahresgesamt - Jahr 1 vs Jahr 2 (Portionen)",
-    yearlyTotalBen: "Gesamte Ernährungsdienst-Nutzer",
+    yearlyTotalBen: "Gesamte ErnÃ¤hrungsdienst-Nutzer",
     yearlyTotalBenNote: "Jahresgesamt - Jahr 1 vs Jahr 2 (Gesamtpersonen)",
-    yearlyStudentComp: "Studierenden-Nutzervergleich im Ernährungsdienst",
+    yearlyStudentComp: "Studierenden-Nutzervergleich im ErnÃ¤hrungsdienst",
     yearlyStudentNote: "Jahresgesamt - Jahr 1 vs Jahr 2 (Studierende)",
     yearlyWasteComp: "Abfall-Vergleich (kg)",
     yearlyWasteNote: "Jahresgesamt - Jahr 1 vs Jahr 2 (kg)",
     yearlyMonthlyProd: "Monatlicher Produktionsvergleich",
     yearlyMonthlyProdNote: "Jahr 1 vs Jahr 2 - hergestellte Mahlzeiten (Portionen)",
     yearlyMonthlyTurnstile: "Monatlicher Drehkreuz-Vergleich",
-    yearlyMonthlyTurnstileNote: "Jahr 1 vs Jahr 2 - Anzahl der Drehkreuzdurchgänge",
+    yearlyMonthlyTurnstileNote: "Jahr 1 vs Jahr 2 - Anzahl der DrehkreuzdurchgÃ¤nge",
     yearlyMonthlyStudent: "Monatlicher Studierenden-Drehkreuz-Vergleich",
-    yearlyMonthlyStudentNote: "Jahr 1 vs Jahr 2 - Studierende-Drehkreuzdurchgänge",
+    yearlyMonthlyStudentNote: "Jahr 1 vs Jahr 2 - Studierende-DrehkreuzdurchgÃ¤nge",
     yearlyMonthlyWaste: "Monatlicher Abfall-Vergleich (kg)",
     yearlyMonthlyWasteNote: "Jahr 1 vs Jahr 2 - Abfallmenge (kg)",
-    yearlyWasteListTitle: "Jährliche Abfallliste",
+    yearlyWasteListTitle: "JÃ¤hrliche Abfallliste",
     spendingRatesTitle: "Pro-Kopf-Ausgaben (Studierende, Personal & Mahlzeiten)",
     spendingStudentRate: "Studierenden-Ausgaben pro Person (TL)",
     btnSaveStudentRate: "Studierenden-Betrag speichern",
@@ -14651,21 +14675,21 @@ var I18N = {
     btnSaveStaffRate: "Personal-Betrag speichern",
     spendingMealRate: "Mahlzeiten-Ausgaben pro Mahlzeit (TL)",
     btnSaveMealRate: "Mahlzeiten-Betrag speichern",
-    spendingDesc: "Studierenden-Ausgaben = Studierendenzahl × Studierenden-Ausgaben pro Person",
+    spendingDesc: "Studierenden-Ausgaben = Studierendenzahl Ã— Studierenden-Ausgaben pro Person",
     spendingStudentTitle: "Studierenden-Ausgaben (TL)",
-    spendingChartEmpty: "Diagramme werden angezeigt, wenn Einträge erfasst werden",
-    spendingStudentNote: "Studierenden-Ausgaben (TL) = Studierendenzahl × Studierenden-Ausgaben pro Person",
+    spendingChartEmpty: "Diagramme werden angezeigt, wenn EintrÃ¤ge erfasst werden",
+    spendingStudentNote: "Studierenden-Ausgaben (TL) = Studierendenzahl Ã— Studierenden-Ausgaben pro Person",
     spendingStaffTitle: "Personal-Ausgaben (TL)",
-    spendingStaffNote: "Personal-Ausgaben (TL) = Personalanzahl × Personal-Ausgaben pro Person",
+    spendingStaffNote: "Personal-Ausgaben (TL) = Personalanzahl Ã— Personal-Ausgaben pro Person",
     spendingMealTitle: "Mahlzeiten-Ausgaben (TL)",
-    spendingMealNote: "Mahlzeiten-Ausgaben (TL) = Hergestellte Mahlzeiten × Mahlzeiten-Ausgaben pro Mahlzeit",
+    spendingMealNote: "Mahlzeiten-Ausgaben (TL) = Hergestellte Mahlzeiten Ã— Mahlzeiten-Ausgaben pro Mahlzeit",
     spendingTableTitle: "Ausgabenberechnungstabelle",
     syncTitle: "Supabase-Synchronisierung",
-    syncCloseBtn: "Schließen",
-    modalNewRecord: "Neuen Eintrag hinzufügen",
+    syncCloseBtn: "SchlieÃŸen",
+    modalNewRecord: "Neuen Eintrag hinzufÃ¼gen",
     formDate: "Datum",
     formProducedCount: "Anzahl hergestellter Mahlzeiten",
-    formTurnstileCount: "Anzahl der Drehkreuzdurchgänge",
+    formTurnstileCount: "Anzahl der DrehkreuzdurchgÃ¤nge",
     formStudentCount: "Anzahl der Studierenden",
     formFoodType: "Essenstyp",
     formAutoCalc: "Automatische Berechnungen",
@@ -14675,56 +14699,56 @@ var I18N = {
     btnCancel: "Abbrechen",
     entryFormSubmit: "Speichern",
     formReceiptNo: "Belegnummer",
-    formOilType: "Öltyp",
+    formOilType: "Ã–ltyp",
     formAmountLt: "Menge (Liter)",
     formNote: "Notiz",
     formWasteType: "Abfalltyp",
     formAmount: "Menge",
-    formDeviceName: "Gerätename",
+    formDeviceName: "GerÃ¤tename",
     formBrandModel: "Marke-Modell",
     formSerialNo: "Seriennummer",
     formStatus: "Status",
     formVerification: "Eichung",
     formLastCalibration: "Letzte Kalibrierung",
-    formNextCalibration: "Nächste Kalibrierung",
+    formNextCalibration: "NÃ¤chste Kalibrierung",
     formLocation: "Standort/Abteilung",
     formResponsible: "Verantwortliche Person",
     btnSave: "Speichern",
-    btnAdd: "Hinzufügen",
-    btnClose: "Schließen",
+    btnAdd: "HinzufÃ¼gen",
+    btnClose: "SchlieÃŸen",
     qrTitle: "QR-Code",
-    qrHint: "Drucken Sie den QR-Code für die Lagerhaustüren aus.",
+    qrHint: "Drucken Sie den QR-Code fÃ¼r die LagerhaustÃ¼ren aus.",
     adminTitle: "Verwaltungspanel",
     adminReAuthText: "Bitte geben Sie Ihr Admin-Passwort ein, um auf das Verwaltungspanel zuzugreifen.",
     adminPassword: "Admin-Passwort",
-    btnVerify: "Überprüfen",
+    btnVerify: "ÃœberprÃ¼fen",
     adminSessionRole: "Sitzungsrolle",
     adminLastLogin: "Letzte Anmeldung",
     adminAuthMethod: "Auth-Methode",
     adminStorage: "Passwortspeicher",
     adminDataSource: "Datenquelle",
     adminUserMgmt: "Benutzerverwaltung",
-    adminUserMgmtDesc: "Benutzer hinzufügen, bearbeiten oder löschen.",
-    adminAddUser: "Neuen Benutzer hinzufügen",
+    adminUserMgmtDesc: "Benutzer hinzufÃ¼gen, bearbeiten oder lÃ¶schen.",
+    adminAddUser: "Neuen Benutzer hinzufÃ¼gen",
     adminUsername: "Benutzername",
     adminDisplayName: "Anzeigename",
     adminPasswordLabel: "Passwort",
     adminRole: "Rolle",
-    adminAddUserBtn: "Benutzer hinzufügen",
+    adminAddUserBtn: "Benutzer hinzufÃ¼gen",
     adminRolePerms: "Rollenbasierte Berechtigungseinstellungen",
     adminRolePermsDesc: "Legen Sie fest, welche Registerkarten jede Rolle sehen kann.",
     adminSecurity: "Sitzungssicherheit",
-    adminSecurityDesc: "Die Sitzung wird geschlossen, wenn innerhalb des angegebenen Zeitraums keine Aktivität erfolgt.",
-    adminInactivityTimeout: "Inaktivitäts-Timeout",
-    adminLogsTitle: "Aktivitätsprotokolle",
+    adminSecurityDesc: "Die Sitzung wird geschlossen, wenn innerhalb des angegebenen Zeitraums keine AktivitÃ¤t erfolgt.",
+    adminInactivityTimeout: "InaktivitÃ¤ts-Timeout",
+    adminLogsTitle: "AktivitÃ¤tsprotokolle",
     adminLogsDesc: "Benutzeran/-abmeldungen und Eintragsoperationen",
     btnRefresh: "Aktualisieren",
     adminSaveBtn: "Einstellungen speichern",
-    adminFooterNote: "Passwörter werden dauerhaft auf dem Server gespeichert.",
-    adminCloseBtn: "Schließen",
-    logFilterDelete: "Löschen",
-    logFilterAddUser: "Benutzer hinzufügen",
-    logFilterDeleteUser: "Benutzer löschen",
+    adminFooterNote: "PasswÃ¶rter werden dauerhaft auf dem Server gespeichert.",
+    adminCloseBtn: "SchlieÃŸen",
+    logFilterDelete: "LÃ¶schen",
+    logFilterAddUser: "Benutzer hinzufÃ¼gen",
+    logFilterDeleteUser: "Benutzer lÃ¶schen",
     adminRefreshBtn: "Aktualisieren",
     manualTitle: "Benutzerhandbuch",
     manualSubtitle: "Speisenhaus-Produktions-, Verbrauchs- und Abfallkontrollsystem",
@@ -14738,16 +14762,16 @@ var I18N = {
     compDiff: "Differenz",
     compTotalWaste: "Gesamtabfall (kg)",
     compTotalProduction: "Gesamtproduktion",
-    compTurnstilePasses: "Drehkreuzdurchgänge",
+    compTurnstilePasses: "DrehkreuzdurchgÃ¤nge",
     compStudentCount: "Anzahl Studenten",
     compWastePerPerson: "Abfall pro Person (g)",
-    monthlyCompDesc: "Vergleich dieses Monats mit dem Vormonat. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
-    yearlyCompDesc: "Vergleich dieses Jahres (Jahresbilanz) mit demselben Zeitraum des Vorjahres. ↑ Anstieg, ↓ Rückgang. Ein Rückgang (↓) bei Abfall und Abfall pro Person ist gut.",
-    monthNames: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
+    monthlyCompDesc: "Vergleich dieses Monats mit dem Vormonat. â†‘ Anstieg, â†“ RÃ¼ckgang. Ein RÃ¼ckgang (â†“) bei Abfall und Abfall pro Person ist gut.",
+    yearlyCompDesc: "Vergleich dieses Jahres (Jahresbilanz) mit demselben Zeitraum des Vorjahres. â†‘ Anstieg, â†“ RÃ¼ckgang. Ein RÃ¼ckgang (â†“) bei Abfall und Abfall pro Person ist gut.",
+    monthNames: ["Januar","Februar","MÃ¤rz","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
     haccpColDate: "Datum",
     haccpColTime: "Uhrzeit",
     haccpColDepot: "Lagername",
-    haccpColTemp: "Temperatur (°C)",
+    haccpColTemp: "Temperatur (Â°C)",
     haccpColHumidity: "Feuchtigkeit (%)",
     haccpColNote: "Notiz",
     haccpColAction: "Aktion",
@@ -14763,76 +14787,84 @@ var I18N = {
     total: "Gesamt",
     inVarieties: "Sorten",
     person: "Pers.",
-    weeklyGrandTotal: "Wöchentliche Gesamtsumme",
+    weeklyGrandTotal: "WÃ¶chentliche Gesamtsumme",
     dailyAverage: "Tagesdurchschnitt",
     avgPerPerson: "Durchschnitt pro Person",
     totalPersonDays: "Gesamt Personen/Tage",
     colDay: "Tag",
     colDate: "Datum",
     colPerson: "Pers.",
-    dailyMaterialCost: "Tägliche Materialkosten",
+    dailyMaterialCost: "TÃ¤gliche Materialkosten",
     perPerson: "Pro Person",
     ingredients: "Zutaten",
     perPersonGram: "(Gramm pro Person)",
     colIngredient: "Zutat",
     colPerPerson: "/Pers.",
     colUnit: "Einheit",
-    addIngredient: "+ Zutat hinzufügen",
+    addIngredient: "+ Zutat hinzufÃ¼gen",
     foodName: "Gerichtname",
     allergen: "Allergen",
     recipePerPerson: "Rezept (pro Person)",
-    devices: "Geräte",
+    devices: "GerÃ¤te",
+    chartMonthlyProduction: "Monatliche Produktion (pax)",
+    chartMonthlyPasses: "Monatliche Durchgänge (pax)",
+    chartLastYearWaste: "Vorjahr Verschwendetes (Portionen)",
+    chartMonthlyWasteKg: "Monatliche Abfälle (kg)",
+    chartMonthlyMealCount: "Monatliche Mahlzeitenanzahl",
+    chartMonthlyWasteRate: "Monatliche Abfallrate %",
+    chartMonthlyStudent: "Monatliche Schüleranzahl",
+    chartWastePerPersonLabel: "Abfall pro Person (kg/Person)",
     maliTablo: "Finanztabelle",
-    maliTabloSubtitle: "Wöchentliche Materialkosten-Zusammenfassung",
+    maliTabloSubtitle: "WÃ¶chentliche Materialkosten-Zusammenfassung",
     maliUnitPriceMissing: "Material-Einheitspreis nicht definiert",
-    maliUnitPriceHint: "Sie können im Tab Einheitspreise festlegen",
-    weeklyTotal: "WÖCHENTLICHE GESAMTSUMME",
+    maliUnitPriceHint: "Sie kÃ¶nnen im Tab Einheitspreise festlegen",
+    weeklyTotal: "WÃ–CHENTLICHE GESAMTSUMME",
     categoryDistribution: "Kategorieverteilung",
-    weeklyTotalList: "Wöchentliche Gesamtbedarfsliste",
+    weeklyTotalList: "WÃ¶chentliche Gesamtbedarfsliste",
     totalCost: "Gesamtkosten",
     catMeat: "Fleischprodukte",
     catDairy: "Milchprodukte",
     catLegumes: "Trockenleguminosen",
-    catSpices: "Gewürze",
-    catVegetable: "Gemüse & Obst",
+    catSpices: "GewÃ¼rze",
+    catVegetable: "GemÃ¼se & Obst",
     catOther: "Sonstiges",
-    month1: "Januar", month2: "Februar", month3: "März", month4: "April",
+    month1: "Januar", month2: "Februar", month3: "MÃ¤rz", month4: "April",
     month5: "Mai", month6: "Juni", month7: "Juli", month8: "August",
     month9: "September", month10: "Oktober", month11: "November", month12: "Dezember",
-    menuListTitle: "MENÜLISTE",
-    totalDevices: "Geräte Gesamt",
-    statusWorking: "Funktionsfähig",
+    menuListTitle: "MENÃœLISTE",
+    totalDevices: "GerÃ¤te Gesamt",
+    statusWorking: "FunktionsfÃ¤hig",
     statusDefective: "Defekt",
     statusMaintenance: "Wartung erforderlich",
     statusScrap: "Zur Verschrottung",
-    calibrationValid: "Kalibrierung gültig",
+    calibrationValid: "Kalibrierung gÃ¼ltig",
     calibrationApproaching: "Kalibrierung naht (30 Tage)",
     differentDepartments: "Verschiedene Abteilungen",
-    statusApproaching: "Nähert sich",
+    statusApproaching: "NÃ¤hert sich",
     statusExpired: "Abgelaufen",
-    statusNotDone: "Nicht durchgeführt",
-    statusValid: "Gültig",
-    noDeviceFound: "Keine Geräte gefunden, die diesen Filterkriterien entsprechen.",
-    noDeviceRecord: "Es wurden noch keine Kalibrierungsgeräte erfasst.",
-    deviceCount: "Geräte",
-    deviceCountSuffix: " Geräte",
-    editDeviceTitle: "Kalibrierungsgerät bearbeiten",
-    newDeviceTitle: "Neues Kalibrierungsgerät",
+    statusNotDone: "Nicht durchgefÃ¼hrt",
+    statusValid: "GÃ¼ltig",
+    noDeviceFound: "Keine GerÃ¤te gefunden, die diesen Filterkriterien entsprechen.",
+    noDeviceRecord: "Es wurden noch keine KalibrierungsgerÃ¤te erfasst.",
+    deviceCount: "GerÃ¤te",
+    deviceCountSuffix: " GerÃ¤te",
+    editDeviceTitle: "KalibrierungsgerÃ¤t bearbeiten",
+    newDeviceTitle: "Neues KalibrierungsgerÃ¤t",
     kpiBeneficiary: "Bereich: ",
     kpiNoRecordToday: "Kein Eintrag heute",
     kpiAlertsCount: "Warnungen",
     kpiAllValuesOk: "Alle Werte sind OK",
-    kpiDeviceInAlarm: "Geräte im Alarm",
-    kpiApproaching: "nähert sich",
-    kpiAllCalibrationsValid: "Alle Kalibrierungen sind gültig",
+    kpiDeviceInAlarm: "GerÃ¤te im Alarm",
+    kpiApproaching: "nÃ¤hert sich",
+    kpiAllCalibrationsValid: "Alle Kalibrierungen sind gÃ¼ltig",
     filterAll: "Alle",
-    colDeviceName: "Gerätename",
+    colDeviceName: "GerÃ¤tename",
     colBrandModel: "Marke-Modell",
     colSerialNo: "Seriennummer",
-    colDeviceStatus: "Gerätestatus",
+    colDeviceStatus: "GerÃ¤testatus",
     colCalibration: "Kalibrierung",
     colLastCalibration: "Letzte Kalibrierung",
-    colNextCalibration: "Nächste",
+    colNextCalibration: "NÃ¤chste",
     colDepartment: "Abteilung",
     colResponsible: "Verantwortlich",
     colNote: "Notiz",
@@ -14841,17 +14873,17 @@ var I18N = {
     registeredProducts: "Registrierte Produkte",
     totalAmount: "Gesamtbetrag",
     avgUnitPrice: "Durchschnittlicher Einheitspreis",
-    selectedYear: "Ausgewähltes Jahr",
-    duplicateWarning: "Produkte mit doppelten Einträgen gefunden. Preisberechnungen können Fehler enthalten.",
+    selectedYear: "AusgewÃ¤hltes Jahr",
+    duplicateWarning: "Produkte mit doppelten EintrÃ¤gen gefunden. Preisberechnungen kÃ¶nnen Fehler enthalten.",
     cleanDuplicates: "Einzeln bereinigen",
     colProductName: "Produktname",
     colUnit: "Einheit",
-    colUnitPrice: "Einheitspreis (₺)",
+    colUnitPrice: "Einheitspreis (â‚º)",
     colUnitEquals: "1 Einheit =",
     colYear: "Jahr",
-    noProductsThisYear: "Für dieses Jahr wurden noch keine Produkte hinzugefügt.",
+    noProductsThisYear: "FÃ¼r dieses Jahr wurden noch keine Produkte hinzugefÃ¼gt.",
     btnEdit: "Bearbeiten",
-    btnDelete: "Löschen",
+    btnDelete: "LÃ¶schen",
     pageLabel: "Seite",
     totalProductsLabel: "Gesamt",
     totalProductsSuffix: " Produkte",
@@ -14860,20 +14892,20 @@ var I18N = {
     btnDownloadCSV: "CSV Herunterladen",
     btnPrint: "Drucken",
     btnUploadCSV: "CSV Hochladen",
-    clickToSelectYear: "Klicken zum Auswählen",
-    selectYear: "Jahr auswählen",
-    dataInfoRecord: "Einträge",
+    clickToSelectYear: "Klicken zum AuswÃ¤hlen",
+    selectYear: "Jahr auswÃ¤hlen",
+    dataInfoRecord: "EintrÃ¤ge",
     dataInfoProduction: "Produktion",
     dataInfoWaste: "Abfall",
     portion: "Portionen",
     abnormalDays: "anormale Tage",
-    noRecordsToDisplay: "Keine Einträge zum Anzeigen.",
+    noRecordsToDisplay: "Keine EintrÃ¤ge zum Anzeigen.",
     colYearLabel: "Jahr",
     avgPortion400: "400 g",
-    recordsNot400: "Einträge nicht 400",
+    recordsNot400: "EintrÃ¤ge nicht 400",
     gram: " g",
     personLabel: "Person",
-    last7RecordsPrev7: "letzte 7 Einträge / vorherige 7",
+    last7RecordsPrev7: "letzte 7 EintrÃ¤ge / vorherige 7",
     tempAppropriate: "Angemessen",
     tempLow: "Niedrig",
     tempHigh: "Hoch",
@@ -14885,10 +14917,10 @@ var I18N = {
     tempMax: "Max: ",
     humidity: "Feuchtigkeit: ",
     depot: "Lager",
-    selectedCount: " ausgewählt",
+    selectedCount: " ausgewÃ¤hlt",
     pageRecords: "Seite ",
-    recordCount: " Einträge)",
-    tempRecordsTitle: "Kühllager-Temperaturaufzeichnungen",
+    recordCount: " EintrÃ¤ge)",
+    tempRecordsTitle: "KÃ¼hllager-Temperaturaufzeichnungen",
     dateRangeLabel: " | Datum:",
     allDepots: "Alle Lager",
     colTime: "Zeit",
@@ -14899,57 +14931,57 @@ var I18N = {
     formDate: "Datum",
     formTime: "Zeit",
     formDepotName: "Lagername",
-    formTemperature: "Temperatur (°C)",
+    formTemperature: "Temperatur (Â°C)",
     tempPlaceholder: "0.0 (kann leer gelassen werden)",
     formHumidity: "Feuchtigkeit (%)",
     formNoteOptional: "Optional",
-    deleteConfirm: "Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?",
+    deleteConfirm: "Sind Sie sicher, dass Sie diesen Eintrag lÃ¶schen mÃ¶chten?",
     deleteSelectedConfirm: "Sind Sie sicher, dass Sie ",
-    deleteSelectedConfirmSuffix: " ausgewählte Einträge löschen möchten?",
+    deleteSelectedConfirmSuffix: " ausgewÃ¤hlte EintrÃ¤ge lÃ¶schen mÃ¶chten?",
     tempHistory: " Temperaturverlauf",
-    weeklyAvgTempNote: "Wöchentliche Durchschnittstemperaturwerte — mit Unter- und Obergrenzlinien",
+    weeklyAvgTempNote: "WÃ¶chentliche Durchschnittstemperaturwerte â€” mit Unter- und Obergrenzlinien",
     upperLimitLabel: "Obergrenze (",
     lowerLimitLabel: "Untergrenze (",
-    totalRecordCount: "Gesamteinträge",
-    totalWasteOil: "Gesamt Altöl",
+    totalRecordCount: "GesamteintrÃ¤ge",
+    totalWasteOil: "Gesamt AltÃ¶l",
     avgAmountPerRecord: "Std. Menge / Eintrag",
-    highestAmount: "Höchste Menge",
+    highestAmount: "HÃ¶chste Menge",
     lowestAmount: "Niedrigste Menge",
-    oilTypeCount: "Öltyp-Anzahl",
+    oilTypeCount: "Ã–ltyp-Anzahl",
     yearTotalSuffix: " Gesamt",
     startDate: "Anfang",
     endDate: "Ende",
     typeLabel: "Typ: ",
     yearLabel: "Jahr: ",
     activeFilterLabel: "Aktiver Filter: ",
-    noFilterMessage: "Kein Filter — alle Altölaufzeichnungen werden angezeigt.",
-    noWasteOilRecord: "Noch keine Altölaufzeichnungen eingegeben.",
-    noMatchingFilterRecord: "Keine Einträge gefunden, die diesen Filterkriterien entsprechen.",
-    editWasteOilRecord: "Altölaufzeichnung bearbeiten",
-    newWasteOilRecord: "Neue Altölaufzeichnung",
-    wasteOilChartLabel: "Altöl",
+    noFilterMessage: "Kein Filter â€” alle AltÃ¶laufzeichnungen werden angezeigt.",
+    noWasteOilRecord: "Noch keine AltÃ¶laufzeichnungen eingegeben.",
+    noMatchingFilterRecord: "Keine EintrÃ¤ge gefunden, die diesen Filterkriterien entsprechen.",
+    editWasteOilRecord: "AltÃ¶laufzeichnung bearbeiten",
+    newWasteOilRecord: "Neue AltÃ¶laufzeichnung",
+    wasteOilChartLabel: "AltÃ¶l",
     previousYearLabel: "Vorheriges Jahr",
     undefinedType: "Nicht spezifiziert",
     totalWastePackaging: "Gesamt Verpackungsabfall",
     wasteTypeCount: "Abfalltyp-Anzahl",
     noWastePackagingRecord: "Noch keine Verpackungsabfallaufzeichnungen eingegeben.",
-    noMatchingFilterPackage: "Keine Einträge gefunden, die diesen Filterkriterien entsprechen.",
-    noFilterMessagePackaging: "Kein Filter — alle Verpackungsabfallaufzeichnungen werden angezeigt.",
+    noMatchingFilterPackage: "Keine EintrÃ¤ge gefunden, die diesen Filterkriterien entsprechen.",
+    noFilterMessagePackaging: "Kein Filter â€” alle Verpackungsabfallaufzeichnungen werden angezeigt.",
     editWastePackagingRecord: "Verpackungsabfallaufzeichnung bearbeiten",
     newWastePackagingRecord: "Neue Verpackungsabfallaufzeichnung",
     wastePackagingChartLabel: "Verpackungsabfall",
-    chartDetailEmpty: "Keine Einträge für diesen Zeitraum gefunden.",
-    chartClose: "Schließen",
+    chartDetailEmpty: "Keine EintrÃ¤ge fÃ¼r diesen Zeitraum gefunden.",
+    chartClose: "SchlieÃŸen",
     chartColProduction: "Produktion",
-    chartColPasses: "Durchgänge",
+    chartColPasses: "DurchgÃ¤nge",
     chartColWaste: "Abfall",
     chartColStudent: "Studenten",
     chartColFoodType: "Gerichtart",
-    chartProductionVsTurnstile: "Differenz zwischen Produktion und Drehkreuzdurchgängen",
+    chartProductionVsTurnstile: "Differenz zwischen Produktion und DrehkreuzdurchgÃ¤ngen",
     chartStaffTotal: "Akademisches + Verwaltungspersonal + SKS",
     yearFilterLabel: "Jahr:",
     monthFilterLabel: "Monat:",
-    chartSelectYear: "Auswählen",
+    chartSelectYear: "AuswÃ¤hlen",
     year1Label: "Jahr 1:",
     year2Label: "Jahr 2:",
     noComparison: "Kein Vergleich",
@@ -14961,78 +14993,78 @@ var I18N = {
     diffKgLabel: "Differenz (kg)",
     totalRow: "GESAMT",
     registeredRate: "Gespeicherter Satz: ",
-    unsavedChanges: " (ungespeicherte Änderungen)",
+    unsavedChanges: " (ungespeicherte Ã„nderungen)",
     kpiTotalStudentSpending: "Gesamte Studentenausgaben",
     kpiTotalStaffSpending: "Gesamte Personalausgaben",
     kpiAvgMonthlyStudentSpending: "Std. monatl. Studentenausgaben",
     kpiAvgMonthlyStaffSpending: "Std. monatl. Personalausgaben",
     kpiTotalStudents: "Gesamt Studenten",
     kpiTotalStaff: "Gesamt Personal",
-    kpiHighestStudentMonth: "Höchster Studentenmonat",
-    kpiHighestStaffMonth: "Höchster Personalmonat",
+    kpiHighestStudentMonth: "HÃ¶chster Studentenmonat",
+    kpiHighestStaffMonth: "HÃ¶chster Personalmonat",
     kpiTotalMealSpending: "Gesamte Essensausgaben",
     kpiAvgMonthlyMealSpending: "Std. monatl. Essensausgaben",
     kpiTotalMealsProduced: "Gesamt produzierte Mahlzeiten",
-    kpiHighestMealMonth: "Höchster Mahlzeitenmonat",
-    chartStudentSpending: "Studentenausgaben (₺)",
-    chartStaffSpending: "Personalausgaben (₺)",
-    chartMealSpending: "Essensausgaben (₺)",
-    noRecordsYet: "Noch keine Einträge.",
-    invalidRate: "Bitte geben Sie einen gültigen Satz ein!",
+    kpiHighestMealMonth: "HÃ¶chster Mahlzeitenmonat",
+    chartStudentSpending: "Studentenausgaben (â‚º)",
+    chartStaffSpending: "Personalausgaben (â‚º)",
+    chartMealSpending: "Essensausgaben (â‚º)",
+    noRecordsYet: "Noch keine EintrÃ¤ge.",
+    invalidRate: "Bitte geben Sie einen gÃ¼ltigen Satz ein!",
     rateSaved: "Satz gespeichert: ",
     menuStatusDraft: "Entwurf",
     menuStatusPending: "Genehmigung ausstehend",
     menuStatusApproved: "Genehmigt",
     menuStatusRejected: "Abgelehnt",
-    menuApprove: "Menü genehmigen",
-    menuApproveDisabled: "Menü wurde noch nicht zur Genehmigung eingereicht. Wenn der Diätarzt auf 'Zur Genehmigung einreichen' klickt, können Sie hier genehmigen.",
-    menuReject: "Menü mit Begründung ablehnen",
-    menuRejectDisabled: "Menü wurde noch nicht zur Genehmigung eingereicht. Wenn der Diätarzt auf 'Zur Genehmigung einreichen' klickt, können Sie hier ablehnen.",
-    menuPendingCount: " Wochenmenüs warten auf Genehmigung. Sie können zur ausstehenden Woche wechseln und genehmigen.",
-    menuNotApproved: "Das Menü dieser Woche wurde vom Lebensmittelingenieur noch nicht genehmigt.",
-    menuRejected: "Dieses Menü wurde abgelehnt",
-    menuRejectedSuffix: ". Der Diätarzt kann korrigieren und erneut einreichen.",
-    menuAwaitingApproval: "Dieses Menü wartet auf Genehmigung. Ohne Genehmigung wird es in der Produktionsliste als 'ungenehmigt' markiert.",
+    menuApprove: "MenÃ¼ genehmigen",
+    menuApproveDisabled: "MenÃ¼ wurde noch nicht zur Genehmigung eingereicht. Wenn der DiÃ¤tarzt auf 'Zur Genehmigung einreichen' klickt, kÃ¶nnen Sie hier genehmigen.",
+    menuReject: "MenÃ¼ mit BegrÃ¼ndung ablehnen",
+    menuRejectDisabled: "MenÃ¼ wurde noch nicht zur Genehmigung eingereicht. Wenn der DiÃ¤tarzt auf 'Zur Genehmigung einreichen' klickt, kÃ¶nnen Sie hier ablehnen.",
+    menuPendingCount: " WochenmenÃ¼s warten auf Genehmigung. Sie kÃ¶nnen zur ausstehenden Woche wechseln und genehmigen.",
+    menuNotApproved: "Das MenÃ¼ dieser Woche wurde vom Lebensmittelingenieur noch nicht genehmigt.",
+    menuRejected: "Dieses MenÃ¼ wurde abgelehnt",
+    menuRejectedSuffix: ". Der DiÃ¤tarzt kann korrigieren und erneut einreichen.",
+    menuAwaitingApproval: "Dieses MenÃ¼ wartet auf Genehmigung. Ohne Genehmigung wird es in der Produktionsliste als 'ungenehmigt' markiert.",
     noteLabel: "Notiz ",
-    deleteNote: "Diese Notiz löschen",
-    addNote: "Neue Notiz hinzufügen",
-    mealPickerTitle: "Gericht auswählen",
-    clearLabel: "🗑 Löschen",
+    deleteNote: "Diese Notiz lÃ¶schen",
+    addNote: "Neue Notiz hinzufÃ¼gen",
+    mealPickerTitle: "Gericht auswÃ¤hlen",
+    clearLabel: "ğŸ—‘ LÃ¶schen",
     searchMealPlaceholder: "Gericht suchen...",
     noMatchingMeal: "Kein passendes Gericht gefunden.",
     varietyLabel: " Sorte: ",
-    addRecord: "Neuen Eintrag hinzufügen",
+    addRecord: "Neuen Eintrag hinzufÃ¼gen",
     editRecord: "Eintrag bearbeiten",
     btnUpdate: "Aktualisieren",
-    recordAdded: "Eintrag erfolgreich hinzugefügt.",
+    recordAdded: "Eintrag erfolgreich hinzugefÃ¼gt.",
     recordUpdated: "Eintrag erfolgreich aktualisiert.",
-    recordDeleted: "Eintrag gelöscht.",
-    allRecordsDeleted: "Alle Einträge gelöscht.",
-    selectedRecordsDeleted: "Ausgewählte Einträge gelöscht.",
-    noRecordToDelete: "Keine Einträge zum Löschen.",
-    noSelectedRecord: "Keine Einträge ausgewählt.",
-    deleteAllConfirm: "Sind Sie sicher, dass Sie ALLE Einträge löschen möchten?\nDiese Aktion kann nicht rückgängig gemacht werden!",
-    deleteFoodConfirm: "Sind Sie sicher, dass Sie dieses Gericht löschen möchten?",
-    selected: " ausgewählt",
+    recordDeleted: "Eintrag gelÃ¶scht.",
+    allRecordsDeleted: "Alle EintrÃ¤ge gelÃ¶scht.",
+    selectedRecordsDeleted: "AusgewÃ¤hlte EintrÃ¤ge gelÃ¶scht.",
+    noRecordToDelete: "Keine EintrÃ¤ge zum LÃ¶schen.",
+    noSelectedRecord: "Keine EintrÃ¤ge ausgewÃ¤hlt.",
+    deleteAllConfirm: "Sind Sie sicher, dass Sie ALLE EintrÃ¤ge lÃ¶schen mÃ¶chten?\nDiese Aktion kann nicht rÃ¼ckgÃ¤ngig gemacht werden!",
+    deleteFoodConfirm: "Sind Sie sicher, dass Sie dieses Gericht lÃ¶schen mÃ¶chten?",
+    selected: " ausgewÃ¤hlt",
     negMeals: "Die Anzahl der zubereiteten Mahlzeiten kann nicht negativ sein.",
     negTurnstile: "Die Drehkreuzanzahl kann nicht negativ sein.",
     negStaff: "Die Personalanzahl kann nicht negativ sein.",
     negPortion: "Die Portionsmenge kann nicht negativ sein.",
     negStudent: "Die Studentenanzahl kann nicht negativ sein.",
-    unsavedConfirm: "Es gibt nicht gespeicherte Änderungen. Möchten Sie wirklich schließen?",
-    selectUser: "Bitte wählen Sie einen Benutzer.",
+    unsavedConfirm: "Es gibt nicht gespeicherte Ã„nderungen. MÃ¶chten Sie wirklich schlieÃŸen?",
+    selectUser: "Bitte wÃ¤hlen Sie einen Benutzer.",
     wrongCredentials: "Falscher Benutzername oder Passwort.",
     tooManyAttempts: "Zu viele Versuche. Bitte warten.",
     editable: "Bearbeitbar",
     fixed: "Fest",
-    menuSentForApproval: "Menü zur Genehmigung eingereicht. Warten auf Genehmigung durch Lebensmitteltechniker/Admin.",
-    menuApproved: "Menü genehmigt.",
-    menuRejectedMsg: "Menü mit Begründung abgelehnt.",
-    menuDraftSaved: "Menü als Entwurf gespeichert.",
-    menuCleared: "Menü geleert.",
+    menuSentForApproval: "MenÃ¼ zur Genehmigung eingereicht. Warten auf Genehmigung durch Lebensmitteltechniker/Admin.",
+    menuApproved: "MenÃ¼ genehmigt.",
+    menuRejectedMsg: "MenÃ¼ mit BegrÃ¼ndung abgelehnt.",
+    menuDraftSaved: "MenÃ¼ als Entwurf gespeichert.",
+    menuCleared: "MenÃ¼ geleert.",
     monthShort1: "Jan",
     monthShort2: "Feb",
-    monthShort3: "Mär",
+    monthShort3: "MÃ¤r",
     monthShort4: "Apr",
     monthShort5: "Mai",
     monthShort6: "Jun",
@@ -15044,128 +15076,128 @@ var I18N = {
     monthShort12: "Dez"
   },
   fr: {
-    loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
+    loginSub: "SYSTÃˆME DE GESTION DES SERVICES DE RESTAURATION",
     loginFormSub: "Connexion",
     loginUsername: "Nom d'utilisateur",
-    loginSelectUser: "Sélectionner l'utilisateur",
+    loginSelectUser: "SÃ©lectionner l'utilisateur",
     loginPassword: "Mot de passe",
     loginBtn: "Se connecter",
-    loginHint: "Vous pouvez obtenir votre mot de passe auprès de votre administrateur",
-    loginFeature1: "Planification du menu, production quotidienne, consommation et déchets",
-    loginFeature2: "Rapports détaillés",
+    loginHint: "Vous pouvez obtenir votre mot de passe auprÃ¨s de votre administrateur",
+    loginFeature1: "Planification du menu, production quotidienne, consommation et dÃ©chets",
+    loginFeature2: "Rapports dÃ©taillÃ©s",
     loginFeature3: "Tableau de bord en direct et graphiques",
     menuLabel: "Menu",
-    headerSubtitle: "Système de gestion des services de nutrition",
-    btnLogout: "Déconnexion",
-    btnPrev: "Précédent",
+    headerSubtitle: "SystÃ¨me de gestion des services de nutrition",
+    btnLogout: "DÃ©connexion",
+    btnPrev: "PrÃ©cÃ©dent",
     btnNext: "Suivant",
     loading: "Chargement...",
-    loadingText: "Synchronisation des données...",
-    loadingSub: "Vérification de la connexion Supabase",
+    loadingText: "Synchronisation des donnÃ©es...",
+    loadingSub: "VÃ©rification de la connexion Supabase",
     loadingSkip: "Cliquez pour ignorer",
     versionLabel: "Version de l'application",
     sidebarPanel: "Tableau de bord",
     sidebarMenu: "Menu hebdomadaire",
     sidebarRecords: "Enregistrements",
     sidebarReport: "Rapport",
-    sidebarHaccp: "Sécurité alimentaire",
+    sidebarHaccp: "SÃ©curitÃ© alimentaire",
     sidebarCalibration: "Calibration",
-    sidebarOil: "Huile usagée",
-    sidebarPackaging: "Déchets d'emballage",
+    sidebarOil: "Huile usagÃ©e",
+    sidebarPackaging: "DÃ©chets d'emballage",
     sidebarCharts: "Graphiques",
     sidebarYearly: "Comparaison annuelle",
-    sidebarSpending: "Dépenses",
+    sidebarSpending: "DÃ©penses",
     sidebarUnitPrice: "Prix unitaires",
-    sidebarDownload: "Tout télécharger",
+    sidebarDownload: "Tout tÃ©lÃ©charger",
     sidebarBackup: "Sauvegarder sur Supabase",
     sidebarRestore: "Restaurer depuis Supabase",
     sidebarAdmin: "Administration",
     sidebarLogs: "Journaux",
-    sidebarTheme: "Thème",
+    sidebarTheme: "ThÃ¨me",
     sidebarManual: "Manuel utilisateur",
     dashboardPrintPdf: "Imprimer PDF",
     kpiTotalRecords: "Total des jours de production",
     kpiTodayProduction: "Production du jour",
-    kpiHaccpAlarm: "Alarme température chambre froide",
+    kpiHaccpAlarm: "Alarme tempÃ©rature chambre froide",
     kpiCalibrationAlarm: "Alarme de calibration",
-    kpiAvgWaste: "Déchets moyens (kg)",
+    kpiAvgWaste: "DÃ©chets moyens (kg)",
     kpiTotalPasses: "Total des passages au tourniquet",
-    kpiTotalWaste: "Total des déchets (kg)",
-    kpiWasteRate: "Taux de déchets",
-    weeklyPrevBtn: "Semaine précédente",
-    weeklySummary: "Résumé hebdomadaire",
+    kpiTotalWaste: "Total des dÃ©chets (kg)",
+    kpiWasteRate: "Taux de dÃ©chets",
+    weeklyPrevBtn: "Semaine prÃ©cÃ©dente",
+    weeklySummary: "RÃ©sumÃ© hebdomadaire",
     weeklyNextBtn: "Semaine suivante",
     weeklyBadge: "Cette semaine",
-    dailyPrevBtn: "Jour précédent",
-    dailySummary: "Détail quotidien",
+    dailyPrevBtn: "Jour prÃ©cÃ©dent",
+    dailySummary: "DÃ©tail quotidien",
     dailyNextBtn: "Jour suivant",
     weeklyCompTitle: "Comparaison hebdomadaire",
     monthlyCompTitle: "Comparaison mensuelle",
     monthlyBadge: "Ce mois-ci",
-    yearlyBadge: "Cette année",
-    anomalyTitle: "Détection d'anomalies",
-    anomalyBadge: "Jours de déchets anormaux",
+    yearlyBadge: "Cette annÃ©e",
+    anomalyTitle: "DÃ©tection d'anomalies",
+    anomalyBadge: "Jours de dÃ©chets anormaux",
     lastRecordsTitle: "Derniers enregistrements",
     dashboardGoToRecords: "Aller aux enregistrements",
     emptyDashboard: "Pas encore d'enregistrements...",
-    formulaTitle: "FORMULE DE CALCUL DES DÉCHETS",
+    formulaTitle: "FORMULE DE CALCUL DES DÃ‰CHETS",
     recordsEntryBtn: "Saisir production/consommation",
     recordsImportBtn: "Importer",
     recordsPrintPdf: "PDF",
-    recordsCsvBtn: "Télécharger CSV",
-    recordsDeleteBtn: "Supprimer la sélection",
-    emptyRecords: "Aucun enregistrement trouvé.",
+    recordsCsvBtn: "TÃ©lÃ©charger CSV",
+    recordsDeleteBtn: "Supprimer la sÃ©lection",
+    emptyRecords: "Aucun enregistrement trouvÃ©.",
     thDate: "Date",
     thProducedPerson: "Repas produits (Personne)",
-    thWaste10: "10% de déchets",
-    thBeneficiary: "Bénéficiaires du service de restauration",
+    thWaste10: "10% de dÃ©chets",
+    thBeneficiary: "BÃ©nÃ©ficiaires du service de restauration",
     thPortionGr: "Portion (g)",
-    thWasteKg: "Déchets (kg)",
-    thWastedPortion: "Jetée (portion)",
+    thWasteKg: "DÃ©chets (kg)",
+    thWastedPortion: "JetÃ©e (portion)",
     thFoodType: "Type de plat",
     thAction: "Action",
-    thAcademicStaff: "Personnel académique & administratif via tourniquet",
-    thStudentCount: "Étudiants via tourniquet",
-    thBeneficiaryTotal: "Total des bénéficiaires du service de restauration",
+    thAcademicStaff: "Personnel acadÃ©mique & administratif via tourniquet",
+    thStudentCount: "Ã‰tudiants via tourniquet",
+    thBeneficiaryTotal: "Total des bÃ©nÃ©ficiaires du service de restauration",
     sksStaff: "Personnel SKS restauration",
-    summaryReport: "Rapport de synthèse",
+    summaryReport: "Rapport de synthÃ¨se",
     reportPdfBtn: "Ouvrir PDF",
     allRecordsPrint: "Tous les enregistrements (Vue d'impression)",
     rTotalRecords: "Nombre total d'enregistrements",
     rTotalMeals: "Total des repas produits",
-    rTotalWaste10: "Total des déchets 10%",
-    rTotalAfterWaste: "Total des repas après 10% de déchets",
+    rTotalWaste10: "Total des dÃ©chets 10%",
+    rTotalAfterWaste: "Total des repas aprÃ¨s 10% de dÃ©chets",
     rTotalTurnstile: "Total des passages au tourniquet",
-    rTotalBeneficiary: "Total des bénéficiaires du service de restauration",
-    rTotalStaff: "Total du personnel SKS bénéficiaire",
+    rTotalBeneficiary: "Total des bÃ©nÃ©ficiaires du service de restauration",
+    rTotalStaff: "Total du personnel SKS bÃ©nÃ©ficiaire",
     rPortionSize: "Taille de la portion (g)",
     rTotalPortion: "Total des portions (g)",
-    rWastedPortion: "Portions jetées",
-    rMaxWeeklyBeneficiary: "Nombre maximum de bénéficiaires hebdomadaire",
-    rTotalWasteKg: "Quantité totale de déchets (kg)",
-    rAvgWasteKg: "Quantité moyenne de déchets (kg)",
-    rTotalStudents: "Nombre total d'étudiants",
-    rMaxWaste: "Déchets maximum (kg)",
-    rMinWaste: "Déchets minimum (kg)",
-    rWasteTrend: "Tendance des déchets (7 derniers jours)",
-    rBeneficiaryTrend: "Tendance des bénéficiaires (7 derniers jours)",
-    wasteByFoodTitle: "Analyse des déchets par type de plat",
-    wasteByFoodEmpty: "Aucun enregistrement avec des données de type de plat trouvé.",
+    rWastedPortion: "Portions jetÃ©es",
+    rMaxWeeklyBeneficiary: "Nombre maximum de bÃ©nÃ©ficiaires hebdomadaire",
+    rTotalWasteKg: "QuantitÃ© totale de dÃ©chets (kg)",
+    rAvgWasteKg: "QuantitÃ© moyenne de dÃ©chets (kg)",
+    rTotalStudents: "Nombre total d'Ã©tudiants",
+    rMaxWaste: "DÃ©chets maximum (kg)",
+    rMinWaste: "DÃ©chets minimum (kg)",
+    rWasteTrend: "Tendance des dÃ©chets (7 derniers jours)",
+    rBeneficiaryTrend: "Tendance des bÃ©nÃ©ficiaires (7 derniers jours)",
+    wasteByFoodTitle: "Analyse des dÃ©chets par type de plat",
+    wasteByFoodEmpty: "Aucun enregistrement avec des donnÃ©es de type de plat trouvÃ©.",
     wasteByFoodRecords: "Nombre d'enreg.",
-    wasteByFoodRate: "Taux de déchets",
-    wasteByFoodPerPerson: "Déchets par personne (kg)",
+    wasteByFoodRate: "Taux de dÃ©chets",
+    wasteByFoodPerPerson: "DÃ©chets par personne (kg)",
     wsProducedMeal: "Repas produits (pers.)",
     wsTotalPasses: "Total des passages",
     wsTurnstile: "Tourniquet",
     wsStaffSKS: "Personnel restauration",
-    wsWasteAmount: "Quantité de déchets",
-    wsWastedPortion: "Jeté",
-    wsStudents: "Étudiants nutrition",
+    wsWasteAmount: "QuantitÃ© de dÃ©chets",
+    wsWastedPortion: "JetÃ©",
+    wsStudents: "Ã‰tudiants nutrition",
     wsNoRecordsYet: "Aucun enregistrement",
     wsNoRecordThisWeek: "Aucun enreg. cette semaine",
     wsNoRecordToday: "Aucun enreg.",
-    wsTodayDetail: "Détails du jour",
-    wsDailyDetail: "Détails quotidiens",
+    wsTodayDetail: "DÃ©tails du jour",
+    wsDailyDetail: "DÃ©tails quotidiens",
     wsWaste: "Perte",
     wsPortion: "portion",
     wsProduced: "Produit",
@@ -15181,10 +15213,10 @@ var I18N = {
     menuClearBtn: "Effacer le tableau",
     menuPrintBtn: "Imprimer",
     menuFoodListBtn: "Liste des plats",
-    menuFoodListUploadBtn: "Téléverser CSV",
-    menuFoodListCsvBtn: "Télécharger CSV",
-    menuWarningPrefix: "Menu non approuvé :",
-    menuWarningText: "Le menu de cette semaine n'a pas encore été approuvé par le nutritionniste.",
+    menuFoodListUploadBtn: "TÃ©lÃ©verser CSV",
+    menuFoodListCsvBtn: "TÃ©lÃ©charger CSV",
+    menuWarningPrefix: "Menu non approuvÃ© :",
+    menuWarningText: "Le menu de cette semaine n'a pas encore Ã©tÃ© approuvÃ© par le nutritionniste.",
     menuHintText: "Tapez les noms des plats...",
     productNeedsTitle: "Liste des besoins en produits",
     weeklyNeedsTitle: "Liste hebdomadaire des besoins totaux",
@@ -15192,122 +15224,122 @@ var I18N = {
     modalRejectMenu: "Rejeter le menu",
     modalRejectDesc: "Le motif de rejet est obligatoire.",
     menuRejectConfirm: "Rejeter",
-    haccpTitle: "Gestion de la sécurité alimentaire",
-    haccpCsvBtn: "Télécharger CSV",
-    haccpColdStorage: "Enregistrements de température chambre froide",
+    haccpTitle: "Gestion de la sÃ©curitÃ© alimentaire",
+    haccpCsvBtn: "TÃ©lÃ©charger CSV",
+    haccpColdStorage: "Enregistrements de tempÃ©rature chambre froide",
     haccpNewBtn: "Nouvel enregistrement",
-    haccpDepotBtn: "Noms des dépôts",
-    haccpDepoQrNote: "Vous pouvez modifier les noms des dépôts et générer des codes QR pour chaque dépôt avec le bouton QR.",
+    haccpDepotBtn: "Noms des dÃ©pÃ´ts",
+    haccpDepoQrNote: "Vous pouvez modifier les noms des dÃ©pÃ´ts et gÃ©nÃ©rer des codes QR pour chaque dÃ©pÃ´t avec le bouton QR.",
     haccpModalTitle: "Nouvel enregistrement",
-    filterDepot: "Filtre de dépôt :",
+    filterDepot: "Filtre de dÃ©pÃ´t :",
     filterAll: "Tous",
-    filterDateRange: "Période :",
-    emptyHaccp: "Aucun enregistrement de température saisi.",
-    btnDeleteSelectedHaccp: "Supprimer la sélection",
+    filterDateRange: "PÃ©riode :",
+    emptyHaccp: "Aucun enregistrement de tempÃ©rature saisi.",
+    btnDeleteSelectedHaccp: "Supprimer la sÃ©lection",
     btnPdf: "PDF",
-    depoNamesTitle: "Noms des dépôts",
+    depoNamesTitle: "Noms des dÃ©pÃ´ts",
     oilNewBtn: "Nouvel enregistrement",
     oilListBtn: "Liste",
-    oilFilterTitle: "Filtres huile usagée",
+    oilFilterTitle: "Filtres huile usagÃ©e",
     filterOilType: "Type d'huile :",
-    btnReset: "Réinitialiser",
-    oilSummaryTitle: "Résumé des huiles usagées",
-    oilChartTitle: "Graphiques des huiles usagées",
-    oilChartSubtitle: "Quantité mensuelle d'huile usagée (litres)",
-    oilChartEmpty: "Les graphiques apparaîtront lorsque des enregistrements d'huile usagée seront saisis",
-    oilChartNote: "Totaux mensuels d'huile usagée par date, type d'huile et filtres d'année",
-    oilRecordsTitle: "Enregistrements d'huile usagée",
-    oilModalTitle: "Enregistrement d'huile usagée",
-    emptyOil: "Aucun enregistrement d'huile usagée saisi.",
+    btnReset: "RÃ©initialiser",
+    oilSummaryTitle: "RÃ©sumÃ© des huiles usagÃ©es",
+    oilChartTitle: "Graphiques des huiles usagÃ©es",
+    oilChartSubtitle: "QuantitÃ© mensuelle d'huile usagÃ©e (litres)",
+    oilChartEmpty: "Les graphiques apparaÃ®tront lorsque des enregistrements d'huile usagÃ©e seront saisis",
+    oilChartNote: "Totaux mensuels d'huile usagÃ©e par date, type d'huile et filtres d'annÃ©e",
+    oilRecordsTitle: "Enregistrements d'huile usagÃ©e",
+    oilModalTitle: "Enregistrement d'huile usagÃ©e",
+    emptyOil: "Aucun enregistrement d'huile usagÃ©e saisi.",
     ambalajNewBtn: "Nouvel enregistrement",
     ambalajListBtn: "Liste",
-    packagingFilterTitle: "Filtres déchets d'emballage",
-    filterWasteType: "Type de déchet :",
-    packagingSummaryTitle: "Résumé des déchets d'emballage",
-    packagingChartTitle: "Graphiques des déchets d'emballage",
-    packagingChartSubtitle: "Quantité mensuelle de déchets d'emballage (kg)",
-    packagingChartEmpty: "Les graphiques apparaîtront lorsque des enregistrements de déchets d'emballage seront saisis",
-    packagingChartNote: "Totaux mensuels de déchets d'emballage par date, type de déchet et filtres d'année (kg)",
-    packagingRecordsTitle: "Enregistrements de déchets d'emballage",
-    packagingModalTitle: "Enregistrement de déchets d'emballage",
-    emptyPackaging: "Aucun enregistrement de déchets d'emballage saisi.",
+    packagingFilterTitle: "Filtres dÃ©chets d'emballage",
+    filterWasteType: "Type de dÃ©chet :",
+    packagingSummaryTitle: "RÃ©sumÃ© des dÃ©chets d'emballage",
+    packagingChartTitle: "Graphiques des dÃ©chets d'emballage",
+    packagingChartSubtitle: "QuantitÃ© mensuelle de dÃ©chets d'emballage (kg)",
+    packagingChartEmpty: "Les graphiques apparaÃ®tront lorsque des enregistrements de dÃ©chets d'emballage seront saisis",
+    packagingChartNote: "Totaux mensuels de dÃ©chets d'emballage par date, type de dÃ©chet et filtres d'annÃ©e (kg)",
+    packagingRecordsTitle: "Enregistrements de dÃ©chets d'emballage",
+    packagingModalTitle: "Enregistrement de dÃ©chets d'emballage",
+    emptyPackaging: "Aucun enregistrement de dÃ©chets d'emballage saisi.",
     kalibrasyonNewBtn: "Nouvel appareil",
     kalibrasyonListBtn: "Liste",
-    kalibrasyonCsvBtn: "Télécharger CSV",
-    calibrationSummary: "Résumé de la calibration",
-    calibrationDevices: "Appareils soumis à la calibration",
+    kalibrasyonCsvBtn: "TÃ©lÃ©charger CSV",
+    calibrationSummary: "RÃ©sumÃ© de la calibration",
+    calibrationDevices: "Appareils soumis Ã  la calibration",
     calibrationModalTitle: "Appareil pour calibration",
     filterStatus: "Statut :",
-    filterDepartment: "Département :",
+    filterDepartment: "DÃ©partement :",
     btnWordExport: "Exporter vers Word",
     btnPrint: "Imprimer PDF",
-    chartProdWaste: "Comparaison Production - Passages - Déchets",
-    chartEmpty: "Les graphiques apparaîtront lorsque des données seront saisies",
-    chartProdWasteNote: "Comparaison mensuelle de la production, des passages au tourniquet et des portions jetées",
-    chartStudentCount: "Nombre d'étudiants utilisant le service de restauration",
+    chartProdWaste: "Comparaison Production - Passages - DÃ©chets",
+    chartEmpty: "Les graphiques apparaÃ®tront lorsque des donnÃ©es seront saisies",
+    chartProdWasteNote: "Comparaison mensuelle de la production, des passages au tourniquet et des portions jetÃ©es",
+    chartStudentCount: "Nombre d'Ã©tudiants utilisant le service de restauration",
     yearTotal: "Total annuel",
-    chartStudentNote: "Total mensuel des passages étudiants quotidiens",
-    chartStaffTotal: "Total personnel académique & administratif + SKS",
-    chartStaffNote: "Total du personnel académique & administratif (Tourniquet - Étudiants) et du personnel SKS restauration",
+    chartStudentNote: "Total mensuel des passages Ã©tudiants quotidiens",
+    chartStaffTotal: "Total personnel acadÃ©mique & administratif + SKS",
+    chartStaffNote: "Total du personnel acadÃ©mique & administratif (Tourniquet - Ã‰tudiants) et du personnel SKS restauration",
     chartMonthlyProd: "Production mensuelle de repas",
     chartMonthlyProdNote: "Total mensuel du nombre de repas produits quotidiennement",
     chartMonthlyTurnstile: "Passages mensuels au tourniquet",
-    chartTurnstileNote: "Total étudiants + personnel + passages externes",
-    chartMonthlyWaste: "Quantité mensuelle de déchets (kg)",
-    chartMonthlyWasteNote: "Total mensuel des déchets quotidiens (kg)",
-    chartMonthlyWastePortion: "Quantité mensuelle de déchets (portions)",
-    chartWastePortionNote: "Total mensuel des portions jetées quotidiennement",
-    chartDiff: "Différence entre production et passages",
-    chartDiffNote: "Différence entre repas produits et passages au tourniquet",
-    chartWasteRatio: "Déchets % des repas produits",
+    chartTurnstileNote: "Total Ã©tudiants + personnel + passages externes",
+    chartMonthlyWaste: "QuantitÃ© mensuelle de dÃ©chets (kg)",
+    chartMonthlyWasteNote: "Total mensuel des dÃ©chets quotidiens (kg)",
+    chartMonthlyWastePortion: "QuantitÃ© mensuelle de dÃ©chets (portions)",
+    chartWastePortionNote: "Total mensuel des portions jetÃ©es quotidiennement",
+    chartDiff: "DiffÃ©rence entre production et passages",
+    chartDiffNote: "DiffÃ©rence entre repas produits et passages au tourniquet",
+    chartWasteRatio: "DÃ©chets % des repas produits",
     yearAverage: "Moyenne annuelle",
-    chartWasteRatioNote: "Pourcentage des repas produits qui deviennent des déchets",
-    chartWastePerPerson: "Déchets par personne (kg/personne)",
-    chartWastePerPersonNote: "Déchets moyens par personne entrant dans la cantine",
-    chartMonthlyTemp: "Températures moyennes mensuelles des dépôts (°C)",
-    chartTempEmpty: "Les graphiques apparaîtront lorsque des enregistrements de température seront saisis",
-    chartTempNote: "Température moyenne mensuelle de chaque dépôt",
+    chartWasteRatioNote: "Pourcentage des repas produits qui deviennent des dÃ©chets",
+    chartWastePerPerson: "DÃ©chets par personne (kg/personne)",
+    chartWastePerPersonNote: "DÃ©chets moyens par personne entrant dans la cantine",
+    chartMonthlyTemp: "TempÃ©ratures moyennes mensuelles des dÃ©pÃ´ts (Â°C)",
+    chartTempEmpty: "Les graphiques apparaÃ®tront lorsque des enregistrements de tempÃ©rature seront saisis",
+    chartTempNote: "TempÃ©rature moyenne mensuelle de chaque dÃ©pÃ´t",
     yearlyPdfBtn: "Imprimer PDF",
     yearlyTotalProd: "Comparaison de la production totale",
-    yearlyTotalProdNote: "Total annuel - Année 1 vs Année 2 (portions)",
-    yearlyTotalBen: "Total des bénéficiaires du service de restauration",
-    yearlyTotalBenNote: "Total annuel - Année 1 vs Année 2 (total personnes)",
-    yearlyStudentComp: "Comparaison des étudiants bénéficiaires",
-    yearlyStudentNote: "Total annuel - Année 1 vs Année 2 (étudiants)",
-    yearlyWasteComp: "Comparaison des déchets (kg)",
-    yearlyWasteNote: "Total annuel - Année 1 vs Année 2 (kg)",
+    yearlyTotalProdNote: "Total annuel - AnnÃ©e 1 vs AnnÃ©e 2 (portions)",
+    yearlyTotalBen: "Total des bÃ©nÃ©ficiaires du service de restauration",
+    yearlyTotalBenNote: "Total annuel - AnnÃ©e 1 vs AnnÃ©e 2 (total personnes)",
+    yearlyStudentComp: "Comparaison des Ã©tudiants bÃ©nÃ©ficiaires",
+    yearlyStudentNote: "Total annuel - AnnÃ©e 1 vs AnnÃ©e 2 (Ã©tudiants)",
+    yearlyWasteComp: "Comparaison des dÃ©chets (kg)",
+    yearlyWasteNote: "Total annuel - AnnÃ©e 1 vs AnnÃ©e 2 (kg)",
     yearlyMonthlyProd: "Comparaison mensuelle de la production",
-    yearlyMonthlyProdNote: "Année 1 vs Année 2 - repas produits (portions)",
+    yearlyMonthlyProdNote: "AnnÃ©e 1 vs AnnÃ©e 2 - repas produits (portions)",
     yearlyMonthlyTurnstile: "Comparaison mensuelle des passages au tourniquet",
-    yearlyMonthlyTurnstileNote: "Année 1 vs Année 2 - nombre de passages au tourniquet",
-    yearlyMonthlyStudent: "Comparaison mensuelle des passages étudiants",
-    yearlyMonthlyStudentNote: "Année 1 vs Année 2 - nombre de passages étudiants",
-    yearlyMonthlyWaste: "Comparaison mensuelle des déchets (kg)",
-    yearlyMonthlyWasteNote: "Année 1 vs Année 2 - quantité de déchets (kg)",
-    yearlyWasteListTitle: "Liste annuelle des déchets",
-    spendingRatesTitle: "Taux de dépenses par personne (Étudiants, Personnel & Repas)",
-    spendingStudentRate: "Montant de dépense par étudiant (TL)",
-    btnSaveStudentRate: "Enregistrer montant étudiants",
-    spendingStaffRate: "Montant de dépense par membre du personnel (TL)",
+    yearlyMonthlyTurnstileNote: "AnnÃ©e 1 vs AnnÃ©e 2 - nombre de passages au tourniquet",
+    yearlyMonthlyStudent: "Comparaison mensuelle des passages Ã©tudiants",
+    yearlyMonthlyStudentNote: "AnnÃ©e 1 vs AnnÃ©e 2 - nombre de passages Ã©tudiants",
+    yearlyMonthlyWaste: "Comparaison mensuelle des dÃ©chets (kg)",
+    yearlyMonthlyWasteNote: "AnnÃ©e 1 vs AnnÃ©e 2 - quantitÃ© de dÃ©chets (kg)",
+    yearlyWasteListTitle: "Liste annuelle des dÃ©chets",
+    spendingRatesTitle: "Taux de dÃ©penses par personne (Ã‰tudiants, Personnel & Repas)",
+    spendingStudentRate: "Montant de dÃ©pense par Ã©tudiant (TL)",
+    btnSaveStudentRate: "Enregistrer montant Ã©tudiants",
+    spendingStaffRate: "Montant de dÃ©pense par membre du personnel (TL)",
     btnSaveStaffRate: "Enregistrer montant personnel",
-    spendingMealRate: "Montant de dépense par repas (TL)",
+    spendingMealRate: "Montant de dÃ©pense par repas (TL)",
     btnSaveMealRate: "Enregistrer montant repas",
-    spendingDesc: "Dépenses étudiants = Nombre d'étudiants × Montant par étudiant",
-    spendingStudentTitle: "Dépenses étudiants (TL)",
-    spendingChartEmpty: "Les graphiques apparaîtront lorsque des enregistrements seront saisis",
-    spendingStudentNote: "Dépenses étudiants (TL) = Nombre d'étudiants × Montant par étudiant",
-    spendingStaffTitle: "Dépenses personnel (TL)",
-    spendingStaffNote: "Dépenses personnel (TL) = Nombre de personnel × Montant par membre du personnel",
-    spendingMealTitle: "Dépenses repas (TL)",
-    spendingMealNote: "Dépenses repas (TL) = Repas produits × Montant par repas",
-    spendingTableTitle: "Tableau de calcul des dépenses",
+    spendingDesc: "DÃ©penses Ã©tudiants = Nombre d'Ã©tudiants Ã— Montant par Ã©tudiant",
+    spendingStudentTitle: "DÃ©penses Ã©tudiants (TL)",
+    spendingChartEmpty: "Les graphiques apparaÃ®tront lorsque des enregistrements seront saisis",
+    spendingStudentNote: "DÃ©penses Ã©tudiants (TL) = Nombre d'Ã©tudiants Ã— Montant par Ã©tudiant",
+    spendingStaffTitle: "DÃ©penses personnel (TL)",
+    spendingStaffNote: "DÃ©penses personnel (TL) = Nombre de personnel Ã— Montant par membre du personnel",
+    spendingMealTitle: "DÃ©penses repas (TL)",
+    spendingMealNote: "DÃ©penses repas (TL) = Repas produits Ã— Montant par repas",
+    spendingTableTitle: "Tableau de calcul des dÃ©penses",
     syncTitle: "Synchronisation Supabase",
     syncCloseBtn: "Fermer",
     modalNewRecord: "Ajouter un enregistrement",
     formDate: "Date",
     formProducedCount: "Nombre de repas produits",
     formTurnstileCount: "Nombre de passages au tourniquet",
-    formStudentCount: "Nombre d'étudiants",
+    formStudentCount: "Nombre d'Ã©tudiants",
     formFoodType: "Type de plat",
     formAutoCalc: "Calculs automatiques",
     badgeAutomatic: "Automatique",
@@ -15315,151 +15347,159 @@ var I18N = {
     badgeAutoEditable: "Automatique + Modifiable",
     btnCancel: "Annuler",
     entryFormSubmit: "Enregistrer",
-    formReceiptNo: "N° de reçu",
+    formReceiptNo: "NÂ° de reÃ§u",
     formOilType: "Type d'huile",
-    formAmountLt: "Quantité (litres)",
+    formAmountLt: "QuantitÃ© (litres)",
     formNote: "Note",
-    formWasteType: "Type de déchet",
-    formAmount: "Quantité",
+    formWasteType: "Type de dÃ©chet",
+    formAmount: "QuantitÃ©",
     formDeviceName: "Nom de l'appareil",
-    formBrandModel: "Marque-Modèle",
-    formSerialNo: "Numéro de série",
+    formBrandModel: "Marque-ModÃ¨le",
+    formSerialNo: "NumÃ©ro de sÃ©rie",
     formStatus: "Statut",
-    formVerification: "Vérification",
-    formLastCalibration: "Dernière calibration",
+    formVerification: "VÃ©rification",
+    formLastCalibration: "DerniÃ¨re calibration",
     formNextCalibration: "Prochaine calibration",
-    formLocation: "Emplacement/Département",
+    formLocation: "Emplacement/DÃ©partement",
     formResponsible: "Personne responsable",
     btnSave: "Enregistrer",
     btnAdd: "Ajouter",
     btnClose: "Fermer",
     qrTitle: "Code QR",
-    qrHint: "Imprimez le code QR à accrocher sur les portes des dépôts.",
+    qrHint: "Imprimez le code QR Ã  accrocher sur les portes des dÃ©pÃ´ts.",
     adminTitle: "Panneau d'administration",
-    adminReAuthText: "Veuillez entrer votre mot de passe administrateur pour accéder au panneau.",
+    adminReAuthText: "Veuillez entrer votre mot de passe administrateur pour accÃ©der au panneau.",
     adminPassword: "Mot de passe administrateur",
-    btnVerify: "Vérifier",
-    adminSessionRole: "Rôle de la session",
-    adminLastLogin: "Dernière connexion",
-    adminAuthMethod: "Méthode d'authentification",
+    btnVerify: "VÃ©rifier",
+    adminSessionRole: "RÃ´le de la session",
+    adminLastLogin: "DerniÃ¨re connexion",
+    adminAuthMethod: "MÃ©thode d'authentification",
     adminStorage: "Stockage des mots de passe",
-    adminDataSource: "Source de données",
+    adminDataSource: "Source de donnÃ©es",
     adminUserMgmt: "Gestion des utilisateurs",
     adminUserMgmtDesc: "Ajoutez, modifiez ou supprimez des utilisateurs.",
     adminAddUser: "Ajouter un utilisateur",
     adminUsername: "Nom d'utilisateur",
-    adminDisplayName: "Nom affiché",
+    adminDisplayName: "Nom affichÃ©",
     adminPasswordLabel: "Mot de passe",
-    adminRole: "Rôle",
+    adminRole: "RÃ´le",
     adminAddUserBtn: "Ajouter l'utilisateur",
-    adminRolePerms: "Paramètres de permissions par rôle",
-    adminRolePermsDesc: "Définissez quels onglets chaque rôle peut voir.",
-    adminSecurity: "Sécurité de session",
-    adminSecurityDesc: "La session se ferma si aucune activité n'est effectuée pendant la durée spécifiée.",
-    adminInactivityTimeout: "Délai d'inactivité",
-    adminLogsTitle: "Journal des activités",
-    adminLogsDesc: "Connexion/déconnexion des utilisateurs et opérations sur les enregistrements",
+    adminRolePerms: "ParamÃ¨tres de permissions par rÃ´le",
+    adminRolePermsDesc: "DÃ©finissez quels onglets chaque rÃ´le peut voir.",
+    adminSecurity: "SÃ©curitÃ© de session",
+    adminSecurityDesc: "La session se ferma si aucune activitÃ© n'est effectuÃ©e pendant la durÃ©e spÃ©cifiÃ©e.",
+    adminInactivityTimeout: "DÃ©lai d'inactivitÃ©",
+    adminLogsTitle: "Journal des activitÃ©s",
+    adminLogsDesc: "Connexion/dÃ©connexion des utilisateurs et opÃ©rations sur les enregistrements",
     btnRefresh: "Actualiser",
-    adminSaveBtn: "Enregistrer les paramètres",
-    adminFooterNote: "Les mots de passe sont stockés en permanence sur le serveur.",
+    adminSaveBtn: "Enregistrer les paramÃ¨tres",
+    adminFooterNote: "Les mots de passe sont stockÃ©s en permanence sur le serveur.",
     adminCloseBtn: "Fermer",
     logFilterDelete: "Suppression",
     logFilterAddUser: "Ajout d'utilisateur",
     logFilterDeleteUser: "Suppression d'utilisateur",
     adminRefreshBtn: "Actualiser",
     manualTitle: "Manuel utilisateur",
-    manualSubtitle: "Système de contrôle de la production, consommation et des déchets de la cantine",
-    compDataType: "Type de données",
-    compLastWeek: "Semaine dernière",
+    manualSubtitle: "SystÃ¨me de contrÃ´le de la production, consommation et des dÃ©chets de la cantine",
+    compDataType: "Type de donnÃ©es",
+    compLastWeek: "Semaine derniÃ¨re",
     compThisWeek: "Cette semaine",
     compLastMonth: "Mois dernier",
     compThisMonth: "Ce mois-ci",
-    compLastYear: "Année dernière",
-    compThisYear: "Cette année",
-    compDiff: "Écart",
-    compTotalWaste: "Déchets totaux (kg)",
+    compLastYear: "AnnÃ©e derniÃ¨re",
+    compThisYear: "Cette annÃ©e",
+    compDiff: "Ã‰cart",
+    compTotalWaste: "DÃ©chets totaux (kg)",
     compTotalProduction: "Production totale",
     compTurnstilePasses: "Passages tourniquet",
-    compStudentCount: "Nombre d'étudiants",
-    compWastePerPerson: "Déchets par personne (g)",
-    monthlyCompDesc: "Comparaison de ce mois avec le mois dernier. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
-    yearlyCompDesc: "Comparaison de cette année (du début de l'année à aujourd'hui) avec la même période l'année dernière. ↑ augmentation, ↓ diminution. Une diminution (↓) des déchets et des déchets par personne est bonne.",
-    monthNames: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+    compStudentCount: "Nombre d'Ã©tudiants",
+    compWastePerPerson: "DÃ©chets par personne (g)",
+    monthlyCompDesc: "Comparaison de ce mois avec le mois dernier. â†‘ augmentation, â†“ diminution. Une diminution (â†“) des dÃ©chets et des dÃ©chets par personne est bonne.",
+    yearlyCompDesc: "Comparaison de cette annÃ©e (du dÃ©but de l'annÃ©e Ã  aujourd'hui) avec la mÃªme pÃ©riode l'annÃ©e derniÃ¨re. â†‘ augmentation, â†“ diminution. Une diminution (â†“) des dÃ©chets et des dÃ©chets par personne est bonne.",
+    monthNames: ["Janvier","FÃ©vrier","Mars","Avril","Mai","Juin","Juillet","AoÃ»t","Septembre","Octobre","Novembre","DÃ©cembre"],
     haccpColDate: "Date",
     haccpColTime: "Heure",
-    haccpColDepot: "Nom de l'entrepôt",
-    haccpColTemp: "Température (°C)",
-    haccpColHumidity: "Humidité (%)",
+    haccpColDepot: "Nom de l'entrepÃ´t",
+    haccpColTemp: "TempÃ©rature (Â°C)",
+    haccpColHumidity: "HumiditÃ© (%)",
     haccpColNote: "Note",
     haccpColAction: "Action",
     dayNames: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"],
-    menuVariety: "Variété",
-    menuVariety1: "1ère variété",
-    menuVariety2: "2ème variété",
-    menuVariety3: "3ème variété",
-    menuVariety4: "4ème variété",
-    menuVariety5: "5ème variété",
+    menuVariety: "VariÃ©tÃ©",
+    menuVariety1: "1Ã¨re variÃ©tÃ©",
+    menuVariety2: "2Ã¨me variÃ©tÃ©",
+    menuVariety3: "3Ã¨me variÃ©tÃ©",
+    menuVariety4: "4Ã¨me variÃ©tÃ©",
+    menuVariety5: "5Ã¨me variÃ©tÃ©",
     menuPersonCount: "Nombre de personnes",
-    stockDeductionList: "Liste de déduction de stock",
+    stockDeductionList: "Liste de dÃ©duction de stock",
     total: "Total",
-    inVarieties: "variétés",
+    inVarieties: "variÃ©tÃ©s",
     person: "pers.",
     weeklyGrandTotal: "Total hebdomadaire",
-    dailyAverage: "Moyenne journalière",
+    dailyAverage: "Moyenne journaliÃ¨re",
     avgPerPerson: "Moyenne par personne",
     totalPersonDays: "Total personnes/jours",
     colDay: "Jour",
     colDate: "Date",
     colPerson: "Pers.",
-    dailyMaterialCost: "Coût matériaux journalier",
+    dailyMaterialCost: "CoÃ»t matÃ©riaux journalier",
     perPerson: "Par personne",
-    ingredients: "Ingrédients",
+    ingredients: "IngrÃ©dients",
     perPersonGram: "(grammes par personne)",
-    colIngredient: "Ingrédient",
+    colIngredient: "IngrÃ©dient",
     colPerPerson: "/pers.",
-    colUnit: "Unité",
-    addIngredient: "+ Ajouter un ingrédient",
+    colUnit: "UnitÃ©",
+    addIngredient: "+ Ajouter un ingrÃ©dient",
     foodName: "Nom du plat",
-    allergen: "Allergène",
+    allergen: "AllergÃ¨ne",
     recipePerPerson: "Recette (par personne)",
     devices: "appareils",
+    chartMonthlyProduction: "Production mensuelle (pax)",
+    chartMonthlyPasses: "Passages mensuels (pax)",
+    chartLastYearWaste: "Gaspillage de l'année dernière (portions)",
+    chartMonthlyWasteKg: "Déchets mensuels (kg)",
+    chartMonthlyMealCount: "Nombre de repas mensuels",
+    chartMonthlyWasteRate: "Taux de gaspillage mensuel %",
+    chartMonthlyStudent: "Nombre d'étudiants mensuel",
+    chartWastePerPersonLabel: "Déchets par personne (kg/personne)",
     maliTablo: "Tableau Financier",
-    maliTabloSubtitle: "Résumé hebdomadaire des coûts matériaux",
-    maliUnitPriceMissing: "prix unitaire du matériau non défini",
-    maliUnitPriceHint: "Vous pouvez définir dans l'onglet Prix Unitaire",
+    maliTabloSubtitle: "RÃ©sumÃ© hebdomadaire des coÃ»ts matÃ©riaux",
+    maliUnitPriceMissing: "prix unitaire du matÃ©riau non dÃ©fini",
+    maliUnitPriceHint: "Vous pouvez dÃ©finir dans l'onglet Prix Unitaire",
     weeklyTotal: "TOTAL HEBDOMADAIRE",
-    categoryDistribution: "Répartition par catégorie",
+    categoryDistribution: "RÃ©partition par catÃ©gorie",
     weeklyTotalList: "Liste des besoins hebdomadaires totaux",
-    totalCost: "Coût total",
-    catMeat: "Produits carnés",
+    totalCost: "CoÃ»t total",
+    catMeat: "Produits carnÃ©s",
     catDairy: "Produits laitiers",
-    catLegumes: "Légumineuses sèches",
-    catSpices: "Épices",
-    catVegetable: "Légumes et Fruits",
+    catLegumes: "LÃ©gumineuses sÃ¨ches",
+    catSpices: "Ã‰pices",
+    catVegetable: "LÃ©gumes et Fruits",
     catOther: "Autres",
-    month1: "Janvier", month2: "Février", month3: "Mars", month4: "Avril",
-    month5: "Mai", month6: "Juin", month7: "Juillet", month8: "Août",
-    month9: "Septembre", month10: "Octobre", month11: "Novembre", month12: "Décembre",
+    month1: "Janvier", month2: "FÃ©vrier", month3: "Mars", month4: "Avril",
+    month5: "Mai", month6: "Juin", month7: "Juillet", month8: "AoÃ»t",
+    month9: "Septembre", month10: "Octobre", month11: "Novembre", month12: "DÃ©cembre",
     menuListTitle: "LISTE DU MENU",
     totalDevices: "Total des appareils",
     statusWorking: "En service",
-    statusDefective: "Défectueux",
+    statusDefective: "DÃ©fectueux",
     statusMaintenance: "Maintenance requise",
-    statusScrap: "À mettre au rebut",
+    statusScrap: "Ã€ mettre au rebut",
     calibrationValid: "Calibration valide",
-    calibrationApproaching: "Calibration à venir (30 jours)",
-    differentDepartments: "Départements différents",
+    calibrationApproaching: "Calibration Ã  venir (30 jours)",
+    differentDepartments: "DÃ©partements diffÃ©rents",
     statusApproaching: "Approche",
-    statusExpired: "Expiré",
-    statusNotDone: "Non effectué",
+    statusExpired: "ExpirÃ©",
+    statusNotDone: "Non effectuÃ©",
     statusValid: "Valide",
-    noDeviceFound: "Aucun appareil trouvé correspondant à ces critères.",
+    noDeviceFound: "Aucun appareil trouvÃ© correspondant Ã  ces critÃ¨res.",
     noDeviceRecord: "Aucun enregistrement d'appareil de calibration saisi.",
     deviceCount: "appareils",
     deviceCountSuffix: " appareils",
     editDeviceTitle: "Modifier l'appareil de calibration",
     newDeviceTitle: "Nouvel appareil de calibration",
-    kpiBeneficiary: "Bénéficiaires: ",
+    kpiBeneficiary: "BÃ©nÃ©ficiaires: ",
     kpiNoRecordToday: "Aujourd'hui pas d'enregistrement",
     kpiAlertsCount: "alertes",
     kpiAllValuesOk: "Toutes les valeurs sont conformes",
@@ -15468,53 +15508,53 @@ var I18N = {
     kpiAllCalibrationsValid: "Toutes les calibrations sont valides",
     filterAll: "Tous",
     colDeviceName: "Nom de l'appareil",
-    colBrandModel: "Marque-Modèle",
-    colSerialNo: "Numéro de série",
-    colDeviceStatus: "État de l'appareil",
+    colBrandModel: "Marque-ModÃ¨le",
+    colSerialNo: "NumÃ©ro de sÃ©rie",
+    colDeviceStatus: "Ã‰tat de l'appareil",
     colCalibration: "Calibration",
-    colLastCalibration: "Dernière calibration",
+    colLastCalibration: "DerniÃ¨re calibration",
     colNextCalibration: "Prochaine",
-    colDepartment: "Département",
+    colDepartment: "DÃ©partement",
     colResponsible: "Responsable",
     colNote: "Note",
     colAction: "Action",
     unitPriceList: "Liste des prix unitaires",
-    registeredProducts: "Produits enregistrés",
+    registeredProducts: "Produits enregistrÃ©s",
     totalAmount: "Montant total",
     avgUnitPrice: "Prix unitaire moyen",
-    selectedYear: "Année sélectionnée",
-    duplicateWarning: "produits avec des enregistrements en double trouvés. Les calculs de prix peuvent contenir des erreurs.",
+    selectedYear: "AnnÃ©e sÃ©lectionnÃ©e",
+    duplicateWarning: "produits avec des enregistrements en double trouvÃ©s. Les calculs de prix peuvent contenir des erreurs.",
     cleanDuplicates: "Nettoyer un par un",
     colProductName: "Nom du produit",
-    colUnit: "Unité",
-    colUnitPrice: "Prix unitaire (₺)",
-    colUnitEquals: "1 Unité =",
-    colYear: "Année",
-    noProductsThisYear: "Aucun produit ajouté pour cette année.",
+    colUnit: "UnitÃ©",
+    colUnitPrice: "Prix unitaire (â‚º)",
+    colUnitEquals: "1 UnitÃ© =",
+    colYear: "AnnÃ©e",
+    noProductsThisYear: "Aucun produit ajoutÃ© pour cette annÃ©e.",
     btnEdit: "Modifier",
     btnDelete: "Supprimer",
     pageLabel: "Page",
     totalProductsLabel: "Total",
     totalProductsSuffix: " produits",
-    priceYearNote: "Les prix sont par année. Correspondance: Le nom du matériau est automatiquement normalisé.",
+    priceYearNote: "Les prix sont par annÃ©e. Correspondance: Le nom du matÃ©riau est automatiquement normalisÃ©.",
     btnAddNewProduct: "+ Nouveau produit",
-    btnDownloadCSV: "Télécharger CSV",
+    btnDownloadCSV: "TÃ©lÃ©charger CSV",
     btnPrint: "Imprimer",
-    btnUploadCSV: "Télécharger CSV",
-    clickToSelectYear: "Cliquez pour sélectionner l'année",
-    selectYear: "Sélectionner l'année",
+    btnUploadCSV: "TÃ©lÃ©charger CSV",
+    clickToSelectYear: "Cliquez pour sÃ©lectionner l'annÃ©e",
+    selectYear: "SÃ©lectionner l'annÃ©e",
     dataInfoRecord: "enregistrements",
     dataInfoProduction: "production",
-    dataInfoWaste: "déchets",
+    dataInfoWaste: "dÃ©chets",
     portion: "portions",
     abnormalDays: "jours anormaux",
-    noRecordsToDisplay: "Aucun enregistrement à afficher.",
-    colYearLabel: "Année",
+    noRecordsToDisplay: "Aucun enregistrement Ã  afficher.",
+    colYearLabel: "AnnÃ©e",
     avgPortion400: "400 g",
-    recordsNot400: "enregistrements ≠ 400",
+    recordsNot400: "enregistrements â‰  400",
     gram: " g",
     personLabel: "Pers",
-    last7RecordsPrev7: "7 derniers enreg. / 7 précédents",
+    last7RecordsPrev7: "7 derniers enreg. / 7 prÃ©cÃ©dents",
     tempAppropriate: "Conforme",
     tempLow: "Bas",
     tempHigh: "Haut",
@@ -15524,211 +15564,211 @@ var I18N = {
     tempMin: "Min: ",
     tempAvg: "Moy: ",
     tempMax: "Max: ",
-    humidity: "Humidité: ",
+    humidity: "HumiditÃ©: ",
     depot: "Chambre",
-    selectedCount: " sélectionnés",
+    selectedCount: " sÃ©lectionnÃ©s",
     pageRecords: "Page ",
     recordCount: " enreg.)",
-    tempRecordsTitle: "Enregistrements de température du froid",
+    tempRecordsTitle: "Enregistrements de tempÃ©rature du froid",
     dateRangeLabel: " | Date:",
     allDepots: "Toutes les chambres",
     colTime: "Heure",
     colDepot: "Chambre",
-    colTemperature: "Température",
-    colStatus: "État",
-    depotTempRecordTitle: "Enregistrement de température",
+    colTemperature: "TempÃ©rature",
+    colStatus: "Ã‰tat",
+    depotTempRecordTitle: "Enregistrement de tempÃ©rature",
     formDate: "Date",
     formTime: "Heure",
     formDepotName: "Nom de la chambre",
-    formTemperature: "Température (°C)",
-    tempPlaceholder: "0.0 (peut être laissé vide)",
-    formHumidity: "Humidité (%)",
+    formTemperature: "TempÃ©rature (Â°C)",
+    tempPlaceholder: "0.0 (peut Ãªtre laissÃ© vide)",
+    formHumidity: "HumiditÃ© (%)",
     formNoteOptional: "Optionnel",
-    deleteConfirm: "Êtes-vous sûr de vouloir supprimer cet enregistrement ?",
-    deleteSelectedConfirm: "Êtes-vous sûr de vouloir supprimer ",
-    deleteSelectedConfirmSuffix: " enregistrements sélectionnés ?",
-    tempHistory: " Historique de température",
-    weeklyAvgTempNote: "Valeurs moyennes hebdomadaires de température — avec lignes de limites haute et basse",
+    deleteConfirm: "ÃŠtes-vous sÃ»r de vouloir supprimer cet enregistrement ?",
+    deleteSelectedConfirm: "ÃŠtes-vous sÃ»r de vouloir supprimer ",
+    deleteSelectedConfirmSuffix: " enregistrements sÃ©lectionnÃ©s ?",
+    tempHistory: " Historique de tempÃ©rature",
+    weeklyAvgTempNote: "Valeurs moyennes hebdomadaires de tempÃ©rature â€” avec lignes de limites haute et basse",
     upperLimitLabel: "Limite haute (",
     lowerLimitLabel: "Limite basse (",
     totalRecordCount: "Total des enregistrements",
-    totalWasteOil: "Total huile usagée",
-    avgAmountPerRecord: "Moy. quantité / enreg.",
-    highestAmount: "Quantité la plus élevée",
-    lowestAmount: "Quantité la plus basse",
+    totalWasteOil: "Total huile usagÃ©e",
+    avgAmountPerRecord: "Moy. quantitÃ© / enreg.",
+    highestAmount: "QuantitÃ© la plus Ã©levÃ©e",
+    lowestAmount: "QuantitÃ© la plus basse",
     oilTypeCount: "Nombre de types d'huile",
     yearTotalSuffix: " Total",
-    startDate: "Début",
+    startDate: "DÃ©but",
     endDate: "Fin",
     typeLabel: "Type: ",
-    yearLabel: "Année: ",
+    yearLabel: "AnnÃ©e: ",
     activeFilterLabel: "Filtre actif: ",
-    noFilterMessage: "Aucun filtre — affichage de tous les enregistrements d'huile usagée.",
-    noWasteOilRecord: "Aucun enregistrement d'huile usagée saisi.",
-    noMatchingFilterRecord: "Aucun enregistrement trouvé pour ces critères.",
-    editWasteOilRecord: "Modifier l'enregistrement d'huile usagée",
-    newWasteOilRecord: "Nouvel enregistrement d'huile usagée",
-    wasteOilChartLabel: "Huile usagée",
-    previousYearLabel: "Année précédente",
-    undefinedType: "Non spécifié",
-    totalWastePackaging: "Total déchets d'emballage",
-    wasteTypeCount: "Nombre de types de déchets",
-    noWastePackagingRecord: "Aucun enregistrement de déchets d'emballage saisi.",
-    noMatchingFilterPackage: "Aucun enregistrement trouvé pour ces critères.",
-    noFilterMessagePackaging: "Aucun filtre — affichage de tous les enregistrements de déchets d'emballage.",
-    editWastePackagingRecord: "Modifier l'enregistrement de déchets d'emballage",
-    newWastePackagingRecord: "Nouvel enregistrement de déchets d'emballage",
-    wastePackagingChartLabel: "Déchets d'emballage",
-    chartDetailEmpty: "Aucun enregistrement trouvé pour cette période.",
+    noFilterMessage: "Aucun filtre â€” affichage de tous les enregistrements d'huile usagÃ©e.",
+    noWasteOilRecord: "Aucun enregistrement d'huile usagÃ©e saisi.",
+    noMatchingFilterRecord: "Aucun enregistrement trouvÃ© pour ces critÃ¨res.",
+    editWasteOilRecord: "Modifier l'enregistrement d'huile usagÃ©e",
+    newWasteOilRecord: "Nouvel enregistrement d'huile usagÃ©e",
+    wasteOilChartLabel: "Huile usagÃ©e",
+    previousYearLabel: "AnnÃ©e prÃ©cÃ©dente",
+    undefinedType: "Non spÃ©cifiÃ©",
+    totalWastePackaging: "Total dÃ©chets d'emballage",
+    wasteTypeCount: "Nombre de types de dÃ©chets",
+    noWastePackagingRecord: "Aucun enregistrement de dÃ©chets d'emballage saisi.",
+    noMatchingFilterPackage: "Aucun enregistrement trouvÃ© pour ces critÃ¨res.",
+    noFilterMessagePackaging: "Aucun filtre â€” affichage de tous les enregistrements de dÃ©chets d'emballage.",
+    editWastePackagingRecord: "Modifier l'enregistrement de dÃ©chets d'emballage",
+    newWastePackagingRecord: "Nouvel enregistrement de dÃ©chets d'emballage",
+    wastePackagingChartLabel: "DÃ©chets d'emballage",
+    chartDetailEmpty: "Aucun enregistrement trouvÃ© pour cette pÃ©riode.",
     chartClose: "Fermer",
     chartColProduction: "Production",
     chartColPasses: "Passages",
-    chartColWaste: "Déchets",
-    chartColStudent: "Étudiants",
+    chartColWaste: "DÃ©chets",
+    chartColStudent: "Ã‰tudiants",
     chartColFoodType: "Type de plat",
-    chartProductionVsTurnstile: "Différence entre production et passages au tourniquet",
-    chartStaffTotal: "Personnel académique + administratif + SKS",
-    yearFilterLabel: "Année:",
+    chartProductionVsTurnstile: "DiffÃ©rence entre production et passages au tourniquet",
+    chartStaffTotal: "Personnel acadÃ©mique + administratif + SKS",
+    yearFilterLabel: "AnnÃ©e:",
     monthFilterLabel: "Mois:",
-    chartSelectYear: "Sélectionner",
-    year1Label: "Année 1:",
-    year2Label: "Année 2:",
+    chartSelectYear: "SÃ©lectionner",
+    year1Label: "AnnÃ©e 1:",
+    year2Label: "AnnÃ©e 2:",
     noComparison: "Sans comparaison",
     newLabel: "Nouveau",
     foodTypeLabel: "Type de plat",
     productionLabel: " Production",
-    wasteKgLabel: " Déchets (kg)",
-    wasteGrPortionLabel: " Déchets (g/portion)",
+    wasteKgLabel: " DÃ©chets (kg)",
+    wasteGrPortionLabel: " DÃ©chets (g/portion)",
     diffKgLabel: "Diff (kg)",
     totalRow: "TOTAL",
-    registeredRate: "Taux enregistré: ",
-    unsavedChanges: " (modifications non enregistrées)",
-    kpiTotalStudentSpending: "Dépenses totales étudiants",
-    kpiTotalStaffSpending: "Dépenses totales personnel",
-    kpiAvgMonthlyStudentSpending: "Dép. moy. mensuelle étudiants",
-    kpiAvgMonthlyStaffSpending: "Dép. moy. mensuelle personnel",
-    kpiTotalStudents: "Total étudiants",
+    registeredRate: "Taux enregistrÃ©: ",
+    unsavedChanges: " (modifications non enregistrÃ©es)",
+    kpiTotalStudentSpending: "DÃ©penses totales Ã©tudiants",
+    kpiTotalStaffSpending: "DÃ©penses totales personnel",
+    kpiAvgMonthlyStudentSpending: "DÃ©p. moy. mensuelle Ã©tudiants",
+    kpiAvgMonthlyStaffSpending: "DÃ©p. moy. mensuelle personnel",
+    kpiTotalStudents: "Total Ã©tudiants",
     kpiTotalStaff: "Total personnel",
-    kpiHighestStudentMonth: "Mois le plus élevé étudiants",
-    kpiHighestStaffMonth: "Mois le plus élevé personnel",
-    kpiTotalMealSpending: "Dépenses totales repas",
-    kpiAvgMonthlyMealSpending: "Dép. moy. mensuelle repas",
+    kpiHighestStudentMonth: "Mois le plus Ã©levÃ© Ã©tudiants",
+    kpiHighestStaffMonth: "Mois le plus Ã©levÃ© personnel",
+    kpiTotalMealSpending: "DÃ©penses totales repas",
+    kpiAvgMonthlyMealSpending: "DÃ©p. moy. mensuelle repas",
     kpiTotalMealsProduced: "Total repas produits",
-    kpiHighestMealMonth: "Mois le plus élevé repas",
-    chartStudentSpending: "Dépenses étudiants (₺)",
-    chartStaffSpending: "Dépenses personnel (₺)",
-    chartMealSpending: "Dépenses repas (₺)",
+    kpiHighestMealMonth: "Mois le plus Ã©levÃ© repas",
+    chartStudentSpending: "DÃ©penses Ã©tudiants (â‚º)",
+    chartStaffSpending: "DÃ©penses personnel (â‚º)",
+    chartMealSpending: "DÃ©penses repas (â‚º)",
     noRecordsYet: "Aucun enregistrement.",
     invalidRate: "Veuillez entrer un taux valide !",
-    rateSaved: "Taux enregistré: ",
+    rateSaved: "Taux enregistrÃ©: ",
     menuStatusDraft: "Brouillon",
     menuStatusPending: "En attente d'approbation",
-    menuStatusApproved: "Approuvé",
-    menuStatusRejected: "Rejeté",
+    menuStatusApproved: "ApprouvÃ©",
+    menuStatusRejected: "RejetÃ©",
     menuApprove: "Approuver le menu",
-    menuApproveDisabled: "Le menu n'a pas encore été soumis pour approbation. Lorsque le diététicien clique sur « Soumettre pour approbation », vous pouvez approuver ici.",
+    menuApproveDisabled: "Le menu n'a pas encore Ã©tÃ© soumis pour approbation. Lorsque le diÃ©tÃ©ticien clique sur Â« Soumettre pour approbation Â», vous pouvez approuver ici.",
     menuReject: "Rejeter le menu avec motif",
-    menuRejectDisabled: "Le menu n'a pas encore été soumis pour approbation. Lorsque le diététicien clique sur « Soumettre pour approbation », vous pouvez rejeter ici.",
-    menuPendingCount: " menus en attente d'approbation. Allez à la semaine en attente pour approuver.",
-    menuNotApproved: "Le menu de cette semaine n'a pas encore été approuvé par l'ingénieur alimentaire.",
-    menuRejected: "Ce menu a été rejeté",
-    menuRejectedSuffix: ". Le diététicien peut corriger et resoumettre.",
-    menuAwaitingApproval: "Ce menu attend approbation. Il sera marqué comme « non approuvé » dans la liste de production.",
+    menuRejectDisabled: "Le menu n'a pas encore Ã©tÃ© soumis pour approbation. Lorsque le diÃ©tÃ©ticien clique sur Â« Soumettre pour approbation Â», vous pouvez rejeter ici.",
+    menuPendingCount: " menus en attente d'approbation. Allez Ã  la semaine en attente pour approuver.",
+    menuNotApproved: "Le menu de cette semaine n'a pas encore Ã©tÃ© approuvÃ© par l'ingÃ©nieur alimentaire.",
+    menuRejected: "Ce menu a Ã©tÃ© rejetÃ©",
+    menuRejectedSuffix: ". Le diÃ©tÃ©ticien peut corriger et resoumettre.",
+    menuAwaitingApproval: "Ce menu attend approbation. Il sera marquÃ© comme Â« non approuvÃ© Â» dans la liste de production.",
     noteLabel: "Note ",
     deleteNote: "Supprimer cette note",
     addNote: "Ajouter une note",
     mealPickerTitle: "Choisir un plat",
-    clearLabel: "🗑 Effacer",
+    clearLabel: "ğŸ—‘ Effacer",
     searchMealPlaceholder: "Rechercher un plat...",
-    noMatchingMeal: "Aucun plat correspondant trouvé.",
-    varietyLabel: " Variété: ",
+    noMatchingMeal: "Aucun plat correspondant trouvÃ©.",
+    varietyLabel: " VariÃ©tÃ©: ",
     addRecord: "Ajouter un nouvel enregistrement",
     editRecord: "Modifier l'enregistrement",
-    btnUpdate: "Mettre à jour",
-    recordAdded: "Enregistrement ajouté avec succès.",
-    recordUpdated: "Enregistrement mis à jour avec succès.",
-    recordDeleted: "Enregistrement supprimé.",
-    allRecordsDeleted: "Tous les enregistrements supprimés.",
-    selectedRecordsDeleted: "Enregistrements sélectionnés supprimés.",
-    noRecordToDelete: "Aucun enregistrement à supprimer.",
-    noSelectedRecord: "Aucun enregistrement sélectionné.",
-    deleteAllConfirm: "Êtes-vous sûr de vouloir supprimer TOUS les enregistrements ?\nCette action est irréversible !",
-    deleteFoodConfirm: "Êtes-vous sûr de vouloir supprimer cet aliment ?",
-    selected: " sélectionnés",
-    negMeals: "Le nombre de repas produits ne peut pas être négatif.",
-    negTurnstile: "Le nombre de passages ne peut pas être négatif.",
-    negStaff: "Le nombre de personnel ne peut pas être négatif.",
-    negPortion: "La quantité de portions ne peut pas être négative.",
-    negStudent: "Le nombre d'étudiants ne peut pas être négatif.",
-    unsavedConfirm: "Vous avez des modifications non enregistrées. Voulez-vous vraiment fermer ?",
-    selectUser: "Veuillez sélectionner un utilisateur.",
+    btnUpdate: "Mettre Ã  jour",
+    recordAdded: "Enregistrement ajoutÃ© avec succÃ¨s.",
+    recordUpdated: "Enregistrement mis Ã  jour avec succÃ¨s.",
+    recordDeleted: "Enregistrement supprimÃ©.",
+    allRecordsDeleted: "Tous les enregistrements supprimÃ©s.",
+    selectedRecordsDeleted: "Enregistrements sÃ©lectionnÃ©s supprimÃ©s.",
+    noRecordToDelete: "Aucun enregistrement Ã  supprimer.",
+    noSelectedRecord: "Aucun enregistrement sÃ©lectionnÃ©.",
+    deleteAllConfirm: "ÃŠtes-vous sÃ»r de vouloir supprimer TOUS les enregistrements ?\nCette action est irrÃ©versible !",
+    deleteFoodConfirm: "ÃŠtes-vous sÃ»r de vouloir supprimer cet aliment ?",
+    selected: " sÃ©lectionnÃ©s",
+    negMeals: "Le nombre de repas produits ne peut pas Ãªtre nÃ©gatif.",
+    negTurnstile: "Le nombre de passages ne peut pas Ãªtre nÃ©gatif.",
+    negStaff: "Le nombre de personnel ne peut pas Ãªtre nÃ©gatif.",
+    negPortion: "La quantitÃ© de portions ne peut pas Ãªtre nÃ©gative.",
+    negStudent: "Le nombre d'Ã©tudiants ne peut pas Ãªtre nÃ©gatif.",
+    unsavedConfirm: "Vous avez des modifications non enregistrÃ©es. Voulez-vous vraiment fermer ?",
+    selectUser: "Veuillez sÃ©lectionner un utilisateur.",
     wrongCredentials: "Nom d'utilisateur ou mot de passe incorrect.",
     tooManyAttempts: "Trop de tentatives. Veuillez patienter.",
     editable: "Modifiable",
     fixed: "Fixe",
-    menuSentForApproval: "Menu soumis pour approbation. En attente de l'approbation de l'ingénieur alimentaire/admin.",
-    menuApproved: "Menu approuvé.",
-    menuRejectedMsg: "Menu rejeté avec justification.",
-    menuDraftSaved: "Menu enregistré comme brouillon.",
-    menuCleared: "Menu effacé.",
+    menuSentForApproval: "Menu soumis pour approbation. En attente de l'approbation de l'ingÃ©nieur alimentaire/admin.",
+    menuApproved: "Menu approuvÃ©.",
+    menuRejectedMsg: "Menu rejetÃ© avec justification.",
+    menuDraftSaved: "Menu enregistrÃ© comme brouillon.",
+    menuCleared: "Menu effacÃ©.",
     monthShort1: "Janv",
-    monthShort2: "Févr",
+    monthShort2: "FÃ©vr",
     monthShort3: "Mars",
     monthShort4: "Avr",
     monthShort5: "Mai",
     monthShort6: "Juin",
     monthShort7: "Juil",
-    monthShort8: "Août",
+    monthShort8: "AoÃ»t",
     monthShort9: "Sept",
     monthShort10: "Oct",
     monthShort11: "Nov",
-    monthShort12: "Déc"
+    monthShort12: "DÃ©c"
   },
   es: {
-    loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
-    loginFormSub: "Iniciar sesión",
+    loginSub: "SISTEMA DE GESTIÃ“N DE SERVICIOS DE NUTRICIÃ“N",
+    loginFormSub: "Iniciar sesiÃ³n",
     loginUsername: "Usuario",
     loginSelectUser: "Seleccionar usuario",
-    loginPassword: "Contraseña",
-    loginBtn: "Iniciar sesión",
-    loginHint: "Puede obtener su contraseña del administrador",
-    loginFeature1: "Planificación de menú, producción diaria, consumo y residuos",
+    loginPassword: "ContraseÃ±a",
+    loginBtn: "Iniciar sesiÃ³n",
+    loginHint: "Puede obtener su contraseÃ±a del administrador",
+    loginFeature1: "PlanificaciÃ³n de menÃº, producciÃ³n diaria, consumo y residuos",
     loginFeature2: "Informes detallados",
-    loginFeature3: "Panel en vivo y gráficos",
-    menuLabel: "Menú",
-    headerSubtitle: "Sistema de gestión de servicios de nutrición",
-    btnLogout: "Cerrar sesión",
+    loginFeature3: "Panel en vivo y grÃ¡ficos",
+    menuLabel: "MenÃº",
+    headerSubtitle: "Sistema de gestiÃ³n de servicios de nutriciÃ³n",
+    btnLogout: "Cerrar sesiÃ³n",
     btnPrev: "Anterior",
     btnNext: "Siguiente",
     loading: "Cargando...",
     loadingText: "Sincronizando datos...",
-    loadingSub: "Verificando conexión con Supabase",
+    loadingSub: "Verificando conexiÃ³n con Supabase",
     loadingSkip: "Haga clic para omitir",
-    versionLabel: "Versión de la aplicación",
+    versionLabel: "VersiÃ³n de la aplicaciÃ³n",
     sidebarPanel: "Panel",
-    sidebarMenu: "Menú semanal",
+    sidebarMenu: "MenÃº semanal",
     sidebarRecords: "Registros",
     sidebarReport: "Informe",
     sidebarHaccp: "Seguridad alimentaria",
-    sidebarCalibration: "Calibración",
+    sidebarCalibration: "CalibraciÃ³n",
     sidebarOil: "Aceite usado",
     sidebarPackaging: "Residuos de envases",
-    sidebarCharts: "Gráficos",
-    sidebarYearly: "Comparación anual",
+    sidebarCharts: "GrÃ¡ficos",
+    sidebarYearly: "ComparaciÃ³n anual",
     sidebarSpending: "Gastos",
     sidebarUnitPrice: "Precios unitarios",
     sidebarDownload: "Descargar todo",
     sidebarBackup: "Copia de seguridad en Supabase",
     sidebarRestore: "Restaurar desde Supabase",
-    sidebarAdmin: "Administración",
+    sidebarAdmin: "AdministraciÃ³n",
     sidebarLogs: "Registros de actividad",
     sidebarTheme: "Tema",
     sidebarManual: "Manual de usuario",
     dashboardPrintPdf: "Imprimir PDF",
-    kpiTotalRecords: "Total de días de producción",
-    kpiTodayProduction: "Producción de hoy",
-    kpiHaccpAlarm: "Alarma de temperatura de cámara frigorífica",
-    kpiCalibrationAlarm: "Alarma de calibración",
+    kpiTotalRecords: "Total de dÃ­as de producciÃ³n",
+    kpiTodayProduction: "ProducciÃ³n de hoy",
+    kpiHaccpAlarm: "Alarma de temperatura de cÃ¡mara frigorÃ­fica",
+    kpiCalibrationAlarm: "Alarma de calibraciÃ³n",
     kpiAvgWaste: "Residuos promedio (kg)",
     kpiTotalPasses: "Total de pasadas por torniquete",
     kpiTotalWaste: "Total de residuos (kg)",
@@ -15737,20 +15777,20 @@ var I18N = {
     weeklySummary: "Resumen semanal",
     weeklyNextBtn: "Semana siguiente",
     weeklyBadge: "Esta semana",
-    dailyPrevBtn: "Día anterior",
+    dailyPrevBtn: "DÃ­a anterior",
     dailySummary: "Detalle diario",
-    dailyNextBtn: "Día siguiente",
-    weeklyCompTitle: "Comparación semanal",
-    monthlyCompTitle: "Comparación mensual",
+    dailyNextBtn: "DÃ­a siguiente",
+    weeklyCompTitle: "ComparaciÃ³n semanal",
+    monthlyCompTitle: "ComparaciÃ³n mensual",
     monthlyBadge: "Este mes",
-    yearlyBadge: "Este año",
-    anomalyTitle: "Detección de anomalías",
-    anomalyBadge: "Días con residuos anormales",
-    lastRecordsTitle: "Últimos registros",
+    yearlyBadge: "Este aÃ±o",
+    anomalyTitle: "DetecciÃ³n de anomalÃ­as",
+    anomalyBadge: "DÃ­as con residuos anormales",
+    lastRecordsTitle: "Ãšltimos registros",
     dashboardGoToRecords: "Ir a registros",
-    emptyDashboard: "Aún no hay registros...",
-    formulaTitle: "FÓRMULA DE CÁLCULO DE RESIDUOS",
-    recordsEntryBtn: "Ingresar producción/consumo",
+    emptyDashboard: "AÃºn no hay registros...",
+    formulaTitle: "FÃ“RMULA DE CÃLCULO DE RESIDUOS",
+    recordsEntryBtn: "Ingresar producciÃ³n/consumo",
     recordsImportBtn: "Importar",
     recordsPrintPdf: "PDF",
     recordsCsvBtn: "Descargar CSV",
@@ -15759,172 +15799,172 @@ var I18N = {
     thDate: "Fecha",
     thProducedPerson: "Comidas producidas (Persona)",
     thWaste10: "Residuos 10%",
-    thBeneficiary: "Beneficiarios del servicio de alimentación",
-    thPortionGr: "Porción (g)",
+    thBeneficiary: "Beneficiarios del servicio de alimentaciÃ³n",
+    thPortionGr: "PorciÃ³n (g)",
     thWasteKg: "Residuos (kg)",
-    thWastedPortion: "Descartada (porción)",
+    thWastedPortion: "Descartada (porciÃ³n)",
     thFoodType: "Tipo de comida",
-    thAction: "Acción",
-    thAcademicStaff: "Personal académico y administrativo por torniquete",
+    thAction: "AcciÃ³n",
+    thAcademicStaff: "Personal acadÃ©mico y administrativo por torniquete",
     thStudentCount: "Estudiantes por torniquete",
-    thBeneficiaryTotal: "Total de beneficiarios del servicio de alimentación",
-    sksStaff: "Personal SKS de alimentación",
+    thBeneficiaryTotal: "Total de beneficiarios del servicio de alimentaciÃ³n",
+    sksStaff: "Personal SKS de alimentaciÃ³n",
     summaryReport: "Informe resumen",
     reportPdfBtn: "Abrir PDF",
-    allRecordsPrint: "Todos los registros (Vista de impresión)",
+    allRecordsPrint: "Todos los registros (Vista de impresiÃ³n)",
     rTotalRecords: "Total de registros",
     rTotalMeals: "Total de comidas producidas",
     rTotalWaste10: "Total de residuos 10%",
-    rTotalAfterWaste: "Total de comidas después de 10% de residuos",
+    rTotalAfterWaste: "Total de comidas despuÃ©s de 10% de residuos",
     rTotalTurnstile: "Total de pasadas por torniquete",
-    rTotalBeneficiary: "Total de beneficiarios del servicio de alimentación",
+    rTotalBeneficiary: "Total de beneficiarios del servicio de alimentaciÃ³n",
     rTotalStaff: "Total de personal SKS beneficiado",
-    rPortionSize: "Tamaño de porción (g)",
+    rPortionSize: "TamaÃ±o de porciÃ³n (g)",
     rTotalPortion: "Total de porciones (g)",
     rWastedPortion: "Porciones descartadas",
-    rMaxWeeklyBeneficiary: "Máximo de beneficiarios semanales",
+    rMaxWeeklyBeneficiary: "MÃ¡ximo de beneficiarios semanales",
     rTotalWasteKg: "Cantidad total de residuos (kg)",
     rAvgWasteKg: "Cantidad promedio de residuos (kg)",
     rTotalStudents: "Total de estudiantes",
-    rMaxWaste: "Máximo de residuos (kg)",
-    rMinWaste: "Mínimo de residuos (kg)",
-    rWasteTrend: "Tendencia de residuos (últimos 7 días)",
-    rBeneficiaryTrend: "Tendencia de beneficiarios (últimos 7 días)",
-    wasteByFoodTitle: "Análisis de residuos por tipo de comida",
+    rMaxWaste: "MÃ¡ximo de residuos (kg)",
+    rMinWaste: "MÃ­nimo de residuos (kg)",
+    rWasteTrend: "Tendencia de residuos (Ãºltimos 7 dÃ­as)",
+    rBeneficiaryTrend: "Tendencia de beneficiarios (Ãºltimos 7 dÃ­as)",
+    wasteByFoodTitle: "AnÃ¡lisis de residuos por tipo de comida",
     wasteByFoodEmpty: "No se encontraron registros con datos de tipo de comida.",
-    wasteByFoodRecords: "Nº de registros",
+    wasteByFoodRecords: "NÂº de registros",
     wasteByFoodRate: "Tasa de residuos",
     wasteByFoodPerPerson: "Residuos por persona (kg)",
     wsProducedMeal: "Comidas producidas (pers.)",
     wsTotalPasses: "Total de pases",
     wsTurnstile: "Torniquete",
-    wsStaffSKS: "Personal de nutrición",
+    wsStaffSKS: "Personal de nutriciÃ³n",
     wsWasteAmount: "Cantidad de residuos",
     wsWastedPortion: "Al basurero",
-    wsStudents: "Estudiantes nutrición",
-    wsNoRecordsYet: "Sin registros aún",
+    wsStudents: "Estudiantes nutriciÃ³n",
+    wsNoRecordsYet: "Sin registros aÃºn",
     wsNoRecordThisWeek: "Sin registros esta semana",
     wsNoRecordToday: "Sin registro",
     wsTodayDetail: "Detalle de hoy",
     wsDailyDetail: "Detalle diario",
     wsWaste: "Merma",
-    wsPortion: "porción",
+    wsPortion: "porciÃ³n",
     wsProduced: "Producido",
     wsTurnstileCount: "Pases torniquete",
     wsStaffCount: "Personal",
-    menuTitle: "Menú semanal",
+    menuTitle: "MenÃº semanal",
     menuStatusBadge: "Estado",
     menuSaveBtn: "Guardar",
-    menuSendBtn: "Enviar para aprobación",
+    menuSendBtn: "Enviar para aprobaciÃ³n",
     menuApproveBtn: "Aprobar",
     menuRejectBtn: "Rechazar",
-    menuWithdrawBtn: "Retirar aprobación",
+    menuWithdrawBtn: "Retirar aprobaciÃ³n",
     menuClearBtn: "Limpiar tabla",
     menuPrintBtn: "Imprimir",
     menuFoodListBtn: "Lista de comidas",
     menuFoodListUploadBtn: "Subir CSV",
     menuFoodListCsvBtn: "Descargar CSV",
-    menuWarningPrefix: "Menú no aprobado:",
-    menuWarningText: "El menú de esta semana aún no ha sido aprobado por el ingeniero de alimentos.",
+    menuWarningPrefix: "MenÃº no aprobado:",
+    menuWarningText: "El menÃº de esta semana aÃºn no ha sido aprobado por el ingeniero de alimentos.",
     menuHintText: "Escriba los nombres de las comidas...",
     productNeedsTitle: "Lista de necesidades de productos",
     weeklyNeedsTitle: "Lista semanal total de necesidades",
     foodListTitle: "Lista de comidas",
-    modalRejectMenu: "Rechazar menú",
+    modalRejectMenu: "Rechazar menÃº",
     modalRejectDesc: "El motivo de rechazo es obligatorio.",
     menuRejectConfirm: "Rechazar",
-    haccpTitle: "Gestión de seguridad alimentaria",
+    haccpTitle: "GestiÃ³n de seguridad alimentaria",
     haccpCsvBtn: "Descargar CSV",
-    haccpColdStorage: "Registros de temperatura de cámara frigorífica",
+    haccpColdStorage: "Registros de temperatura de cÃ¡mara frigorÃ­fica",
     haccpNewBtn: "Nuevo registro",
-    haccpDepotBtn: "Nombres de depósitos",
-    haccpDepoQrNote: "Puede editar los nombres de los depósitos y generar códigos QR para cada depósito con el botón QR.",
+    haccpDepotBtn: "Nombres de depÃ³sitos",
+    haccpDepoQrNote: "Puede editar los nombres de los depÃ³sitos y generar cÃ³digos QR para cada depÃ³sito con el botÃ³n QR.",
     haccpModalTitle: "Nuevo registro",
-    filterDepot: "Filtro de depósito:",
+    filterDepot: "Filtro de depÃ³sito:",
     filterAll: "Todos",
     filterDateRange: "Rango de fechas:",
-    emptyHaccp: "Aún no se han ingresado registros de temperatura.",
+    emptyHaccp: "AÃºn no se han ingresado registros de temperatura.",
     btnDeleteSelectedHaccp: "Eliminar seleccionados",
     btnPdf: "PDF",
-    depoNamesTitle: "Nombres de depósitos",
+    depoNamesTitle: "Nombres de depÃ³sitos",
     oilNewBtn: "Nuevo registro",
     oilListBtn: "Lista",
     oilFilterTitle: "Filtros de aceite usado",
     filterOilType: "Tipo de aceite:",
     btnReset: "Restablecer",
     oilSummaryTitle: "Resumen de aceite usado",
-    oilChartTitle: "Gráficos de aceite usado",
+    oilChartTitle: "GrÃ¡ficos de aceite usado",
     oilChartSubtitle: "Cantidad mensual de aceite usado (litros)",
-    oilChartEmpty: "Los gráficos aparecerán cuando se ingresen registros de aceite usado",
-    oilChartNote: "Totales mensuales de aceite usado por fecha, tipo de aceite y filtros de año",
+    oilChartEmpty: "Los grÃ¡ficos aparecerÃ¡n cuando se ingresen registros de aceite usado",
+    oilChartNote: "Totales mensuales de aceite usado por fecha, tipo de aceite y filtros de aÃ±o",
     oilRecordsTitle: "Registros de aceite usado",
     oilModalTitle: "Registro de aceite usado",
-    emptyOil: "Aún no se han ingresado registros de aceite usado.",
+    emptyOil: "AÃºn no se han ingresado registros de aceite usado.",
     ambalajNewBtn: "Nuevo registro",
     ambalajListBtn: "Lista",
     packagingFilterTitle: "Filtros de residuos de envases",
     filterWasteType: "Tipo de residuo:",
     packagingSummaryTitle: "Resumen de residuos de envases",
-    packagingChartTitle: "Gráficos de residuos de envases",
+    packagingChartTitle: "GrÃ¡ficos de residuos de envases",
     packagingChartSubtitle: "Cantidad mensual de residuos de envases (kg)",
-    packagingChartEmpty: "Los gráficos aparecerán cuando se ingresen registros de residuos de envases",
-    packagingChartNote: "Totales mensuales de residuos de envases por fecha, tipo de residuo y filtros de año (kg)",
+    packagingChartEmpty: "Los grÃ¡ficos aparecerÃ¡n cuando se ingresen registros de residuos de envases",
+    packagingChartNote: "Totales mensuales de residuos de envases por fecha, tipo de residuo y filtros de aÃ±o (kg)",
     packagingRecordsTitle: "Registros de residuos de envases",
     packagingModalTitle: "Registro de residuos de envases",
-    emptyPackaging: "Aún no se han ingresado registros de residuos de envases.",
+    emptyPackaging: "AÃºn no se han ingresado registros de residuos de envases.",
     kalibrasyonNewBtn: "Nuevo dispositivo",
     kalibrasyonListBtn: "Lista",
     kalibrasyonCsvBtn: "Descargar CSV",
-    calibrationSummary: "Resumen de calibración",
-    calibrationDevices: "Dispositivos sujetos a calibración",
-    calibrationModalTitle: "Dispositivo para calibración",
+    calibrationSummary: "Resumen de calibraciÃ³n",
+    calibrationDevices: "Dispositivos sujetos a calibraciÃ³n",
+    calibrationModalTitle: "Dispositivo para calibraciÃ³n",
     filterStatus: "Estado:",
     filterDepartment: "Departamento:",
     btnWordExport: "Exportar a Word",
     btnPrint: "Imprimir PDF",
-    chartProdWaste: "Comparación Producción - Pasadas - Residuos",
-    chartEmpty: "Los gráficos aparecerán cuando se ingresen datos",
-    chartProdWasteNote: "Comparación mensual de producción, pasadas por torniquete y porciones descartadas",
-    chartStudentCount: "Número de estudiantes que usan el servicio de alimentación",
+    chartProdWaste: "ComparaciÃ³n ProducciÃ³n - Pasadas - Residuos",
+    chartEmpty: "Los grÃ¡ficos aparecerÃ¡n cuando se ingresen datos",
+    chartProdWasteNote: "ComparaciÃ³n mensual de producciÃ³n, pasadas por torniquete y porciones descartadas",
+    chartStudentCount: "NÃºmero de estudiantes que usan el servicio de alimentaciÃ³n",
     yearTotal: "Total anual",
     chartStudentNote: "Total mensual de pasadas diarias de estudiantes",
-    chartStaffTotal: "Total de personal académico y administrativo + SKS",
-    chartStaffNote: "Total del personal académico y administrativo (Torniquete - Estudiantes) y del personal SKS de alimentación",
-    chartMonthlyProd: "Producción mensual de comidas",
-    chartMonthlyProdNote: "Total mensual del número diario de comidas producidas",
+    chartStaffTotal: "Total de personal acadÃ©mico y administrativo + SKS",
+    chartStaffNote: "Total del personal acadÃ©mico y administrativo (Torniquete - Estudiantes) y del personal SKS de alimentaciÃ³n",
+    chartMonthlyProd: "ProducciÃ³n mensual de comidas",
+    chartMonthlyProdNote: "Total mensual del nÃºmero diario de comidas producidas",
     chartMonthlyTurnstile: "Pasadas mensuales por torniquete",
     chartTurnstileNote: "Estudiantes + personal + pasadas externas",
     chartMonthlyWaste: "Cantidad mensual de residuos (kg)",
     chartMonthlyWasteNote: "Total mensual de residuos diarios (kg)",
     chartMonthlyWastePortion: "Cantidad mensual de residuos (porciones)",
     chartWastePortionNote: "Total mensual de porciones descartadas diariamente",
-    chartDiff: "Diferencia entre producción y pasadas",
+    chartDiff: "Diferencia entre producciÃ³n y pasadas",
     chartDiffNote: "Diferencia entre comidas producidas y pasadas por torniquete",
     chartWasteRatio: "Residuos % de las comidas producidas",
     yearAverage: "Promedio anual",
     chartWasteRatioNote: "Porcentaje de comidas producidas que se convierten en residuos",
     chartWastePerPerson: "Residuos por persona (kg/persona)",
     chartWastePerPersonNote: "Residuos promedio por persona que ingresa al comedor",
-    chartMonthlyTemp: "Temperaturas promedio mensuales de depósitos (°C)",
-    chartTempEmpty: "Los gráficos aparecerán cuando se ingresen registros de temperatura",
-    chartTempNote: "Temperatura promedio mensual de cada depósito",
+    chartMonthlyTemp: "Temperaturas promedio mensuales de depÃ³sitos (Â°C)",
+    chartTempEmpty: "Los grÃ¡ficos aparecerÃ¡n cuando se ingresen registros de temperatura",
+    chartTempNote: "Temperatura promedio mensual de cada depÃ³sito",
     yearlyPdfBtn: "Imprimir PDF",
-    yearlyTotalProd: "Comparación de producción total",
-    yearlyTotalProdNote: "Total anual - Año 1 vs Año 2 (porciones)",
-    yearlyTotalBen: "Total de beneficiarios del servicio de alimentación",
-    yearlyTotalBenNote: "Total anual - Año 1 vs Año 2 (total personas)",
-    yearlyStudentComp: "Comparación de estudiantes beneficiarios",
-    yearlyStudentNote: "Total anual - Año 1 vs Año 2 (estudiantes)",
-    yearlyWasteComp: "Comparación de residuos (kg)",
-    yearlyWasteNote: "Total anual - Año 1 vs Año 2 (kg)",
-    yearlyMonthlyProd: "Comparación mensual de producción",
-    yearlyMonthlyProdNote: "Año 1 vs Año 2 - comidas producidas (porciones)",
-    yearlyMonthlyTurnstile: "Comparación mensual de pasadas por torniquete",
-    yearlyMonthlyTurnstileNote: "Año 1 vs Año 2 - cantidad de pasadas por torniquete",
-    yearlyMonthlyStudent: "Comparación mensual de pasadas de estudiantes",
-    yearlyMonthlyStudentNote: "Año 1 vs Año 2 - cantidad de pasadas de estudiantes",
-    yearlyMonthlyWaste: "Comparación mensual de residuos (kg)",
-    yearlyMonthlyWasteNote: "Año 1 vs Año 2 - cantidad de residuos (kg)",
+    yearlyTotalProd: "ComparaciÃ³n de producciÃ³n total",
+    yearlyTotalProdNote: "Total anual - AÃ±o 1 vs AÃ±o 2 (porciones)",
+    yearlyTotalBen: "Total de beneficiarios del servicio de alimentaciÃ³n",
+    yearlyTotalBenNote: "Total anual - AÃ±o 1 vs AÃ±o 2 (total personas)",
+    yearlyStudentComp: "ComparaciÃ³n de estudiantes beneficiarios",
+    yearlyStudentNote: "Total anual - AÃ±o 1 vs AÃ±o 2 (estudiantes)",
+    yearlyWasteComp: "ComparaciÃ³n de residuos (kg)",
+    yearlyWasteNote: "Total anual - AÃ±o 1 vs AÃ±o 2 (kg)",
+    yearlyMonthlyProd: "ComparaciÃ³n mensual de producciÃ³n",
+    yearlyMonthlyProdNote: "AÃ±o 1 vs AÃ±o 2 - comidas producidas (porciones)",
+    yearlyMonthlyTurnstile: "ComparaciÃ³n mensual de pasadas por torniquete",
+    yearlyMonthlyTurnstileNote: "AÃ±o 1 vs AÃ±o 2 - cantidad de pasadas por torniquete",
+    yearlyMonthlyStudent: "ComparaciÃ³n mensual de pasadas de estudiantes",
+    yearlyMonthlyStudentNote: "AÃ±o 1 vs AÃ±o 2 - cantidad de pasadas de estudiantes",
+    yearlyMonthlyWaste: "ComparaciÃ³n mensual de residuos (kg)",
+    yearlyMonthlyWasteNote: "AÃ±o 1 vs AÃ±o 2 - cantidad de residuos (kg)",
     yearlyWasteListTitle: "Lista anual de residuos",
     spendingRatesTitle: "Tasas de gasto por persona (Estudiantes, Personal y Comidas)",
     spendingStudentRate: "Monto de gasto por estudiante (TL)",
@@ -15933,30 +15973,30 @@ var I18N = {
     btnSaveStaffRate: "Guardar monto personal",
     spendingMealRate: "Monto de gasto por comida (TL)",
     btnSaveMealRate: "Guardar monto comidas",
-    spendingDesc: "Gasto de estudiantes = Nro. estudiantes × Monto por estudiante",
+    spendingDesc: "Gasto de estudiantes = Nro. estudiantes Ã— Monto por estudiante",
     spendingStudentTitle: "Gasto de estudiantes (TL)",
-    spendingChartEmpty: "Los gráficos aparecerán cuando se ingresen registros",
-    spendingStudentNote: "Gasto de estudiantes (TL) = Nro. estudiantes × Monto por estudiante",
+    spendingChartEmpty: "Los grÃ¡ficos aparecerÃ¡n cuando se ingresen registros",
+    spendingStudentNote: "Gasto de estudiantes (TL) = Nro. estudiantes Ã— Monto por estudiante",
     spendingStaffTitle: "Gasto del personal (TL)",
-    spendingStaffNote: "Gasto del personal (TL) = Nro. personal × Monto por miembro del personal",
+    spendingStaffNote: "Gasto del personal (TL) = Nro. personal Ã— Monto por miembro del personal",
     spendingMealTitle: "Gasto de comidas (TL)",
-    spendingMealNote: "Gasto de comidas (TL) = Comidas producidas × Monto por comida",
-    spendingTableTitle: "Tabla de cálculo de gastos",
-    syncTitle: "Sincronización Supabase",
+    spendingMealNote: "Gasto de comidas (TL) = Comidas producidas Ã— Monto por comida",
+    spendingTableTitle: "Tabla de cÃ¡lculo de gastos",
+    syncTitle: "SincronizaciÃ³n Supabase",
     syncCloseBtn: "Cerrar",
     modalNewRecord: "Agregar nuevo registro",
     formDate: "Fecha",
-    formProducedCount: "Número de comidas producidas",
-    formTurnstileCount: "Número de pasadas por torniquete",
-    formStudentCount: "Número de estudiantes",
+    formProducedCount: "NÃºmero de comidas producidas",
+    formTurnstileCount: "NÃºmero de pasadas por torniquete",
+    formStudentCount: "NÃºmero de estudiantes",
     formFoodType: "Tipo de comida",
-    formAutoCalc: "Cálculos automáticos",
-    badgeAutomatic: "Automático",
+    formAutoCalc: "CÃ¡lculos automÃ¡ticos",
+    badgeAutomatic: "AutomÃ¡tico",
     badgeFixed: "Fijo",
-    badgeAutoEditable: "Automático + Editable",
+    badgeAutoEditable: "AutomÃ¡tico + Editable",
     btnCancel: "Cancelar",
     entryFormSubmit: "Guardar",
-    formReceiptNo: "N° de recibo",
+    formReceiptNo: "NÂ° de recibo",
     formOilType: "Tipo de aceite",
     formAmountLt: "Cantidad (litros)",
     formNote: "Nota",
@@ -15964,92 +16004,92 @@ var I18N = {
     formAmount: "Cantidad",
     formDeviceName: "Nombre del dispositivo",
     formBrandModel: "Marca-Modelo",
-    formSerialNo: "Número de serie",
+    formSerialNo: "NÃºmero de serie",
     formStatus: "Estado",
-    formVerification: "Verificación",
-    formLastCalibration: "Última calibración",
-    formNextCalibration: "Siguiente calibración",
-    formLocation: "Ubicación/Departamento",
+    formVerification: "VerificaciÃ³n",
+    formLastCalibration: "Ãšltima calibraciÃ³n",
+    formNextCalibration: "Siguiente calibraciÃ³n",
+    formLocation: "UbicaciÃ³n/Departamento",
     formResponsible: "Persona responsable",
     btnSave: "Guardar",
     btnAdd: "Agregar",
     btnClose: "Cerrar",
-    qrTitle: "Código QR",
-    qrHint: "Imprima el código QR para colgar en las puertas de los depósitos.",
-    adminTitle: "Panel de administración",
-    adminReAuthText: "Ingrese su contraseña de administrador para acceder al panel.",
-    adminPassword: "Contraseña de administrador",
+    qrTitle: "CÃ³digo QR",
+    qrHint: "Imprima el cÃ³digo QR para colgar en las puertas de los depÃ³sitos.",
+    adminTitle: "Panel de administraciÃ³n",
+    adminReAuthText: "Ingrese su contraseÃ±a de administrador para acceder al panel.",
+    adminPassword: "ContraseÃ±a de administrador",
     btnVerify: "Verificar",
-    adminSessionRole: "Rol de sesión",
-    adminLastLogin: "Último inicio de sesión",
-    adminAuthMethod: "Método de autenticación",
-    adminStorage: "Almacén de contraseñas",
+    adminSessionRole: "Rol de sesiÃ³n",
+    adminLastLogin: "Ãšltimo inicio de sesiÃ³n",
+    adminAuthMethod: "MÃ©todo de autenticaciÃ³n",
+    adminStorage: "AlmacÃ©n de contraseÃ±as",
     adminDataSource: "Fuente de datos",
-    adminUserMgmt: "Gestión de usuarios",
+    adminUserMgmt: "GestiÃ³n de usuarios",
     adminUserMgmtDesc: "Agregue, edite o elimine usuarios.",
     adminAddUser: "Agregar nuevo usuario",
     adminUsername: "Nombre de usuario",
     adminDisplayName: "Nombre para mostrar",
-    adminPasswordLabel: "Contraseña",
+    adminPasswordLabel: "ContraseÃ±a",
     adminRole: "Rol",
     adminAddUserBtn: "Agregar usuario",
-    adminRolePerms: "Configuración de permisos por rol",
-    adminRolePermsDesc: "Configure qué pestañas puede ver cada rol.",
-    adminSecurity: "Seguridad de sesión",
-    adminSecurityDesc: "La sesión se cerrará si no hay actividad durante el tiempo especificado.",
+    adminRolePerms: "ConfiguraciÃ³n de permisos por rol",
+    adminRolePermsDesc: "Configure quÃ© pestaÃ±as puede ver cada rol.",
+    adminSecurity: "Seguridad de sesiÃ³n",
+    adminSecurityDesc: "La sesiÃ³n se cerrarÃ¡ si no hay actividad durante el tiempo especificado.",
     adminInactivityTimeout: "Tiempo de inactividad",
     adminLogsTitle: "Registros de actividad",
-    adminLogsDesc: "Inicio/cierre de sesión de usuarios y operaciones de registros",
+    adminLogsDesc: "Inicio/cierre de sesiÃ³n de usuarios y operaciones de registros",
     btnRefresh: "Actualizar",
-    adminSaveBtn: "Guardar configuración",
-    adminFooterNote: "Las contraseñas se almacenan permanentemente en el servidor.",
+    adminSaveBtn: "Guardar configuraciÃ³n",
+    adminFooterNote: "Las contraseÃ±as se almacenan permanentemente en el servidor.",
     adminCloseBtn: "Cerrar",
-    logFilterDelete: "Eliminación",
+    logFilterDelete: "EliminaciÃ³n",
     logFilterAddUser: "Agregar usuario",
     logFilterDeleteUser: "Eliminar usuario",
     adminRefreshBtn: "Actualizar",
     manualTitle: "Manual de usuario",
-    manualSubtitle: "Sistema de control de producción, consumo y residuos del comedor",
+    manualSubtitle: "Sistema de control de producciÃ³n, consumo y residuos del comedor",
     compDataType: "Tipo de dato",
     compLastWeek: "Semana pasada",
     compThisWeek: "Esta semana",
     compLastMonth: "Mes pasado",
     compThisMonth: "Este mes",
-    compLastYear: "Año pasado",
-    compThisYear: "Este año",
+    compLastYear: "AÃ±o pasado",
+    compThisYear: "Este aÃ±o",
     compDiff: "Diferencia",
     compTotalWaste: "Residuos totales (kg)",
-    compTotalProduction: "Producción total",
+    compTotalProduction: "ProducciÃ³n total",
     compTurnstilePasses: "Pasos de torniquete",
-    compStudentCount: "Número de estudiantes",
+    compStudentCount: "NÃºmero de estudiantes",
     compWastePerPerson: "Residuos por persona (g)",
-    monthlyCompDesc: "Comparación de este mes con el mes pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
-    yearlyCompDesc: "Comparación de este año (año hasta la fecha) con el mismo período del año pasado. ↑ aumento, ↓ disminución. Una disminución (↓) en residuos y residuos por persona es buena.",
+    monthlyCompDesc: "ComparaciÃ³n de este mes con el mes pasado. â†‘ aumento, â†“ disminuciÃ³n. Una disminuciÃ³n (â†“) en residuos y residuos por persona es buena.",
+    yearlyCompDesc: "ComparaciÃ³n de este aÃ±o (aÃ±o hasta la fecha) con el mismo perÃ­odo del aÃ±o pasado. â†‘ aumento, â†“ disminuciÃ³n. Una disminuciÃ³n (â†“) en residuos y residuos por persona es buena.",
     monthNames: ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
     haccpColDate: "Fecha",
     haccpColTime: "Hora",
-    haccpColDepot: "Nombre del almacén",
-    haccpColTemp: "Temperatura (°C)",
+    haccpColDepot: "Nombre del almacÃ©n",
+    haccpColTemp: "Temperatura (Â°C)",
     haccpColHumidity: "Humedad (%)",
     haccpColNote: "Nota",
-    haccpColAction: "Acción",
-    dayNames: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
+    haccpColAction: "AcciÃ³n",
+    dayNames: ["Lunes", "Martes", "MiÃ©rcoles", "Jueves", "Viernes"],
     menuVariety: "Variedad",
-    menuVariety1: "1ª Variedad",
-    menuVariety2: "2ª Variedad",
-    menuVariety3: "3ª Variedad",
-    menuVariety4: "4ª Variedad",
-    menuVariety5: "5ª Variedad",
-    menuPersonCount: "Número de personas",
-    stockDeductionList: "Lista de deducción de stock",
+    menuVariety1: "1Âª Variedad",
+    menuVariety2: "2Âª Variedad",
+    menuVariety3: "3Âª Variedad",
+    menuVariety4: "4Âª Variedad",
+    menuVariety5: "5Âª Variedad",
+    menuPersonCount: "NÃºmero de personas",
+    stockDeductionList: "Lista de deducciÃ³n de stock",
     total: "Total",
     inVarieties: "variedades",
     person: "pers.",
     weeklyGrandTotal: "Total semanal",
     dailyAverage: "Promedio diario",
     avgPerPerson: "Promedio por persona",
-    totalPersonDays: "Total personas/días",
-    colDay: "Día",
+    totalPersonDays: "Total personas/dÃ­as",
+    colDay: "DÃ­a",
     colDate: "Fecha",
     colPerson: "Pers.",
     dailyMaterialCost: "Costo diario de materiales",
@@ -16061,19 +16101,27 @@ var I18N = {
     colUnit: "Unidad",
     addIngredient: "+ Agregar ingrediente",
     foodName: "Nombre del plato",
-    allergen: "Alérgeno",
+    allergen: "AlÃ©rgeno",
     recipePerPerson: "Receta (por persona)",
     devices: "dispositivos",
+    chartMonthlyProduction: "Producción mensual (pax)",
+    chartMonthlyPasses: "Pasadas mensuales (pax)",
+    chartLastYearWaste: "Desperdicio del año pasado (porciones)",
+    chartMonthlyWasteKg: "Residuos mensuales (kg)",
+    chartMonthlyMealCount: "Cantidad mensual de comidas",
+    chartMonthlyWasteRate: "Tasa de residuos mensual %",
+    chartMonthlyStudent: "Cantidad mensual de estudiantes",
+    chartWastePerPersonLabel: "Residuos por persona (kg/persona)",
     maliTablo: "Tabla Financiera",
     maliTabloSubtitle: "Resumen semanal de costos de materiales",
     maliUnitPriceMissing: "precio unitario del material no definido",
-    maliUnitPriceHint: "Puede definir en la pestaña de Precios Unitarios",
+    maliUnitPriceHint: "Puede definir en la pestaÃ±a de Precios Unitarios",
     weeklyTotal: "TOTAL SEMANAL",
-    categoryDistribution: "Distribución por categoría",
+    categoryDistribution: "DistribuciÃ³n por categorÃ­a",
     weeklyTotalList: "Lista semanal de necesidades totales",
     totalCost: "Costo total",
-    catMeat: "Productos cárnicos",
-    catDairy: "Productos lácteos",
+    catMeat: "Productos cÃ¡rnicos",
+    catDairy: "Productos lÃ¡cteos",
     catLegumes: "Legumbres secas",
     catSpices: "Especias",
     catVegetable: "Verduras y Frutas",
@@ -16081,140 +16129,163 @@ var I18N = {
     month1: "Enero", month2: "Febrero", month3: "Marzo", month4: "Abril",
     month5: "Mayo", month6: "Junio", month7: "Julio", month8: "Agosto",
     month9: "Septiembre", month10: "Octubre", month11: "Noviembre", month12: "Diciembre",
-    menuListTitle: "LISTA DEL MENÚ",
+    menuListTitle: "LISTA DEL MENÃš",
     totalDevices: "Total de dispositivos",
     statusWorking: "Funcionando",
     statusDefective: "Defectuoso",
     statusMaintenance: "Requiere mantenimiento",
     statusScrap: "A desguazar",
-    calibrationValid: "Calibración válida",
-    calibrationApproaching: "Calibración próxima (30 días)",
+    calibrationValid: "CalibraciÃ³n vÃ¡lida",
+    calibrationApproaching: "CalibraciÃ³n prÃ³xima (30 dÃ­as)",
     differentDepartments: "Diferentes departamentos",
-    statusApproaching: "Próximamente",
+    statusApproaching: "PrÃ³ximamente",
     statusExpired: "Vencido",
     statusNotDone: "No realizado",
-    statusValid: "Válido",
+    statusValid: "VÃ¡lido",
     noDeviceFound: "No se encontraron dispositivos con estos criterios de filtro.",
-    noDeviceRecord: "Aún no se han registrado dispositivos de calibración.",
+    noDeviceRecord: "AÃºn no se han registrado dispositivos de calibraciÃ³n.",
     deviceCount: "dispositivos",
     deviceCountSuffix: " dispositivos",
-    editDeviceTitle: "Editar dispositivo de calibración",
-    newDeviceTitle: "Nuevo dispositivo de calibración",
+    editDeviceTitle: "Editar dispositivo de calibraciÃ³n",
+    newDeviceTitle: "Nuevo dispositivo de calibraciÃ³n",
     kpiBeneficiary: "Beneficiarios: ",
     kpiNoRecordToday: "Sin registro hoy",
     kpiAlertsCount: "alertas",
     kpiAllValuesOk: "Todos los valores son correctos",
     kpiDeviceInAlarm: "dispositivos en alarma",
     kpiApproaching: "se aproxima",
-    kpiAllCalibrationsValid: "Todas las calibraciones son válidas",
+    kpiAllCalibrationsValid: "Todas las calibraciones son vÃ¡lidas",
     filterAll: "Todos",
     colDeviceName: "Nombre del dispositivo",
     colBrandModel: "Marca-Modelo",
-    colSerialNo: "Número de serie",
+    colSerialNo: "NÃºmero de serie",
     colDeviceStatus: "Estado del dispositivo",
-    colCalibration: "Calibración",
-    colLastCalibration: "Última calibración",
-    colNextCalibration: "Próxima",
+    colCalibration: "CalibraciÃ³n",
+    colLastCalibration: "Ãšltima calibraciÃ³n",
+    colNextCalibration: "PrÃ³xima",
     colDepartment: "Departamento",
     colResponsible: "Responsable",
     colNote: "Nota",
-    colAction: "Acción",
+    colAction: "AcciÃ³n",
+    unitPriceList: "Lista de precios unitarios",
+    registeredProducts: "Productos registrados",
+    totalAmount: "Monto total",
+    avgUnitPrice: "Precio unitario promedio",
+    selectedYear: "Año seleccionado",
+    duplicateWarning: "productos con registros duplicados encontrados. Los cálculos de precios pueden tener errores.",
+    cleanDuplicates: "Limpiar uno por uno",
+    colProductName: "Nombre del producto",
+    colUnitPrice: "Precio unitario (₺)",
+    colUnitEquals: "1 Unidad =",
+    colYear: "Año",
+    noProductsThisYear: "No se han añadido productos para este año.",
+    btnEdit: "Editar",
+    btnDelete: "Eliminar",
+    pageLabel: "Página",
+    totalProductsLabel: "Total",
+    totalProductsSuffix: " productos",
+    priceYearNote: "Los precios son por año. Coincidencia: El nombre del material se empareja automáticamente por normalización.",
+    btnAddNewProduct: "+ Nuevo producto",
+    btnDownloadCSV: "Descargar CSV",
+    btnUploadCSV: "Subir CSV",
+    clickToSelectYear: "Haga clic para seleccionar año",
+    selectYear: "Seleccionar año",
     dataInfoRecord: "registros",
-    dataInfoProduction: "producción",
+    dataInfoProduction: "producciÃ³n",
     dataInfoWaste: "residuos",
     portion: "porciones",
-    abnormalDays: "días anormales",
+    abnormalDays: "dÃ­as anormales",
     noRecordsToDisplay: "No hay registros para mostrar.",
-    colYearLabel: "Año",
+    colYearLabel: "AÃ±o",
     avgPortion400: "400 g",
     recordsNot400: "registros no 400",
     gram: " g",
     personLabel: "Pers",
-    last7RecordsPrev7: "últimos 7 registros / 7 anteriores",
+    last7RecordsPrev7: "Ãºltimos 7 registros / 7 anteriores",
     tempAppropriate: "Adecuado",
     tempLow: "Bajo",
     tempHigh: "Alto",
-    lowerLimit: "Límite inferior: ",
-    upperLimit: "Límite superior: ",
-    unknownDespo: "Desconocido",
-    tempMin: "Mín: ",
+    lowerLimit: "LÃ­mite inferior: ",
+    upperLimit: "LÃ­mite superior: ",
+    unknownDepo: "Desconocido",
+    tempMin: "MÃ­n: ",
     tempAvg: "Prome: ",
-    tempMax: "Máx: ",
+    tempMax: "MÃ¡x: ",
     humidity: "Humedad: ",
-    depot: "Cámara",
+    depot: "CÃ¡mara",
     selectedCount: " seleccionados",
-    pageRecords: "Página ",
+    pageRecords: "PÃ¡gina ",
     recordCount: " registros)",
-    tempRecordsTitle: "Registros de temperatura de frío",
+    tempRecordsTitle: "Registros de temperatura de frÃ­o",
     dateRangeLabel: " | Fecha:",
-    allDepots: "Todas las cámaras",
+    allDepots: "Todas las cÃ¡maras",
     colTime: "Hora",
-    colDepot: "Cámara",
+    colDepot: "CÃ¡mara",
     colTemperature: "Temperatura",
     colStatus: "Estado",
     depotTempRecordTitle: "Registro de temperatura",
     formDate: "Fecha",
     formTime: "Hora",
-    formDepotName: "Nombre de cámara",
-    formTemperature: "Temperatura (°C)",
-    tempPlaceholder: "0.0 (puede dejarse vacío)",
+    formDepotName: "Nombre de cÃ¡mara",
+    formTemperature: "Temperatura (Â°C)",
+    tempPlaceholder: "0.0 (puede dejarse vacÃ­o)",
     formHumidity: "Humedad (%)",
     formNoteOptional: "Opcional",
-    deleteConfirm: "¿Está seguro de que desea eliminar este registro?",
-    deleteSelectedConfirm: "¿Está seguro de que desea eliminar ",
+    deleteConfirm: "Â¿EstÃ¡ seguro de que desea eliminar este registro?",
+    deleteSelectedConfirm: "Â¿EstÃ¡ seguro de que desea eliminar ",
     deleteSelectedConfirmSuffix: " registros seleccionados?",
     tempHistory: " Historial de temperatura",
-    weeklyAvgTempNote: "Valores promedio semanales de temperatura — con líneas de límite superior e inferior",
-    upperLimitLabel: "Límite superior (",
-    lowerLimitLabel: "Límite inferior (",
+    weeklyAvgTempNote: "Valores promedio semanales de temperatura â€” con lÃ­neas de lÃ­mite superior e inferior",
+    upperLimitLabel: "LÃ­mite superior (",
+    lowerLimitLabel: "LÃ­mite inferior (",
     totalRecordCount: "Total de registros",
     totalWasteOil: "Total aceite usado",
     avgAmountPerRecord: "Prom. cantidad / registro",
-    highestAmount: "Cantidad más alta",
-    lowestAmount: "Cantidad más baja",
+    highestAmount: "Cantidad mÃ¡s alta",
+    lowestAmount: "Cantidad mÃ¡s baja",
     oilTypeCount: "Tipos de aceite",
     yearTotalSuffix: " Total",
     startDate: "Inicio",
     endDate: "Fin",
     typeLabel: "Tipo: ",
-    yearLabel: "Año: ",
+    yearLabel: "AÃ±o: ",
     activeFilterLabel: "Filtro activo: ",
-    noFilterMessage: "Sin filtro — mostrando todos los registros de aceite usado.",
-    noWasteOilRecord: "Aún no se han registrado aceites usados.",
+    noFilterMessage: "Sin filtro â€” mostrando todos los registros de aceite usado.",
+    noWasteOilRecord: "AÃºn no se han registrado aceites usados.",
     noMatchingFilterRecord: "No se encontraron registros con estos criterios.",
     editWasteOilRecord: "Editar registro de aceite usado",
     newWasteOilRecord: "Nuevo registro de aceite usado",
     wasteOilChartLabel: "Aceite usado",
-    previousYearLabel: "Año anterior",
+    previousYearLabel: "AÃ±o anterior",
     undefinedType: "No especificado",
     totalWastePackaging: "Total residuos de embalaje",
     wasteTypeCount: "Tipos de residuos",
-    noWastePackagingRecord: "Aún no se han registrado residuos de embalaje.",
+    noWastePackagingRecord: "AÃºn no se han registrado residuos de embalaje.",
     noMatchingFilterPackage: "No se encontraron registros con estos criterios.",
-    noFilterMessagePackaging: "Sin filtro — mostrando todos los registros de residuos de embalaje.",
+    noFilterMessagePackaging: "Sin filtro â€” mostrando todos los registros de residuos de embalaje.",
     editWastePackagingRecord: "Editar registro de residuos de embalaje",
     newWastePackagingRecord: "Nuevo registro de residuos de embalaje",
     wastePackagingChartLabel: "Residuos de embalaje",
-    chartDetailEmpty: "No se encontraron registros para este período.",
+    chartDetailEmpty: "No se encontraron registros para este perÃ­odo.",
     chartClose: "Cerrar",
-    chartColProduction: "Producción",
+    chartColProduction: "ProducciÃ³n",
     chartColPasses: "Pasadas",
     chartColWaste: "Residuos",
     chartColStudent: "Estudiantes",
     chartColFoodType: "Tipo de alimento",
-    chartProductionVsTurnstile: "Diferencia entre producción y pasadas por torniquete",
-    chartStaffTotal: "Personal académico + administrativo + SKS",
-    yearFilterLabel: "Año:",
+    chartProductionVsTurnstile: "Diferencia entre producciÃ³n y pasadas por torniquete",
+    chartStaffTotal: "Personal acadÃ©mico + administrativo + SKS",
+    yearFilterLabel: "AÃ±o:",
     monthFilterLabel: "Mes:",
     chartSelectYear: "Seleccionar",
-    year1Label: "Año 1:",
-    year2Label: "Año 2:",
-    noComparison: "Sin comparación",
+    year1Label: "AÃ±o 1:",
+    year2Label: "AÃ±o 2:",
+    noComparison: "Sin comparaciÃ³n",
     newLabel: "Nuevo",
     foodTypeLabel: "Tipo de alimento",
-    productionLabel: " Producción",
+    productionLabel: " ProducciÃ³n",
     wasteKgLabel: " Residuos (kg)",
-    wasteGrPortionLabel: " Residuos (g/porción)",
+    wasteGrPortionLabel: " Residuos (g/porciÃ³n)",
     diffKgLabel: "Diferencia (kg)",
     totalRow: "TOTAL",
     registeredRate: "Tasa guardada: ",
@@ -16225,36 +16296,36 @@ var I18N = {
     kpiAvgMonthlyStaffSpending: "Gasto prom. mensual personal",
     kpiTotalStudents: "Total estudiantes",
     kpiTotalStaff: "Total personal",
-    kpiHighestStudentMonth: "Mes más alto estudiantes",
-    kpiHighestStaffMonth: "Mes más alto personal",
+    kpiHighestStudentMonth: "Mes mÃ¡s alto estudiantes",
+    kpiHighestStaffMonth: "Mes mÃ¡s alto personal",
     kpiTotalMealSpending: "Gasto total comidas",
     kpiAvgMonthlyMealSpending: "Gasto prom. mensual comidas",
     kpiTotalMealsProduced: "Total comidas producidas",
-    kpiHighestMealMonth: "Mes más alto comidas",
-    chartStudentSpending: "Gasto estudiantes (₺)",
-    chartStaffSpending: "Gasto personal (₺)",
-    chartMealSpending: "Gasto comidas (₺)",
-    noRecordsYet: "Aún no hay registros.",
-    invalidRate: "¡Ingrese una tasa válida!",
+    kpiHighestMealMonth: "Mes mÃ¡s alto comidas",
+    chartStudentSpending: "Gasto estudiantes (â‚º)",
+    chartStaffSpending: "Gasto personal (â‚º)",
+    chartMealSpending: "Gasto comidas (â‚º)",
+    noRecordsYet: "AÃºn no hay registros.",
+    invalidRate: "Â¡Ingrese una tasa vÃ¡lida!",
     rateSaved: "Tasa guardada: ",
     menuStatusDraft: "Borrador",
-    menuStatusPending: "Pendiente de aprobación",
+    menuStatusPending: "Pendiente de aprobaciÃ³n",
     menuStatusApproved: "Aprobado",
     menuStatusRejected: "Rechazado",
-    menuApprove: "Aprobar menú",
-    menuApproveDisabled: "El menú aún no ha sido enviado para aprobación. Cuando el dietista haga clic en \"Enviar para aprobación\", podrá aprobar desde aquí.",
-    menuReject: "Rechazar menú con justificación",
-    menuRejectDisabled: "El menú aún no ha sido enviado para aprobación. Cuando el dietista haga clic en \"Enviar para aprobación\", podrá rechazar desde aquí.",
-    menuPendingCount: " menús esperando aprobación. Vaya a la semana pendiente para aprobar.",
-    menuNotApproved: "El menú de esta semana aún no ha sido aprobado por el ingeniero de alimentos.",
-    menuRejected: "Este menú ha sido rechazado",
+    menuApprove: "Aprobar menÃº",
+    menuApproveDisabled: "El menÃº aÃºn no ha sido enviado para aprobaciÃ³n. Cuando el dietista haga clic en \"Enviar para aprobaciÃ³n\", podrÃ¡ aprobar desde aquÃ­.",
+    menuReject: "Rechazar menÃº con justificaciÃ³n",
+    menuRejectDisabled: "El menÃº aÃºn no ha sido enviado para aprobaciÃ³n. Cuando el dietista haga clic en \"Enviar para aprobaciÃ³n\", podrÃ¡ rechazar desde aquÃ­.",
+    menuPendingCount: " menÃºs esperando aprobaciÃ³n. Vaya a la semana pendiente para aprobar.",
+    menuNotApproved: "El menÃº de esta semana aÃºn no ha sido aprobado por el ingeniero de alimentos.",
+    menuRejected: "Este menÃº ha sido rechazado",
     menuRejectedSuffix: ". El dietista puede corregir y reenviar.",
-    menuAwaitingApproval: "Este menú está esperando aprobación. Se marcará como \"no aprobado\" en la lista de producción.",
+    menuAwaitingApproval: "Este menÃº estÃ¡ esperando aprobaciÃ³n. Se marcarÃ¡ como \"no aprobado\" en la lista de producciÃ³n.",
     noteLabel: "Nota ",
     deleteNote: "Eliminar esta nota",
     addNote: "Agregar nueva nota",
     mealPickerTitle: "Seleccionar alimento",
-    clearLabel: "🗑 Limpiar",
+    clearLabel: "ğŸ—‘ Limpiar",
     searchMealPlaceholder: "Buscar alimentos...",
     noMatchingMeal: "No se encontraron alimentos coincidentes.",
     varietyLabel: " Variedad: ",
@@ -16267,26 +16338,26 @@ var I18N = {
     allRecordsDeleted: "Todos los registros eliminados.",
     selectedRecordsDeleted: "Registros seleccionados eliminados.",
     noRecordToDelete: "No hay registros para eliminar.",
-    noSelectedRecord: "No se seleccionó ningún registro.",
-    deleteAllConfirm: "¿Está seguro de que desea eliminar TODOS los registros?\n¡Esta acción no se puede deshacer!",
-    deleteFoodConfirm: "¿Está seguro de que desea eliminar este alimento?",
+    noSelectedRecord: "No se seleccionÃ³ ningÃºn registro.",
+    deleteAllConfirm: "Â¿EstÃ¡ seguro de que desea eliminar TODOS los registros?\nÂ¡Esta acciÃ³n no se puede deshacer!",
+    deleteFoodConfirm: "Â¿EstÃ¡ seguro de que desea eliminar este alimento?",
     selected: " seleccionados",
     negMeals: "La cantidad de comidas producidas no puede ser negativa.",
     negTurnstile: "La cantidad de turnos no puede ser negativa.",
     negStaff: "La cantidad de personal no puede ser negativa.",
     negPortion: "La cantidad de porciones no puede ser negativa.",
     negStudent: "La cantidad de estudiantes no puede ser negativa.",
-    unsavedConfirm: "Tiene cambios sin guardar. ¿Está seguro de que desea cerrar?",
+    unsavedConfirm: "Tiene cambios sin guardar. Â¿EstÃ¡ seguro de que desea cerrar?",
     selectUser: "Por favor seleccione un usuario.",
-    wrongCredentials: "Nombre de usuario o contraseña incorrectos.",
+    wrongCredentials: "Nombre de usuario o contraseÃ±a incorrectos.",
     tooManyAttempts: "Demasiados intentos. Por favor espere.",
     editable: "Editable",
     fixed: "Fijo",
-    menuSentForApproval: "Menú enviado para aprobación. Esperando aprobación del ingeniero de alimentos/admin.",
-    menuApproved: "Menú aprobado.",
-    menuRejectedMsg: "Menú rechazado con justificación.",
-    menuDraftSaved: "Menú guardado como borrador.",
-    menuCleared: "Menú limpiado.",
+    menuSentForApproval: "MenÃº enviado para aprobaciÃ³n. Esperando aprobaciÃ³n del ingeniero de alimentos/admin.",
+    menuApproved: "MenÃº aprobado.",
+    menuRejectedMsg: "MenÃº rechazado con justificaciÃ³n.",
+    menuDraftSaved: "MenÃº guardado como borrador.",
+    menuCleared: "MenÃº limpiado.",
     monthShort1: "Ene",
     monthShort2: "Feb",
     monthShort3: "Mar",
@@ -16301,374 +16372,374 @@ var I18N = {
     monthShort12: "Dic"
   },
   pt: {
-    loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
+    loginSub: "SISTEMA DE GESTÃƒO DE SERVIÃ‡OS DE NUTRIÃ‡ÃƒO",
     loginFormSub: "Entrar",
-    loginUsername: "Usuário",
-    loginSelectUser: "Selecionar usuário",
+    loginUsername: "UsuÃ¡rio",
+    loginSelectUser: "Selecionar usuÃ¡rio",
     loginPassword: "Senha",
     loginBtn: "Entrar",
-    loginHint: "Você pode obter sua senha do administrador",
-    loginFeature1: "Planejamento de cardápio, produção diária, consumo e resíduos",
-    loginFeature2: "Relatórios detalhados",
-    loginFeature3: "Painel ao vivo e gráficos",
-    menuLabel: "Cardápio",
-    headerSubtitle: "Sistema de gestão de serviços de nutrição",
+    loginHint: "VocÃª pode obter sua senha do administrador",
+    loginFeature1: "Planejamento de cardÃ¡pio, produÃ§Ã£o diÃ¡ria, consumo e resÃ­duos",
+    loginFeature2: "RelatÃ³rios detalhados",
+    loginFeature3: "Painel ao vivo e grÃ¡ficos",
+    menuLabel: "CardÃ¡pio",
+    headerSubtitle: "Sistema de gestÃ£o de serviÃ§os de nutriÃ§Ã£o",
     btnLogout: "Sair",
     btnPrev: "Anterior",
-    btnNext: "Próximo",
+    btnNext: "PrÃ³ximo",
     loading: "Carregando...",
     loadingText: "Sincronizando dados...",
-    loadingSub: "Verificando conexão com Supabase",
+    loadingSub: "Verificando conexÃ£o com Supabase",
     loadingSkip: "Clique para pular",
-    versionLabel: "Versão do aplicativo",
+    versionLabel: "VersÃ£o do aplicativo",
     sidebarPanel: "Painel",
-    sidebarMenu: "Cardápio semanal",
+    sidebarMenu: "CardÃ¡pio semanal",
     sidebarRecords: "Registros",
-    sidebarReport: "Relatório",
-    sidebarHaccp: "Segurança alimentar",
-    sidebarCalibration: "Calibração",
-    sidebarOil: "Óleo usado",
-    sidebarPackaging: "Resíduos de embalagem",
-    sidebarCharts: "Gráficos",
-    sidebarYearly: "Comparação anual",
+    sidebarReport: "RelatÃ³rio",
+    sidebarHaccp: "SeguranÃ§a alimentar",
+    sidebarCalibration: "CalibraÃ§Ã£o",
+    sidebarOil: "Ã“leo usado",
+    sidebarPackaging: "ResÃ­duos de embalagem",
+    sidebarCharts: "GrÃ¡ficos",
+    sidebarYearly: "ComparaÃ§Ã£o anual",
     sidebarSpending: "Despesas",
-    sidebarUnitPrice: "Preços unitários",
+    sidebarUnitPrice: "PreÃ§os unitÃ¡rios",
     sidebarDownload: "Baixar tudo",
     sidebarBackup: "Backup no Supabase",
     sidebarRestore: "Restaurar do Supabase",
-    sidebarAdmin: "Administração",
+    sidebarAdmin: "AdministraÃ§Ã£o",
     sidebarLogs: "Registros de atividade",
     sidebarTheme: "Tema",
-    sidebarManual: "Manual do usuário",
+    sidebarManual: "Manual do usuÃ¡rio",
     dashboardPrintPdf: "Imprimir PDF",
-    kpiTotalRecords: "Total de dias de produção",
-    kpiTodayProduction: "Produção de hoje",
-    kpiHaccpAlarm: "Alarme de temperatura da câmara fria",
-    kpiCalibrationAlarm: "Alarme de calibração",
-    kpiAvgWaste: "Resíduos médios (kg)",
+    kpiTotalRecords: "Total de dias de produÃ§Ã£o",
+    kpiTodayProduction: "ProduÃ§Ã£o de hoje",
+    kpiHaccpAlarm: "Alarme de temperatura da cÃ¢mara fria",
+    kpiCalibrationAlarm: "Alarme de calibraÃ§Ã£o",
+    kpiAvgWaste: "ResÃ­duos mÃ©dios (kg)",
     kpiTotalPasses: "Total de passagens pelo catraca",
-    kpiTotalWaste: "Total de resíduos (kg)",
-    kpiWasteRate: "Taxa de resíduos",
+    kpiTotalWaste: "Total de resÃ­duos (kg)",
+    kpiWasteRate: "Taxa de resÃ­duos",
     weeklyPrevBtn: "Semana anterior",
     weeklySummary: "Resumo semanal",
-    weeklyNextBtn: "Próxima semana",
+    weeklyNextBtn: "PrÃ³xima semana",
     weeklyBadge: "Esta semana",
     dailyPrevBtn: "Dia anterior",
-    dailySummary: "Detalhe diário",
-    dailyNextBtn: "Próximo dia",
-    weeklyCompTitle: "Comparação semanal",
-    monthlyCompTitle: "Comparação mensal",
-    monthlyBadge: "Este mês",
+    dailySummary: "Detalhe diÃ¡rio",
+    dailyNextBtn: "PrÃ³ximo dia",
+    weeklyCompTitle: "ComparaÃ§Ã£o semanal",
+    monthlyCompTitle: "ComparaÃ§Ã£o mensal",
+    monthlyBadge: "Este mÃªs",
     yearlyBadge: "Este ano",
-    anomalyTitle: "Detecção de anomalias",
-    anomalyBadge: "Dias com resíduos anormais",
-    lastRecordsTitle: "Últimos registros",
+    anomalyTitle: "DetecÃ§Ã£o de anomalias",
+    anomalyBadge: "Dias com resÃ­duos anormais",
+    lastRecordsTitle: "Ãšltimos registros",
     dashboardGoToRecords: "Ir para registros",
-    emptyDashboard: "Ainda não há registros...",
-    formulaTitle: "FÓRMULA DE CÁLCULO DE RESÍDUOS",
-    recordsEntryBtn: "Inserir produção/consumo",
+    emptyDashboard: "Ainda nÃ£o hÃ¡ registros...",
+    formulaTitle: "FÃ“RMULA DE CÃLCULO DE RESÃDUOS",
+    recordsEntryBtn: "Inserir produÃ§Ã£o/consumo",
     recordsImportBtn: "Importar",
     recordsPrintPdf: "PDF",
     recordsCsvBtn: "Baixar CSV",
     recordsDeleteBtn: "Excluir selecionados",
     emptyRecords: "Nenhum registro encontrado.",
     thDate: "Data",
-    thProducedPerson: "Refeições produzidas (Pessoa)",
-    thWaste10: "10% de resíduos",
-    thBeneficiary: "Beneficiários do serviço de alimentação",
-    thPortionGr: "Porção (g)",
-    thWasteKg: "Resíduos (kg)",
-    thWastedPortion: "Descartada (porção)",
-    thFoodType: "Tipo de refeição",
-    thAction: "Ação",
-    thAcademicStaff: "Pessoal acadêmico e administrativo pela catraca",
+    thProducedPerson: "RefeiÃ§Ãµes produzidas (Pessoa)",
+    thWaste10: "10% de resÃ­duos",
+    thBeneficiary: "BeneficiÃ¡rios do serviÃ§o de alimentaÃ§Ã£o",
+    thPortionGr: "PorÃ§Ã£o (g)",
+    thWasteKg: "ResÃ­duos (kg)",
+    thWastedPortion: "Descartada (porÃ§Ã£o)",
+    thFoodType: "Tipo de refeiÃ§Ã£o",
+    thAction: "AÃ§Ã£o",
+    thAcademicStaff: "Pessoal acadÃªmico e administrativo pela catraca",
     thStudentCount: "Estudantes pela catraca",
-    thBeneficiaryTotal: "Total de beneficiários do serviço de alimentação",
-    sksStaff: "Pessoal SKS de alimentação",
-    summaryReport: "Relatório resumo",
+    thBeneficiaryTotal: "Total de beneficiÃ¡rios do serviÃ§o de alimentaÃ§Ã£o",
+    sksStaff: "Pessoal SKS de alimentaÃ§Ã£o",
+    summaryReport: "RelatÃ³rio resumo",
     reportPdfBtn: "Abrir PDF",
-    allRecordsPrint: "Todos os registros (Visão de impressão)",
+    allRecordsPrint: "Todos os registros (VisÃ£o de impressÃ£o)",
     rTotalRecords: "Total de registros",
-    rTotalMeals: "Total de refeições produzidas",
-    rTotalWaste10: "Total de resíduos 10%",
-    rTotalAfterWaste: "Total de refeições após 10% de resíduos",
+    rTotalMeals: "Total de refeiÃ§Ãµes produzidas",
+    rTotalWaste10: "Total de resÃ­duos 10%",
+    rTotalAfterWaste: "Total de refeiÃ§Ãµes apÃ³s 10% de resÃ­duos",
     rTotalTurnstile: "Total de passagens pela catraca",
-    rTotalBeneficiary: "Total de beneficiários do serviço de alimentação",
+    rTotalBeneficiary: "Total de beneficiÃ¡rios do serviÃ§o de alimentaÃ§Ã£o",
     rTotalStaff: "Total de pessoal SKS beneficiado",
-    rPortionSize: "Tamanho da porção (g)",
-    rTotalPortion: "Total de porções (g)",
-    rWastedPortion: "Porções descartadas",
-    rMaxWeeklyBeneficiary: "Máximo de beneficiários semanais",
-    rTotalWasteKg: "Quantidade total de resíduos (kg)",
-    rAvgWasteKg: "Quantidade média de resíduos (kg)",
+    rPortionSize: "Tamanho da porÃ§Ã£o (g)",
+    rTotalPortion: "Total de porÃ§Ãµes (g)",
+    rWastedPortion: "PorÃ§Ãµes descartadas",
+    rMaxWeeklyBeneficiary: "MÃ¡ximo de beneficiÃ¡rios semanais",
+    rTotalWasteKg: "Quantidade total de resÃ­duos (kg)",
+    rAvgWasteKg: "Quantidade mÃ©dia de resÃ­duos (kg)",
     rTotalStudents: "Total de estudantes",
-    rMaxWaste: "Máximo de resíduos (kg)",
-    rMinWaste: "Mínimo de resíduos (kg)",
-    rWasteTrend: "Tendência de resíduos (últimos 7 dias)",
-    rBeneficiaryTrend: "Tendência de beneficiários (últimos 7 dias)",
-    wasteByFoodTitle: "Análise de resíduos por tipo de refeição",
-    wasteByFoodEmpty: "Nenhum registro com dados de tipo de refeição encontrado.",
-    wasteByFoodRecords: "Nº de registros",
-    wasteByFoodRate: "Taxa de resíduos",
-    wasteByFoodPerPerson: "Resíduos por pessoa (kg)",
-    wsProducedMeal: "Refeições produzidas (pessoa)",
+    rMaxWaste: "MÃ¡ximo de resÃ­duos (kg)",
+    rMinWaste: "MÃ­nimo de resÃ­duos (kg)",
+    rWasteTrend: "TendÃªncia de resÃ­duos (Ãºltimos 7 dias)",
+    rBeneficiaryTrend: "TendÃªncia de beneficiÃ¡rios (Ãºltimos 7 dias)",
+    wasteByFoodTitle: "AnÃ¡lise de resÃ­duos por tipo de refeiÃ§Ã£o",
+    wasteByFoodEmpty: "Nenhum registro com dados de tipo de refeiÃ§Ã£o encontrado.",
+    wasteByFoodRecords: "NÂº de registros",
+    wasteByFoodRate: "Taxa de resÃ­duos",
+    wasteByFoodPerPerson: "ResÃ­duos por pessoa (kg)",
+    wsProducedMeal: "RefeiÃ§Ãµes produzidas (pessoa)",
     wsTotalPasses: "Total de passagens",
     wsTurnstile: "Catraca",
-    wsStaffSKS: "Pessoal de nutrição",
-    wsWasteAmount: "Quantidade de resíduos",
+    wsStaffSKS: "Pessoal de nutriÃ§Ã£o",
+    wsWasteAmount: "Quantidade de resÃ­duos",
     wsWastedPortion: "Descartado",
-    wsStudents: "Estudantes nutrição",
+    wsStudents: "Estudantes nutriÃ§Ã£o",
     wsNoRecordsYet: "Nenhum registro ainda",
     wsNoRecordThisWeek: "Nenhum registro esta semana",
     wsNoRecordToday: "Sem registro",
     wsTodayDetail: "Detalhe de hoje",
-    wsDailyDetail: "Detalhe diário",
+    wsDailyDetail: "Detalhe diÃ¡rio",
     wsWaste: "Perda",
-    wsPortion: "porção",
+    wsPortion: "porÃ§Ã£o",
     wsProduced: "Produzido",
     wsTurnstileCount: "Passagens catraca",
     wsStaffCount: "Pessoal",
-    menuTitle: "Cardápio semanal",
+    menuTitle: "CardÃ¡pio semanal",
     menuStatusBadge: "Estado",
     menuSaveBtn: "Salvar",
-    menuSendBtn: "Enviar para aprovação",
+    menuSendBtn: "Enviar para aprovaÃ§Ã£o",
     menuApproveBtn: "Aprovar",
     menuRejectBtn: "Rejeitar",
-    menuWithdrawBtn: "Retirar aprovação",
+    menuWithdrawBtn: "Retirar aprovaÃ§Ã£o",
     menuClearBtn: "Limpar tabela",
     menuPrintBtn: "Imprimir",
-    menuFoodListBtn: "Lista de refeições",
+    menuFoodListBtn: "Lista de refeiÃ§Ãµes",
     menuFoodListUploadBtn: "Carregar CSV",
     menuFoodListCsvBtn: "Baixar CSV",
-    menuWarningPrefix: "Cardápio não aprovado:",
-    menuWarningText: "O cardápio desta semana ainda não foi aprovado pelo engenheiro de alimentos.",
-    menuHintText: "Digite os nomes das refeições...",
+    menuWarningPrefix: "CardÃ¡pio nÃ£o aprovado:",
+    menuWarningText: "O cardÃ¡pio desta semana ainda nÃ£o foi aprovado pelo engenheiro de alimentos.",
+    menuHintText: "Digite os nomes das refeiÃ§Ãµes...",
     productNeedsTitle: "Lista de necessidades de produtos",
     weeklyNeedsTitle: "Lista semanal total de necessidades",
-    foodListTitle: "Lista de refeições",
-    modalRejectMenu: "Rejeitar cardápio",
-    modalRejectDesc: "O motivo da rejeição é obrigatório.",
+    foodListTitle: "Lista de refeiÃ§Ãµes",
+    modalRejectMenu: "Rejeitar cardÃ¡pio",
+    modalRejectDesc: "O motivo da rejeiÃ§Ã£o Ã© obrigatÃ³rio.",
     menuRejectConfirm: "Rejeitar",
-    haccpTitle: "Gestão de segurança alimentar",
+    haccpTitle: "GestÃ£o de seguranÃ§a alimentar",
     haccpCsvBtn: "Baixar CSV",
-    haccpColdStorage: "Registros de temperatura da câmara fria",
+    haccpColdStorage: "Registros de temperatura da cÃ¢mara fria",
     haccpNewBtn: "Novo registro",
-    haccpDepotBtn: "Nomes dos depósitos",
-    haccpDepoQrNote: "Você pode editar os nomes dos depósitos e gerar códigos QR para cada depósito com o botão QR.",
+    haccpDepotBtn: "Nomes dos depÃ³sitos",
+    haccpDepoQrNote: "VocÃª pode editar os nomes dos depÃ³sitos e gerar cÃ³digos QR para cada depÃ³sito com o botÃ£o QR.",
     haccpModalTitle: "Novo registro",
-    filterDepot: "Filtro de depósito:",
+    filterDepot: "Filtro de depÃ³sito:",
     filterAll: "Todos",
     filterDateRange: "Intervalo de datas:",
-    emptyHaccp: "Ainda não há registros de temperatura.",
+    emptyHaccp: "Ainda nÃ£o hÃ¡ registros de temperatura.",
     btnDeleteSelectedHaccp: "Excluir selecionados",
     btnPdf: "PDF",
-    depoNamesTitle: "Nomes dos depósitos",
+    depoNamesTitle: "Nomes dos depÃ³sitos",
     oilNewBtn: "Novo registro",
     oilListBtn: "Lista",
-    oilFilterTitle: "Filtros de óleo usado",
-    filterOilType: "Tipo de óleo:",
+    oilFilterTitle: "Filtros de Ã³leo usado",
+    filterOilType: "Tipo de Ã³leo:",
     btnReset: "Redefinir",
-    oilSummaryTitle: "Resumo do óleo usado",
-    oilChartTitle: "Gráficos do óleo usado",
-    oilChartSubtitle: "Quantidade mensal de óleo usado (litros)",
-    oilChartEmpty: "Os gráficos aparecerão quando registros de óleo usado forem inseridos",
-    oilChartNote: "Totais mensais de óleo usado por data, tipo de óleo e filtros de ano",
-    oilRecordsTitle: "Registros de óleo usado",
-    oilModalTitle: "Registro de óleo usado",
-    emptyOil: "Ainda não há registros de óleo usado.",
+    oilSummaryTitle: "Resumo do Ã³leo usado",
+    oilChartTitle: "GrÃ¡ficos do Ã³leo usado",
+    oilChartSubtitle: "Quantidade mensal de Ã³leo usado (litros)",
+    oilChartEmpty: "Os grÃ¡ficos aparecerÃ£o quando registros de Ã³leo usado forem inseridos",
+    oilChartNote: "Totais mensais de Ã³leo usado por data, tipo de Ã³leo e filtros de ano",
+    oilRecordsTitle: "Registros de Ã³leo usado",
+    oilModalTitle: "Registro de Ã³leo usado",
+    emptyOil: "Ainda nÃ£o hÃ¡ registros de Ã³leo usado.",
     ambalajNewBtn: "Novo registro",
     ambalajListBtn: "Lista",
-    packagingFilterTitle: "Filtros de resíduos de embalagem",
-    filterWasteType: "Tipo de resíduo:",
-    packagingSummaryTitle: "Resumo de resíduos de embalagem",
-    packagingChartTitle: "Gráficos de resíduos de embalagem",
-    packagingChartSubtitle: "Quantidade mensal de resíduos de embalagem (kg)",
-    packagingChartEmpty: "Os gráficos aparecerão quando registros de resíduos de embalagem forem inseridos",
-    packagingChartNote: "Totais mensais de resíduos de embalagem por data, tipo de resíduo e filtros de ano (kg)",
-    packagingRecordsTitle: "Registros de resíduos de embalagem",
-    packagingModalTitle: "Registro de resíduos de embalagem",
-    emptyPackaging: "Ainda não há registros de resíduos de embalagem.",
+    packagingFilterTitle: "Filtros de resÃ­duos de embalagem",
+    filterWasteType: "Tipo de resÃ­duo:",
+    packagingSummaryTitle: "Resumo de resÃ­duos de embalagem",
+    packagingChartTitle: "GrÃ¡ficos de resÃ­duos de embalagem",
+    packagingChartSubtitle: "Quantidade mensal de resÃ­duos de embalagem (kg)",
+    packagingChartEmpty: "Os grÃ¡ficos aparecerÃ£o quando registros de resÃ­duos de embalagem forem inseridos",
+    packagingChartNote: "Totais mensais de resÃ­duos de embalagem por data, tipo de resÃ­duo e filtros de ano (kg)",
+    packagingRecordsTitle: "Registros de resÃ­duos de embalagem",
+    packagingModalTitle: "Registro de resÃ­duos de embalagem",
+    emptyPackaging: "Ainda nÃ£o hÃ¡ registros de resÃ­duos de embalagem.",
     kalibrasyonNewBtn: "Novo dispositivo",
     kalibrasyonListBtn: "Lista",
     kalibrasyonCsvBtn: "Baixar CSV",
-    calibrationSummary: "Resumo da calibração",
-    calibrationDevices: "Dispositivos sujeitos a calibração",
-    calibrationModalTitle: "Dispositivo para calibração",
+    calibrationSummary: "Resumo da calibraÃ§Ã£o",
+    calibrationDevices: "Dispositivos sujeitos a calibraÃ§Ã£o",
+    calibrationModalTitle: "Dispositivo para calibraÃ§Ã£o",
     filterStatus: "Estado:",
     filterDepartment: "Departamento:",
     btnWordExport: "Exportar para Word",
     btnPrint: "Imprimir PDF",
-    chartProdWaste: "Comparação Produção - Passagens - Resíduos",
-    chartEmpty: "Os gráficos aparecerão quando dados forem inseridos",
-    chartProdWasteNote: "Comparação mensal de produção, passagens pela catraca e porções descartadas",
-    chartStudentCount: "Número de estudantes que usam o serviço de alimentação",
+    chartProdWaste: "ComparaÃ§Ã£o ProduÃ§Ã£o - Passagens - ResÃ­duos",
+    chartEmpty: "Os grÃ¡ficos aparecerÃ£o quando dados forem inseridos",
+    chartProdWasteNote: "ComparaÃ§Ã£o mensal de produÃ§Ã£o, passagens pela catraca e porÃ§Ãµes descartadas",
+    chartStudentCount: "NÃºmero de estudantes que usam o serviÃ§o de alimentaÃ§Ã£o",
     yearTotal: "Total anual",
-    chartStudentNote: "Total mensal de passagens diárias de estudantes",
-    chartStaffTotal: "Pessoal acadêmico e administrativo + SKS",
-    chartStaffNote: "Total do pessoal acadêmico e administrativo (Catraca - Estudantes) e do pessoal SKS de alimentação",
-    chartMonthlyProd: "Produção mensal de refeições",
-    chartMonthlyProdNote: "Total mensal do número diário de refeições produzidas",
+    chartStudentNote: "Total mensal de passagens diÃ¡rias de estudantes",
+    chartStaffTotal: "Pessoal acadÃªmico e administrativo + SKS",
+    chartStaffNote: "Total do pessoal acadÃªmico e administrativo (Catraca - Estudantes) e do pessoal SKS de alimentaÃ§Ã£o",
+    chartMonthlyProd: "ProduÃ§Ã£o mensal de refeiÃ§Ãµes",
+    chartMonthlyProdNote: "Total mensal do nÃºmero diÃ¡rio de refeiÃ§Ãµes produzidas",
     chartMonthlyTurnstile: "Passagens mensais pela catraca",
     chartTurnstileNote: "Estudantes + pessoal + passagens externas",
-    chartMonthlyWaste: "Quantidade mensal de resíduos (kg)",
-    chartMonthlyWasteNote: "Total mensal de resíduos diários (kg)",
-    chartMonthlyWastePortion: "Quantidade mensal de resíduos (porções)",
-    chartWastePortionNote: "Total mensal de porções descartadas diariamente",
-    chartDiff: "Diferença entre produção e passagens",
-    chartDiffNote: "Diferença entre refeições produzidas e passagens pela catraca",
-    chartWasteRatio: "Resíduos % das refeições produzidas",
-    yearAverage: "Média anual",
-    chartWasteRatioNote: "Percentual das refeições produzidas que se tornam resíduos",
-    chartWastePerPerson: "Resíduos por pessoa (kg/pessoa)",
-    chartWastePerPersonNote: "Resíduos médios por pessoa que entra no refeitório",
-    chartMonthlyTemp: "Temperaturas médias mensais dos depósitos (°C)",
-    chartTempEmpty: "Os gráficos aparecerão quando registros de temperatura forem inseridos",
-    chartTempNote: "Temperatura média mensal de cada depósito",
+    chartMonthlyWaste: "Quantidade mensal de resÃ­duos (kg)",
+    chartMonthlyWasteNote: "Total mensal de resÃ­duos diÃ¡rios (kg)",
+    chartMonthlyWastePortion: "Quantidade mensal de resÃ­duos (porÃ§Ãµes)",
+    chartWastePortionNote: "Total mensal de porÃ§Ãµes descartadas diariamente",
+    chartDiff: "DiferenÃ§a entre produÃ§Ã£o e passagens",
+    chartDiffNote: "DiferenÃ§a entre refeiÃ§Ãµes produzidas e passagens pela catraca",
+    chartWasteRatio: "ResÃ­duos % das refeiÃ§Ãµes produzidas",
+    yearAverage: "MÃ©dia anual",
+    chartWasteRatioNote: "Percentual das refeiÃ§Ãµes produzidas que se tornam resÃ­duos",
+    chartWastePerPerson: "ResÃ­duos por pessoa (kg/pessoa)",
+    chartWastePerPersonNote: "ResÃ­duos mÃ©dios por pessoa que entra no refeitÃ³rio",
+    chartMonthlyTemp: "Temperaturas mÃ©dias mensais dos depÃ³sitos (Â°C)",
+    chartTempEmpty: "Os grÃ¡ficos aparecerÃ£o quando registros de temperatura forem inseridos",
+    chartTempNote: "Temperatura mÃ©dia mensal de cada depÃ³sito",
     yearlyPdfBtn: "Imprimir PDF",
-    yearlyTotalProd: "Comparação da produção total",
-    yearlyTotalProdNote: "Total anual - Ano 1 vs Ano 2 (porções)",
-    yearlyTotalBen: "Total de beneficiários do serviço de alimentação",
+    yearlyTotalProd: "ComparaÃ§Ã£o da produÃ§Ã£o total",
+    yearlyTotalProdNote: "Total anual - Ano 1 vs Ano 2 (porÃ§Ãµes)",
+    yearlyTotalBen: "Total de beneficiÃ¡rios do serviÃ§o de alimentaÃ§Ã£o",
     yearlyTotalBenNote: "Total anual - Ano 1 vs Ano 2 (total de pessoas)",
-    yearlyStudentComp: "Comparação de estudantes beneficiários",
+    yearlyStudentComp: "ComparaÃ§Ã£o de estudantes beneficiÃ¡rios",
     yearlyStudentNote: "Total anual - Ano 1 vs Ano 2 (estudantes)",
-    yearlyWasteComp: "Comparação de resíduos (kg)",
+    yearlyWasteComp: "ComparaÃ§Ã£o de resÃ­duos (kg)",
     yearlyWasteNote: "Total anual - Ano 1 vs Ano 2 (kg)",
-    yearlyMonthlyProd: "Comparação mensal da produção",
-    yearlyMonthlyProdNote: "Ano 1 vs Ano 2 - refeições produzidas (porções)",
-    yearlyMonthlyTurnstile: "Comparação mensal de passagens pela catraca",
+    yearlyMonthlyProd: "ComparaÃ§Ã£o mensal da produÃ§Ã£o",
+    yearlyMonthlyProdNote: "Ano 1 vs Ano 2 - refeiÃ§Ãµes produzidas (porÃ§Ãµes)",
+    yearlyMonthlyTurnstile: "ComparaÃ§Ã£o mensal de passagens pela catraca",
     yearlyMonthlyTurnstileNote: "Ano 1 vs Ano 2 - quantidade de passagens pela catraca",
-    yearlyMonthlyStudent: "Comparação mensal de passagens de estudantes",
+    yearlyMonthlyStudent: "ComparaÃ§Ã£o mensal de passagens de estudantes",
     yearlyMonthlyStudentNote: "Ano 1 vs Ano 2 - quantidade de passagens de estudantes",
-    yearlyMonthlyWaste: "Comparação mensal de resíduos (kg)",
-    yearlyMonthlyWasteNote: "Ano 1 vs Ano 2 - quantidade de resíduos (kg)",
-    yearlyWasteListTitle: "Lista anual de resíduos",
-    spendingRatesTitle: "Taxas de despesa por pessoa (Estudantes, Pessoal e Refeições)",
+    yearlyMonthlyWaste: "ComparaÃ§Ã£o mensal de resÃ­duos (kg)",
+    yearlyMonthlyWasteNote: "Ano 1 vs Ano 2 - quantidade de resÃ­duos (kg)",
+    yearlyWasteListTitle: "Lista anual de resÃ­duos",
+    spendingRatesTitle: "Taxas de despesa por pessoa (Estudantes, Pessoal e RefeiÃ§Ãµes)",
     spendingStudentRate: "Valor de despesa por estudante (TL)",
     btnSaveStudentRate: "Salvar valor estudantes",
     spendingStaffRate: "Valor de despesa por membro do pessoal (TL)",
     btnSaveStaffRate: "Salvar valor pessoal",
-    spendingMealRate: "Valor de despesa por refeição (TL)",
-    btnSaveMealRate: "Salvar valor refeições",
-    spendingDesc: "Despesa de estudantes = Nº estudantes × Valor por estudante",
+    spendingMealRate: "Valor de despesa por refeiÃ§Ã£o (TL)",
+    btnSaveMealRate: "Salvar valor refeiÃ§Ãµes",
+    spendingDesc: "Despesa de estudantes = NÂº estudantes Ã— Valor por estudante",
     spendingStudentTitle: "Despesa de estudantes (TL)",
-    spendingChartEmpty: "Os gráficos aparecerão quando registros forem inseridos",
-    spendingStudentNote: "Despesa de estudantes (TL) = Nº estudantes × Valor por estudante",
+    spendingChartEmpty: "Os grÃ¡ficos aparecerÃ£o quando registros forem inseridos",
+    spendingStudentNote: "Despesa de estudantes (TL) = NÂº estudantes Ã— Valor por estudante",
     spendingStaffTitle: "Despesa do pessoal (TL)",
-    spendingStaffNote: "Despesa do pessoal (TL) = Nº pessoal × Valor por membro do pessoal",
-    spendingMealTitle: "Despesa de refeições (TL)",
-    spendingMealNote: "Despesa de refeições (TL) = Refeições produzidas × Valor por refeição",
-    spendingTableTitle: "Tabela de cálculo de despesas",
-    syncTitle: "Sincronização Supabase",
+    spendingStaffNote: "Despesa do pessoal (TL) = NÂº pessoal Ã— Valor por membro do pessoal",
+    spendingMealTitle: "Despesa de refeiÃ§Ãµes (TL)",
+    spendingMealNote: "Despesa de refeiÃ§Ãµes (TL) = RefeiÃ§Ãµes produzidas Ã— Valor por refeiÃ§Ã£o",
+    spendingTableTitle: "Tabela de cÃ¡lculo de despesas",
+    syncTitle: "SincronizaÃ§Ã£o Supabase",
     syncCloseBtn: "Fechar",
     modalNewRecord: "Adicionar novo registro",
     formDate: "Data",
-    formProducedCount: "Número de refeições produzidas",
-    formTurnstileCount: "Número de passagens pela catraca",
-    formStudentCount: "Número de estudantes",
-    formFoodType: "Tipo de refeição",
-    formAutoCalc: "Cálculos automáticos",
-    badgeAutomatic: "Automático",
+    formProducedCount: "NÃºmero de refeiÃ§Ãµes produzidas",
+    formTurnstileCount: "NÃºmero de passagens pela catraca",
+    formStudentCount: "NÃºmero de estudantes",
+    formFoodType: "Tipo de refeiÃ§Ã£o",
+    formAutoCalc: "CÃ¡lculos automÃ¡ticos",
+    badgeAutomatic: "AutomÃ¡tico",
     badgeFixed: "Fixo",
-    badgeAutoEditable: "Automático + Editável",
+    badgeAutoEditable: "AutomÃ¡tico + EditÃ¡vel",
     btnCancel: "Cancelar",
     entryFormSubmit: "Salvar",
-    formReceiptNo: "Nº de recibo",
-    formOilType: "Tipo de óleo",
+    formReceiptNo: "NÂº de recibo",
+    formOilType: "Tipo de Ã³leo",
     formAmountLt: "Quantidade (litros)",
     formNote: "Nota",
-    formWasteType: "Tipo de resíduo",
+    formWasteType: "Tipo de resÃ­duo",
     formAmount: "Quantidade",
     formDeviceName: "Nome do dispositivo",
     formBrandModel: "Marca-Modelo",
-    formSerialNo: "Número de série",
+    formSerialNo: "NÃºmero de sÃ©rie",
     formStatus: "Estado",
-    formVerification: "Verificação",
-    formLastCalibration: "Última calibração",
-    formNextCalibration: "Próxima calibração",
-    formLocation: "Localização/Departamento",
-    formResponsible: "Pessoa responsável",
+    formVerification: "VerificaÃ§Ã£o",
+    formLastCalibration: "Ãšltima calibraÃ§Ã£o",
+    formNextCalibration: "PrÃ³xima calibraÃ§Ã£o",
+    formLocation: "LocalizaÃ§Ã£o/Departamento",
+    formResponsible: "Pessoa responsÃ¡vel",
     btnSave: "Salvar",
     btnAdd: "Adicionar",
     btnClose: "Fechar",
-    qrTitle: "Código QR",
-    qrHint: "Imprima o código QR para pendurar nas portas dos depósitos.",
-    adminTitle: "Painel de administração",
+    qrTitle: "CÃ³digo QR",
+    qrHint: "Imprima o cÃ³digo QR para pendurar nas portas dos depÃ³sitos.",
+    adminTitle: "Painel de administraÃ§Ã£o",
     adminReAuthText: "Por favor, insira sua senha de administrador para acessar o painel.",
     adminPassword: "Senha de administrador",
     btnVerify: "Verificar",
-    adminSessionRole: "Função da sessão",
-    adminLastLogin: "Último login",
-    adminAuthMethod: "Método de autenticação",
+    adminSessionRole: "FunÃ§Ã£o da sessÃ£o",
+    adminLastLogin: "Ãšltimo login",
+    adminAuthMethod: "MÃ©todo de autenticaÃ§Ã£o",
     adminStorage: "Armazenamento de senhas",
     adminDataSource: "Fonte de dados",
-    adminUserMgmt: "Gestão de usuários",
-    adminUserMgmtDesc: "Adicione, edite ou exclua usuários.",
-    adminAddUser: "Adicionar novo usuário",
-    adminUsername: "Nome de usuário",
+    adminUserMgmt: "GestÃ£o de usuÃ¡rios",
+    adminUserMgmtDesc: "Adicione, edite ou exclua usuÃ¡rios.",
+    adminAddUser: "Adicionar novo usuÃ¡rio",
+    adminUsername: "Nome de usuÃ¡rio",
     adminDisplayName: "Nome exibido",
     adminPasswordLabel: "Senha",
-    adminRole: "Função",
-    adminAddUserBtn: "Adicionar usuário",
-    adminRolePerms: "Configurações de permissões por função",
-    adminRolePermsDesc: "Configure quais abas cada função pode visualizar.",
-    adminSecurity: "Segurança da sessão",
-    adminSecurityDesc: "A sessão será encerrada se não houver atividade durante o período especificado.",
+    adminRole: "FunÃ§Ã£o",
+    adminAddUserBtn: "Adicionar usuÃ¡rio",
+    adminRolePerms: "ConfiguraÃ§Ãµes de permissÃµes por funÃ§Ã£o",
+    adminRolePermsDesc: "Configure quais abas cada funÃ§Ã£o pode visualizar.",
+    adminSecurity: "SeguranÃ§a da sessÃ£o",
+    adminSecurityDesc: "A sessÃ£o serÃ¡ encerrada se nÃ£o houver atividade durante o perÃ­odo especificado.",
     adminInactivityTimeout: "Tempo limite de inatividade",
     adminLogsTitle: "Registros de atividade",
-    adminLogsDesc: "Login/logout de usuários e operações de registros",
+    adminLogsDesc: "Login/logout de usuÃ¡rios e operaÃ§Ãµes de registros",
     btnRefresh: "Atualizar",
-    adminSaveBtn: "Salvar configurações",
-    adminFooterNote: "As senhas são armazenadas permanentemente no servidor.",
+    adminSaveBtn: "Salvar configuraÃ§Ãµes",
+    adminFooterNote: "As senhas sÃ£o armazenadas permanentemente no servidor.",
     adminCloseBtn: "Fechar",
-    logFilterDelete: "Exclusão",
-    logFilterAddUser: "Adicionar usuário",
-    logFilterDeleteUser: "Excluir usuário",
+    logFilterDelete: "ExclusÃ£o",
+    logFilterAddUser: "Adicionar usuÃ¡rio",
+    logFilterDeleteUser: "Excluir usuÃ¡rio",
     adminRefreshBtn: "Atualizar",
-    manualTitle: "Manual do usuário",
-    manualSubtitle: "Sistema de controle de produção, consumo e resíduos do refeitório",
+    manualTitle: "Manual do usuÃ¡rio",
+    manualSubtitle: "Sistema de controle de produÃ§Ã£o, consumo e resÃ­duos do refeitÃ³rio",
     compDataType: "Tipo de dado",
     compLastWeek: "Semana passada",
     compThisWeek: "Esta semana",
-    compLastMonth: "Mês passado",
-    compThisMonth: "Este mês",
+    compLastMonth: "MÃªs passado",
+    compThisMonth: "Este mÃªs",
     compLastYear: "Ano passado",
     compThisYear: "Este ano",
-    compDiff: "Diferença",
-    compTotalWaste: "Resíduos totais (kg)",
-    compTotalProduction: "Produção total",
+    compDiff: "DiferenÃ§a",
+    compTotalWaste: "ResÃ­duos totais (kg)",
+    compTotalProduction: "ProduÃ§Ã£o total",
     compTurnstilePasses: "Passagens catraca",
-    compStudentCount: "Número de estudantes",
-    compWastePerPerson: "Resíduos por pessoa (g)",
-    monthlyCompDesc: "Comparação deste mês com o mês passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
-    yearlyCompDesc: "Comparação deste ano (ano até o momento) com o mesmo período do ano passado. ↑ aumento, ↓ diminuição. Uma diminuição (↓) nos resíduos e resíduos por pessoa é boa.",
-    monthNames: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+    compStudentCount: "NÃºmero de estudantes",
+    compWastePerPerson: "ResÃ­duos por pessoa (g)",
+    monthlyCompDesc: "ComparaÃ§Ã£o deste mÃªs com o mÃªs passado. â†‘ aumento, â†“ diminuiÃ§Ã£o. Uma diminuiÃ§Ã£o (â†“) nos resÃ­duos e resÃ­duos por pessoa Ã© boa.",
+    yearlyCompDesc: "ComparaÃ§Ã£o deste ano (ano atÃ© o momento) com o mesmo perÃ­odo do ano passado. â†‘ aumento, â†“ diminuiÃ§Ã£o. Uma diminuiÃ§Ã£o (â†“) nos resÃ­duos e resÃ­duos por pessoa Ã© boa.",
+    monthNames: ["Janeiro","Fevereiro","MarÃ§o","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
     haccpColDate: "Data",
     haccpColTime: "Hora",
-    haccpColDepot: "Nome do depósito",
-    haccpColTemp: "Temperatura (°C)",
+    haccpColDepot: "Nome do depÃ³sito",
+    haccpColTemp: "Temperatura (Â°C)",
     haccpColHumidity: "Umidade (%)",
     haccpColNote: "Nota",
-    haccpColAction: "Ação",
-    dayNames: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"],
+    haccpColAction: "AÃ§Ã£o",
+    dayNames: ["Segunda-feira", "TerÃ§a-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"],
     menuVariety: "Variedade",
-    menuVariety1: "1ª Variedade",
-    menuVariety2: "2ª Variedade",
-    menuVariety3: "3ª Variedade",
-    menuVariety4: "4ª Variedade",
-    menuVariety5: "5ª Variedade",
-    menuPersonCount: "Número de pessoas",
-    stockDeductionList: "Lista de dedução de estoque",
+    menuVariety1: "1Âª Variedade",
+    menuVariety2: "2Âª Variedade",
+    menuVariety3: "3Âª Variedade",
+    menuVariety4: "4Âª Variedade",
+    menuVariety5: "5Âª Variedade",
+    menuPersonCount: "NÃºmero de pessoas",
+    stockDeductionList: "Lista de deduÃ§Ã£o de estoque",
     total: "Total",
     inVarieties: "variedades",
     person: "pessoa",
     weeklyGrandTotal: "Total semanal",
-    dailyAverage: "Média diária",
-    avgPerPerson: "Média por pessoa",
+    dailyAverage: "MÃ©dia diÃ¡ria",
+    avgPerPerson: "MÃ©dia por pessoa",
     totalPersonDays: "Total pessoas/dias",
     colDay: "Dia",
     colDate: "Data",
     colPerson: "Pessoa",
-    dailyMaterialCost: "Custo diário de materiais",
+    dailyMaterialCost: "Custo diÃ¡rio de materiais",
     perPerson: "Por pessoa",
     ingredients: "Ingredientes",
     perPersonGram: "(gramas por pessoa)",
@@ -16677,232 +16748,263 @@ var I18N = {
     colUnit: "Unidade",
     addIngredient: "+ Adicionar ingrediente",
     foodName: "Nome do prato",
-    allergen: "Alérgeno",
+    allergen: "AlÃ©rgeno",
     recipePerPerson: "Receita (por pessoa)",
     devices: "dispositivos",
+    chartMonthlyProduction: "Produção mensal (pax)",
+    chartMonthlyPasses: "Passagens mensais (pax)",
+    chartLastYearWaste: "Desperdício do ano passado (porções)",
+    chartMonthlyWasteKg: "Resíduos mensais (kg)",
+    chartMonthlyMealCount: "Quantidade mensal de refeições",
+    chartMonthlyWasteRate: "Taxa de resíduos mensal %",
+    chartMonthlyStudent: "Quantidade mensual de estudantes",
+    chartWastePerPersonLabel: "Resíduos por pessoa (kg/pessoa)",
     maliTablo: "Tabela Financeira",
     maliTabloSubtitle: "Resumo semanal de custos de materiais",
-    maliUnitPriceMissing: "preço unitário do material não definido",
-    maliUnitPriceHint: "Pode definir na aba de Preços Unitários",
+    maliUnitPriceMissing: "preÃ§o unitÃ¡rio do material nÃ£o definido",
+    maliUnitPriceHint: "Pode definir na aba de PreÃ§os UnitÃ¡rios",
     weeklyTotal: "TOTAL SEMANAL",
-    categoryDistribution: "Distribuição por categoria",
+    categoryDistribution: "DistribuiÃ§Ã£o por categoria",
     weeklyTotalList: "Lista semanal de necessidades totais",
     totalCost: "Custo total",
-    catMeat: "Produtos cárneos",
-    catDairy: "Produtos lácteos",
+    catMeat: "Produtos cÃ¡rneos",
+    catDairy: "Produtos lÃ¡cteos",
     catLegumes: "Leguminosas secas",
     catSpices: "Especiarias",
     catVegetable: "Legumes e Frutas",
     catOther: "Outros",
-    month1: "Janeiro", month2: "Fevereiro", month3: "Março", month4: "Abril",
+    month1: "Janeiro", month2: "Fevereiro", month3: "MarÃ§o", month4: "Abril",
     month5: "Maio", month6: "Junho", month7: "Julho", month8: "Agosto",
     month9: "Setembro", month10: "Outubro", month11: "Novembro", month12: "Dezembro",
     menuListTitle: "LISTA DO MENU",
     totalDevices: "Total de dispositivos",
     statusWorking: "Funcional",
     statusDefective: "Defeituoso",
-    statusMaintenance: "Manutenção necessária",
+    statusMaintenance: "ManutenÃ§Ã£o necessÃ¡ria",
     statusScrap: "A ser descartado",
-    calibrationValid: "Calibração válida",
-    calibrationApproaching: "Calibração aproximando (30 dias)",
+    calibrationValid: "CalibraÃ§Ã£o vÃ¡lida",
+    calibrationApproaching: "CalibraÃ§Ã£o aproximando (30 dias)",
     differentDepartments: "Diferentes departamentos",
     statusApproaching: "Aproximando",
     statusExpired: "Expirado",
-    statusNotDone: "Não realizado",
-    statusValid: "Válido",
-    noDeviceFound: "Nenhum dispositivo encontrado com estes critérios.",
-    noDeviceRecord: "Nenhum registro de dispositivo de calibração inserido.",
+    statusNotDone: "NÃ£o realizado",
+    statusValid: "VÃ¡lido",
+    noDeviceFound: "Nenhum dispositivo encontrado com estes critÃ©rios.",
+    noDeviceRecord: "Nenhum registro de dispositivo de calibraÃ§Ã£o inserido.",
     deviceCount: "dispositivos",
     deviceCountSuffix: " dispositivos",
-    editDeviceTitle: "Editar dispositivo de calibração",
-    newDeviceTitle: "Novo dispositivo de calibração",
-    kpiBeneficiary: "Beneficiários: ",
+    editDeviceTitle: "Editar dispositivo de calibraÃ§Ã£o",
+    newDeviceTitle: "Novo dispositivo de calibraÃ§Ã£o",
+    kpiBeneficiary: "BeneficiÃ¡rios: ",
     kpiNoRecordToday: "Sem registro hoje",
     kpiAlertsCount: "alertas",
-    kpiAllValuesOk: "Todos os valores estão dentro da faixa",
+    kpiAllValuesOk: "Todos os valores estÃ£o dentro da faixa",
     kpiDeviceInAlarm: "dispositivos em alarme",
     kpiApproaching: "aproximando",
-    kpiAllCalibrationsValid: "Todas as calibrações são válidas",
+    kpiAllCalibrationsValid: "Todas as calibraÃ§Ãµes sÃ£o vÃ¡lidas",
     filterAll: "Todos",
     colDeviceName: "Nome do dispositivo",
     colBrandModel: "Marca-Modelo",
-    colSerialNo: "Número de série",
+    colSerialNo: "NÃºmero de sÃ©rie",
     colDeviceStatus: "Estado do dispositivo",
-    colCalibration: "Calibração",
-    colLastCalibration: "Última calibração",
-    colNextCalibration: "Próxima",
+    colCalibration: "CalibraÃ§Ã£o",
+    colLastCalibration: "Ãšltima calibraÃ§Ã£o",
+    colNextCalibration: "PrÃ³xima",
     colDepartment: "Departamento",
-    colResponsible: "Responsável",
+    colResponsible: "ResponsÃ¡vel",
     colNote: "Nota",
-    colAction: "Ação",
+    colAction: "AÃ§Ã£o",
+    unitPriceList: "Lista de preços unitários",
+    registeredProducts: "Produtos registrados",
+    totalAmount: "Valor total",
+    avgUnitPrice: "Preço unitário médio",
+    selectedYear: "Ano selecionado",
+    duplicateWarning: "produtos com registros duplicados encontrados. Os cálculos de preços podem conter erros.",
+    cleanDuplicates: "Limpar um por um",
+    colProductName: "Nome do produto",
+    colUnitPrice: "Preço unitário (₺)",
+    colUnitEquals: "1 Unidade =",
+    colYear: "Ano",
+    noProductsThisYear: "Nenhum produto adicionado para este ano ainda.",
+    btnEdit: "Editar",
+    btnDelete: "Excluir",
+    pageLabel: "Página",
+    totalProductsLabel: "Total",
+    totalProductsSuffix: " produtos",
+    priceYearNote: "Os preços são por ano. Correspondência: O nome do material é automaticamente normalizado.",
+    btnAddNewProduct: "+ Novo produto",
+    btnDownloadCSV: "Baixar CSV",
+    btnUploadCSV: "Carregar CSV",
+    clickToSelectYear: "Clique para selecionar o ano",
+    selectYear: "Selecionar ano",
     dataInfoRecord: "registros",
-    dataInfoProduction: "produção",
-    dataInfoWaste: "resíduos",
-    portion: "porções",
+    dataInfoProduction: "produÃ§Ã£o",
+    dataInfoWaste: "resÃ­duos",
+    portion: "porÃ§Ãµes",
     abnormalDays: "dias anormais",
     noRecordsToDisplay: "Sem registros para exibir.",
     colYearLabel: "Ano",
     avgPortion400: "400 g",
-    recordsNot400: "registros ≠ 400",
+    recordsNot400: "registros â‰  400",
     gram: " g",
     personLabel: "Pessoa",
-    last7RecordsPrev7: "últimos 7 registros / 7 anteriores",
+    last7RecordsPrev7: "Ãºltimos 7 registros / 7 anteriores",
     tempAppropriate: "Adequado",
     tempLow: "Baixo",
     tempHigh: "Alto",
     lowerLimit: "Limite inferior: ",
     upperLimit: "Limite superior: ",
     unknownDepo: "Desconhecido",
-    tempMin: "Mín: ",
-    tempAvg: "Méd: ",
-    tempMax: "Máx: ",
+    tempMin: "MÃ­n: ",
+    tempAvg: "MÃ©d: ",
+    tempMax: "MÃ¡x: ",
     humidity: "Umidade: ",
-    depot: "Câmara",
+    depot: "CÃ¢mara",
     selectedCount: " selecionados",
-    pageRecords: "Página ",
+    pageRecords: "PÃ¡gina ",
     recordCount: " registros)",
-    tempRecordsTitle: "Registros de temperatura de câmara fria",
+    tempRecordsTitle: "Registros de temperatura de cÃ¢mara fria",
     dateRangeLabel: " | Data:",
-    allDepots: "Todas as câmaras",
+    allDepots: "Todas as cÃ¢maras",
     colTime: "Hora",
-    colDepot: "Câmara",
+    colDepot: "CÃ¢mara",
     colTemperature: "Temperatura",
     colStatus: "Estado",
     depotTempRecordTitle: "Registro de temperatura",
     formDate: "Data",
     formTime: "Hora",
-    formDepotName: "Nome da câmara",
-    formTemperature: "Temperatura (°C)",
+    formDepotName: "Nome da cÃ¢mara",
+    formTemperature: "Temperatura (Â°C)",
     tempPlaceholder: "0.0 (pode ficar vazio)",
     formHumidity: "Umidade (%)",
     formNoteOptional: "Opcional",
     deleteConfirm: "Tem certeza de que deseja excluir este registro?",
     deleteSelectedConfirm: "Tem certeza de que deseja excluir ",
     deleteSelectedConfirmSuffix: " registros selecionados?",
-    tempHistory: " Histórico de temperatura",
-    weeklyAvgTempNote: "Valores médios semanais de temperatura — com linhas de limite superior e inferior",
+    tempHistory: " HistÃ³rico de temperatura",
+    weeklyAvgTempNote: "Valores mÃ©dios semanais de temperatura â€” com linhas de limite superior e inferior",
     upperLimitLabel: "Limite superior (",
     lowerLimitLabel: "Limite inferior (",
     totalRecordCount: "Total de registros",
-    totalWasteOil: "Total óleo usado",
-    avgAmountPerRecord: "Méd. quantidade / registro",
+    totalWasteOil: "Total Ã³leo usado",
+    avgAmountPerRecord: "MÃ©d. quantidade / registro",
     highestAmount: "Quantidade mais alta",
     lowestAmount: "Quantidade mais baixa",
-    oilTypeCount: "Tipos de óleo",
+    oilTypeCount: "Tipos de Ã³leo",
     yearTotalSuffix: " Total",
-    startDate: "Início",
+    startDate: "InÃ­cio",
     endDate: "Fim",
     typeLabel: "Tipo: ",
     yearLabel: "Ano: ",
     activeFilterLabel: "Filtro ativo: ",
-    noFilterMessage: "Sem filtro — exibindo todos os registros de óleo usado.",
-    noWasteOilRecord: "Nenhum registro de óleo usado inserido.",
-    noMatchingFilterRecord: "Nenhum registro encontrado para estes critérios.",
-    editWasteOilRecord: "Editar registro de óleo usado",
-    newWasteOilRecord: "Novo registro de óleo usado",
-    wasteOilChartLabel: "Óleo usado",
+    noFilterMessage: "Sem filtro â€” exibindo todos os registros de Ã³leo usado.",
+    noWasteOilRecord: "Nenhum registro de Ã³leo usado inserido.",
+    noMatchingFilterRecord: "Nenhum registro encontrado para estes critÃ©rios.",
+    editWasteOilRecord: "Editar registro de Ã³leo usado",
+    newWasteOilRecord: "Novo registro de Ã³leo usado",
+    wasteOilChartLabel: "Ã“leo usado",
     previousYearLabel: "Ano anterior",
-    undefinedType: "Não especificado",
-    totalWastePackaging: "Total resíduos de embalagem",
-    wasteTypeCount: "Tipos de resíduos",
-    noWastePackagingRecord: "Nenhum registro de resíduos de embalagem inserido.",
-    noMatchingFilterPackage: "Nenhum registro encontrado para estes critérios.",
-    noFilterMessagePackaging: "Sem filtro — exibindo todos os registros de resíduos de embalagem.",
-    editWastePackagingRecord: "Editar registro de resíduos de embalagem",
-    newWastePackagingRecord: "Novo registro de resíduos de embalagem",
-    wastePackagingChartLabel: "Resíduos de embalagem",
-    chartDetailEmpty: "Nenhum registro encontrado para este período.",
+    undefinedType: "NÃ£o especificado",
+    totalWastePackaging: "Total resÃ­duos de embalagem",
+    wasteTypeCount: "Tipos de resÃ­duos",
+    noWastePackagingRecord: "Nenhum registro de resÃ­duos de embalagem inserido.",
+    noMatchingFilterPackage: "Nenhum registro encontrado para estes critÃ©rios.",
+    noFilterMessagePackaging: "Sem filtro â€” exibindo todos os registros de resÃ­duos de embalagem.",
+    editWastePackagingRecord: "Editar registro de resÃ­duos de embalagem",
+    newWastePackagingRecord: "Novo registro de resÃ­duos de embalagem",
+    wastePackagingChartLabel: "ResÃ­duos de embalagem",
+    chartDetailEmpty: "Nenhum registro encontrado para este perÃ­odo.",
     chartClose: "Fechar",
-    chartColProduction: "Produção",
+    chartColProduction: "ProduÃ§Ã£o",
     chartColPasses: "Passagens",
-    chartColWaste: "Resíduos",
+    chartColWaste: "ResÃ­duos",
     chartColStudent: "Estudantes",
-    chartColFoodType: "Tipo de refeição",
-    chartProductionVsTurnstile: "Diferença entre produção e passagens no catraca",
-    chartStaffTotal: "Pessoal acadêmico + administrativo + SKS",
+    chartColFoodType: "Tipo de refeiÃ§Ã£o",
+    chartProductionVsTurnstile: "DiferenÃ§a entre produÃ§Ã£o e passagens no catraca",
+    chartStaffTotal: "Pessoal acadÃªmico + administrativo + SKS",
     yearFilterLabel: "Ano:",
-    monthFilterLabel: "Mês:",
+    monthFilterLabel: "MÃªs:",
     chartSelectYear: "Selecionar",
     year1Label: "Ano 1:",
     year2Label: "Ano 2:",
-    noComparison: "Sem comparação",
+    noComparison: "Sem comparaÃ§Ã£o",
     newLabel: "Novo",
-    foodTypeLabel: "Tipo de refeição",
-    productionLabel: " Produção",
-    wasteKgLabel: " Resíduos (kg)",
-    wasteGrPortionLabel: " Resíduos (g/porção)",
-    diffKgLabel: "Diferença (kg)",
+    foodTypeLabel: "Tipo de refeiÃ§Ã£o",
+    productionLabel: " ProduÃ§Ã£o",
+    wasteKgLabel: " ResÃ­duos (kg)",
+    wasteGrPortionLabel: " ResÃ­duos (g/porÃ§Ã£o)",
+    diffKgLabel: "DiferenÃ§a (kg)",
     totalRow: "TOTAL",
     registeredRate: "Taxa salva: ",
-    unsavedChanges: " (alterações não salvas)",
+    unsavedChanges: " (alteraÃ§Ãµes nÃ£o salvas)",
     kpiTotalStudentSpending: "Gasto total estudantes",
     kpiTotalStaffSpending: "Gasto total pessoal",
-    kpiAvgMonthlyStudentSpending: "Gasto méd. mensal estudantes",
-    kpiAvgMonthlyStaffSpending: "Gasto méd. mensal pessoal",
+    kpiAvgMonthlyStudentSpending: "Gasto mÃ©d. mensal estudantes",
+    kpiAvgMonthlyStaffSpending: "Gasto mÃ©d. mensal pessoal",
     kpiTotalStudents: "Total estudantes",
     kpiTotalStaff: "Total pessoal",
-    kpiHighestStudentMonth: "Mês mais alto estudantes",
-    kpiHighestStaffMonth: "Mês mais alto pessoal",
-    kpiTotalMealSpending: "Gasto total refeições",
-    kpiAvgMonthlyMealSpending: "Gasto méd. mensal refeições",
-    kpiTotalMealsProduced: "Total refeições produzidas",
-    kpiHighestMealMonth: "Mês mais alto refeições",
-    chartStudentSpending: "Gasto estudantes (₺)",
-    chartStaffSpending: "Gasto pessoal (₺)",
-    chartMealSpending: "Gasto refeições (₺)",
+    kpiHighestStudentMonth: "MÃªs mais alto estudantes",
+    kpiHighestStaffMonth: "MÃªs mais alto pessoal",
+    kpiTotalMealSpending: "Gasto total refeiÃ§Ãµes",
+    kpiAvgMonthlyMealSpending: "Gasto mÃ©d. mensal refeiÃ§Ãµes",
+    kpiTotalMealsProduced: "Total refeiÃ§Ãµes produzidas",
+    kpiHighestMealMonth: "MÃªs mais alto refeiÃ§Ãµes",
+    chartStudentSpending: "Gasto estudantes (â‚º)",
+    chartStaffSpending: "Gasto pessoal (â‚º)",
+    chartMealSpending: "Gasto refeiÃ§Ãµes (â‚º)",
     noRecordsYet: "Sem registros ainda.",
-    invalidRate: "Por favor insira uma taxa válida!",
+    invalidRate: "Por favor insira uma taxa vÃ¡lida!",
     rateSaved: "Taxa salva: ",
     menuStatusDraft: "Rascunho",
-    menuStatusPending: "Aguardando aprovação",
+    menuStatusPending: "Aguardando aprovaÃ§Ã£o",
     menuStatusApproved: "Aprovado",
     menuStatusRejected: "Rejeitado",
-    menuApprove: "Aprovar cardápio",
-    menuApproveDisabled: "O cardápio ainda não foi enviado para aprovação. Quando o nutricionista clicar em \"Enviar para aprovação\", você poderá aprovar aqui.",
-    menuReject: "Rejeitar cardápio com justificativa",
-    menuRejectDisabled: "O cardápio ainda não foi enviado para aprovação. Quando o nutricionista clicar em \"Enviar para aprovação\", você poderá rejeitar aqui.",
-    menuPendingCount: " cardápios aguardando aprovação. Vá à semana pendente para aprovar.",
-    menuNotApproved: "O cardápio desta semana ainda não foi aprovado pelo engenheiro de alimentos.",
-    menuRejected: "Este cardápio foi rejeitado",
+    menuApprove: "Aprovar cardÃ¡pio",
+    menuApproveDisabled: "O cardÃ¡pio ainda nÃ£o foi enviado para aprovaÃ§Ã£o. Quando o nutricionista clicar em \"Enviar para aprovaÃ§Ã£o\", vocÃª poderÃ¡ aprovar aqui.",
+    menuReject: "Rejeitar cardÃ¡pio com justificativa",
+    menuRejectDisabled: "O cardÃ¡pio ainda nÃ£o foi enviado para aprovaÃ§Ã£o. Quando o nutricionista clicar em \"Enviar para aprovaÃ§Ã£o\", vocÃª poderÃ¡ rejeitar aqui.",
+    menuPendingCount: " cardÃ¡pios aguardando aprovaÃ§Ã£o. VÃ¡ Ã  semana pendente para aprovar.",
+    menuNotApproved: "O cardÃ¡pio desta semana ainda nÃ£o foi aprovado pelo engenheiro de alimentos.",
+    menuRejected: "Este cardÃ¡pio foi rejeitado",
     menuRejectedSuffix: ". O nutricionista pode corrigir e reenviar.",
-    menuAwaitingApproval: "Este cardápio aguarda aprovação. Será marcado como \"não aprovado\" na lista de produção.",
+    menuAwaitingApproval: "Este cardÃ¡pio aguarda aprovaÃ§Ã£o. SerÃ¡ marcado como \"nÃ£o aprovado\" na lista de produÃ§Ã£o.",
     noteLabel: "Nota ",
     deleteNote: "Excluir esta nota",
     addNote: "Adicionar nova nota",
-    mealPickerTitle: "Selecionar refeição",
-    clearLabel: "🗑 Limpar",
-    searchMealPlaceholder: "Pesquisar refeição...",
-    noMatchingMeal: "Nenhuma refeição correspondente encontrada.",
+    mealPickerTitle: "Selecionar refeiÃ§Ã£o",
+    clearLabel: "ğŸ—‘ Limpar",
+    searchMealPlaceholder: "Pesquisar refeiÃ§Ã£o...",
+    noMatchingMeal: "Nenhuma refeiÃ§Ã£o correspondente encontrada.",
     varietyLabel: " Variedade: ",
     addRecord: "Adicionar novo registro",
     editRecord: "Editar registro",
     btnUpdate: "Atualizar",
     recordAdded: "Registro adicionado com sucesso.",
     recordUpdated: "Registro atualizado com sucesso.",
-    recordDeleted: "Registro excluído.",
-    allRecordsDeleted: "Todos os registros excluídos.",
-    selectedRecordsDeleted: "Registros selecionados excluídos.",
+    recordDeleted: "Registro excluÃ­do.",
+    allRecordsDeleted: "Todos os registros excluÃ­dos.",
+    selectedRecordsDeleted: "Registros selecionados excluÃ­dos.",
     noRecordToDelete: "Nenhum registro para excluir.",
     noSelectedRecord: "Nenhum registro selecionado.",
-    deleteAllConfirm: "Tem certeza de que deseja excluir TODOS os registros?\nEsta ação não pode ser desfeita!",
+    deleteAllConfirm: "Tem certeza de que deseja excluir TODOS os registros?\nEsta aÃ§Ã£o nÃ£o pode ser desfeita!",
     deleteFoodConfirm: "Tem certeza de que deseja excluir este alimento?",
     selected: " selecionados",
-    negMeals: "A quantidade de refeições produzidas não pode ser negativa.",
-    negTurnstile: "A quantidade de catracas não pode ser negativa.",
-    negStaff: "A quantidade de pessoal não pode ser negativa.",
-    negPortion: "A quantidade de porções não pode ser negativa.",
-    negStudent: "A quantidade de estudantes não pode ser negativa.",
-    unsavedConfirm: "Você tem alterações não salvas. Tem certeza de que deseja fechar?",
-    selectUser: "Por favor selecione um usuário.",
-    wrongCredentials: "Nome de usuário ou senha incorretos.",
+    negMeals: "A quantidade de refeiÃ§Ãµes produzidas nÃ£o pode ser negativa.",
+    negTurnstile: "A quantidade de catracas nÃ£o pode ser negativa.",
+    negStaff: "A quantidade de pessoal nÃ£o pode ser negativa.",
+    negPortion: "A quantidade de porÃ§Ãµes nÃ£o pode ser negativa.",
+    negStudent: "A quantidade de estudantes nÃ£o pode ser negativa.",
+    unsavedConfirm: "VocÃª tem alteraÃ§Ãµes nÃ£o salvas. Tem certeza de que deseja fechar?",
+    selectUser: "Por favor selecione um usuÃ¡rio.",
+    wrongCredentials: "Nome de usuÃ¡rio ou senha incorretos.",
     tooManyAttempts: "Muitas tentativas. Por favor aguarde.",
-    editable: "Editável",
+    editable: "EditÃ¡vel",
     fixed: "Fixo",
-    menuSentForApproval: "Cardápio enviado para aprovação. Aguardando aprovação do engenheiro de alimentos/admin.",
-    menuApproved: "Cardápio aprovado.",
-    menuRejectedMsg: "Cardápio rejeitado com justificativa.",
-    menuDraftSaved: "Cardápio salvo como rascunho.",
-    menuCleared: "Cardápio limpo.",
+    menuSentForApproval: "CardÃ¡pio enviado para aprovaÃ§Ã£o. Aguardando aprovaÃ§Ã£o do engenheiro de alimentos/admin.",
+    menuApproved: "CardÃ¡pio aprovado.",
+    menuRejectedMsg: "CardÃ¡pio rejeitado com justificativa.",
+    menuDraftSaved: "CardÃ¡pio salvo como rascunho.",
+    menuCleared: "CardÃ¡pio limpo.",
     monthShort1: "Jan",
     monthShort2: "Fev",
     monthShort3: "Mar",
@@ -17137,7 +17239,7 @@ var I18N = {
     chartWasteRatioNote: "Ishlab chiqarilgan ovqatning necha foizi chiqindi bo'ladi",
     chartWastePerPerson: "Shaxs boshiga chiqindi (kg/shaxs)",
     chartWastePerPersonNote: "Oshxonasiga kirgan shaxs boshiga o'rtacha chiqindi",
-    chartMonthlyTemp: "Oylik o'rtacha ombor haroratlari (°C)",
+    chartMonthlyTemp: "Oylik o'rtacha ombor haroratlari (Â°C)",
     chartTempEmpty: "Harorat yozuvlari kiritilganda grafikalar ko'rsatiladi",
     chartTempNote: "Har bir omborning oylik o'rtacha harorati",
     yearlyPdfBtn: "PDF chop etish",
@@ -17165,14 +17267,14 @@ var I18N = {
     btnSaveStaffRate: "Xodim miqdorini saqlash",
     spendingMealRate: "Ovqat boshiga xarajat miqdori (TL)",
     btnSaveMealRate: "Ovqat miqdorini saqlash",
-    spendingDesc: "Talaba xarajati = Talabalar soni × Talaba boshiga miqdor",
+    spendingDesc: "Talaba xarajati = Talabalar soni Ã— Talaba boshiga miqdor",
     spendingStudentTitle: "Talaba xarajat miqdori (TL)",
     spendingChartEmpty: "Yozuvlar kiritilganda grafikalar ko'rsatiladi",
-    spendingStudentNote: "Talaba xarajati (TL) = Talabalar soni × Talaba boshiga xarajat miqdori",
+    spendingStudentNote: "Talaba xarajati (TL) = Talabalar soni Ã— Talaba boshiga xarajat miqdori",
     spendingStaffTitle: "Xodim xarajat miqdori (TL)",
-    spendingStaffNote: "Xodim xarajati (TL) = Xodimlar soni × Xodim boshiga xarajat miqdori",
+    spendingStaffNote: "Xodim xarajati (TL) = Xodimlar soni Ã— Xodim boshiga xarajat miqdori",
     spendingMealTitle: "Ovqat xarajat miqdori (TL)",
-    spendingMealNote: "Ovqat xarajati (TL) = Ishlab chiqarilgan ovqat soni × Ovqat boshiga xarajat miqdori",
+    spendingMealNote: "Ovqat xarajati (TL) = Ishlab chiqarilgan ovqat soni Ã— Ovqat boshiga xarajat miqdori",
     spendingTableTitle: "Xarajat hisoblash jadvali",
     syncTitle: "Supabase sinxronizatsiyasi",
     syncCloseBtn: "Yopish",
@@ -17255,13 +17357,13 @@ var I18N = {
     compTurnstilePasses: "Turniket o'tishlari",
     compStudentCount: "Talabalar soni",
     compWastePerPerson: "Kishi boshiga chiqindi (gr)",
-    monthlyCompDesc: "Joriy oy o'tgan oy bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
-    yearlyCompDesc: "Joriy yil (yil boshidan bugunga) o'tgan yilning shu davri bilan solishtirilmoqda. ↑ o'sish, ↓ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (↓) yaxshi.",
+    monthlyCompDesc: "Joriy oy o'tgan oy bilan solishtirilmoqda. â†‘ o'sish, â†“ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (â†“) yaxshi.",
+    yearlyCompDesc: "Joriy yil (yil boshidan bugunga) o'tgan yilning shu davri bilan solishtirilmoqda. â†‘ o'sish, â†“ kamayish. Chiqindi va kishi boshiga chiqindining kamayishi (â†“) yaxshi.",
     monthNames: ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"],
     haccpColDate: "Sana",
     haccpColTime: "Vaqt",
     haccpColDepot: "Ombor nomi",
-    haccpColTemp: "Harorat (°C)",
+    haccpColTemp: "Harorat (Â°C)",
     haccpColHumidity: "Namlik (%)",
     haccpColNote: "Eslatma",
     haccpColAction: "Amal",
@@ -17296,6 +17398,14 @@ var I18N = {
     allergen: "Allergen",
     recipePerPerson: "Retsept (kishi boshiga)",
     devices: "qurilmalar",
+    chartMonthlyProduction: "Oylik ishlab chiqarish (kishi)",
+    chartMonthlyPasses: "Oylik o'tish (kishi)",
+    chartLastYearWaste: "O'tgab yil chiqindi (porsiyalar)",
+    chartMonthlyWasteKg: "Oylik chiqindi (kg)",
+    chartMonthlyMealCount: "Oylik ovqat soni",
+    chartMonthlyWasteRate: "Oylik chiqindi nisbati %",
+    chartMonthlyStudent: "Oylik talaba soni",
+    chartWastePerPersonLabel: "Kishi boshiga chiqindi (kg/kishi)",
     maliTablo: "Moliyaviy Jadval",
     maliTabloSubtitle: "Haftalik material xarajatlari xulosasi",
     maliUnitPriceMissing: "materialning birlik narxi belgilanmagan",
@@ -17351,6 +17461,29 @@ var I18N = {
     colResponsible: "Mas'ul",
     colNote: "Eslatma",
     colAction: "Amal",
+    unitPriceList: "Birlik narxlari ro'yxati",
+    registeredProducts: "Ro'yxatdan o'tgan mahsulotlar",
+    totalAmount: "Umumiy summa",
+    avgUnitPrice: "O'rtacha birlik narxi",
+    selectedYear: "Tanlangan yil",
+    duplicateWarning: "takroriy yozuvlar topilgan mahsulotlar. Narx hisoblashlarida xatolik bo'lishi mumkin.",
+    cleanDuplicates: "Bittalab tozalash",
+    colProductName: "Mahsulot nomi",
+    colUnitPrice: "Birlik narxi (₺)",
+    colUnitEquals: "1 Birlik =",
+    colYear: "Yil",
+    noProductsThisYear: "Ushbu yil uchun hali mahsulot qo'shilmagan.",
+    btnEdit: "Tahrirlash",
+    btnDelete: "O'chirish",
+    pageLabel: "Sahifa",
+    totalProductsLabel: "Jami",
+    totalProductsSuffix: " mahsulot",
+    priceYearNote: "Narxlar yil bo'yicha. Moslashtirish: Material nomi avtomatik normalizatsiya qilinadi.",
+    btnAddNewProduct: "+ Yangi mahsulot",
+    btnDownloadCSV: "CSV yuklab olish",
+    btnUploadCSV: "CSV yuklash",
+    clickToSelectYear: "Yil tanlash uchun bosing",
+    selectYear: "Yil tanlash",
     dataInfoRecord: "yozuvlar",
     dataInfoProduction: "ishlab chiqarish",
     dataInfoWaste: "chiqindilar",
@@ -17388,7 +17521,7 @@ var I18N = {
     formDate: "Sana",
     formTime: "Vaqt",
     formDepotName: "Xona nomi",
-    formTemperature: "Harorat (°C)",
+    formTemperature: "Harorat (Â°C)",
     tempPlaceholder: "0.0 (bo'sh qoldirish mumkin)",
     formHumidity: "Namlik (%)",
     formNoteOptional: "Ixtiyoriy",
@@ -17396,7 +17529,7 @@ var I18N = {
     deleteSelectedConfirm: "Tanlangan ",
     deleteSelectedConfirmSuffix: " yozuvlarni o'chirishga ishonchingiz komilmi?",
     tempHistory: " Harorat tarixi",
-    weeklyAvgTempNote: "Haftalik o'rtacha harorat qiymatlari — pastki va yuqori chegara chiziqlari bilan",
+    weeklyAvgTempNote: "Haftalik o'rtacha harorat qiymatlari â€” pastki va yuqori chegara chiziqlari bilan",
     upperLimitLabel: "Yuqori chegara (",
     lowerLimitLabel: "Pastki chegara (",
     totalRecordCount: "Jami yozuvlar",
@@ -17411,7 +17544,7 @@ var I18N = {
     typeLabel: "Turi: ",
     yearLabel: "Yil: ",
     activeFilterLabel: "Faol filter: ",
-    noFilterMessage: "Filtrlashsiz — barcha ishlatilgan moy yozuvlari ko'rsatilmoqda.",
+    noFilterMessage: "Filtrlashsiz â€” barcha ishlatilgan moy yozuvlari ko'rsatilmoqda.",
     noWasteOilRecord: "Hali ishlatilgan moy yozuvi kiritilmagan.",
     noMatchingFilterRecord: "Ushbu filtr mezonlariga mos yozuv topilmadi.",
     editWasteOilRecord: "Ishlatilgan moy yozuvini tahrirlash",
@@ -17423,7 +17556,7 @@ var I18N = {
     wasteTypeCount: "Chiqindi turlari soni",
     noWastePackagingRecord: "Hali qadoqlash chiqindisi yozuvi kiritilmagan.",
     noMatchingFilterPackage: "Ushbu filtr mezonlariga mos yozuv topilmadi.",
-    noFilterMessagePackaging: "Filtrlashsiz — barcha qadoqlash chiqindisi yozuvlari ko'rsatilmoqda.",
+    noFilterMessagePackaging: "Filtrlashsiz â€” barcha qadoqlash chiqindisi yozuvlari ko'rsatilmoqda.",
     editWastePackagingRecord: "Qadoqlash chiqindisi yozuvini tahrirlash",
     newWastePackagingRecord: "Yangi qadoqlash chiqindisi yozuvi",
     wastePackagingChartLabel: "Qadoqlash chiqindilari",
@@ -17463,9 +17596,9 @@ var I18N = {
     kpiAvgMonthlyMealSpending: "O'rt. oylik ovqat xarajatlari",
     kpiTotalMealsProduced: "Jami ishlab chiqarilgan ovqatlar",
     kpiHighestMealMonth: "Eng yuqori ovqat oy",
-    chartStudentSpending: "Talaba xarajatlari (₺)",
-    chartStaffSpending: "Xodim xarajatlari (₺)",
-    chartMealSpending: "Ovqat xarajatlari (₺)",
+    chartStudentSpending: "Talaba xarajatlari (â‚º)",
+    chartStaffSpending: "Xodim xarajatlari (â‚º)",
+    chartMealSpending: "Ovqat xarajatlari (â‚º)",
     noRecordsYet: "Hali yozuvlar yo'q.",
     invalidRate: "Iltimos, yaroqli stavka kiriting!",
     rateSaved: "Stavka saqlandi: ",
@@ -17486,7 +17619,7 @@ var I18N = {
     deleteNote: "Ushbu eslatmani o'chirish",
     addNote: "Yangi eslatma qo'shish",
     mealPickerTitle: "Ovqat tanlash",
-    clearLabel: "🗑 Tozalash",
+    clearLabel: "ğŸ—‘ Tozalash",
     searchMealPlaceholder: "Ovqat qidirish...",
     noMatchingMeal: "Mos ovqat topilmadi.",
     varietyLabel: " Turi: ",
@@ -17573,8 +17706,8 @@ function t(key) {
 }
 
 var CATEGORY_I18N = {
-  'Et Ürünleri': 'catMeat', 'Süt Ürünleri': 'catDairy', 'Kuru Bakliyat': 'catLegumes',
-  'Baharatlar': 'catSpices', 'Sebze ve Meyve': 'catVegetable', 'Diğer': 'catOther'
+  'Et ÃœrÃ¼nleri': 'catMeat', 'SÃ¼t ÃœrÃ¼nleri': 'catDairy', 'Kuru Bakliyat': 'catLegumes',
+  'Baharatlar': 'catSpices', 'Sebze ve Meyve': 'catVegetable', 'DiÄŸer': 'catOther'
 };
 function tCategory(name) {
   var key = CATEGORY_I18N[name];
@@ -17623,8 +17756,8 @@ function applyTranslations() {
   }
 
   document.title = currentLang === 'tr'
-    ? 'Kırşehir Ahi Evran Üniversitesi - BHYS'
-    : 'Kırşehir Ahi Evran University - NSMS';
+    ? 'KÄ±rÅŸehir Ahi Evran Ãœniversitesi - BHYS'
+    : 'KÄ±rÅŸehir Ahi Evran University - NSMS';
 }
 
 document.addEventListener('click', function(e) {
