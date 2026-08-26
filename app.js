@@ -620,7 +620,7 @@ async function doLogin() {
   const password = input.value;
   
   if (!username) {
-    error.textContent = 'Lütfen kullanıcı seçin!';
+    error.textContent = t('selectUser');
     error.style.display = 'block';
     return;
   }
@@ -674,12 +674,12 @@ async function doLogin() {
 
   // 3. Her ikisi de başarısız
   window._loginAttempts = (window._loginAttempts || 0) + 1;
-  error.textContent = 'Hatalı kullanıcı adı veya şifre!';
+  error.textContent = t('wrongCredentials');
   error.style.display = 'block';
   input.value = '';
   input.focus();
   if (window._loginAttempts >= 5) {
-    error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
+    error.textContent = t('tooManyAttempts');
     setTimeout(() => location.reload(), 2000);
   }
 }
@@ -2356,7 +2356,7 @@ function printBirimFiyatlar() {
   win.document.write('</style></head><body>');
   win.document.write('<h1>' + t('unitPriceList') + '</h1>');
   win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
-  win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">\u00dcr\u00fcn Ad\u0131</th><th>Birim</th><th>Birim Fiyat (\u20BA)</th><th>Y\u0131l</th></tr></thead><tbody>' + rows + '</tbody></table>');
+  win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">' + t('colProductName') + '</th><th>' + t('colUnit') + '</th><th>' + t('colUnitPrice') + '</th><th>' + t('colYear') + '</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
   win.document.write('</body></html>');
   win.document.close();
@@ -3583,7 +3583,7 @@ function haccpToggleSelectAll(checked) {
 
 async function haccpDeleteSelected() {
   if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
+  if (haccpSelectedIds.size === 0) { showToast(t('noSelectedRecord'), 'error'); return; }
   if (!confirm(t('deleteSelectedConfirm') + haccpSelectedIds.size + t('deleteSelectedConfirmSuffix'))) return;
   var ids = [...haccpSelectedIds];
   if (supabaseClient && ids.length > 0) {
@@ -3599,7 +3599,7 @@ async function haccpDeleteSelected() {
   haccpSelectedIds.clear();
   saveHaccpData();
   renderHaccp();
-  showToast('Seçili kayıtlar silindi.', 'success');
+  showToast(t('selectedRecordsDeleted'), 'success');
 }
 
 function openHaccpModal(type, id) {
@@ -3703,7 +3703,7 @@ async function deleteHaccpRecord(type, id) {
   haccpSelectedIds.delete(id);
   saveHaccpData();
   renderHaccp();
-  showToast('Kayıt silindi.', 'success');
+  showToast(t('recordDeleted'), 'success');
 }
 
 
@@ -4158,12 +4158,12 @@ function openModal(id = null) {
   if (id !== null) {
     const rec = records.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Kaydı Düzenle';
-    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Güncelle`;
+    title.textContent = t('editRecord');
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${t('btnUpdate')}`;
     populateForm(rec);
   } else {
-    title.textContent = 'Yeni Kayıt Ekle';
-    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
+    title.textContent = t('addRecord');
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${t('btnSave')}`;
     document.getElementById('fTarih').value = formatLocalDate(new Date());
     // Yemekhanede Çalışan Personel Sayısı: son kayıtta kullanılan değer otomatik dolar, elle değiştirilebilir
     const fPersonelEl = document.getElementById('fPersonel');
@@ -4182,12 +4182,12 @@ function openModal(id = null) {
       fPorsiyonEl.readOnly = false;
       fPorsiyonEl.classList.remove('readonly-input');
       fPorsiyonEl.oninput = autoCalcAtik;
-      if (fPorsiyonBadge) fPorsiyonBadge.textContent = 'Düzenlenebilir';
+      if (fPorsiyonBadge) fPorsiyonBadge.textContent = t('editable');
     } else {
       fPorsiyonEl.readOnly = true;
       fPorsiyonEl.classList.add('readonly-input');
       fPorsiyonEl.oninput = null;
-      if (fPorsiyonBadge) fPorsiyonBadge.textContent = 'Sabit';
+      if (fPorsiyonBadge) fPorsiyonBadge.textContent = t('fixed');
     }
   }
 
@@ -4201,7 +4201,7 @@ function openModal(id = null) {
 }
 
 function closeModal() {
-  if (formModified && !confirm('Kaydedilmemiş değişiklikler var. Yine de kapatmak istiyor musunuz?')) return;
+  if (formModified && !confirm(t('unsavedConfirm'))) return;
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
   editingId = null;
@@ -4281,11 +4281,11 @@ function saveRecord(e) {
   const fPorsiyon = document.getElementById('fPorsiyon');
   const fOgrenci = document.getElementById('fOgrenci');
   const errors = [];
-  if (parseFloat(fYemek.value) < 0) errors.push('Üretilen yemek sayısı negatif olamaz.');
-  if (parseInt(fTurnike.value) < 0) errors.push('Turnike geçiş sayısı negatif olamaz.');
-  if (parseInt(fPersonel.value) < 0) errors.push('Personel sayısı negatif olamaz.');
-  if (parseInt(fPorsiyon.value) < 0) errors.push('Porsiyon miktarı negatif olamaz.');
-  if (parseInt(fOgrenci.value) < 0) errors.push('Öğrenci sayısı negatif olamaz.');
+  if (parseFloat(fYemek.value) < 0) errors.push(t('negMeals'));
+  if (parseInt(fTurnike.value) < 0) errors.push(t('negTurnstile'));
+  if (parseInt(fPersonel.value) < 0) errors.push(t('negStaff'));
+  if (parseInt(fPorsiyon.value) < 0) errors.push(t('negPortion'));
+  if (parseInt(fOgrenci.value) < 0) errors.push(t('negStudent'));
   if (errors.length > 0) {
     showToast(errors.join(' '), 'error');
     return;
@@ -4326,11 +4326,11 @@ function saveRecord(e) {
     if (savedEditingId !== null) {
       const idx = records.findIndex(r => r.id === savedEditingId);
       if (idx !== -1) records[idx] = rec;
-      showToast('Kayıt başarıyla güncellendi.', 'success');
+      showToast(t('recordUpdated'), 'success');
       logIslem('kayit_duzenle', 'yemek #' + savedEditingId + ' güncellendi');
     } else {
       records.push(rec);
-      showToast('Yeni kayıt başarıyla eklendi.', 'success');
+      showToast(t('recordAdded'), 'success');
       logIslem('yeni_kayit', 'yemek ' + (rec.tarih || '') + ' eklendi');
     }
 
@@ -4346,7 +4346,7 @@ function saveRecord(e) {
 // ─── DELETE ────────────────────────────────────────────────────────────────────
 async function deleteRecord(id) {
   if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+  if (!confirm(t('deleteConfirm'))) return;
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from('records').delete().eq('id', id);
@@ -4364,7 +4364,7 @@ async function deleteRecord(id) {
     renderRecordsTable();
     renderAll();
     drawAllCharts();
-    showToast('Kayıt silindi.', 'success');
+    showToast(t('recordDeleted'), 'success');
     logIslem('kayit_sil', 'yemek #' + id + ' silindi');
   } catch (e) {
     showToast('Hata: ' + e.message, 'error');
@@ -4457,7 +4457,7 @@ function updateBulkBar() {
   if (!bar || !count) return;
   if (canAddRecords() && selectedIds.size > 0) {
     bar.style.display = 'flex';
-    count.textContent = selectedIds.size + ' seçili';
+    count.textContent = selectedIds.size + t('selected');
   } else {
     bar.style.display = 'none';
   }
@@ -4466,7 +4466,7 @@ function updateBulkBar() {
 function deleteSelected() {
   if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (selectedIds.size === 0) {
-    showToast('Seçili kayıt yok.', 'error');
+    showToast(t('noSelectedRecord'), 'error');
     return;
   }
   if (!confirm('Seçili ' + selectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
@@ -4483,7 +4483,7 @@ function deleteSelected() {
     renderRecordsTable();
     renderAll();
     drawAllCharts();
-    showToast('Seçili kayıtlar silindi.', 'success');
+    showToast(t('selectedRecordsDeleted'), 'success');
   } catch (e) {
     showToast('Hata: ' + e.message, 'error');
   }
@@ -4638,10 +4638,10 @@ function handleImport(e) {
 // ─── DATA MANAGEMENT ──────────────────────────────────────────────────────────
 async function clearAllData() { if (!requireAdmin()) return;
   if (records.length === 0) {
-    showToast('Silinecek kayıt yok.', 'error');
+    showToast(t('noRecordToDelete'), 'error');
     return;
   }
-  if (!confirm('TÜM kayıtları silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!')) return;
+  if (!confirm(t('deleteAllConfirm'))) return;
   if (!confirm('Son bir kez daha: Tüm veriler silinsin mi?')) return;
   records = [];
   filteredRecords = [];
@@ -4653,7 +4653,7 @@ async function clearAllData() { if (!requireAdmin()) return;
   }
   renderAll();
   drawAllCharts();
-  showToast('Tüm kayıtlar silindi.', 'success');
+  showToast(t('allRecordsDeleted'), 'success');
 }
 
 function exportData() {
@@ -6203,7 +6203,7 @@ function editYemek(id) {
 }
 
 function deleteYemek(id) { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
+  if (!confirm(t('deleteFoodConfirm'))) return;
   let list = loadYemekler();
   list = list.filter(y => y.id !== id);
   saveYemekler(list);
@@ -6759,7 +6759,7 @@ function renderYearlyCharts() {
   var sel = eff.sel;
   var prev = eff.prev;
   var hasPrev = prev !== null && prev > 0;
-  var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  var monthLabels = [t('monthShort1'),t('monthShort2'),t('monthShort3'),t('monthShort4'),t('monthShort5'),t('monthShort6'),t('monthShort7'),t('monthShort8'),t('monthShort9'),t('monthShort10'),t('monthShort11'),t('monthShort12')];
 
   function buildYear(year) {
     var monthly = [];
@@ -8214,7 +8214,7 @@ function renderHarcamaMenuTable(oran, persOran, yemekOran) {
 }
 
 // ─── HARCAMA MENÜSÜ NAV (yıl / ay / kaydırma) ────────────────────────────────
-const HC_MONTHS_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const HC_MONTHS_TR = [t('month1'), t('month2'), t('month3'), t('month4'), t('month5'), t('month6'), t('month7'), t('month8'), t('month9'), t('month10'), t('month11'), t('month12')];
 
 function hcGetYears() {
   var set = {};
@@ -8244,7 +8244,7 @@ function renderHarcamaNav() {
   });
   html += '</select>';
   html += '<span style="font-size:0.8rem;color:var(--text-muted);margin-left:4px">Ay:</span>';
-  var months = ['Tümü', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  var months = [t('filterAll'), t('month1'), t('month2'), t('month3'), t('month4'), t('month5'), t('month6'), t('month7'), t('month8'), t('month9'), t('month10'), t('month11'), t('month12')];
   months.forEach(function (m, i) {
     var active = (i === 0 ? hcSelectedMonth === null : hcSelectedMonth === i - 1) ? ' active' : '';
     html += '<button class="year-btn month-btn' + active + '" data-hc-month="' + i + '" onclick="hcSetMonth(' + i + ')">' + m + '</button>';
@@ -8352,12 +8352,12 @@ function hcKaydetOran() {
   const status = document.getElementById('hcOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('invalidRate');
     status.style.color = '#ef4444';
     return;
   }
   setOgrenciBasiHarcamaOrani(val);
-  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
@@ -8369,12 +8369,12 @@ function hcKaydetPersonelOran() {
   const status = document.getElementById('hcPersonelOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('invalidRate');
     status.style.color = '#ef4444';
     return;
   }
   setPersonelBasiHarcamaOrani(val);
-  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
@@ -8386,12 +8386,12 @@ function hcKaydetYemekOran() {
   const status = document.getElementById('hcYemekOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('invalidRate');
     status.style.color = '#ef4444';
     return;
   }
   setUretilenYemekBasiHarcamaOrani(val);
-  status.textContent = 'Oran kaydedildi: ' + val.toFixed(2) + ' ₺';
+  status.textContent = t('rateSaved') + val.toFixed(2) + ' ₺';
   status.style.color = '#22c55e';
   renderHarcamaMenu();
 }
@@ -8644,7 +8644,7 @@ async function menuOnayaGonder() {
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_onaya_gonder', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
-  showToast('Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.', 'success');
+  showToast(t('menuSentForApproval'), 'success');
   await renderMenu();
 }
 
@@ -8661,7 +8661,7 @@ async function menuOnayla() {
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_onayla', displayName + ' ' + ctx.weekKey + ' menüsünü onayladı');
-  showToast('Menü onaylandı.', 'success');
+  showToast(t('menuApproved'), 'success');
   await renderMenu();
 }
 
@@ -8691,7 +8691,7 @@ async function menuReddetApply(not) {
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_reddet', displayName + ' ' + ctx.weekKey + ' menüsünü reddetti: ' + not);
-  showToast('Menü gerekçeli olarak reddedildi.', 'success');
+  showToast(t('menuRejectedMsg'), 'success');
   await renderMenu();
 }
 
@@ -8788,7 +8788,7 @@ function renderMenuDurumBar(durumMeta, pendingCount) {
         warn.style.display = 'none';
       } else {
         warn.style.display = '';
-        let metin = 'Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.';
+        let metin = t('menuNotApproved');
         if (durumMeta.durum === MENU_DURUMLAR.REDDEDILDI) {
           metin = t('menuRejected') + (durumMeta.onaylayan ? ' (' + durumMeta.onaylayan + ')' : '');
           if (durumMeta.onay_notu) metin += ': ' + durumMeta.onay_notu;
@@ -9079,7 +9079,7 @@ async function saveWeeklyMenu() {
     : { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
-  showToast('Menü taslak olarak kaydedildi.', 'success');
+  showToast(t('menuDraftSaved'), 'success');
   await renderMenu();
 }
 
@@ -9152,7 +9152,7 @@ function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem i
     if (el) el.value = '0';
   });
   refreshMenuProduction();
-  showToast('Menü temizlendi.', 'success');
+  showToast(t('menuCleared'), 'success');
 }
 
 async function exportMenuJSON() {
@@ -9427,7 +9427,7 @@ function renderYagFilterBar() {
   if (ozet) {
     var parts = [];
     if ((bas && bas.value) || (bit && bit.value)) {
-      parts.push((bas && bas.value ? displayDate(bas.value) : 'Başlangıç') + ' – ' + (bit && bit.value ? displayDate(bit.value) : 'Bitiş'));
+      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' – ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
     }
     if (tur && tur.value) parts.push(t('typeLabel') + tur.value);
     if (yagSelectedYear) parts.push(t('yearLabel') + yagSelectedYear);
@@ -9611,7 +9611,7 @@ let yagChartInstance = null;
 let yagTurChartInstance = null;
 let yagSelectedYear = '';
 
-var AYLAR_KISA = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+var AYLAR_KISA = [t('monthShort1'), t('monthShort2'), t('monthShort3'), t('monthShort4'), t('monthShort5'), t('monthShort6'), t('monthShort7'), t('monthShort8'), t('monthShort9'), t('monthShort10'), t('monthShort11'), t('monthShort12')];
 
 function drawYagChart(list) {
   var canvas = document.getElementById('canvasYag');
@@ -10022,13 +10022,13 @@ function renderAmbalajFilterBar() {
   if (ozet) {
     var parts = [];
     if ((bas && bas.value) || (bit && bit.value)) {
-      parts.push((bas && bas.value ? displayDate(bas.value) : 'Başlangıç') + ' – ' + (bit && bit.value ? displayDate(bit.value) : 'Bitiş'));
+      parts.push((bas && bas.value ? displayDate(bas.value) : t('startDate')) + ' – ' + (bit && bit.value ? displayDate(bit.value) : t('endDate')));
     }
     if (tur && tur.value) parts.push(t('typeLabel') + tur.value);
     if (ambalajSelectedYear) parts.push(t('yearLabel') + ambalajSelectedYear);
     ozet.textContent = parts.length
       ? t('activeFilterLabel') + parts.join(' · ')
-      : t('noFilterMessage');
+      : t('noFilterMessagePackaging');
   }
 }
 
@@ -17054,6 +17054,7 @@ var I18N = {
     wasteTypeCount: "Chiqindi turlari soni",
     noWastePackagingRecord: "Hali qadoqlash chiqindisi yozuvi kiritilmagan.",
     noMatchingFilterPackage: "Ushbu filtr mezonlariga mos yozuv topilmadi.",
+    noFilterMessagePackaging: "Filtrlashsiz — barcha qadoqlash chiqindisi yozuvlari ko'rsatilmoqda.",
     editWastePackagingRecord: "Qadoqlash chiqindisi yozuvini tahrirlash",
     newWastePackagingRecord: "Yangi qadoqlash chiqindisi yozuvi",
     wastePackagingChartLabel: "Qadoqlash chiqindilari",
