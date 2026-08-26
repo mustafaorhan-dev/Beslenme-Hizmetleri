@@ -1126,16 +1126,16 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted);background:rgba(59,130,246,0.06);padding:0.5rem 0.75rem;border-radius:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          <span>Cihaz durumu rozeti (<strong>Çalışır Durumda</strong>/Arızalı/Bakım/Hurda) ve kalibrasyon rozeti (<strong>Geçerli</strong>/Yaklaşıyor/<strong>Süresi Doldu</strong>) ayrı ayrı gösterilir.</span>
+          <span>Cihaz durumu rozeti (<strong data-i18n="statusWorking">Çalışır Durumda</strong>/<span data-i18n="statusDefective">Arızalı</span>/<span data-i18n="statusMaintenance">Bakım</span>/<span data-i18n="statusScrap">Hurda</span>) ve kalibrasyon rozeti (<strong data-i18n="statusValid">Geçerli</strong>/<span data-i18n="statusApproaching">Yaklaşıyor</span>/<strong data-i18n="statusExpired">Süresi Doldu</strong>) ayrı ayrı gösterilir.</span>
         </div>
         <div class="filter-bar">
           <span class="filter-label" data-i18n="filterStatus">Durum:</span>
           <select id="kalibrasyonDurumFilter" onchange="kalibrasyonPage=0;renderKalibrasyon()">
-            <option value="">Tümü</option>
-            <option value="calisir">Çalışır Durumda</option>
-            <option value="arizali">Arızalı</option>
-            <option value="bakim">Bakım Yapılacak</option>
-            <option value="hurda">Hurdaya Ayrılacak</option>
+            <option value="" data-i18n="filterAll">Tümü</option>
+            <option value="calisir" data-i18n="statusWorking">Çalışır Durumda</option>
+            <option value="arizali" data-i18n="statusDefective">Arızalı</option>
+            <option value="bakim" data-i18n="statusMaintenance">Bakım Yapılacak</option>
+            <option value="hurda" data-i18n="statusScrap">Hurdaya Ayrılacak</option>
           </select>
           <span class="filter-label" data-i18n="filterDepartment">Bölüm:</span>
           <input type="text" id="kalibrasyonKonumFilter" placeholder="Bölüm ara..." style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem;width:150px" oninput="kalibrasyonPage=0;renderKalibrasyon()">
@@ -1147,22 +1147,22 @@
               <circle cx="40" cy="40" r="24" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-dasharray="4 4"/>
               <path d="M40 24v16l10 10" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <p>Henüz kalibrasyona tabi cihaz kaydı girilmemiş.</p>
+            <p data-i18n="noDeviceRecord">Henüz kalibrasyona tabi cihaz kaydı girilmemiş.</p>
           </div>
           <table class="data-table" id="kalibrasyonTable" style="display:none">
             <thead>
               <tr>
-                <th>Cihaz Adı</th>
-                <th>Marka-Model</th>
-                <th>Sicil No</th>
-                <th>Cihaz Durumu</th>
-                <th>Kalibrasyon</th>
-                <th>Son Kalibrasyon</th>
-                <th>Bir Sonraki</th>
-                <th>Bölüm</th>
-                <th>Sorumlu</th>
-                <th>Not</th>
-                <th>İşlem</th>
+                <th data-i18n="colDeviceName">Cihaz Adı</th>
+                <th data-i18n="colBrandModel">Marka-Model</th>
+                <th data-i18n="colSerialNo">Sicil No</th>
+                <th data-i18n="colDeviceStatus">Cihaz Durumu</th>
+                <th data-i18n="colCalibration">Kalibrasyon</th>
+                <th data-i18n="colLastCalibration">Son Kalibrasyon</th>
+                <th data-i18n="colNextCalibration">Bir Sonraki</th>
+                <th data-i18n="colDepartment">Bölüm</th>
+                <th data-i18n="colResponsible">Sorumlu</th>
+                <th data-i18n="colNote">Not</th>
+                <th data-i18n="colAction">İşlem</th>
               </tr>
             </thead>
             <tbody id="kalibrasyonTbody"></tbody>
