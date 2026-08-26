@@ -15022,9 +15022,17 @@ function setLanguage(lang) {
   localStorage.setItem('bhys_lang', lang);
   document.documentElement.setAttribute('lang', lang);
   if (lang === 'ar') {
-    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('dir', 'ltr');
+    document.documentElement.classList.add('lang-ar');
+    document.querySelectorAll('.main-content, .sidebar, .login-overlay, .modal-overlay .modal').forEach(function(el) {
+      el.setAttribute('dir', 'rtl');
+    });
   } else {
     document.documentElement.removeAttribute('dir');
+    document.documentElement.classList.remove('lang-ar');
+    document.querySelectorAll('.main-content, .sidebar, .login-overlay, .modal-overlay .modal').forEach(function(el) {
+      el.removeAttribute('dir');
+    });
   }
   var opts = document.querySelectorAll('.lang-option');
   opts.forEach(function(o) {
