@@ -15035,6 +15035,7 @@ function setLanguage(lang) {
   var dd = document.getElementById('langDropdown');
   if (dd) dd.classList.remove('open');
   applyTranslations();
+  rerenderActiveTab();
 }
 
 function t(key) {
@@ -15086,6 +15087,24 @@ function applyTranslations() {
   document.title = currentLang === 'tr'
     ? 'Kırşehir Ahi Evran Üniversitesi - BHYS'
     : 'Kırşehir Ahi Evran University - NSMS';
+}
+
+function rerenderActiveTab() {
+  var activeBtn = document.querySelector('.tab-btn.active');
+  if (!activeBtn) return;
+  var name = activeBtn.id.replace('tab-', '');
+  if (name === 'dashboard') { renderDashboard(); }
+  if (name === 'menu') { renderMenu(); }
+  if (name === 'records') { renderRecordsTable(); }
+  if (name === 'report') { renderReport(); }
+  if (name === 'charts') { drawAllCharts(); }
+  if (name === 'yillik') { renderYearlyCharts(); }
+  if (name === 'harcama') { renderHarcamaMenu(); }
+  if (name === 'birimfiyat') { renderBirimFiyatlar(); }
+  if (name === 'haccp') { loadHaccpData(); }
+  if (name === 'yag') { renderYagTable(); }
+  if (name === 'ambalaj') { renderAmbalajTable(); }
+  if (name === 'kalibrasyon') { renderKalibrasyon(); }
 }
 
 document.addEventListener('click', function(e) {
