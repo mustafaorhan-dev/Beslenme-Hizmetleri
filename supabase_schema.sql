@@ -163,12 +163,12 @@ CREATE TABLE IF NOT EXISTS config (
 
 ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 
--- NOT: Yalnızca 'role_permissions' satırına anon erişim izni verilir.
--- Böylece yönetim panelindeki rol izin kutucukları tüm cihazlara senkronize
+-- NOT: Yalnızca 'role_permissions' ve 'harcama_oranlari' satırlarına anon erişim izni verilir.
+-- Böylece yönetim panelindeki rol izin kutucukları ve harcama oranları tüm cihazlara senkronize
 -- olur, diğer config satırları (örn. legacy user hash'leri) korunur.
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key = 'role_permissions')
-  WITH CHECK (key = 'role_permissions');
+  USING (key IN ('role_permissions', 'harcama_oranlari'))
+  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari'));
 
 -- Varsayılan config değerleri (Service Role ile çalıştırılmalı)
 -- Aşağıdaki INSERT'ler service_role ile çalıştırılmalıdır, anon ile çalışmaz.
