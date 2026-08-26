@@ -20,12 +20,12 @@ ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
 -- 2) user_roles rol kısıtını kaldır
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
 
--- 3) config tablosunda yalnızca 'role_permissions' satırına anon erişim
---    (rol izin kutucuklarının tüm cihazlara senkronu için)
+-- 3) config tablosunda yalnızca 'role_permissions' ve 'harcama_oranlari' satırlarına anon erişim
+--    (rol izin kutucuklarının ve harcama oranlarının tüm cihazlara senkronu için)
 DROP POLICY IF EXISTS "anon_role_permissions" ON config;
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key = 'role_permissions')
-  WITH CHECK (key = 'role_permissions');
+  USING (key IN ('role_permissions', 'harcama_oranlari'))
+  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari'));
 
 -- 4) KALİBRASYONA TABİ CİHAZLAR tablosu + erişim politikası
 --    durum değerleri: calisir, arizali, bakim, hurda
@@ -53,3 +53,25 @@ ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari;
 CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
   USING (true) WITH CHECK (true);
+
+-- 5) BİRİM FİYAT LİSTESİ tablosu + erişim politikası
+--    Yemeklerde kullanılan malzemelerin kg/lt birim fiyatlarını tutar
+--    Yıl bazlı: her yıl için ayrı birim fiyat girilir
+CREATE TABLE IF NOT EXISTS unit_prices (
+  id SERIAL PRIMARY KEY,
+  urun_adi TEXT NOT NULL,
+  birim TEXT NOT NULL DEFAULT 'kg',
+  birim_fiyat NUMERIC(10,2) NOT NULL DEFAULT 0,
+  yil INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM now()),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE unit_prices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "unit_prices_all" ON unit_prices;
+CREATE POLICY "unit_prices_all" ON unit_prices FOR ALL
+  USING (true) WITH CHECK (true);
+
+-- 6) BİRİM ÇARPANI - her ürünün kendi birim dönüşüm oranı
+--    1 teneke = 18 lt, 1 koli = 10 kg vb.
+ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS birim_carpan NUMERIC(10,4) DEFAULT 0;
