@@ -5018,10 +5018,10 @@ function renderKPIs() {
   const elBugunYemekSub = document.getElementById('kpiBugunYemekSub');
   if (todayRec) {
     elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
-    elBugunYemekSub.textContent = 'Yararlanan: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
+    elBugunYemekSub.textContent = t('kpiBeneficiary') + (todayRec.toplam || 0).toLocaleString('tr-TR');
   } else {
     elBugunYemek.textContent = '—';
-    elBugunYemekSub.textContent = 'Bugün kayıt yok';
+    elBugunYemekSub.textContent = t('kpiNoRecordToday');
   }
 
   // HACCP Alarm: son 24 saatteki uygunsuz sıcaklıklar
@@ -5042,9 +5042,9 @@ function renderKPIs() {
   document.getElementById('kpiHaccpAlarm').textContent = alarmCount;
   var alarmSub = document.getElementById('kpiHaccpAlarmSub');
   if (alarmCount > 0) {
-    alarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + alarmCount + ' uyarı var</span>';
+    alarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + alarmCount + ' ' + t('kpiAlertsCount') + '</span>';
   } else {
-    alarmSub.textContent = 'Tüm değerler uygun';
+    alarmSub.textContent = t('kpiAllValuesOk');
   }
 
   // Kalibrasyon Alarm: süresi dolan veya kalibrasyon yapılmamış cihazlar
@@ -5058,15 +5058,15 @@ function renderKPIs() {
     kAlarmEl.textContent = kalibrasyonAlarmSayisi;
     if (kalibrasyonAlarmSayisi > 0) {
       var yakinSayi = kalibrasyonCihazlari.filter(function(r) { return getKalibrasyonDurum(r) === 'yakinlasiyor'; }).length;
-      var subTxt = kalibrasyonAlarmSayisi + ' cihaz alarmda';
-      if (yakinSayi > 0) subTxt += ', ' + yakinSayi + ' yaklaşıyor';
+      var subTxt = kalibrasyonAlarmSayisi + ' ' + t('kpiDeviceInAlarm');
+      if (yakinSayi > 0) subTxt += ', ' + yakinSayi + ' ' + t('kpiApproaching');
       kAlarmSub.innerHTML = '<span style="color:#ef4444;font-weight:600">' + subTxt + '</span>';
     } else {
       var yakinToplam = kalibrasyonCihazlari.filter(function(r) { return getKalibrasyonDurum(r) === 'yakinlasiyor'; }).length;
       if (yakinToplam > 0) {
-        kAlarmSub.innerHTML = '<span style="color:#f59e0b;font-weight:600">' + yakinToplam + ' cihaz yaklaşıyor</span>';
+        kAlarmSub.innerHTML = '<span style="color:#f59e0b;font-weight:600">' + yakinToplam + ' ' + t('kpiDeviceInAlarm') + ' ' + t('kpiApproaching') + '</span>';
       } else {
-        kAlarmSub.textContent = 'Tüm kalibrasyonlar geçerli';
+        kAlarmSub.textContent = t('kpiAllCalibrationsValid');
       }
     }
   }
@@ -10750,16 +10750,18 @@ let editingKalibrasyonId = null;
 let kalibrasyonPage = 0;
 const KALIBRASYON_PAGE_SIZE = 10;
 
-const KALIBRASYON_DURUMLAR = {
-  calisir: { text: 'Çalışır Durumda', cls: 'badge badge-ok' },
-  arizali: { text: 'Arızalı', cls: 'badge badge-err' },
-  bakim: { text: 'Bakım Yapılacak', cls: 'badge badge-warn' },
-  hurda: { text: 'Hurdaya Ayrılacak', cls: 'badge badge-err' }
-};
+function getKALIBRASYON_DURUMLAR() {
+  return {
+    calisir: { text: t('statusWorking'), cls: 'badge badge-ok' },
+    arizali: { text: t('statusDefective'), cls: 'badge badge-err' },
+    bakim: { text: t('statusMaintenance'), cls: 'badge badge-warn' },
+    hurda: { text: t('statusScrap'), cls: 'badge badge-err' }
+  };
+}
 
 function getCihazDurumBilgi(r) {
-  var d = KALIBRASYON_DURUMLAR[r.durum];
-  if (!d) return KALIBRASYON_DURUMLAR.calisir;
+  var d = getKALIBRASYON_DURUMLAR()[r.durum];
+  if (!d) return getKALIBRASYON_DURUMLAR().calisir;
   return d;
 }
 
@@ -10778,10 +10780,10 @@ function getKalibrasyonDurum(r) {
 
 function getKalibrasyonDurumBilgi(r) {
   var st = getKalibrasyonDurum(r);
-  if (st === 'yakinlasiyor') return { text: 'Yaklaşıyor', cls: 'badge badge-warn' };
-  if (st === 'suresi_doldu') return { text: 'Süresi Doldu', cls: 'badge badge-err' };
-  if (st === 'yapilmadi') return { text: 'Yapılmadı', cls: 'badge badge-err' };
-  return { text: 'Geçerli', cls: 'badge badge-ok' };
+  if (st === 'yakinlasiyor') return { text: t('statusApproaching'), cls: 'badge badge-warn' };
+  if (st === 'suresi_doldu') return { text: t('statusExpired'), cls: 'badge badge-err' };
+  if (st === 'yapilmadi') return { text: t('statusNotDone'), cls: 'badge badge-err' };
+  return { text: t('statusValid'), cls: 'badge badge-ok' };
 }
 
 function loadKalibrasyonData() {
@@ -10833,35 +10835,35 @@ function renderKalibrasyonOzet(list) {
   var fmtN = function(v) { return v.toLocaleString('tr-TR'); };
   var html = `
     <div class="report-item">
-      <span class="report-label"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>Toplam Cihaz</span>
+      <span class="report-label"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>${t('totalDevices')}</span>
       <span class="report-value">${fmtN(toplam)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#10b981"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Çalışır Durumda</span>
+      <span class="report-label" style="color:#10b981"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${t('statusWorking')}</span>
       <span class="report-value" style="color:#10b981">${fmtN(calisir)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#ef4444"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Arızalı</span>
+      <span class="report-label" style="color:#ef4444"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>${t('statusDefective')}</span>
       <span class="report-value" style="color:#ef4444">${fmtN(arizali)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Bakım Yapılacak</span>
+      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>${t('statusMaintenance')}</span>
       <span class="report-value" style="color:#f59e0b">${fmtN(bakim)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#ef4444"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Hurdaya Ayrılacak</span>
+      <span class="report-label" style="color:#ef4444"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>${t('statusScrap')}</span>
       <span class="report-value" style="color:#ef4444">${fmtN(hurda)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#10b981"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 12 14 15 9"/></svg>Kalibrasyonu Geçerli</span>
+      <span class="report-label" style="color:#10b981"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 12 14 15 9"/></svg>${t('calibrationValid')}</span>
       <span class="report-value" style="color:#10b981">${fmtN(gecerli)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Kalibrasyonu Yaklaşan (30 Gün)</span>
+      <span class="report-label" style="color:#f59e0b"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${t('calibrationApproaching')}</span>
       <span class="report-value" style="color:#f59e0b">${fmtN(yaklasan)}</span>
     </div>
     <div class="report-item">
-      <span class="report-label"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Farklı Bölüm</span>
+      <span class="report-label"><svg class="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${t('differentDepartments')}</span>
       <span class="report-value">${fmtN(bolumler.size)}</span>
     </div>
   `;
@@ -10875,7 +10877,7 @@ function renderKalibrasyon() {
   const badge = document.getElementById('kalibrasyonBadge');
   if (!tbody || !table || !empty) return;
 
-  badge.textContent = kalibrasyonCihazlari.length + ' cihaz';
+  badge.textContent = kalibrasyonCihazlari.length + ' ' + t('deviceCount');
 
   if (kalibrasyonCihazlari.length === 0) {
     table.style.display = 'none';
@@ -10899,11 +10901,11 @@ function renderKalibrasyon() {
   if (filtered.length === 0) {
     table.style.display = 'none';
     empty.style.display = 'flex';
-    empty.querySelector('p').textContent = 'Bu filtreleme kriterlerine uygun cihaz bulunamadı.';
+    empty.querySelector('p').textContent = t('noDeviceFound');
     renderKalibrasyonOzet([]);
     return;
   }
-  empty.querySelector('p').textContent = 'Henüz kalibrasyona tabi cihaz kaydı girilmemiş.';
+  empty.querySelector('p').textContent = t('noDeviceRecord');
 
   renderKalibrasyonOzet(filtered);
 
@@ -10956,7 +10958,7 @@ function renderKalibrasyon() {
         '<span style="font-weight:600;margin:0 4px">' + (kalibrasyonPage + 1) + ' / ' + totalPages + '</span>' +
         '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>›</button>' +
         '<button class="btn-icon" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>»</button>' +
-        '<span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">' + filtered.length + ' cihaz</span>';
+        '<span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">' + filtered.length + ' ' + t('deviceCount') + '</span>';
     } else {
       pagination.innerHTML = '';
     }
@@ -10980,7 +10982,7 @@ function openKalibrasyonModal(id) {
   if (id) {
     const rec = kalibrasyonCihazlari.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Kalibrasyona Tabi Cihazı Düzenle';
+    title.textContent = t('editDeviceTitle');
     document.getElementById('kfCihazAdi').value = rec.cihazAdi || '';
     document.getElementById('kfMarkaModel').value = rec.markaModel || '';
     document.getElementById('kfSicilNo').value = rec.sicilNo || '';
@@ -10992,7 +10994,7 @@ function openKalibrasyonModal(id) {
     document.getElementById('kfSorumlu').value = rec.sorumlu || '';
     document.getElementById('kfNot').value = rec.not || '';
   } else {
-    title.textContent = 'Yeni Kalibrasyona Tabi Cihaz';
+    title.textContent = t('newDeviceTitle');
   }
 
   overlay.classList.add('open');
@@ -11582,6 +11584,43 @@ var I18N = {
     month5: "Mayıs", month6: "Haziran", month7: "Temmuz", month8: "Ağustos",
     month9: "Eylül", month10: "Ekim", month11: "Kasım", month12: "Aralık",
     menuListTitle: "MENÜ LİSTESİ",
+    totalDevices: "Toplam Cihaz",
+    statusWorking: "Çalışır Durumda",
+    statusDefective: "Arızalı",
+    statusMaintenance: "Bakım Yapılacak",
+    statusScrap: "Hurdaya Ayrılacak",
+    calibrationValid: "Kalibrasyonu Geçerli",
+    calibrationApproaching: "Kalibrasyonu Yaklaşan (30 Gün)",
+    differentDepartments: "Farklı Bölüm",
+    statusApproaching: "Yaklaşıyor",
+    statusExpired: "Süresi Doldu",
+    statusNotDone: "Yapılmadı",
+    statusValid: "Geçerli",
+    noDeviceFound: "Bu filtreleme kriterlerine uygun cihaz bulunamadı.",
+    noDeviceRecord: "Henüz kalibrasyona tabi cihaz kaydı girilmemiş.",
+    deviceCount: "cihaz",
+    deviceCountSuffix: " cihaz",
+    editDeviceTitle: "Kalibrasyona Tabi Cihazı Düzenle",
+    newDeviceTitle: "Yeni Kalibrasyona Tabi Cihaz",
+    kpiBeneficiary: "Yararlanan: ",
+    kpiNoRecordToday: "Bugün kayıt yok",
+    kpiAlertsCount: "uyarı var",
+    kpiAllValuesOk: "Tüm değerler uygun",
+    kpiDeviceInAlarm: "cihaz alarmda",
+    kpiApproaching: "yaklaşıyor",
+    kpiAllCalibrationsValid: "Tüm kalibrasyonlar geçerli",
+    filterAll: "Tümü",
+    colDeviceName: "Cihaz Adı",
+    colBrandModel: "Marka-Model",
+    colSerialNo: "Sicil No",
+    colDeviceStatus: "Cihaz Durumu",
+    colCalibration: "Kalibrasyon",
+    colLastCalibration: "Son Kalibrasyon",
+    colNextCalibration: "Bir Sonraki",
+    colDepartment: "Bölüm",
+    colResponsible: "Sorumlu",
+    colNote: "Not",
+    colAction: "İşlem",
   },
   en: {
     loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
@@ -11992,6 +12031,43 @@ var I18N = {
     month5: "May", month6: "June", month7: "July", month8: "August",
     month9: "September", month10: "October", month11: "November", month12: "December",
     menuListTitle: "MENU LIST",
+    totalDevices: "Total Devices",
+    statusWorking: "Working",
+    statusDefective: "Defective",
+    statusMaintenance: "Needs Maintenance",
+    statusScrap: "To Be Scrapped",
+    calibrationValid: "Calibration Valid",
+    calibrationApproaching: "Calibration Approaching (30 Days)",
+    differentDepartments: "Different Departments",
+    statusApproaching: "Approaching",
+    statusExpired: "Expired",
+    statusNotDone: "Not Done",
+    statusValid: "Valid",
+    noDeviceFound: "No devices found matching these filter criteria.",
+    noDeviceRecord: "No calibration device records entered yet.",
+    deviceCount: "devices",
+    deviceCountSuffix: " devices",
+    editDeviceTitle: "Edit Calibration Device",
+    newDeviceTitle: "New Calibration Device",
+    kpiBeneficiary: "Beneficiaries: ",
+    kpiNoRecordToday: "No record today",
+    kpiAlertsCount: "alerts",
+    kpiAllValuesOk: "All values are within range",
+    kpiDeviceInAlarm: "devices in alarm",
+    kpiApproaching: "approaching",
+    kpiAllCalibrationsValid: "All calibrations are valid",
+    filterAll: "All",
+    colDeviceName: "Device Name",
+    colBrandModel: "Brand-Model",
+    colSerialNo: "Serial No",
+    colDeviceStatus: "Device Status",
+    colCalibration: "Calibration",
+    colLastCalibration: "Last Calibration",
+    colNextCalibration: "Next",
+    colDepartment: "Department",
+    colResponsible: "Responsible",
+    colNote: "Note",
+    colAction: "Action",
   },
   az: {
     loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
@@ -12391,6 +12467,43 @@ var I18N = {
     month5: "May", month6: "İyun", month7: "İyul", month8: "Avqust",
     month9: "Sentyabr", month10: "Oktyabr", month11: "Noyabr", month12: "Dekabr",
     menuListTitle: "MENYU SİYAHISI",
+    totalDevices: "Ümumi Cihaz",
+    statusWorking: "İşləyir",
+    statusDefective: "Nasaz",
+    statusMaintenance: "Təmir Lazım",
+    statusScrap: "Xarabaya Çıkarılacaq",
+    calibrationValid: "Kalibrləmə Keçərli",
+    calibrationApproaching: "Kalibrləmə Yaxınlaşır (30 Gün)",
+    differentDepartments: "Fərqli Bölmə",
+    statusApproaching: "Yaxınlaşır",
+    statusExpired: "Müddəti Bitdi",
+    statusNotDone: "Edilməyib",
+    statusValid: "Keçərli",
+    noDeviceFound: "Bu filtrləmə meyarlarına uyğun cihaz tapılmadı.",
+    noDeviceRecord: "Hələ kalibrləməyə tabe cihaz qeydi daxil edilməyib.",
+    deviceCount: "cihaz",
+    deviceCountSuffix: " cihaz",
+    editDeviceTitle: "Kalibrləmə Cihazını Redaktə Et",
+    newDeviceTitle: "Yeni Kalibrləmə Cihazı",
+    kpiBeneficiary: "Faydalanılan: ",
+    kpiNoRecordToday: "Bu gün qeyd yoxdur",
+    kpiAlertsCount: "xəbərdarlıq var",
+    kpiAllValuesOk: "Bütün dəyərlər uyğundur",
+    kpiDeviceInAlarm: "cihaz alarmda",
+    kpiApproaching: "yaxınlaşır",
+    kpiAllCalibrationsValid: "Bütün kalibrləmələr keçərlidir",
+    filterAll: "Hamısı",
+    colDeviceName: "Cihaz Adı",
+    colBrandModel: "Marka-Model",
+    colSerialNo: "Sicil Nömrəsi",
+    colDeviceStatus: "Cihaz Vəziyyəti",
+    colCalibration: "Kalibrləmə",
+    colLastCalibration: "Son Kalibrləmə",
+    colNextCalibration: "Növbəti",
+    colDepartment: "Bölmə",
+    colResponsible: "Məsul",
+    colNote: "Qeyd",
+    colAction: "Əməliyyat",
   },
   ru: {
     loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
@@ -12790,6 +12903,43 @@ var I18N = {
     month5: "Май", month6: "Июнь", month7: "Июль", month8: "Август",
     month9: "Сентябрь", month10: "Октябрь", month11: "Ноябрь", month12: "Декабрь",
     menuListTitle: "СПИСОК МЕНЮ",
+    totalDevices: "Всего устройств",
+    statusWorking: "Исправно",
+    statusDefective: "Неисправно",
+    statusMaintenance: "Требует обслуживания",
+    statusScrap: "Подлежит списанию",
+    calibrationValid: "Калибровка действительна",
+    calibrationApproaching: "Калибровка приближается (30 дней)",
+    differentDepartments: "Разные отделы",
+    statusApproaching: "Приближается",
+    statusExpired: "Срок истёк",
+    statusNotDone: "Не выполнено",
+    statusValid: "Действительно",
+    noDeviceFound: "Устройства, соответствующие этим критериям, не найдены.",
+    noDeviceRecord: "Записи об устройствах для калибровки пока не введены.",
+    deviceCount: "шт.",
+    deviceCountSuffix: " шт.",
+    editDeviceTitle: "Редактировать устройство калибровки",
+    newDeviceTitle: "Новое устройство калибровки",
+    kpiBeneficiary: "Пользуются: ",
+    kpiNoRecordToday: "Нет записи за сегодня",
+    kpiAlertsCount: "предупреждений",
+    kpiAllValuesOk: "Все значения в норме",
+    kpiDeviceInAlarm: "устройств в тревоге",
+    kpiApproaching: "приближается",
+    kpiAllCalibrationsValid: "Все калибровки действительны",
+    filterAll: "Все",
+    colDeviceName: "Название устройства",
+    colBrandModel: "Марка-Модель",
+    colSerialNo: "Серийный номер",
+    colDeviceStatus: "Состояние",
+    colCalibration: "Калибровка",
+    colLastCalibration: "Последняя калибровка",
+    colNextCalibration: "Следующая",
+    colDepartment: "Отдел",
+    colResponsible: "Ответственный",
+    colNote: "Примечание",
+    colAction: "Действие",
   },
   ar: {
     loginSub: "نظام إدارة خدمات التغذية",
@@ -13189,6 +13339,43 @@ var I18N = {
     month5: "مايو", month6: "يونيو", month7: "يوليو", month8: "أغسطس",
     month9: "سبتمبر", month10: "أكتوبر", month11: "نوفمبر", month12: "ديسمبر",
     menuListTitle: "قائمة القائمة",
+    totalDevices: "إجمالي الأجهزة",
+    statusWorking: "يعمل",
+    statusDefective: "معطل",
+    statusMaintenance: "يحتاج صيانة",
+    statusScrap: "يجب تجهيزة",
+    calibrationValid: "المعايرة صالحة",
+    calibrationApproaching: "المعايرة تقترب (30 يوم)",
+    differentDepartments: "أقسام مختلفة",
+    statusApproaching: "يقترب",
+    statusExpired: "انتهت الصلاحية",
+    statusNotDone: "لم يتم",
+    statusValid: "صالح",
+    noDeviceFound: "لم يتم العثور على أجهزة تطابق معايير التصفية هذه.",
+    noDeviceRecord: "لم يتم إدخال سجلات أجهزة المعايرة بعد.",
+    deviceCount: "أجهزة",
+    deviceCountSuffix: " أجهزة",
+    editDeviceTitle: "تعديل جهاز المعايرة",
+    newDeviceTitle: "جهاز معايرة جديد",
+    kpiBeneficiary: "المستفيدون: ",
+    kpiNoRecordToday: "لا توجد سجلات اليوم",
+    kpiAlertsCount: "تنبيهات",
+    kpiAllValuesOk: "جميع القيم مقبولة",
+    kpiDeviceInAlarm: "أجهزة في حالة انذار",
+    kpiApproaching: "تقترب",
+    kpiAllCalibrationsValid: "جميع المعايرات صالحة",
+    filterAll: "الكل",
+    colDeviceName: "اسم الجهاز",
+    colBrandModel: "العلامة التجارية-الطراز",
+    colSerialNo: "الرقم التسلسلي",
+    colDeviceStatus: "حالة الجهاز",
+    colCalibration: "المعايرة",
+    colLastCalibration: "آخر معايرة",
+    colNextCalibration: "التالية",
+    colDepartment: "القسم",
+    colResponsible: "المسؤول",
+    colNote: "ملاحظة",
+    colAction: "الإجراء",
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
@@ -13588,6 +13775,43 @@ var I18N = {
     month5: "Mai", month6: "Juni", month7: "Juli", month8: "August",
     month9: "September", month10: "Oktober", month11: "November", month12: "Dezember",
     menuListTitle: "MENÜLISTE",
+    totalDevices: "Geräte Gesamt",
+    statusWorking: "Funktionsfähig",
+    statusDefective: "Defekt",
+    statusMaintenance: "Wartung erforderlich",
+    statusScrap: "Zur Verschrottung",
+    calibrationValid: "Kalibrierung gültig",
+    calibrationApproaching: "Kalibrierung naht (30 Tage)",
+    differentDepartments: "Verschiedene Abteilungen",
+    statusApproaching: "Nähert sich",
+    statusExpired: "Abgelaufen",
+    statusNotDone: "Nicht durchgeführt",
+    statusValid: "Gültig",
+    noDeviceFound: "Keine Geräte gefunden, die diesen Filterkriterien entsprechen.",
+    noDeviceRecord: "Es wurden noch keine Kalibrierungsgeräte erfasst.",
+    deviceCount: "Geräte",
+    deviceCountSuffix: " Geräte",
+    editDeviceTitle: "Kalibrierungsgerät bearbeiten",
+    newDeviceTitle: "Neues Kalibrierungsgerät",
+    kpiBeneficiary: "Bereich: ",
+    kpiNoRecordToday: "Kein Eintrag heute",
+    kpiAlertsCount: "Warnungen",
+    kpiAllValuesOk: "Alle Werte sind OK",
+    kpiDeviceInAlarm: "Geräte im Alarm",
+    kpiApproaching: "nähert sich",
+    kpiAllCalibrationsValid: "Alle Kalibrierungen sind gültig",
+    filterAll: "Alle",
+    colDeviceName: "Gerätename",
+    colBrandModel: "Marke-Modell",
+    colSerialNo: "Seriennummer",
+    colDeviceStatus: "Gerätestatus",
+    colCalibration: "Kalibrierung",
+    colLastCalibration: "Letzte Kalibrierung",
+    colNextCalibration: "Nächste",
+    colDepartment: "Abteilung",
+    colResponsible: "Verantwortlich",
+    colNote: "Notiz",
+    colAction: "Aktion",
   },
   fr: {
     loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
@@ -13987,6 +14211,43 @@ var I18N = {
     month5: "Mai", month6: "Juin", month7: "Juillet", month8: "Août",
     month9: "Septembre", month10: "Octobre", month11: "Novembre", month12: "Décembre",
     menuListTitle: "LISTE DU MENU",
+    totalDevices: "Total des appareils",
+    statusWorking: "En service",
+    statusDefective: "Défectueux",
+    statusMaintenance: "Maintenance requise",
+    statusScrap: "À mettre au rebut",
+    calibrationValid: "Calibration valide",
+    calibrationApproaching: "Calibration à venir (30 jours)",
+    differentDepartments: "Départements différents",
+    statusApproaching: "Approche",
+    statusExpired: "Expiré",
+    statusNotDone: "Non effectué",
+    statusValid: "Valide",
+    noDeviceFound: "Aucun appareil trouvé correspondant à ces critères.",
+    noDeviceRecord: "Aucun enregistrement d'appareil de calibration saisi.",
+    deviceCount: "appareils",
+    deviceCountSuffix: " appareils",
+    editDeviceTitle: "Modifier l'appareil de calibration",
+    newDeviceTitle: "Nouvel appareil de calibration",
+    kpiBeneficiary: "Bénéficiaires: ",
+    kpiNoRecordToday: "Aujourd'hui pas d'enregistrement",
+    kpiAlertsCount: "alertes",
+    kpiAllValuesOk: "Toutes les valeurs sont conformes",
+    kpiDeviceInAlarm: "appareils en alarme",
+    kpiApproaching: "approche",
+    kpiAllCalibrationsValid: "Toutes les calibrations sont valides",
+    filterAll: "Tous",
+    colDeviceName: "Nom de l'appareil",
+    colBrandModel: "Marque-Modèle",
+    colSerialNo: "Numéro de série",
+    colDeviceStatus: "État de l'appareil",
+    colCalibration: "Calibration",
+    colLastCalibration: "Dernière calibration",
+    colNextCalibration: "Prochaine",
+    colDepartment: "Département",
+    colResponsible: "Responsable",
+    colNote: "Note",
+    colAction: "Action",
   },
   es: {
     loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
@@ -14386,6 +14647,43 @@ var I18N = {
     month5: "Mayo", month6: "Junio", month7: "Julio", month8: "Agosto",
     month9: "Septiembre", month10: "Octubre", month11: "Noviembre", month12: "Diciembre",
     menuListTitle: "LISTA DEL MENÚ",
+    totalDevices: "Total de dispositivos",
+    statusWorking: "Funcionando",
+    statusDefective: "Defectuoso",
+    statusMaintenance: "Requiere mantenimiento",
+    statusScrap: "A desguazar",
+    calibrationValid: "Calibración válida",
+    calibrationApproaching: "Calibración próxima (30 días)",
+    differentDepartments: "Diferentes departamentos",
+    statusApproaching: "Próximamente",
+    statusExpired: "Vencido",
+    statusNotDone: "No realizado",
+    statusValid: "Válido",
+    noDeviceFound: "No se encontraron dispositivos con estos criterios de filtro.",
+    noDeviceRecord: "Aún no se han registrado dispositivos de calibración.",
+    deviceCount: "dispositivos",
+    deviceCountSuffix: " dispositivos",
+    editDeviceTitle: "Editar dispositivo de calibración",
+    newDeviceTitle: "Nuevo dispositivo de calibración",
+    kpiBeneficiary: "Beneficiarios: ",
+    kpiNoRecordToday: "Sin registro hoy",
+    kpiAlertsCount: "alertas",
+    kpiAllValuesOk: "Todos los valores son correctos",
+    kpiDeviceInAlarm: "dispositivos en alarma",
+    kpiApproaching: "se aproxima",
+    kpiAllCalibrationsValid: "Todas las calibraciones son válidas",
+    filterAll: "Todos",
+    colDeviceName: "Nombre del dispositivo",
+    colBrandModel: "Marca-Modelo",
+    colSerialNo: "Número de serie",
+    colDeviceStatus: "Estado del dispositivo",
+    colCalibration: "Calibración",
+    colLastCalibration: "Última calibración",
+    colNextCalibration: "Próxima",
+    colDepartment: "Departamento",
+    colResponsible: "Responsable",
+    colNote: "Nota",
+    colAction: "Acción",
   },
   pt: {
     loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
@@ -14785,6 +15083,43 @@ var I18N = {
     month5: "Maio", month6: "Junho", month7: "Julho", month8: "Agosto",
     month9: "Setembro", month10: "Outubro", month11: "Novembro", month12: "Dezembro",
     menuListTitle: "LISTA DO MENU",
+    totalDevices: "Total de dispositivos",
+    statusWorking: "Funcional",
+    statusDefective: "Defeituoso",
+    statusMaintenance: "Manutenção necessária",
+    statusScrap: "A ser descartado",
+    calibrationValid: "Calibração válida",
+    calibrationApproaching: "Calibração aproximando (30 dias)",
+    differentDepartments: "Diferentes departamentos",
+    statusApproaching: "Aproximando",
+    statusExpired: "Expirado",
+    statusNotDone: "Não realizado",
+    statusValid: "Válido",
+    noDeviceFound: "Nenhum dispositivo encontrado com estes critérios.",
+    noDeviceRecord: "Nenhum registro de dispositivo de calibração inserido.",
+    deviceCount: "dispositivos",
+    deviceCountSuffix: " dispositivos",
+    editDeviceTitle: "Editar dispositivo de calibração",
+    newDeviceTitle: "Novo dispositivo de calibração",
+    kpiBeneficiary: "Beneficiários: ",
+    kpiNoRecordToday: "Sem registro hoje",
+    kpiAlertsCount: "alertas",
+    kpiAllValuesOk: "Todos os valores estão dentro da faixa",
+    kpiDeviceInAlarm: "dispositivos em alarme",
+    kpiApproaching: "aproximando",
+    kpiAllCalibrationsValid: "Todas as calibrações são válidas",
+    filterAll: "Todos",
+    colDeviceName: "Nome do dispositivo",
+    colBrandModel: "Marca-Modelo",
+    colSerialNo: "Número de série",
+    colDeviceStatus: "Estado do dispositivo",
+    colCalibration: "Calibração",
+    colLastCalibration: "Última calibração",
+    colNextCalibration: "Próxima",
+    colDepartment: "Departamento",
+    colResponsible: "Responsável",
+    colNote: "Nota",
+    colAction: "Ação",
   },
   uz: {
     loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
@@ -15184,6 +15519,43 @@ var I18N = {
     month5: "May", month6: "Iyun", month7: "Iyul", month8: "Avgust",
     month9: "Sentabr", month10: "Oktabr", month11: "Noyabr", month12: "Dekabr",
     menuListTitle: "MENYU RO'YXATI",
+    totalDevices: "Jami qurilmalar",
+    statusWorking: "Ishlayapti",
+    statusDefective: "Buzyongan",
+    statusMaintenance: "Texnik talab qilinadi",
+    statusScrap: "Chiqindiga chiqariladi",
+    calibrationValid: "Kalibrlash amal qiladi",
+    calibrationApproaching: "Kalibrlash yaqinlashmoqda (30 kun)",
+    differentDepartments: "Turli bo'limlar",
+    statusApproaching: "Yaqinlashmoqda",
+    statusExpired: "Muddati tugadi",
+    statusNotDone: "Bajarilmadi",
+    statusValid: "Amal qiladi",
+    noDeviceFound: "Ushbu filtrlash mezonlariga mos qurilmalar topilmadi.",
+    noDeviceRecord: "Hali kalibrlashga taalluqli qurilma kiritilmagan.",
+    deviceCount: "qurilma",
+    deviceCountSuffix: " qurilma",
+    editDeviceTitle: "Kalibrlash qurilmasini tahrirlash",
+    newDeviceTitle: "Yangi kalibrlash qurilmasi",
+    kpiBeneficiary: "Foydalanuvchilar: ",
+    kpiNoRecordToday: "Bugun yozuv yo'q",
+    kpiAlertsCount: "ogohlantirishlar",
+    kpiAllValuesOk: "Barcha qiymatlar mos",
+    kpiDeviceInAlarm: "qurilmalar signal berayotgan",
+    kpiApproaching: "yaqinlashmoqda",
+    kpiAllCalibrationsValid: "Barcha kalibrlashlar amal qiladi",
+    filterAll: "Barchasi",
+    colDeviceName: "Qurilma nomi",
+    colBrandModel: "Brend-Model",
+    colSerialNo: "Seriya raqami",
+    colDeviceStatus: "Qurilma holati",
+    colCalibration: "Kalibrlash",
+    colLastCalibration: "Oxirgi kalibrlash",
+    colNextCalibration: "Keyingi",
+    colDepartment: "Bo'lim",
+    colResponsible: "Mas'ul",
+    colNote: "Eslatma",
+    colAction: "Amal",
   }
 };
 
