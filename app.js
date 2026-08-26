@@ -5718,7 +5718,7 @@ function renderWeeklyTotal(dishEntries, days) {
   });
 
   var html = `<div class="weekly-total-card">
-    <div class="weekly-total-header">Haftalık Toplam İhtiyaç Listesi${haftalikGenelToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.9rem;color:var(--accent-cyan)">Toplam Maliyet: ${formatTRY(haftalikGenelToplam)}</span>` : ''}</div>
+    <div class="weekly-total-header">${t('weeklyTotalList')}${haftalikGenelToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.9rem;color:var(--accent-cyan)">${t('totalCost')}: ${formatTRY(haftalikGenelToplam)}</span>` : ''}</div>
     <div class="weekly-total-body">`;
 
   siraliKategoriler.forEach(function(kategori) {
@@ -5734,7 +5734,7 @@ function renderWeeklyTotal(dishEntries, days) {
     });
     html += `<div class="wt-kategori">
       <div class="wt-kategori-header" style="background:${renk.bg};border-left:4px solid ${renk.border};color:${renk.renk}">
-        <span>${renk.icon}</span> ${kategori} <span style="font-weight:400;font-size:0.75rem;opacity:0.7;margin-left:4px">(${items.length})</span>
+        <span>${renk.icon}</span> ${tCategory(kategori)} <span style="font-weight:400;font-size:0.75rem;opacity:0.7;margin-left:4px">(${items.length})</span>
         ${kategoriToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.85rem;color:${renk.renk}">${formatTRY(kategoriToplam)}</span>` : ''}
       </div>
       <div class="weekly-total-grid">`;
@@ -5830,8 +5830,8 @@ function renderMaliTablo(days) {
   var eksikSayi = Object.keys(eksikSet).length;
 
   var html = '<div class="mali-card">';
-  html += '<div class="mali-header"><span class="mali-header-icon">₺</span><span>Mali Tablo</span><span class="mali-header-sub">Haftalık Malzeme Maliyeti Özeti</span>' +
-    (eksikSayi > 0 ? '<span class="mali-uyari" title="Birim Fiyatlar sekmesinden tanımlayabilirsiniz">' + eksikSayi + ' malzemenin birim fiyatı tanımlı değil</span>' : '') +
+  html += '<div class="mali-header"><span class="mali-header-icon">₺</span><span>' + t('maliTablo') + '</span><span class="mali-header-sub">' + t('maliTabloSubtitle') + '</span>' +
+    (eksikSayi > 0 ? '<span class="mali-uyari" title="' + t('maliUnitPriceHint') + '">' + eksikSayi + ' ' + t('maliUnitPriceMissing') + '</span>' : '') +
     '</div>';
   html += '<div class="mali-body">';
 
@@ -5858,7 +5858,7 @@ function renderMaliTablo(days) {
   });
   var ortBasi = toplamKisiGun > 0 ? formatTRY(Math.round(kisGun * 100) / 100) : '—';
   html += '</tbody><tfoot><tr class="mali-toplam-row">' +
-    '<td colspan="2"><strong>HAFTALIK TOPLAM</strong></td>' +
+    '<td colspan="2"><strong>' + t('weeklyTotal') + '</strong></td>' +
     '<td style="text-align:center"><strong>' + toplamKisiGun + '</strong></td>' +
     '<td class="mali-tutar"><strong>' + formatTRY(genelToplam) + '</strong></td>' +
     '<td class="mali-tutar-alt"><strong>' + ortBasi + '</strong></td></tr></tfoot></table></div>';
@@ -5866,7 +5866,7 @@ function renderMaliTablo(days) {
   // Kategori dağılımı
   var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return katAgg[k] && katAgg[k] > 0; });
   if (katSirali.length) {
-    html += '<div class="mali-kat-baslik">Kategori Dağılımı</div>';
+    html += '<div class="mali-kat-baslik">' + t('categoryDistribution') + '</div>';
     html += '<div class="mali-kat-liste">';
     katSirali.forEach(function(kat) {
       var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
@@ -5875,7 +5875,7 @@ function renderMaliTablo(days) {
       var yuzde = Math.max(2, Math.min(100, pctRaw));
       html += '<div class="mali-kat-row">' +
         '<span class="mali-kat-icon" style="background:' + renk.bg + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
-        '<span class="mali-kat-ad" style="color:' + renk.renk + '">' + escapeHtml(kat) + '</span>' +
+        '<span class="mali-kat-ad" style="color:' + renk.renk + '">' + escapeHtml(tCategory(kat)) + '</span>' +
         '<div class="mali-kat-bar-wrap"><div class="mali-kat-bar" style="width:' + yuzde + '%;background:linear-gradient(90deg,' + renk.renk + '99,' + renk.renk + ')"></div></div>' +
         '<span class="mali-kat-tutar">' + formatTRY(tutar) + '</span>' +
         '<span class="mali-kat-yuzde">%' + pctRaw + '</span>' +
@@ -5892,8 +5892,7 @@ function tarihFormatla2(str) {
   if (!str) return '—';
   var p = str.split('.');
   if (p.length !== 3) return escapeHtml(str);
-  var aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-  var ay = aylar[(parseInt(p[1], 10) || 1) - 1] || p[1];
+  var ay = t('month' + (parseInt(p[1], 10) || 1));
   return parseInt(p[0], 10) + ' ' + ay;
 }
 
@@ -8829,7 +8828,7 @@ async function renderMenu() {
   const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
   const weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
-  const weekLabel = `${formatDateStrTR(monday)} - ${formatDateStrTR(friday)} MENÜ LİSTESİ`;
+  const weekLabel = `${formatDateStrTR(monday)} - ${formatDateStrTR(friday)} ${t('menuListTitle')}`;
 
   document.getElementById('menuWeekLabel').textContent = weekLabel;
   document.getElementById('menuTitle').textContent = weekLabel;
@@ -11565,6 +11564,24 @@ var I18N = {
     chartMonthlyWasteRate: "Aylık Atık Oranı %",
     chartMonthlyStudent: "Aylık Öğrenci Sayısı",
     chartWastePerPersonLabel: "Kişi Başı Atık (kg/kişi)",
+    maliTablo: "Mali Tablo",
+    maliTabloSubtitle: "Haftalık Malzeme Maliyeti Özeti",
+    maliUnitPriceMissing: "malzemenin birim fiyatı tanımlı değil",
+    maliUnitPriceHint: "Birim Fiyatlar sekmesinden tanımlayabilirsiniz",
+    weeklyTotal: "HAFTALIK TOPLAM",
+    categoryDistribution: "Kategori Dağılımı",
+    weeklyTotalList: "Haftalık Toplam İhtiyaç Listesi",
+    totalCost: "Toplam Maliyet",
+    catMeat: "Et Ürünleri",
+    catDairy: "Süt Ürünleri",
+    catLegumes: "Kuru Bakliyat",
+    catSpices: "Baharatlar",
+    catVegetable: "Sebze ve Meyve",
+    catOther: "Diğer",
+    month1: "Ocak", month2: "Şubat", month3: "Mart", month4: "Nisan",
+    month5: "Mayıs", month6: "Haziran", month7: "Temmuz", month8: "Ağustos",
+    month9: "Eylül", month10: "Ekim", month11: "Kasım", month12: "Aralık",
+    menuListTitle: "MENÜ LİSTESİ",
   },
   en: {
     loginSub: "NUTRITION SERVICES MANAGEMENT SYSTEM",
@@ -11957,6 +11974,24 @@ var I18N = {
     chartMonthlyWasteRate: "Monthly Waste Rate %",
     chartMonthlyStudent: "Monthly Student Count",
     chartWastePerPersonLabel: "Waste per Person (kg/pax)",
+    maliTablo: "Financial Table",
+    maliTabloSubtitle: "Weekly Material Cost Summary",
+    maliUnitPriceMissing: "material unit price not defined",
+    maliUnitPriceHint: "You can define from the Unit Prices tab",
+    weeklyTotal: "WEEKLY TOTAL",
+    categoryDistribution: "Category Distribution",
+    weeklyTotalList: "Weekly Total Requirements List",
+    totalCost: "Total Cost",
+    catMeat: "Meat Products",
+    catDairy: "Dairy Products",
+    catLegumes: "Dry Legumes",
+    catSpices: "Spices",
+    catVegetable: "Vegetables & Fruits",
+    catOther: "Other",
+    month1: "January", month2: "February", month3: "March", month4: "April",
+    month5: "May", month6: "June", month7: "July", month8: "August",
+    month9: "September", month10: "October", month11: "November", month12: "December",
+    menuListTitle: "MENU LIST",
   },
   az: {
     loginSub: "QIDA XİDMƏTLƏRİ İDARƏETMƏ SİSTEMİ",
@@ -12338,6 +12373,24 @@ var I18N = {
     allergen: "Allergen",
     recipePerPerson: "Resept (nəfər başı)",
     devices: "cihaz",
+    maliTablo: "Mali Cədvəl",
+    maliTabloSubtitle: "Həftəlik Material Xərcləri Xülasəsi",
+    maliUnitPriceMissing: "materialın vahid qiyməti təyin olunmayıb",
+    maliUnitPriceHint: "Vahid Qiymətlər bölməsindən təyin edə bilərsiniz",
+    weeklyTotal: "HƏFTƏLİK CƏMİ",
+    categoryDistribution: "Kateqoriya Paylanması",
+    weeklyTotalList: "Həftəlik Ümumi Ehtiyac Siyahısı",
+    totalCost: "Ümumi Xərc",
+    catMeat: "Ət Məhsulları",
+    catDairy: "Süt Məhsulları",
+    catLegumes: "Quru Bulqar",
+    catSpices: "Ədviyyatlar",
+    catVegetable: "Tərəvəz və Meyvə",
+    catOther: "Digər",
+    month1: "Yanvar", month2: "Fevral", month3: "Mart", month4: "Aprel",
+    month5: "May", month6: "İyun", month7: "İyul", month8: "Avqust",
+    month9: "Sentyabr", month10: "Oktyabr", month11: "Noyabr", month12: "Dekabr",
+    menuListTitle: "MENYU SİYAHISI",
   },
   ru: {
     loginSub: "СИСТЕМА УПРАВЛЕНИЯ ПИТАНИЕМ",
@@ -12719,6 +12772,24 @@ var I18N = {
     allergen: "Аллерген",
     recipePerPerson: "Рецепт (на человека)",
     devices: "шт.",
+    maliTablo: "Финансовая Таблица",
+    maliTabloSubtitle: "Сводка недельных затрат на материалы",
+    maliUnitPriceMissing: "единичная цена материала не определена",
+    maliUnitPriceHint: "Можно задать в разделе «Единичные цены»",
+    weeklyTotal: "ИТОГО ЗА НЕДЕЛЮ",
+    categoryDistribution: "Распределение по категориям",
+    weeklyTotalList: "Еженедельный список потребностей",
+    totalCost: "Общая стоимость",
+    catMeat: "Мясные продукты",
+    catDairy: "Молочные продукты",
+    catLegumes: "Сухие бобовые",
+    catSpices: "Специи",
+    catVegetable: "Овощи и фрукты",
+    catOther: "Прочее",
+    month1: "Январь", month2: "Февраль", month3: "Март", month4: "Апрель",
+    month5: "Май", month6: "Июнь", month7: "Июль", month8: "Август",
+    month9: "Сентябрь", month10: "Октябрь", month11: "Ноябрь", month12: "Декабрь",
+    menuListTitle: "СПИСОК МЕНЮ",
   },
   ar: {
     loginSub: "نظام إدارة خدمات التغذية",
@@ -13100,6 +13171,24 @@ var I18N = {
     allergen: "الallingيرجين",
     recipePerPerson: "الوصفة (للفرد)",
     devices: "أجهزة",
+    maliTablo: "الجدول المالي",
+    maliTabloSubtitle: "ملخص تكاليف المواد الأسبوعية",
+    maliUnitPriceMissing: "سعر الوحدة للمادة غير محدد",
+    maliUnitPriceHint: "يمكنك التحديد من تبويب أسعار الوحدة",
+    weeklyTotal: "المجموع الأسبوعي",
+    categoryDistribution: "توزيع الفئات",
+    weeklyTotalList: "قائمة الاحتياجات الأسبوعية الإجمالية",
+    totalCost: "التكلفة الإجمالية",
+    catMeat: "منتجات اللحوم",
+    catDairy: "منتجات الألبان",
+    catLegumes: "البقوليات الجافة",
+    catSpices: "التوابل",
+    catVegetable: "الخضروات والفواكه",
+    catOther: "أخرى",
+    month1: "يناير", month2: "فبراير", month3: "مارس", month4: "أبريل",
+    month5: "مايو", month6: "يونيو", month7: "يوليو", month8: "أغسطس",
+    month9: "سبتمبر", month10: "أكتوبر", month11: "نوفمبر", month12: "ديسمبر",
+    menuListTitle: "قائمة القائمة",
   },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
@@ -13481,6 +13570,24 @@ var I18N = {
     allergen: "Allergen",
     recipePerPerson: "Rezept (pro Person)",
     devices: "Geräte",
+    maliTablo: "Finanztabelle",
+    maliTabloSubtitle: "Wöchentliche Materialkosten-Zusammenfassung",
+    maliUnitPriceMissing: "Material-Einheitspreis nicht definiert",
+    maliUnitPriceHint: "Sie können im Tab Einheitspreise festlegen",
+    weeklyTotal: "WÖCHENTLICHE GESAMTSUMME",
+    categoryDistribution: "Kategorieverteilung",
+    weeklyTotalList: "Wöchentliche Gesamtbedarfsliste",
+    totalCost: "Gesamtkosten",
+    catMeat: "Fleischprodukte",
+    catDairy: "Milchprodukte",
+    catLegumes: "Trockenleguminosen",
+    catSpices: "Gewürze",
+    catVegetable: "Gemüse & Obst",
+    catOther: "Sonstiges",
+    month1: "Januar", month2: "Februar", month3: "März", month4: "April",
+    month5: "Mai", month6: "Juni", month7: "Juli", month8: "August",
+    month9: "September", month10: "Oktober", month11: "November", month12: "Dezember",
+    menuListTitle: "MENÜLISTE",
   },
   fr: {
     loginSub: "SYSTÈME DE GESTION DES SERVICES DE RESTAURATION",
@@ -13862,6 +13969,24 @@ var I18N = {
     allergen: "Allergène",
     recipePerPerson: "Recette (par personne)",
     devices: "appareils",
+    maliTablo: "Tableau Financier",
+    maliTabloSubtitle: "Résumé hebdomadaire des coûts matériaux",
+    maliUnitPriceMissing: "prix unitaire du matériau non défini",
+    maliUnitPriceHint: "Vous pouvez définir dans l'onglet Prix Unitaire",
+    weeklyTotal: "TOTAL HEBDOMADAIRE",
+    categoryDistribution: "Répartition par catégorie",
+    weeklyTotalList: "Liste des besoins hebdomadaires totaux",
+    totalCost: "Coût total",
+    catMeat: "Produits carnés",
+    catDairy: "Produits laitiers",
+    catLegumes: "Légumineuses sèches",
+    catSpices: "Épices",
+    catVegetable: "Légumes et Fruits",
+    catOther: "Autres",
+    month1: "Janvier", month2: "Février", month3: "Mars", month4: "Avril",
+    month5: "Mai", month6: "Juin", month7: "Juillet", month8: "Août",
+    month9: "Septembre", month10: "Octobre", month11: "Novembre", month12: "Décembre",
+    menuListTitle: "LISTE DU MENU",
   },
   es: {
     loginSub: "SISTEMA DE GESTIÓN DE SERVICIOS DE NUTRICIÓN",
@@ -14243,6 +14368,24 @@ var I18N = {
     allergen: "Alérgeno",
     recipePerPerson: "Receta (por persona)",
     devices: "dispositivos",
+    maliTablo: "Tabla Financiera",
+    maliTabloSubtitle: "Resumen semanal de costos de materiales",
+    maliUnitPriceMissing: "precio unitario del material no definido",
+    maliUnitPriceHint: "Puede definir en la pestaña de Precios Unitarios",
+    weeklyTotal: "TOTAL SEMANAL",
+    categoryDistribution: "Distribución por categoría",
+    weeklyTotalList: "Lista semanal de necesidades totales",
+    totalCost: "Costo total",
+    catMeat: "Productos cárnicos",
+    catDairy: "Productos lácteos",
+    catLegumes: "Legumbres secas",
+    catSpices: "Especias",
+    catVegetable: "Verduras y Frutas",
+    catOther: "Otros",
+    month1: "Enero", month2: "Febrero", month3: "Marzo", month4: "Abril",
+    month5: "Mayo", month6: "Junio", month7: "Julio", month8: "Agosto",
+    month9: "Septiembre", month10: "Octubre", month11: "Noviembre", month12: "Diciembre",
+    menuListTitle: "LISTA DEL MENÚ",
   },
   pt: {
     loginSub: "SISTEMA DE GESTÃO DE SERVIÇOS DE NUTRIÇÃO",
@@ -14624,6 +14767,24 @@ var I18N = {
     allergen: "Alérgeno",
     recipePerPerson: "Receita (por pessoa)",
     devices: "dispositivos",
+    maliTablo: "Tabela Financeira",
+    maliTabloSubtitle: "Resumo semanal de custos de materiais",
+    maliUnitPriceMissing: "preço unitário do material não definido",
+    maliUnitPriceHint: "Pode definir na aba de Preços Unitários",
+    weeklyTotal: "TOTAL SEMANAL",
+    categoryDistribution: "Distribuição por categoria",
+    weeklyTotalList: "Lista semanal de necessidades totais",
+    totalCost: "Custo total",
+    catMeat: "Produtos cárneos",
+    catDairy: "Produtos lácteos",
+    catLegumes: "Leguminosas secas",
+    catSpices: "Especiarias",
+    catVegetable: "Legumes e Frutas",
+    catOther: "Outros",
+    month1: "Janeiro", month2: "Fevereiro", month3: "Março", month4: "Abril",
+    month5: "Maio", month6: "Junho", month7: "Julho", month8: "Agosto",
+    month9: "Setembro", month10: "Outubro", month11: "Novembro", month12: "Dezembro",
+    menuListTitle: "LISTA DO MENU",
   },
   uz: {
     loginSub: "OVQATLANTIRISH XIZMATLARINI BOSHQARISH TIZIMI",
@@ -15005,6 +15166,24 @@ var I18N = {
     allergen: "Allergen",
     recipePerPerson: "Retsept (kishi boshiga)",
     devices: "qurilmalar",
+    maliTablo: "Moliyaviy Jadval",
+    maliTabloSubtitle: "Haftalik material xarajatlari xulosasi",
+    maliUnitPriceMissing: "materialning birlik narxi belgilanmagan",
+    maliUnitPriceHint: "Birlik narxlari bo'limidan belgilashingiz mumkin",
+    weeklyTotal: "HAFTALIK JAMI",
+    categoryDistribution: "Kategoriya taqsimoti",
+    weeklyTotalList: "Haftalik umumiy ehtiyojlar ro'yxati",
+    totalCost: "Umumiy xarajat",
+    catMeat: "Go'sht mahsulotlari",
+    catDairy: "Sut mahsulotlari",
+    catLegumes: "Quru dukkaklilar",
+    catSpices: "Ziravorlar",
+    catVegetable: "Sabzavot va mevalar",
+    catOther: "Boshqalar",
+    month1: "Yanvar", month2: "Fevral", month3: "Mart", month4: "Aprel",
+    month5: "May", month6: "Iyun", month7: "Iyul", month8: "Avgust",
+    month9: "Sentabr", month10: "Oktabr", month11: "Noyabr", month12: "Dekabr",
+    menuListTitle: "MENYU RO'YXATI",
   }
 };
 
@@ -15044,6 +15223,15 @@ function setLanguage(lang) {
 function t(key) {
   var dict = I18N[currentLang] || I18N['tr'];
   return dict[key] || I18N['tr'][key] || key;
+}
+
+var CATEGORY_I18N = {
+  'Et Ürünleri': 'catMeat', 'Süt Ürünleri': 'catDairy', 'Kuru Bakliyat': 'catLegumes',
+  'Baharatlar': 'catSpices', 'Sebze ve Meyve': 'catVegetable', 'Diğer': 'catOther'
+};
+function tCategory(name) {
+  var key = CATEGORY_I18N[name];
+  return key ? t(key) : name;
 }
 
 function applyTranslations() {
