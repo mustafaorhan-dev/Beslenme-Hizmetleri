@@ -12,10 +12,14 @@
 .login-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
   background:
     radial-gradient(ellipse at 15% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
     radial-gradient(ellipse at 85% 85%, color-mix(in srgb, var(--accent-orange) 10%, transparent), transparent 55%),
     linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+=======
+  background: var(--bg-primary);
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 =======
   background: var(--bg-primary);
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
@@ -31,7 +35,11 @@
 .login-shell {
   display: grid;
 <<<<<<< HEAD
+<<<<<<< HEAD
   grid-template-columns: 1.05fr 1fr;
+=======
+  grid-template-columns: 1fr 1fr;
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 =======
   grid-template-columns: 1fr 1fr;
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
@@ -41,7 +49,10 @@
   overflow: hidden;
   border: 1px solid var(--border);
 <<<<<<< HEAD
+<<<<<<< HEAD
   box-shadow: 0 40px 110px rgba(0,0,0,0.35), 0 0 80px color-mix(in srgb, var(--accent) 12%, transparent);
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 =======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
   animation: loginCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -90,10 +101,16 @@
 }
 .login-title {
 <<<<<<< HEAD
+<<<<<<< HEAD
   font-size: 1.42rem; font-weight: 800; line-height: 1.4; text-align: left;
   background: linear-gradient(135deg, #e2e8f0, #94a3b8);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
+=======
+  font-size: 1.16rem; font-weight: 800; line-height: 1.4; text-align: left;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 =======
   font-size: 1.16rem; font-weight: 800; line-height: 1.4; text-align: left;
   color: #ffffff;
@@ -110,6 +127,7 @@
   -webkit-text-fill-color: transparent;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 .login-title .login-sub-en {
   display: block; margin-top: 0.3rem;
   font-size: 0.72rem; font-weight: 500; letter-spacing: 0.8px;
@@ -121,6 +139,8 @@
   margin-top: 0.9rem;
   position: relative; z-index: 1;
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-cutlery {
   display: flex; justify-content: center;
   position: absolute;
@@ -131,6 +151,9 @@
 .login-cutlery svg {
   width: 190px; height: auto;
   filter: drop-shadow(0 6px 22px rgba(37,99,235,0.4));
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 }
 .login-features {
@@ -142,9 +165,12 @@
 .login-features li {
   display: flex; align-items: center; gap: 0.65rem;
 <<<<<<< HEAD
+<<<<<<< HEAD
   font-size: 0.86rem; font-weight: 500;
   color: rgba(241,245,249,0.88);
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-size: 0.76rem; font-weight: 600;
@@ -152,6 +178,9 @@
   color: #f8fafc;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 }
 .login-check {
@@ -169,7 +198,11 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /* Sağ taraf - form paneli */
+=======
+/* Sag taraf - form paneli */
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 =======
 /* Sag taraf - form paneli */
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
@@ -185,6 +218,7 @@
   border-radius: 0 0 6px 6px; opacity: 0.9;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 .login-form-head h3 {
   font-size: 1.35rem; font-weight: 800; color: var(--text-primary);
 }
@@ -195,6 +229,8 @@
   display: flex; flex-direction: column; gap: 0.55rem;
   margin-top: 1.6rem;
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-form-head {
   position: relative;
   padding-bottom: 1.15rem;
@@ -223,6 +259,9 @@
 .login-form {
   display: flex; flex-direction: column; gap: 0.55rem;
   margin-top: 2.2rem;
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 }
 .login-label {
@@ -231,7 +270,10 @@
   margin-top: 0.45rem;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-field-wrap {
   position: relative;
 }
@@ -243,6 +285,9 @@
 }
 .login-icon-user { background: rgba(99,102,241,0.15); color: #6366f1; }
 .login-icon-lock { background: rgba(34,211,238,0.15); color: #22d3ee; }
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-field {
   width: 100%; padding: 13px 16px;
@@ -253,11 +298,17 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-field.has-icon { padding-left: 56px; }
 .login-field::placeholder {
   color: color-mix(in srgb, var(--text-muted) 40%, transparent);
 }
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
 .login-field:focus {
   border-color: var(--accent);
@@ -297,14 +348,20 @@
   .login-title { font-size: 1.15rem; }
   .login-title .login-sub { font-size: 0.78rem; }
 <<<<<<< HEAD
+<<<<<<< HEAD
   .login-tagline { margin-top: 0.5rem; }
 =======
+=======
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
   .login-cutlery {
     position: static;
     transform: none;
     margin: 1.3rem auto 0;
   }
   .login-cutlery svg { width: 150px; }
+<<<<<<< HEAD
+>>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
+=======
 >>>>>>> 44856ac72c1e3f039887ee689f149e4d93b9668b
   .login-form-panel { padding: 1.9rem 1.8rem 1.2rem; }
 }
