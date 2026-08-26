@@ -3598,141 +3598,104 @@ input.production-input:focus {
 }
 
 /* ---- RTL SUPPORT (sadece metin yönü, layout sabit) ---- */
-.lang-ar .sidebar,
-[dir="rtl"] .sidebar {
+.lang-ar .sidebar {
   left: 0;
   right: auto;
   transform: none;
 }
-.lang-ar .sidebar.open,
-[dir="rtl"] .sidebar.open {
+.lang-ar .sidebar.open {
   transform: none;
 }
 .lang-ar .header,
-[dir="rtl"] .header {
-  direction: ltr;
-}
 .lang-ar .header-content,
-[dir="rtl"] .header-content {
-  flex-direction: row;
-}
 .lang-ar .header-left,
-[dir="rtl"] .header-left {
+.lang-ar .header-right {
+  direction: ltr;
   flex-direction: row;
 }
-.lang-ar .header-right,
-[dir="rtl"] .header-right {
-  flex-direction: row;
-}
-.lang-ar .app-layout,
-[dir="rtl"] .app-layout {
+.lang-ar .app-layout {
   direction: ltr;
 }
-.lang-ar .sidebar-nav .tab-btn,
-[dir="rtl"] .sidebar-nav .tab-btn {
+.lang-ar .sidebar-nav .tab-btn {
   direction: rtl;
   text-align: right;
   justify-content: flex-start;
 }
-.lang-ar .sidebar-nav .tab-btn svg,
-[dir="rtl"] .sidebar-nav .tab-btn svg {
+.lang-ar .sidebar-nav .tab-btn svg {
   order: 1;
   margin-left: 0;
   margin-right: 0.7rem;
 }
-.lang-ar .sidebar-actions .tab-btn,
-[dir="rtl"] .sidebar-actions .tab-btn {
+.lang-ar .sidebar-actions .tab-btn {
   direction: rtl;
   text-align: right;
   justify-content: flex-start;
 }
-.lang-ar .sidebar-actions .tab-btn svg,
-[dir="rtl"] .sidebar-actions .tab-btn svg {
+.lang-ar .sidebar-actions .tab-btn svg {
   order: 1;
 }
-.lang-ar .main-content,
-[dir="rtl"] .main-content {
+.lang-ar .sidebar-header {
   direction: rtl;
-}
-.lang-ar .kpi-grid,
-[dir="rtl"] .kpi-grid {
-  direction: rtl;
-}
-.lang-ar .kpi-label,
-[dir="rtl"] .kpi-label {
   text-align: right;
 }
-.lang-ar .toolbar,
-[dir="rtl"] .toolbar {
+.lang-ar .main-content {
   direction: rtl;
 }
-.lang-ar .section-header,
-[dir="rtl"] .section-header {
+.lang-ar .kpi-grid {
   direction: rtl;
 }
-.lang-ar .section-header h2,
-[dir="rtl"] .section-header h2 {
+.lang-ar .kpi-label {
   text-align: right;
 }
-.lang-ar .report-grid,
-[dir="rtl"] .report-grid {
+.lang-ar .toolbar {
   direction: rtl;
 }
-.lang-ar .report-label,
-[dir="rtl"] .report-label {
+.lang-ar .section-header {
+  direction: rtl;
+}
+.lang-ar .section-header h2 {
+  text-align: right;
+}
+.lang-ar .report-grid {
+  direction: rtl;
+}
+.lang-ar .report-label {
   text-align: right;
 }
 .lang-ar .data-table th,
-.lang-ar .data-table td,
-[dir="rtl"] .data-table th,
-[dir="rtl"] .data-table td {
+.lang-ar .data-table td {
   text-align: right;
 }
-.lang-ar .login-shell,
-[dir="rtl"] .login-shell {
+.lang-ar .login-shell {
   flex-direction: row;
 }
-.lang-ar .login-form-panel,
-[dir="rtl"] .login-form-panel {
+.lang-ar .login-form-panel {
   text-align: right;
 }
-.lang-ar .login-features,
-[dir="rtl"] .login-features {
+.lang-ar .login-features {
   padding-right: 0;
   padding-left: 1.2rem;
 }
-.lang-ar .lang-dropdown,
-[dir="rtl"] .lang-dropdown {
+.lang-ar .lang-dropdown {
   left: 0;
   right: auto;
 }
-.lang-ar .role-badge,
-[dir="rtl"] .role-badge {
+.lang-ar .role-badge {
   margin-right: 0;
   margin-left: 0.5rem;
 }
-.lang-ar .modal,
-[dir="rtl"] .modal {
+.lang-ar .modal {
   direction: rtl;
 }
-.lang-ar .ws-card,
-[dir="rtl"] .ws-card {
+.lang-ar .ws-card {
   direction: rtl;
 }
-.lang-ar .comparison-item,
-[dir="rtl"] .comparison-item {
+.lang-ar .comparison-item {
   direction: rtl;
 }
-.lang-ar .formula-card,
-[dir="rtl"] .formula-card {
+.lang-ar .formula-card {
   direction: rtl;
 }
-.lang-ar .weekly-summary,
-[dir="rtl"] .weekly-summary {
+.lang-ar .weekly-summary {
   direction: rtl;
-}
-.lang-ar .sidebar-header,
-[dir="rtl"] .sidebar-header {
-  direction: rtl;
-  text-align: right;
 }
