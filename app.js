@@ -15035,11 +15035,10 @@ function setLanguage(lang) {
   var dd = document.getElementById('langDropdown');
   if (dd) dd.classList.remove('open');
   applyTranslations();
-  var activeBtn = document.querySelector('.tab-btn.active');
-  if (activeBtn) {
-    var tabName = activeBtn.id.replace('tab-', '');
-    switchTab(tabName);
-  }
+  renderAll();
+  renderMenu();
+  renderHarcamaMenu();
+  renderBirimFiyatlar();
 }
 
 function t(key) {
