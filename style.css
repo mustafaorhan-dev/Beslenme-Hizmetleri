@@ -1,5 +1,5 @@
-/* =============================================
-   ATIK KONTROL YÖNETİM SİSTEMİ - STYLESHEET
+﻿/* =============================================
+   ATIK KONTROL Y�NETIM SISTEMI - STYLESHEET
    ============================================= */
 
 *, *::before, *::after {
@@ -128,7 +128,7 @@
   position: relative; z-index: 1;
 }
 
-/* Sağ taraf - form paneli */
+/* Sag taraf - form paneli */
 .login-form-panel {
   position: relative;
   display: flex; flex-direction: column; justify-content: center;
@@ -743,7 +743,7 @@ body {
 [data-role="viewer"] .btn-logout { display: inline-flex !important; }
 [data-role="viewer"] .sidebar-actions { gap: 0.25rem; }
 [data-role="viewer"] .menu-date-nav .btn-ghost { display: inline-flex !important; }
-/* Harcama bilgileri yalnızca admin (Yönetici) rolüne görünür */
+/* Harcama bilgileri yalnizca admin (Y�netici) rol�ne g�r�n�r */
 body[data-role]:not([data-role="admin"]) th.col-harcama,
 body[data-role]:not([data-role="admin"]) td.td-harcama,
 body[data-role]:not([data-role="admin"]) .report-item-harcama,
@@ -968,7 +968,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .accent-dot:hover { transform: scale(1.2); }
 .accent-dot.active { border-color: var(--text-primary); box-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
-/* ---- YAN MENÜ Mavi Tema (giris ekranina uyumlu) ---- */
+/* ---- YAN MEN� Mavi Tema (giris ekranina uyumlu) ---- */
 .sidebar,
 [data-theme="dark"] .sidebar {
   background:
@@ -1060,7 +1060,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-/* Tüm sekmeler için scrollbar */
+/* T�m sekmeler i�in scrollbar */
 #content-dashboard.active,
 #content-records.active,
 #content-charts.active,
@@ -1120,7 +1120,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-ambalaj.active::-webkit-scrollbar-thumb:hover,
 #content-harcama.active::-webkit-scrollbar-thumb:hover,
 #content-birimfiyat.active::-webkit-scrollbar-thumb:hover { background: var(--accent); border: 1px solid transparent; background-clip: content-box; }
-/* Sol menü (sidebar) scrollbar */
+/* Sol men� (sidebar) scrollbar */
 .sidebar::-webkit-scrollbar { width: 10px; }
 .sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
@@ -1398,7 +1398,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .td-gecis { color: var(--accent-green) !important; font-weight: 600; text-align: center; }
 .td-personel { color: var(--accent-purple) !important; font-weight: 600; }
 
-/* ---- SEKTÖR BAŞLIKLARI ---- */
+/* ---- SEKT�R BASLIKLARI ---- */
 .section-title {
   font-size: 0.9rem;
   font-weight: 700;
@@ -1410,7 +1410,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: var(--text-primary);
   letter-spacing: 0.02em;
 }
-/* ===== ÜRÜN İHTİYAÇ LİSTESİ — GÜN KARTLARI ===== */
+/* ===== �R�N IHTIYA� LISTESI - G�N KARTLARI ===== */
 .prod-day {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1612,7 +1612,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 0.64rem;
 }
 
-/* ===== HAFTALIK TOPLAM LİSTESİ ===== */
+/* ===== HAFTALIK TOPLAM LISTESI ===== */
 .weekly-total-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1713,7 +1713,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   margin-bottom: 0.25rem;
 }
 
-/* ===== MALİ TABLO ===== */
+/* ===== MALI TABLO ===== */
 .mali-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -2276,7 +2276,7 @@ td.porsiyon-warn {
   text-align: center;
 }
 
-/* ---- HARCAMA MENÜSÜ ---- */
+/* ---- HARCAMA MEN�S� ---- */
 .hc-controls {
   display: flex;
   align-items: center;
@@ -2291,7 +2291,7 @@ td.porsiyon-warn {
   box-shadow: 0 0 16px rgba(99,102,241,0.3);
 }
 
-/* Harcama grafiği: çift yönlü (yatay + dikey) kaydırma */
+/* Harcama grafigi: �ift y�nl� (yatay + dikey) kaydirma */
 #hcChartArea {
   overflow: auto;
   height: 360px;
@@ -2329,12 +2329,12 @@ td.porsiyon-warn {
   align-items: flex-start;
 }
 
-/* Harcama: KPI kartları (Panel'deki kpi-card yapısıyla aynı) */
+/* Harcama: KPI kartlari (Panel'deki kpi-card yapisiyla ayni) */
 .hc-kpis .kpi-value { font-size: 1.15rem; }
 .hc-kpis .kpi-card:nth-child(7) .kpi-value,
 .hc-kpis .kpi-card:nth-child(8) .kpi-value { font-size: 1rem; }
 
-/* Harcama: tablo sayfalama (Kayıtlar sekmesindeki ile aynı) */
+/* Harcama: tablo sayfalama (Kayitlar sekmesindeki ile ayni) */
 .hc-pagination {
   display: flex;
   align-items: center;
@@ -2525,7 +2525,7 @@ td.porsiyon-warn {
 .modal-close svg { width: 14px; height: 14px; }
 .modal-close:hover { background: rgba(239,68,68,0.15); color: var(--accent-red); border-color: rgba(239,68,68,0.3); }
 
-/* ---- VERSİYON ETİKETİ ---- */
+/* ---- VERSIYON ETIKETI ---- */
 .sidebar-version {
   margin: 0.35rem 0.75rem 0.75rem;
   padding: 0.4rem 0.6rem;
@@ -2725,7 +2725,7 @@ td.porsiyon-warn {
   cursor: not-allowed;
 }
 
-/* Kişi sayısı giriş alanları (turnike, personel, öğrenci, menü kişi sayısı) - sıcak renk tonu */
+/* Kisi sayisi giris alanlari (turnike, personel, �grenci, men� kisi sayisi) - sicak renk tonu */
 input.person-input,
 input.kisi-input {
   background: rgba(245,158,11,0.07) !important;
@@ -2737,7 +2737,7 @@ input.kisi-input:focus {
   box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important;
 }
 
-/* Üretim miktarı giriş alanları (yemek, porsiyon) - soğuk renk tonu */
+/* �retim miktari giris alanlari (yemek, porsiyon) - soguk renk tonu */
 input.production-input {
   background: rgba(99,102,241,0.05) !important;
   border-color: rgba(99,102,241,0.2) !important;
@@ -2927,7 +2927,7 @@ input.production-input:focus {
   .form-grid { padding: 1rem; gap: 0.8rem; }
 }
 
-/* ---- MOBILE (480px altı) ---- */
+/* ---- MOBILE (480px alti) ---- */
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
   .kpi-value { font-size: 1.3rem; }
@@ -3352,7 +3352,7 @@ input.production-input:focus {
 .report-item {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
-/* Hover efektleri kaldırıldı */
+/* Hover efektleri kaldirildi */
 
 /* Birim Fiyatlar Sekmesi */
 .bf-controls {
@@ -3430,7 +3430,7 @@ input.production-input:focus {
   flex-wrap: wrap;
 }
 
-/* Birim fiyat tablosunda hover efekti kaldır */
+/* Birim fiyat tablosunda hover efekti kaldir */
 #content-birimfiyat .data-table tbody tr {
   transition: none;
   transform: none;
@@ -3597,7 +3597,7 @@ input.production-input:focus {
   line-height: 1;
 }
 
-/* ---- RTL SUPPORT (sadece metin yönü, layout sabit) ---- */
+/* ---- RTL SUPPORT (sadece metin y�n�, layout sabit) ---- */
 .lang-ar .sidebar {
   left: 0;
   right: auto;
