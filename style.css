@@ -1312,7 +1312,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 @media (max-width: 768px) {
   .toolbar-actions { margin-left: 0; width: 100%; }
-  .toolbar-actions .btn { flex: 1; }
+  .toolbar-actions .btn { flex: 1; white-space: normal; text-align: center; justify-content: center; }
 }
 
 .search-box {
@@ -3466,7 +3466,7 @@ input.production-input:focus {
   pointer-events: none;
 }
 .header { position: relative; }
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .bhys-badge { display: none; }
 }
 
