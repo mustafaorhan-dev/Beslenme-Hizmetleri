@@ -365,6 +365,15 @@ select.login-field {
 .login-forgot-card p { color: #5a6b85; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.4rem; }
 .login-forgot-ok { margin-top: 0; }
 
+@media (max-width: 1100px) {
+  .login-shell { width: min(920px, 96vw); min-height: 540px; }
+  .login-brand { padding: 2.2rem 2rem 1.6rem; }
+  .login-form-panel { padding: 2.2rem 2.2rem 1.4rem; }
+  .login-logo-img { max-width: 250px; }
+  .login-title { font-size: 1.05rem; }
+  .login-inst-footer { font-size: 0.6rem; }
+}
+
 @media (max-width: 900px) {
   .login-shell {
     grid-template-columns: 1fr;
@@ -382,7 +391,20 @@ select.login-field {
   .login-form-head { text-align: center; }
   .login-form-head::after { left: 50%; transform: translateX(-50%); }
   .login-form-sub { font-size: 1.2rem; }
+
+  @media (max-width: 600px) {
+    .login-bottom { flex-direction: column; gap: 0.6rem; align-items: center; }
+    .login-form { margin-top: 1.6rem; }
+    .login-form-options { flex-wrap: wrap; gap: 0.5rem; }
+    .login-label { font-size: 0.68rem; }
+    .login-submit { padding: 14px 20px; font-size: 0.92rem; }
+    .login-field { padding: 15px 16px; }
+    .login-logo-img { max-width: 160px; }
+    .login-title { font-size: 0.98rem; }
+    .login-title .login-sub { font-size: 0.56rem; }
+  }
 }
+
 
 /* Loading Overlay */
 .loading-overlay {
