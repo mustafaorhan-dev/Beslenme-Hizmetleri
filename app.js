@@ -649,6 +649,7 @@ async function doLogin() {
       sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
     }
     localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
+    rememberLoginUser(username);
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
     document.getElementById('roleBadge').textContent = displayName;
@@ -668,6 +669,7 @@ async function doLogin() {
     });
     if (!signInError && signInData && signInData.session) {
       // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek
+      rememberLoginUser(username);
       return;
     }
   }
@@ -1371,7 +1373,53 @@ function populateLoginUsers() {
     opt.textContent = user.displayName;
     select.appendChild(opt);
   });
+  // Beni Hatırla: daha önce seçilmiş kullanıcıyı geri yükle
+  var remembered = localStorage.getItem('atik_kontrol_remember_user');
+  if (remembered) {
+    var found = false;
+    for (var i = 0; i < select.options.length; i++) {
+      if (select.options[i].value === remembered) { select.selectedIndex = i; found = true; break; }
+    }
+    var rm = document.getElementById('rememberMe');
+    if (found && rm) rm.checked = true;
+    if (remembered && !found && rm) rm.checked = false;
+  }
 }
+
+function rememberLoginUser(username) {
+  var rm = document.getElementById('rememberMe');
+  if (rm && rm.checked && username) {
+    localStorage.setItem('atik_kontrol_remember_user', username);
+  } else if (!rm || !rm.checked) {
+    localStorage.removeItem('atik_kontrol_remember_user');
+  }
+}
+
+function togglePwVisibility() {
+  var input = document.getElementById('loginPassword');
+  if (!input) return;
+  var hidden = input.type === 'password';
+  input.type = hidden ? 'text' : 'password';
+  var wrap = input.closest ? input.closest('.login-field-wrap') : null;
+  if (wrap) wrap.classList.toggle('login-password-hidden', hidden);
+  var btn = document.getElementById('pwToggle');
+  if (btn) btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+}
+
+function showForgotPw() {
+  var modal = document.getElementById('loginForgotModal');
+  if (modal) modal.classList.add('open');
+}
+
+function hideForgotPw() {
+  var modal = document.getElementById('loginForgotModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function openSupport() {
+  showToast('Destek için lütfen Sistem Yöneticinizle iletişime geçin.', 'info');
+}
+
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11187,6 +11235,12 @@ var I18N = {
     loginFeature1: "Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi",
     loginFeature2: "Detaylı Raporlama",
     loginFeature3: "Canlı Panel ve Grafikler",
+    loginRemember: "Beni Hatırla",
+    loginForgot: "Şifremi Unuttum?",
+    loginForgotTitle: "Şifremi Unuttum",
+    loginForgotText: "Şifrenizi sıfırlamak için lütfen Sistem Yöneticinizle iletişime geçin.",
+    loginForgotOk: "Tamam",
+    loginSecure: "Güvenli Bağlantı",
     menuLabel: "Menü",
     headerSubtitle: "Beslenme Hizmetleri Yönetim Sistemi",
     btnLogout: "Çıkış",
@@ -11579,6 +11633,12 @@ var I18N = {
     loginFeature1: "Menu Planning, Daily Production, Consumption & Waste Tracking",
     loginFeature2: "Detailed Reporting",
     loginFeature3: "Live Dashboard & Charts",
+    loginRemember: "Remember Me",
+    loginForgot: "Forgot Password?",
+    loginForgotTitle: "Forgot Password",
+    loginForgotText: "Please contact your System Administrator to reset your password.",
+    loginForgotOk: "OK",
+    loginSecure: "Secure Connection",
     menuLabel: "Menu",
     headerSubtitle: "Nutrition Services Management System",
     btnLogout: "Logout",
@@ -11971,6 +12031,12 @@ var I18N = {
     loginFeature1: "Menyu Planlaması, Günlük İstehsal, İstehlak və Tullantı İzləmə",
     loginFeature2: "Ətraflı Hesabatlar",
     loginFeature3: "Canlı Panel və Qrafiklər",
+    loginRemember: "Məni Xatırla",
+    loginForgot: "Şifrəmi Unutdum?",
+    loginForgotTitle: "Şifrəmi Unutdum",
+    loginForgotText: "Şifrənizi sıfırlamaq üçün Sistem Administratorunuzla əlaqə saxlayın.",
+    loginForgotOk: "OK",
+    loginSecure: "Təhlükəsiz Bağlantı",
     menuLabel: "Menyu",
     headerSubtitle: "Qida Xidmətləri İdarəetmə Sistemi",
     btnLogout: "Çıxış",
@@ -12352,6 +12418,12 @@ var I18N = {
     loginFeature1: "Меню, ежедневное производство, потребление и отходы",
     loginFeature2: "Подробные отчёты",
     loginFeature3: "Живая панель и графики",
+    loginRemember: "Запомнить меня",
+    loginForgot: "Забыли пароль?",
+    loginForgotTitle: "Забыли пароль",
+    loginForgotText: "Для сброса пароля свяжитесь с системным администратором.",
+    loginForgotOk: "ОК",
+    loginSecure: "Безопасное соединение",
     menuLabel: "Меню",
     headerSubtitle: "Система управления службами питания",
     btnLogout: "Выход",
@@ -12733,6 +12805,12 @@ var I18N = {
     loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
     loginFeature2: "تقارير مفصلة",
     loginFeature3: "لوحة مباشرة ورسوم بيانية",
+    loginRemember: "تذكرني",
+    loginForgot: "نسيت كلمة المرور؟",
+    loginForgotTitle: "نسيت كلمة المرور",
+    loginForgotText: "لإعادة تعيين كلمة المرور، يرجى التواصل مع مسؤول النظام.",
+    loginForgotOk: "موافق",
+    loginSecure: "اتصال آمن",
     menuLabel: "القائمة",
     headerSubtitle: "نظام إدارة خدمات التغذية",
     btnLogout: "تسجيل الخروج",
@@ -13114,6 +13192,12 @@ var I18N = {
     loginFeature1: "Menüplanung, tägliche Produktion, Verbrauch & Abfallverfolgung",
     loginFeature2: "Detaillierte Berichte",
     loginFeature3: "Live-Dashboard & Diagramme",
+    loginRemember: "Angemeldet bleiben",
+    loginForgot: "Passwort vergessen?",
+    loginForgotTitle: "Passwort vergessen",
+    loginForgotText: "Bitte wenden Sie sich zum Zurücksetzen des Passworts an Ihren Systemadministrator.",
+    loginForgotOk: "OK",
+    loginSecure: "Sichere Verbindung",
     menuLabel: "Menü",
     headerSubtitle: "Ernährungsdienste-Verwaltungssystem",
     btnLogout: "Abmelden",
@@ -13495,6 +13579,12 @@ var I18N = {
     loginFeature1: "Planification du menu, production quotidienne, consommation et déchets",
     loginFeature2: "Rapports détaillés",
     loginFeature3: "Tableau de bord en direct et graphiques",
+    loginRemember: "Se souvenir de moi",
+    loginForgot: "Mot de passe oublié ?",
+    loginForgotTitle: "Mot de passe oublié",
+    loginForgotText: "Veuillez contacter votre administrateur système pour réinitialiser le mot de passe.",
+    loginForgotOk: "OK",
+    loginSecure: "Connexion sécurisée",
     menuLabel: "Menu",
     headerSubtitle: "Système de gestion des services de nutrition",
     btnLogout: "Déconnexion",
@@ -13876,6 +13966,12 @@ var I18N = {
     loginFeature1: "Planificación de menú, producción diaria, consumo y residuos",
     loginFeature2: "Informes detallados",
     loginFeature3: "Panel en vivo y gráficos",
+    loginRemember: "Recuérdame",
+    loginForgot: "¿Olvidó su contraseña?",
+    loginForgotTitle: "Contraseña olvidada",
+    loginForgotText: "Para restablecer su contraseña, póngase en contacto con el administrador del sistema.",
+    loginForgotOk: "Aceptar",
+    loginSecure: "Conexión segura",
     menuLabel: "Menú",
     headerSubtitle: "Sistema de gestión de servicios de nutrición",
     btnLogout: "Cerrar sesión",
@@ -14257,6 +14353,12 @@ var I18N = {
     loginFeature1: "Planejamento de cardápio, produção diária, consumo e resíduos",
     loginFeature2: "Relatórios detalhados",
     loginFeature3: "Painel ao vivo e gráficos",
+    loginRemember: "Lembrar de mim",
+    loginForgot: "Esqueceu a senha?",
+    loginForgotTitle: "Senha esquecida",
+    loginForgotText: "Para redefinir sua senha, entre em contato com o administrador do sistema.",
+    loginForgotOk: "OK",
+    loginSecure: "Conexão segura",
     menuLabel: "Cardápio",
     headerSubtitle: "Sistema de gestão de serviços de nutrição",
     btnLogout: "Sair",
@@ -14638,6 +14740,12 @@ var I18N = {
     loginFeature1: "Menyu rejalashtirish, kunlik ishlab chiqarish, iste'mol va chiqindilarni kuzatish",
     loginFeature2: "Batafsil hisobotlar",
     loginFeature3: "Jonli panel va grafiklar",
+    loginRemember: "Meni eslab qol",
+    loginForgot: "Parolni unutdingizmi?",
+    loginForgotTitle: "Parolni unutdingiz",
+    loginForgotText: "Parolni tiklash uchun tizim administratoringiz bilan bog'laning.",
+    loginForgotOk: "OK",
+    loginSecure: "Xavfsiz ulanish",
     menuLabel: "Menyu",
     headerSubtitle: "Ovqatlantirish xizmatlarini boshqarish tizimi",
     btnLogout: "Chiqish",
