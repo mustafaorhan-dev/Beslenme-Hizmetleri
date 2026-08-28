@@ -82,7 +82,7 @@
 }
 .login-title .login-sub {
   display: block; margin-top: 0.45rem;
-  font-size: 0.88rem; font-weight: 700; letter-spacing: 1.6px;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 1.2px;
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-red));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -242,7 +242,7 @@
   .login-brand { padding: 1.9rem 1.8rem 1.5rem; }
   .login-features, .login-brand-foot { display: none; }
   .login-title { font-size: 1.15rem; }
-  .login-title .login-sub { font-size: 0.78rem; }
+  .login-title .login-sub { font-size: 0.6rem; }
   .login-cutlery {
     position: static;
     transform: none;
