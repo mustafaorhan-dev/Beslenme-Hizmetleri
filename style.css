@@ -223,12 +223,12 @@
   border-radius: 12px;
   margin-top: 1rem;
   font-weight: 800; letter-spacing: 1px;
-  background: linear-gradient(135deg, #22c55e, #10b981);
-  box-shadow: 0 6px 18px rgba(16,185,129,0.32);
+  background: linear-gradient(135deg, #2563eb, #22d3ee);
+  box-shadow: 0 6px 18px rgba(34,211,238,0.3);
 }
 .login-form-panel .login-submit:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(16,185,129,0.45);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.4);
 }
 .login-error {
   color: #ef4444; font-size: 0.85rem; margin: 0; text-align: center;
