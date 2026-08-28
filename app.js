@@ -2921,6 +2921,7 @@ function getMenuUrl() {
 }
 
 async function syncAllToSupabase() { if (!requireAdmin()) return;
+  if (!confirm('Tüm yerel veriler Supabase bulutuna yedeklensin mi?')) return;
   if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   var toastMsg = [];
   try {
@@ -2956,6 +2957,7 @@ async function syncAllToSupabase() { if (!requireAdmin()) return;
 }
 
 async function syncAllFromSupabase() { if (!requireAdmin()) return;
+  if (!confirm('Supabase\'ten alınan veriler mevcut yerel verilerin üzerine yazsın mı?')) return;
   if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
   var toastMsg = [];
   try {
