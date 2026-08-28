@@ -218,8 +218,7 @@
   justify-content: center; text-transform: uppercase; letter-spacing: 0.5px;
 }
 .login-form-panel .login-submit {
-  align-self: center;
-  width: min(100%, 250px);
+  width: 100%;
   padding: 13px 26px;
   border-radius: 12px;
   margin-top: 1rem;
