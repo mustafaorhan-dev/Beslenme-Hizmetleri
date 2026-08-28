@@ -98,6 +98,15 @@
   width: 190px; height: auto;
   filter: drop-shadow(0 6px 22px rgba(37,99,235,0.4));
 }
+.login-cutlery img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 300px;
+  margin: 0 auto;
+  position: relative;
+  left: -10px;
+}
 .login-features {
   list-style: none;
   margin: auto 0 0; padding: 2rem 0 0;
@@ -3444,31 +3453,6 @@ input.production-input:focus {
 }
 
 
-
-/* Ust bar BHYS logosu (giris ekranindaki ayni stil, koyu zemin icin parlak) */
-.bhys-badge {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(calc(-50% - 8px), -50%);
-  font-family: 'Orbitron', 'Inter', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  line-height: 1;
-  background: linear-gradient(120deg, #93c5fd, #38bdf8 45%, #22d3ee);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 10px rgba(56,189,248,0.45));
-  cursor: default;
-  user-select: none;
-  pointer-events: none;
-}
-.header { position: relative; }
-@media (max-width: 640px) {
-  .bhys-badge { display: none; }
-}
 
 /* ---- YUKARI CIK BUTONU ---- */
 #scrollTopBtn {
