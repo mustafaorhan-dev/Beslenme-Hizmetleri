@@ -152,6 +152,7 @@
 .login-form-head {
   position: relative;
   padding-bottom: 1.15rem;
+  padding-top: 0.5rem;
   margin-bottom: 0.2rem;
   text-align: center;
 }
@@ -177,7 +178,7 @@
 }
 .login-form {
   display: flex; flex-direction: column; gap: 0.55rem;
-  margin-top: 2.2rem;
+  margin-top: 2.7rem;
 }
 .login-label {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.7px;
@@ -215,6 +216,20 @@
   width: 100%; padding: 14px; margin-top: 0.9rem;
   font-size: 0.95rem; font-weight: 700;
   justify-content: center; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.login-form-panel .login-submit {
+  align-self: center;
+  width: min(100%, 250px);
+  padding: 13px 26px;
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-weight: 800; letter-spacing: 1px;
+  background: linear-gradient(135deg, #22c55e, #10b981);
+  box-shadow: 0 6px 18px rgba(16,185,129,0.32);
+}
+.login-form-panel .login-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16,185,129,0.45);
 }
 .login-error {
   color: #ef4444; font-size: 0.85rem; margin: 0; text-align: center;
