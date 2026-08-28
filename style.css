@@ -172,6 +172,7 @@
 .login-form-sub {
   font-size: 1.15rem; font-weight: 800; letter-spacing: 1.4px;
   margin-top: 0;
+  text-transform: uppercase;
   color: color-mix(in srgb, #2563eb 40%, var(--text-muted));
 }
 .login-form {
@@ -227,6 +228,20 @@
   display: flex; align-items: center; justify-content: space-between;
   margin-top: auto; padding-top: 1rem;
   border-top: 1px dashed var(--border);
+}
+.login-inst-footer {
+  margin-top: 0.9rem; padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.64rem; color: var(--text-muted); opacity: 0.85;
+  text-align: center; line-height: 1.6;
+}
+.login-inst-version {
+  display: block;
+  font-weight: 700; font-size: 0.7rem;
+  letter-spacing: 0.6px;
+  background: linear-gradient(120deg, #93c5fd, #22d3ee);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .login-fmg {
   font-size: 9px; color: var(--text-muted); opacity: 0.35;

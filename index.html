@@ -64,7 +64,7 @@
       </aside>
       <section class="login-form-panel">
         <div class="login-form-head">
-          <p class="login-form-sub" data-i18n="loginFormSub">Oturum Açınız</p>
+          <p class="login-form-sub" data-i18n="loginFormSub">Giriş Yapınız</p>
         </div>
         <form class="login-form" onsubmit="event.preventDefault();doLogin()">
           <label class="login-label" for="loginUsername" data-i18n="loginUsername">Kullanıcı</label>
@@ -87,6 +87,10 @@
           <div id="loginError" class="login-error"></div>
           <span class="login-hint" data-i18n="loginHint">Şifrenizi yöneticinizden alabilirsiniz</span>
         </form>
+        <div class="login-inst-footer">
+          © 2026 Kırşehir Ahi Evran Üniversitesi Sağlık Kültür ve Spor Daire Başkanlığı
+          <span class="login-inst-version">Versiyon: v1.1.0</span>
+        </div>
         <div class="login-form-foot">
           <div style="display:flex;gap:4px">
             <span style="font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(99,102,241,0.1);color:var(--accent);opacity:0.5">Supabase Auth</span>

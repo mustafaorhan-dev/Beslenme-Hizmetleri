@@ -11178,7 +11178,7 @@ function printKalibrasyonList() {
 var I18N = {
   tr: {
     loginSub: "BESLENME HİZMETLERİ YÖNETİM SİSTEMİ",
-    loginFormSub: "Oturum Açınız",
+    loginFormSub: "Giriş Yapınız",
     loginUsername: "Kullanıcı",
     loginSelectUser: "Kullanıcı Seçin",
     loginPassword: "Şifre",
