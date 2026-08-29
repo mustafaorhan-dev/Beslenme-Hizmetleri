@@ -117,20 +117,18 @@
 .login-cutlery {
   display: flex; justify-content: center; align-items: center;
   position: relative;
+  gap: 34px;
   margin: 2rem auto 1.6rem;
   z-index: 1;
 }
 /* Amblemin sağında silik 5x6 (30 adet) nokta ızgarası */
 .login-dot-grid {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   width: 90px;
   height: 108px;
   pointer-events: none;
-  opacity: 0.55;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.5) 1.2px, transparent 1.6px);
+  opacity: 0.5;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.55) 1.2px, transparent 1.6px);
   background-size: 18px 18px;
   background-position: 0 0;
 }
@@ -138,7 +136,7 @@
   display: block;
   width: auto;
   height: auto;
-  max-width: 300px;
+  max-width: 250px;
   margin: 0 auto;
   filter: drop-shadow(0 12px 28px rgba(0,0,0,0.35));
 }
