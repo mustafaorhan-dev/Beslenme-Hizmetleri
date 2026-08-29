@@ -120,6 +120,20 @@
   margin: 2rem auto 1.6rem;
   z-index: 1;
 }
+/* Amblemin sağında silik 5x6 (30 adet) nokta ızgarası */
+.login-dot-grid {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 90px;
+  height: 108px;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.5) 1.2px, transparent 1.6px);
+  background-size: 18px 18px;
+  background-position: 0 0;
+}
 .login-logo-img {
   display: block;
   width: auto;
