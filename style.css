@@ -146,10 +146,15 @@
   text-rendering: optimizeLegibility;
 }
 .login-check {
-  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #1769E0, #00B8E6);
-  box-shadow: 0 2px 8px rgba(0,184,230,0.35);
+  background: linear-gradient(160deg, rgba(56,189,248,0.95), rgba(30,64,175,0.95));
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.18);
+}
+.login-check svg {
+  opacity: 0.98;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35));
 }
 
 /* Sağ taraf - form paneli */
