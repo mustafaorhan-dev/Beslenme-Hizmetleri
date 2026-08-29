@@ -737,12 +737,22 @@ select.login-field {
   box-shadow: 0 4px 16px rgba(99,102,241,0.15), 0 1px 3px rgba(0,0,0,0.2);
 }
 [data-theme="dark"] .prod-day-header {
-  background: linear-gradient(135deg, #1769E0 0%, #2563eb 60%, #0e4bb0 100%);
-  border-bottom-color: rgba(0,0,0,0.2);
+  background: linear-gradient(90deg, rgba(56,189,248,0.14) 0%, rgba(56,189,248,0.03) 100%);
+  border-left-color: #38bdf8;
+  border-bottom-color: rgba(255,255,255,0.08);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .prod-day-header::before {
+  background: #38bdf8;
+  box-shadow: 0 0 6px rgba(56,189,248,0.45);
+}
+[data-theme="dark"] .prod-day-header .prod-day-label {
+  color: #7dd3fc;
 }
 [data-theme="dark"] .prod-day-header .prod-day-kisi {
-  background: rgba(255,255,255,0.22);
-  border-color: rgba(255,255,255,0.3);
+  color: #7dd3fc;
+  background: rgba(56,189,248,0.14);
+  border-color: rgba(56,189,248,0.26);
 }
 [data-theme="dark"] .prod-cesit-col {
   background: var(--cesit-bg);
@@ -1642,39 +1652,39 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   box-shadow: 0 4px 16px rgba(99,102,241,0.08), 0 1px 3px rgba(0,0,0,0.04);
 }
 .prod-day-header {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   padding: 0.7rem 1.1rem;
-  background: linear-gradient(135deg, #1769E0 0%, #2563eb 60%, #0e4bb0 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(90deg, rgba(23,105,224,0.10) 0%, rgba(23,105,224,0.02) 100%);
+  border-left: 4px solid #1769E0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: #ffffff;
+  color: #1e293b;
 }
 .prod-day-header::before {
   content: '';
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.95);
+  background: #1769E0;
   flex-shrink: 0;
-  box-shadow: 0 0 8px rgba(255,255,255,0.55);
+  box-shadow: 0 0 6px rgba(23,105,224,0.35);
 }
 .prod-day-header .prod-day-label {
-  color: #ffffff;
+  color: #0e4bb0;
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .prod-day-header .prod-day-kisi {
   margin-left: auto;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #ffffff;
-  background: rgba(255,255,255,0.22);
+  color: #1769E0;
+  background: rgba(23,105,224,0.10);
   padding: 0.2rem 0.7rem;
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(23,105,224,0.22);
 }
 .prod-day-body {
   padding: 0.8rem 1.1rem 1.1rem 1.1rem;
