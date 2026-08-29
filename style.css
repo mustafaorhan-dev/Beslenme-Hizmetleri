@@ -737,12 +737,12 @@ select.login-field {
   box-shadow: 0 4px 16px rgba(99,102,241,0.15), 0 1px 3px rgba(0,0,0,0.2);
 }
 [data-theme="dark"] .prod-day-header {
-  background: linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.05) 100%);
-  border-bottom-color: rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, #1769E0 0%, #2563eb 60%, #0e4bb0 100%);
+  border-bottom-color: rgba(0,0,0,0.2);
 }
 [data-theme="dark"] .prod-day-header .prod-day-kisi {
-  background: rgba(99,102,241,0.15);
-  border-color: rgba(99,102,241,0.25);
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.3);
 }
 [data-theme="dark"] .prod-cesit-col {
   background: var(--cesit-bg);
@@ -1645,34 +1645,36 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 1.05rem;
   font-weight: 700;
   padding: 0.7rem 1.1rem;
-  background: linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.03) 100%);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #1769E0 0%, #2563eb 60%, #0e4bb0 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.18);
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  color: #ffffff;
 }
 .prod-day-header::before {
   content: '';
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--accent);
+  background: rgba(255,255,255,0.95);
   flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(99,102,241,0.3);
+  box-shadow: 0 0 8px rgba(255,255,255,0.55);
 }
 .prod-day-header .prod-day-label {
-  color: var(--accent);
+  color: #ffffff;
   letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .prod-day-header .prod-day-kisi {
   margin-left: auto;
   font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgba(99,102,241,0.10);
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255,255,255,0.22);
   padding: 0.2rem 0.7rem;
   border-radius: 20px;
-  border: 1px solid rgba(99,102,241,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
 }
 .prod-day-body {
   padding: 0.8rem 1.1rem 1.1rem 1.1rem;
