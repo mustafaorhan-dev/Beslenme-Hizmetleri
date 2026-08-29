@@ -214,9 +214,13 @@
   box-shadow: 0 2px 10px rgba(23,105,224,0.35);
 }
 .login-form-sub {
-  font-size: 1.3rem; font-weight: 800; letter-spacing: 1.2px;
+  font-size: 1.5rem; font-weight: 700; letter-spacing: 0.6px;
   margin-top: 0;
   text-transform: uppercase;
+  background: linear-gradient(120deg, #172B4D 30%, #2563eb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: #172B4D;
 }
 .login-form {
