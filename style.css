@@ -140,6 +140,31 @@
   margin: 0 auto;
   filter: drop-shadow(0 12px 28px rgba(0,0,0,0.35));
 }
+/* Ambleme albeni: yumuşak ışıltı + zarif halka */
+.login-emblem {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-emblem::before {
+  content: ''; position: absolute;
+  width: 250px; height: 250px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(59,130,246,0.28) 45%, rgba(30,64,175,0) 72%);
+  filter: blur(6px);
+  z-index: 0; pointer-events: none;
+  animation: emblemPulse 5.5s ease-in-out infinite;
+}
+.login-emblem::after {
+  content: ''; position: absolute;
+  width: 268px; height: 268px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.16);
+  box-shadow: 0 0 26px rgba(34,211,238,0.18), inset 0 0 20px rgba(34,211,238,0.08);
+  z-index: 0; pointer-events: none;
+}
+.login-emblem .login-logo-img { position: relative; z-index: 1; }
+@keyframes emblemPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.05); }
+}
 .login-features {
   list-style: none;
   margin: auto 0 0; padding: 2rem 0 0;
