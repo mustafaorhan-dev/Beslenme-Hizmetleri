@@ -566,13 +566,8 @@ function isAdminSessionValid() {
   // Legacy: client-side hash kontrolü
   const storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
   if (!storedHash) return false;
-  const loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
-  if (Date.now() - loginTime > 3600000) {
-    sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
-    sessionStorage.removeItem('atik_kontrol_login_time');
-    return false;
-  }
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+
   if (cfg.users && Array.isArray(cfg.users)) {
     const adminHashes = cfg.users.filter(u => u.role === ROLE_ADMIN).map(u => u.passwordHash);
     if (adminHashes.includes(storedHash)) return true;
@@ -597,14 +592,6 @@ function requireAdmin() {
     var storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
     if (!storedHash) {
       showToast('Bu işlem için admin yetkisi gerekli.', 'error');
-      return false;
-    }
-    var loginTime = parseInt(sessionStorage.getItem('atik_kontrol_login_time') || '0');
-    if (Date.now() - loginTime > 3600000) {
-      sessionStorage.removeItem('atik_kontrol_admin_hash_proof');
-      sessionStorage.removeItem('atik_kontrol_login_time');
-      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
-      location.reload();
       return false;
     }
   }
