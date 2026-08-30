@@ -1697,8 +1697,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .prod-day-3 { --day-color: #7c3aed; --day-soft: rgba(124,58,237,0.12); }
 .prod-day-4 { --day-color: #db2777; --day-soft: rgba(219,39,119,0.12); }
 .prod-day-0, .prod-day-1, .prod-day-2, .prod-day-3, .prod-day-4 {
-  background: var(--day-soft);
-  background: color-mix(in srgb, var(--day-soft) 45%, var(--bg-card));
+  background: var(--bg-card);
 }
 .prod-day-0 .prod-day-header,
 .prod-day-1 .prod-day-header,
