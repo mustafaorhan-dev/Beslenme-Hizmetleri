@@ -6234,7 +6234,6 @@ function setupMalzemeAutocomplete(input) {
       if (!item) return;
       input.value = item.getAttribute('data-val');
       closeList();
-      input.dispatchEvent(new Event('input'));
     });
 
     wrap.appendChild(list);
@@ -6254,7 +6253,19 @@ function setupMalzemeAutocomplete(input) {
   });
 }
 
+function syncTarifFromDom() {
+  var malzemeInputs = document.querySelectorAll('.yf-malzeme');
+  var miktarInputs = document.querySelectorAll('.yf-miktar');
+  var birimSelects = document.querySelectorAll('.yf-birim');
+  for (var i = 0; i < yfTarif.length; i++) {
+    if (malzemeInputs[i]) yfTarif[i].malzeme = malzemeInputs[i].value;
+    if (miktarInputs[i]) yfTarif[i].miktar_kisi = parseFloat(miktarInputs[i].value) || 0;
+    if (birimSelects[i]) yfTarif[i].birim = birimSelects[i].value;
+  }
+}
+
 function yfTarifEkle() {
+  syncTarifFromDom();
   yfTarif.push({ malzeme: '', miktar_kisi: 0, birim: 'gr' });
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
@@ -6263,6 +6274,7 @@ function yfTarifEkle() {
 }
 
 function yfTarifSil(idx) {
+  syncTarifFromDom();
   yfTarif.splice(idx, 1);
   const ad = document.getElementById('yf_ad').value;
   const kalori = document.getElementById('yf_kalori').value;
