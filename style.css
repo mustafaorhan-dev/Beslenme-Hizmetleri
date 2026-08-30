@@ -1750,6 +1750,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-size: 0.74rem;
 }
 .prod-name {
+  flex: 1;
   min-width: 0;
   padding-left: 0.1rem;
 }
@@ -1769,6 +1770,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   font-weight: 600;
   color: var(--cesit-accent);
   font-size: 0.8rem;
+  margin-left: auto;
 }
 .fiyat-badge {
   display: inline-block;
@@ -3254,11 +3256,11 @@ input.production-input:focus {
   .prod-cesit-row { display: flex; gap: 0.75rem; flex-wrap: nowrap; }
   .prod-cesit-col { flex: 1; min-width: 0; display: block; padding: 0.35rem 0.4rem; border-radius: 6px; }
   .prod-cesit { font-weight: 700; font-size: 0.78rem; margin: 0 0 0.2rem; padding: 0 0 0.2rem; color: #333; white-space: normal; overflow: visible; text-overflow: unset; border-bottom: 2px solid #aaa; }
-  .prod-ing { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 0.3rem; font-size: 0.72rem; line-height: 1.65; color: #555; }
+  .prod-ing { display: flex; align-items: baseline; flex-wrap: nowrap; column-gap: 0.3rem; font-size: 0.72rem; line-height: 1.65; color: #555; }
   .prod-num { flex-shrink: 0; color: #888; font-weight: 500; }
-  .prod-name { min-width: 0; color: #333; }
+  .prod-name { min-width: 0; color: #333; flex: 1; }
   .prod-sep { flex-shrink: 0; color: #bbb; }
-  .prod-qty { flex-shrink: 0; font-weight: 600; color: #333; }
+  .prod-qty { flex-shrink: 0; font-weight: 600; color: #333; margin-left: auto; }
   .fiyat-badge { color: #333; }
   .prod-day-total { margin-top: 0.6rem; border-top: 1px dashed #ccc; padding-top: 0.4rem; }
   .prod-day-total-header { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; color: #333; }
