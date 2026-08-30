@@ -6193,6 +6193,65 @@ function renderYemekForm(ad, kalori, alerjen) {
       <button class="btn btn-ghost btn-sm" onclick="yfTarifEkle()" style="margin-top:0.4rem">${t('addIngredient')}</button>
     </div>
   </div>`;
+
+  container.querySelectorAll('.yf-malzeme').forEach(function(input) {
+    setupMalzemeAutocomplete(input);
+  });
+}
+
+function setupMalzemeAutocomplete(input) {
+  function closeList() {
+    var list = input.parentNode.querySelector('.mz-autocomplete');
+    if (list) list.remove();
+  }
+  function renderList(filter) {
+    closeList();
+    if (!filter) return;
+    var q = normIsim(filter);
+    var seen = {};
+    var options = [];
+    unitPricesCache.forEach(function(p) {
+      var ad = (p.urun_adi || '').trim();
+      if (!ad || seen[ad]) return;
+      seen[ad] = true;
+      if (normIsim(ad).indexOf(q) !== -1) options.push(ad);
+    });
+    if (!options.length) return;
+
+    var wrap = input.parentNode;
+    wrap.style.position = 'relative';
+    var list = document.createElement('div');
+    list.className = 'mz-autocomplete';
+    var html = '';
+    options.slice(0, 12).forEach(function(ad) {
+      html += '<div class="mz-ac-item" data-val="' + escapeHtml(ad) + '">' + escapeHtml(ad) + '</div>';
+    });
+    list.innerHTML = html;
+
+    list.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      var item = e.target.closest('.mz-ac-item');
+      if (!item) return;
+      input.value = item.getAttribute('data-val');
+      closeList();
+      input.dispatchEvent(new Event('input'));
+    });
+
+    wrap.appendChild(list);
+  }
+
+  input.addEventListener('input', function() { renderList(input.value); });
+  input.addEventListener('focus', function() { renderList(input.value); });
+  input.addEventListener('blur', function() { setTimeout(closeList, 120); });
+  input.addEventListener('keydown', function(e) {
+    if (e.key !== 'Tab') return;
+    var list = input.parentNode.querySelector('.mz-autocomplete');
+    if (list && list.children.length > 0) {
+      e.preventDefault();
+      input.value = list.children[0].getAttribute('data-val');
+      closeList();
+    }
+  });
 }
 
 function yfTarifEkle() {
@@ -6270,6 +6329,7 @@ function openYemekModal() {
   renderYemekListesi();
   // Background'da Supabase'ten taze veri çek (cache güncelle)
   syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
+  if (supabaseClient) syncUnitPricesFromSupabase().catch(function(){});
 }
 function closeYemekModal() {
   document.getElementById('yemekModal').classList.remove('open');
