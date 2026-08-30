@@ -2133,7 +2133,7 @@ function renderBirimFiyatlar() {
   container.innerHTML = `
     <div class="section-card">
       <div class="section-header">
-        <h2>Birim Fiyat Listesi</h2>
+        <h2>Ürün ve Birim Fiyat Listesi</h2>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
           <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden">
             <button class="btn btn-ghost btn-sm" onclick="bfYilDegistir(-1)" style="border:none;border-radius:0;padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -2391,7 +2391,7 @@ function printBirimFiyatlar() {
 
   var win = window.open('', '_blank', 'width=800,height=600');
   if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Birim Fiyat Listesi - ' + birimFiyatSeciliYil + '</title><style>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ürün ve Birim Fiyat Listesi - ' + birimFiyatSeciliYil + '</title><style>');
   win.document.write('@page{size:portrait;margin:1.5cm}');
   win.document.write('body{font-family:Arial,sans-serif;padding:20px;margin:0;color:#1e293b}');
   win.document.write('h1{font-size:1.3rem;margin:0 0 2px}');
@@ -2402,7 +2402,7 @@ function printBirimFiyatlar() {
   win.document.write('tr:nth-child(even){background:#f8fafc}');
   win.document.write('.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}');
   win.document.write('</style></head><body>');
-  win.document.write('<h1>Birim Fiyat Listesi</h1>');
+  win.document.write('<h1>Ürün ve Birim Fiyat Listesi</h1>');
   win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
   win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">\u00dcr\u00fcn Ad\u0131</th><th>Birim</th><th>Birim Fiyat (\u20BA)</th><th>Y\u0131l</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
