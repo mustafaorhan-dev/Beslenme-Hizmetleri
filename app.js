@@ -5667,7 +5667,7 @@ function renderProduction(_weekKey, _weekData, days) {
         var tut = birimFiyatTutar(e.ad, e.birim, hesapMiktari);
         if (tut > 0) gunlukToplam += Math.round(tut * 100) / 100;
       });
-      html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${t('stockDeductionList')} – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">${t('total')}: ${formatTRY(gunlukToplam)}</span>` : ''}</div><div class="prod-day-total-body">`;
+        html += `<div class="prod-day-total"><div class="prod-day-total-header"><span class="prod-day-total-icon">Σ</span> ${t('stockDeductionList')} – ${d.gun}${gunlukToplam > 0 ? `<span style="margin-left:auto;font-weight:700;font-size:0.88rem;color:var(--accent-cyan)">${t('total')}: ${formatTRY(gunlukToplam)}</span>` : ''}</div>${gunlukToplam > 0 ? `<div class="prod-day-kisibasi">${t('perPersonCost')}: ${kisi > 0 ? formatTRY(Math.round((gunlukToplam / kisi) * 100) / 100) : '—'}</div>` : ''}<div class="prod-day-total-body">`;
       dayEntries.forEach((e, idx) => {
         const cInfo = e.cesitler > 1 ? ` <span class="prod-kisi-birim">(${e.cesitler} ${t('inVarieties')})</span>` : '';
         var hesapMiktari = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
@@ -11660,6 +11660,7 @@ var I18N = {
     menuVariety5: "5. Çeşit",
     menuPersonCount: "Kişi Sayısı",
     stockDeductionList: "Stok Düşüm Listesi",
+    perPersonCost: "Kişi Başı Maliyet",
     total: "Toplam",
     inVarieties: "çeşitte",
     person: "kişi",
@@ -12058,6 +12059,7 @@ var I18N = {
     menuVariety5: "5th Variety",
     menuPersonCount: "Person Count",
     stockDeductionList: "Stock Deduction List",
+    perPersonCost: "Per Person Cost",
     total: "Total",
     inVarieties: "varieties",
     person: "pax",
@@ -12456,6 +12458,7 @@ var I18N = {
     menuVariety5: "5 növ",
     menuPersonCount: "Şəxs sayı",
     stockDeductionList: "Stok Siyahısı",
+    perPersonCost: "Adambaşına Xərc",
     total: "Cəmi",
     inVarieties: "növdə",
     person: "nəfər",
@@ -12843,6 +12846,7 @@ var I18N = {
     menuVariety5: "5-й вид",
     menuPersonCount: "Кол-во человек",
     stockDeductionList: "Списание со склада",
+    perPersonCost: "Стоимость на человека",
     total: "Итого",
     inVarieties: "видах",
     person: "чел.",
@@ -13230,6 +13234,7 @@ var I18N = {
     menuVariety5: "النوع الخامس",
     menuPersonCount: "عدد الأشخاص",
     stockDeductionList: "قائمة خصم المخزون",
+    perPersonCost: "التكلفة لكل فرد",
     total: "المجموع",
     inVarieties: "أنواع",
     person: "فرد",
@@ -13617,6 +13622,7 @@ var I18N = {
     menuVariety5: "5. Sorte",
     menuPersonCount: "Personenanzahl",
     stockDeductionList: "Lagerabschreibungsliste",
+    perPersonCost: "Kosten pro Person",
     total: "Gesamt",
     inVarieties: "Sorten",
     person: "Pers.",
@@ -14004,6 +14010,7 @@ var I18N = {
     menuVariety5: "5ème variété",
     menuPersonCount: "Nombre de personnes",
     stockDeductionList: "Liste de déduction de stock",
+    perPersonCost: "Coût par personne",
     total: "Total",
     inVarieties: "variétés",
     person: "pers.",
@@ -14391,6 +14398,7 @@ var I18N = {
     menuVariety5: "5ª Variedad",
     menuPersonCount: "Número de personas",
     stockDeductionList: "Lista de deducción de stock",
+    perPersonCost: "Costo por persona",
     total: "Total",
     inVarieties: "variedades",
     person: "pers.",
@@ -14778,6 +14786,7 @@ var I18N = {
     menuVariety5: "5ª Variedade",
     menuPersonCount: "Número de pessoas",
     stockDeductionList: "Lista de dedução de estoque",
+    perPersonCost: "Custo por pessoa",
     total: "Total",
     inVarieties: "variedades",
     person: "pessoa",
@@ -15165,6 +15174,7 @@ var I18N = {
     menuVariety5: "5-tur",
     menuPersonCount: "Kishilar soni",
     stockDeductionList: "Ombor ayirish ro'yxati",
+    perPersonCost: "Bir kishi uchun xarajat",
     total: "Jami",
     inVarieties: "turlarda",
     person: "kishi",

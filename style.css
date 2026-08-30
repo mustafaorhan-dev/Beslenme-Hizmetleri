@@ -1806,6 +1806,13 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   background: rgba(99,102,241,0.12);
   border-radius: 4px;
 }
+.prod-day-kisibasi {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+  padding-left: 0.25rem;
+}
 .prod-day-total-body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
