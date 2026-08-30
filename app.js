@@ -886,7 +886,7 @@ function apRenderRolePermissions() {
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', birimfiyat: 'Birim Fiyatlar' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', birimfiyat: 'Ürün ve Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -11334,7 +11334,7 @@ var I18N = {
     sidebarCharts: "Grafikler",
     sidebarYearly: "Yıllık Karşılaştırma",
     sidebarSpending: "Harcama",
-    sidebarUnitPrice: "Birim Fiyatlar",
+    sidebarUnitPrice: "Ürün ve Fiyatlar",
     sidebarDownload: "Tümünü İndir",
     sidebarBackup: "Supabase'e Yedekle",
     sidebarRestore: "Supabase'ten Çek",
