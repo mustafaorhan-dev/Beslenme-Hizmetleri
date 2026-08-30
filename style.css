@@ -1763,11 +1763,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .prod-cesit {
   grid-column: 1 / -1;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.83rem;
   margin: 0 0 0.3rem 0;
   padding: 0.35rem 0.55rem 0.35rem 0.55rem;
   color: var(--cesit-accent);
+  color: color-mix(in srgb, var(--cesit-accent) 72%, #000);
   background: var(--cesit-bg);
   white-space: nowrap;
   overflow: hidden;
