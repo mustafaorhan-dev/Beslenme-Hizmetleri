@@ -5610,9 +5610,9 @@ function renderProduction(_weekKey, _weekData, days) {
 
   const wrapper = section.querySelector('.table-wrapper');
   let html = '';
-  days.forEach(d => {
+  days.forEach((d, di) => {
     const kisi = d.data.kisi || 0;
-    html += `<div class="prod-day"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} ${t('person')}</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
+    html += `<div class="prod-day prod-day-${di}"><div class="prod-day-header"><span class="prod-day-label">${d.gun}</span><span class="prod-day-kisi">${kisi} ${t('person')}</span></div><div class="prod-day-body"><div class="prod-cesit-row">`;
 
     const dayAgg = {};
     for (let ci = 0; ci < 5; ci++) {

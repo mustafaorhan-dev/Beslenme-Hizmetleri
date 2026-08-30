@@ -1690,6 +1690,49 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   padding: 0.8rem 1.1rem 1.1rem 1.1rem;
   overflow-x: auto;
 }
+/* Gün bazlı renkler: Ürün İhtiyaç Listesi'nde günleri ayırt etmek için */
+.prod-day-0 { --day-color: #1769E0; --day-soft: rgba(23,105,224,0.10); }
+.prod-day-1 { --day-color: #16a34a; --day-soft: rgba(22,163,74,0.12); }
+.prod-day-2 { --day-color: #ea580c; --day-soft: rgba(234,88,12,0.12); }
+.prod-day-3 { --day-color: #7c3aed; --day-soft: rgba(124,58,237,0.12); }
+.prod-day-4 { --day-color: #db2777; --day-soft: rgba(219,39,119,0.12); }
+.prod-day-0, .prod-day-1, .prod-day-2, .prod-day-3, .prod-day-4 {
+  background: var(--day-soft);
+  background: color-mix(in srgb, var(--day-soft) 45%, var(--bg-card));
+}
+.prod-day-0 .prod-day-header,
+.prod-day-1 .prod-day-header,
+.prod-day-2 .prod-day-header,
+.prod-day-3 .prod-day-header,
+.prod-day-4 .prod-day-header {
+  background: linear-gradient(90deg, var(--day-soft) 0%, color-mix(in srgb, var(--day-soft) 15%, transparent) 100%);
+  border-left: 4px solid var(--day-color);
+  color: var(--day-color);
+}
+.prod-day-0 .prod-day-header::before,
+.prod-day-1 .prod-day-header::before,
+.prod-day-2 .prod-day-header::before,
+.prod-day-3 .prod-day-header::before,
+.prod-day-4 .prod-day-header::before {
+  background: var(--day-color);
+  box-shadow: 0 0 6px var(--day-color);
+}
+.prod-day-0 .prod-day-header .prod-day-label,
+.prod-day-1 .prod-day-header .prod-day-label,
+.prod-day-2 .prod-day-header .prod-day-label,
+.prod-day-3 .prod-day-header .prod-day-label,
+.prod-day-4 .prod-day-header .prod-day-label {
+  color: var(--day-color);
+}
+.prod-day-0 .prod-day-kisi,
+.prod-day-1 .prod-day-kisi,
+.prod-day-2 .prod-day-kisi,
+.prod-day-3 .prod-day-kisi,
+.prod-day-4 .prod-day-kisi {
+  color: var(--day-color);
+  background: var(--day-soft);
+  border-color: color-mix(in srgb, var(--day-color) 35%, transparent);
+}
 .prod-cesit-row {
   display: flex;
   gap: 1.25rem;
