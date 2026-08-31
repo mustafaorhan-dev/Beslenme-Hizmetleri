@@ -3487,7 +3487,7 @@ input.production-input:focus {
 .menu-table textarea.note-input {
   min-height: 30px;
   padding: 0.3rem 0.45rem;
-  background: rgba(34,211,238,0.02);
+  background: var(--bg-card);
   border-color: var(--border);
   font-size: 0.75rem;
   line-height: 1.35;
@@ -3495,7 +3495,7 @@ input.production-input:focus {
   z-index: 2;
 }
 .menu-table textarea.note-input:focus {
-  background: rgba(34,211,238,0.04);
+  background: var(--bg-card);
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 2px rgba(34,211,238,0.06);
 }
