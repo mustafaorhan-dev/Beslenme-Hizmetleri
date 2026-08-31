@@ -10610,6 +10610,11 @@ function buildExportHTML() {
   // Per-day production rows
   var prodDaysHtml = '';
   var weekAgg = {}; // for weekly total
+  var gunMali = [];
+  var katAgg = {};
+  var genelToplam = 0;
+  var toplamKisiGun = 0;
+  var mondayDate = (typeof getWeekStartDate === 'function') ? getWeekStartDate(menuWeekOffset) : null;
   for (var di = 0; di < 5; di++) {
     var kisi = kisiVals[di];
     var dayCesitler = '';
@@ -10647,6 +10652,24 @@ function buildExportHTML() {
     if (dayHasAny) {
       var dayTotalHtml = '';
       var dayEntries = Object.values(dayAgg).filter(function(e) { return e.total > 0; });
+      var dayToplamTutar = 0;
+      dayEntries.forEach(function(e) {
+        var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
+        var tut = birimFiyatTutar(e.ad, e.birim, hesap);
+        if (tut === null || tut === undefined || isNaN(tut)) tut = 0;
+        dayToplamTutar = Math.round((dayToplamTutar + tut) * 100) / 100;
+        var kat = menuGetKategori(e.ad);
+        katAgg[kat] = Math.round(((katAgg[kat] || 0) + tut) * 100) / 100;
+      });
+      genelToplam = Math.round((genelToplam + dayToplamTutar) * 100) / 100;
+      toplamKisiGun += kisi;
+      var tarihStr = '';
+      if (mondayDate) {
+        var td = new Date(mondayDate);
+        td.setDate(mondayDate.getDate() + di);
+        tarihStr = formatDateStrTR(td);
+      }
+      gunMali.push({ gun: gunler[di], tarih: tarihStr, kisi: kisi, toplam: dayToplamTutar });
       if (dayEntries.length) {
         dayTotalHtml = '<div class="pdt"><div class="pdth">' + t('stockDeductionList') + ' – ' + gunler[di] + '</div>';
         dayEntries.forEach(function(e) {
@@ -10683,7 +10706,7 @@ function buildExportHTML() {
     '.menu-table th:first-child{text-align:left;width:45px}' +
     '.menu-table td:first-child{font-weight:600;width:45px;white-space:nowrap;font-size:9px}' +
     '.s-title{font-size:13px;font-weight:700;margin:10px 0 4px;padding-bottom:2px;border-bottom:2px solid #6366f1;color:#1e293b}' +
-    '.pday{margin-bottom:6px;border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.pday{margin-bottom:6px;border:1px solid #ddd;border-radius:3px;overflow:clip;page-break-inside:avoid;break-inside:avoid}' +
     '.phd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;display:flex;align-items:center}' +
     '.plab{color:#333}.pkisi{margin-left:auto;font-size:9px;color:#666}' +
     '.pbd{padding:3px 5px}' +
@@ -10697,13 +10720,33 @@ function buildExportHTML() {
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
     '.pdt{margin-top:4px;border-top:1px dashed #bbb;padding-top:3px}' +
     '.pdth{font-size:10px;font-weight:700;color:#333;margin-bottom:2px}' +
-    '.pdting{display:flex;gap:4px;font-size:9px;line-height:1.4}' +
+    '.pdting{display:flex;gap:4px;font-size:9px;line-height:1.4;break-inside:avoid;page-break-inside:avoid}' +
     '.pdtn{flex:1;color:#333}.pdtq{font-weight:600;color:#333;white-space:nowrap}' +
-    '.wcard{border:1px solid #ddd;border-radius:3px;overflow:hidden}' +
+    '.wcard{border:1px solid #ddd;border-radius:3px;overflow:clip;page-break-inside:avoid;break-inside:avoid}' +
     '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;color:#333}' +
     '.wbd{padding:3px 6px}' +
     '.wit{display:flex;gap:6px;font-size:9px;line-height:1.5;padding:1px 0;border-bottom:1px solid #f0f0f0}' +
     '.wn{color:#333}.wq{font-weight:600;color:#333;white-space:nowrap;margin-left:auto}' +
+    '.mtb-chips{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}' +
+    '.mtb-chip{flex:1;min-width:90px;border:1px solid #ddd;border-radius:3px;padding:4px 6px;background:#f9fafb}' +
+    '.mtb-chip-label{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.3px}' +
+    '.mtb-chip-value{font-size:13px;font-weight:700;color:#111;margin-top:1px}' +
+    '.mtb-vurgu{border-color:#6366f1;background:#eef2ff}.mtb-vurgu .mtb-chip-label{color:#6366f1}.mtb-vurgu .mtb-chip-value{color:#4338ca}' +
+    '.mtb-sub{font-size:11px;color:#666;margin-bottom:5px}' +
+    '.mtb-table{width:100%;border-collapse:collapse;font-size:10px}' +
+    '.mtb-table th,.mtb-table td{border:1px solid #bbb;padding:3px 5px;text-align:left}' +
+    '.mtb-table th{background:#f1f0f6;font-weight:700}' +
+    '.mtb-table tr{page-break-inside:avoid;break-inside:avoid}' +
+    '.mtb-tutar{text-align:right;font-weight:600}' +
+    '.mtb-toplam{background:#eef2ff;font-weight:700}' +
+    '.mtb-toplam td{border-top:2px solid #6366f1}' +
+    '.mtb-kat-baslik{font-size:11px;font-weight:700;margin:8px 0 4px;color:#1e293b}' +
+    '.mtb-kat-row{display:flex;align-items:center;gap:6px;font-size:9px;padding:2px 0;border-bottom:1px solid #f0f0f0;page-break-inside:avoid;break-inside:avoid}' +
+    '.mtb-kat-ad{width:130px;color:#333;font-weight:600}' +
+    '.mtb-kat-bar-wrap{flex:1;background:#f1f0f6;height:8px;border-radius:4px;overflow:hidden}' +
+    '.mtb-kat-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px}' +
+    '.mtb-kat-tutar{width:90px;text-align:right;font-weight:600}' +
+    '.mtb-kat-yuzde{width:40px;text-align:right;color:#888}' +
     '.fot{text-align:center;font-size:8px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
     '</style>';
 
@@ -10746,6 +10789,38 @@ function buildExportHTML() {
   if (weeklyHtml) {
     weeklyHtml = weeklyHtml.replace('<div class="s-title">', '<div class="s-title" style="page-break-before:always">');
     html += weeklyHtml;
+  }
+
+  // Mali tablo (weekly cost summary)
+  if (gunMali.length) {
+    var maliHtml = '<div class="s-title" style="page-break-before:always">Mali Tablo</div>';
+    maliHtml += '<div class="mtb-sub">Haftalık Malzeme Maliyeti Özeti</div>';
+    maliHtml += '<div class="mtb-chips">';
+    maliHtml += '<div class="mtb-chip mtb-vurgu"><div class="mtb-chip-label">HAFTALIK TOPLAM</div><div class="mtb-chip-value">' + formatTRY(genelToplam) + '</div></div>';
+    maliHtml += '<div class="mtb-chip"><div class="mtb-chip-label">Günlük Ortalama</div><div class="mtb-chip-value">' + formatTRY(Math.round(genelToplam / 5 * 100) / 100) + '</div></div>';
+    var kisBas = toplamKisiGun > 0 ? Math.round(genelToplam / toplamKisiGun * 100) / 100 : 0;
+    maliHtml += '<div class="mtb-chip"><div class="mtb-chip-label">Kişi Başı Ortalama</div><div class="mtb-chip-value">' + formatTRY(kisBas) + '</div></div>';
+    maliHtml += '<div class="mtb-chip"><div class="mtb-chip-label">Toplam Kişi-Gün</div><div class="mtb-chip-value">' + toplamKisiGun + '</div></div>';
+    maliHtml += '</div>';
+    maliHtml += '<table class="mtb-table"><thead><tr><th>Gün</th><th>Tarih</th><th style="text-align:center">Kişi</th><th style="text-align:right">Günlük Malzeme Maliyeti</th><th style="text-align:right">Kişi Başı</th></tr></thead><tbody>';
+    gunMali.forEach(function(g) {
+      var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : '—';
+      maliHtml += '<tr><td><strong>' + escapeHtml(g.gun) + '</strong></td><td>' + (g.tarih ? tarihFormatla2(g.tarih) : '—') + '</td><td style="text-align:center">' + (g.kisi || '—') + '</td><td class="mtb-tutar">' + formatTRY(g.toplam) + '</td><td class="mtb-tutar">' + basi + '</td></tr>';
+    });
+    var ortB = toplamKisiGun > 0 ? formatTRY(kisBas) : '—';
+    maliHtml += '</tbody><tfoot><tr class="mtb-toplam"><td colspan="2"><strong>HAFTALIK TOPLAM</strong></td><td style="text-align:center"><strong>' + toplamKisiGun + '</strong></td><td class="mtb-tutar"><strong>' + formatTRY(genelToplam) + '</strong></td><td class="mtb-tutar"><strong>' + ortB + '</strong></td></tr></tfoot></table>';
+
+    var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return katAgg[k] && katAgg[k] > 0; });
+    if (katSirali.length) {
+      maliHtml += '<div class="mtb-kat-baslik">Kategori Dağılımı</div>';
+      katSirali.forEach(function(kat) {
+        var tutar = katAgg[kat];
+        var pct = genelToplam > 0 ? Math.round(tutar / genelToplam * 100) : 0;
+        maliHtml += '<div class="mtb-kat-row"><span class="mtb-kat-ad">' + escapeHtml(kat) + '</span><div class="mtb-kat-bar-wrap"><div class="mtb-kat-bar" style="width:' + Math.max(2, Math.min(100, pct)) + '%"></div></div><span class="mtb-kat-tutar">' + formatTRY(tutar) + '</span><span class="mtb-kat-yuzde">%' + pct + '</span></div>';
+      });
+    }
+
+    html += maliHtml;
   }
 
   html += '<div class="fot">Kırşehir Ahi Evran Üniversitesi - Beslenme Hizmetleri Yönetim Sistemi</div>';
