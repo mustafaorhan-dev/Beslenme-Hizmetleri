@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=24" />
+  <link rel="stylesheet" href="style.css?v=25" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -844,6 +844,7 @@
           </div>
         </div>
         <div id="menuMaliTablo" style="margin-top:1.5rem;display:none"></div>
+        <div id="yillikMaliyetSection" style="margin-top:1.5rem;display:none"></div>
       </div>
     </div>
 
@@ -2463,7 +2464,7 @@
             <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
             <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
             <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
-            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem her zaman <strong>güncel yılın</strong> fiyatını arar, bulamazsa diğer kayıtları kullanır.</li>
+            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem maliyeti <strong>günün takvim yılına</strong> göre hesaplar: 2026 menüsü 2026 fiyatını, 2027 menüsü 2027 fiyatını kullanır. Yıl bölünmüş haftalarda (ör. 28.12.2026–01.01.2027) her gün kendi yılının fiyatıyla değerlendirilir. İlgili yılın fiyatı girilmemişse tutar o kalem için hesaplanmaz ve “birim fiyat tanımlı değil” uyarısı çıkar; diğer yıllara sessizce geçilmez.</li>
             <li>Tarif malzeme adları ile birim fiyat ürün adlarını aynı şekilde yazın; en güvenlisi tariften kopyalayıp fiyata yapıştırmaktır.</li>
             <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
             <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
@@ -2477,7 +2478,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

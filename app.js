@@ -10,6 +10,9 @@ let editingId = null;
 let filteredRecords = [];
 let yemeklerCache = [];
 let unitPricesCache = [];
+let menuAllDataCache = {};   // tüm haftalar: { weekKey: { 'YYYY-MM-DD': {yemekler,kisi,notlar} } }
+let _yillikCache = null;     // computeYearCost sonucu (yil anahtarli)
+let yillikSeciliYil = null;  // daima aktif haftanin yilindan turetilir
 let weeklySummaryOffset = 0;
 let dailySummaryOffset = 0;
 let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıtlardan türetilir)
@@ -1849,6 +1852,7 @@ function loadUnitPrices() { return unitPricesCache; }
 
 function saveUnitPrices(list) {
   unitPricesCache = list;
+  invalidatePriceMap();
 }
 
 async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan) {
@@ -1861,6 +1865,7 @@ async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan) {
     birim_carpan: parseFloat(birim_carpan) || 0
   };
   unitPricesCache.push(item);
+  invalidatePriceMap();
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
@@ -1880,6 +1885,7 @@ async function editUnitPrice(id, alanlar) {
   if (alanlar.birim_fiyat !== undefined) item.birim_fiyat = parseFloat(alanlar.birim_fiyat) || 0;
   if (alanlar.yil !== undefined) item.yil = parseInt(alanlar.yil) || item.yil;
   if (alanlar.birim_carpan !== undefined) item.birim_carpan = parseFloat(alanlar.birim_carpan) || 0;
+  invalidatePriceMap();
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
@@ -1893,6 +1899,7 @@ async function editUnitPrice(id, alanlar) {
 
 async function deleteUnitPrice(id) {
   unitPricesCache = unitPricesCache.filter(function(p) { return p.id !== id; });
+  invalidatePriceMap();
   if (supabaseClient) {
     try {
       var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).delete().eq('id', id);
@@ -1960,6 +1967,7 @@ async function syncUnitPricesFromSupabase() {
           birim_carpan: parseFloat(p.birim_carpan) || 0
         };
       });
+      invalidatePriceMap();
       return true;
     }
     return false;
@@ -1983,8 +1991,8 @@ function normIsim(s) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
 }
 
-function findBirimFiyat(malzemeAdi, birim) {
-  var currentYear = new Date().getFullYear();
+function findBirimFiyat(malzemeAdi, birim, yil, strict) {
+  var currentYear = (yil === undefined || yil === null || isNaN(yil)) ? new Date().getFullYear() : Number(yil);
   var normalized = normIsim(malzemeAdi);
   var birimN = normBirimGlobal(birim);
 
@@ -2013,6 +2021,9 @@ function findBirimFiyat(malzemeAdi, birim) {
     }
     return exactYear[exactYear.length - 1];
   }
+
+  // strict: başka yılın fiyatına sessizce düşme, null dön
+  if (strict) return null;
 
   var matches = unitPricesCache.filter(function(p) {
     return normIsim(p.urun_adi) === normalized;
@@ -2082,8 +2093,108 @@ function birimDonusum(miktar, fromBirim, toBirim, urunCarpan) {
   return miktar;
 }
 
-function birimFiyatTutar(malzemeAdi, birim, miktar) {
-  var fp = findBirimFiyat(malzemeAdi, birim);
+function birimFiyatTutar(malzemeAdi, birim, miktar, yil, strict) {
+  var fp = findBirimFiyat(malzemeAdi, birim, yil, strict);
+  if (!fp) return null;
+  var birimNorm = normBirimGlobal(birim);
+  var fiyatBirim = normBirimGlobal(fp.birim);
+  if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
+  var carpan = fp.birim_carpan || 0;
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null);
+  return donusumMiktari * fp.birim_fiyat;
+}
+
+// Yıl bazlı hızlı fiyat önbelleği.
+// findBirimFiyat her çağrıda unitPricesCache üzerinde 3 kez filter yapar;
+// 52 haftalık yıllık hesapta bu ~13.000 kez tekrarlanır. Map ile tek seferde çözülür.
+var _priceMapCache = null;
+var _priceMapYil = null;
+var _priceMapSig = '';
+
+function priceMapSignature() {
+  return unitPricesCache.length + ':' +
+    (unitPricesCache.length ? (unitPricesCache[0].yil + '|' + unitPricesCache[unitPricesCache.length - 1].yil) : '0');
+}
+
+function invalidatePriceMap() {
+  _priceMapCache = null;
+  _priceMapYil = null;
+  _priceMapSig = '';
+}
+
+function getPriceMap(yil) {
+  var sig = priceMapSignature();
+  if (_priceMapCache && _priceMapYil === yil && _priceMapSig === sig) return _priceMapCache;
+  var map = Object.create(null);
+  unitPricesCache.forEach(function(p) {
+    if (p.yil !== yil) return;
+    var key = normIsim(p.urun_adi) + '|' + normBirimGlobal(p.birim);
+    // findBirimFiyat ile aynı: aynı anahtar için SON kayıt geçerli
+    map[key] = p;
+  });
+  _priceMapCache = map;
+  _priceMapYil = yil;
+  _priceMapSig = sig;
+  return map;
+}
+
+var _priceAltMapCache = null;
+var _priceAltMapYil = null;
+var _priceAltMapSig = '';
+
+function getPriceAltMap(yil) {
+  var sig = priceMapSignature();
+  if (_priceAltMapCache && _priceAltMapYil === yil && _priceAltMapSig === sig) return _priceAltMapCache;
+  // ad -> { birimIlk: {birim: ilk kayit}, son: o yil için son kayit }
+  var map = Object.create(null);
+  unitPricesCache.forEach(function(p) {
+    if (p.yil !== yil) return;
+    var ad = normIsim(p.urun_adi);
+    var bn = normBirimGlobal(p.birim);
+    if (!map[ad]) map[ad] = { birimIlk: Object.create(null), son: p };
+    if (!map[ad].birimIlk[bn]) map[ad].birimIlk[bn] = p;
+    map[ad].son = p;
+  });
+  _priceAltMapCache = map;
+  _priceAltMapYil = yil;
+  _priceAltMapSig = sig;
+  return map;
+}
+
+function priceTargets(bn) {
+  if (bn === 'gr') return ['kg', 'teneke'];
+  if (bn === 'ml') return ['litre', 'teneke'];
+  if (bn === 'litre') return ['teneke', 'ml'];
+  if (bn === 'kg') return ['teneke', 'gr'];
+  if (bn === 'teneke') return ['litre', 'kg'];
+  return [];
+}
+
+// Map tabanlı hızlı fiyat arama (strict yıl). Bulunamazsa null.
+// findBirimFiyat(...) ile birebir aynı öncelik ve kayıt seçimi:
+//   1) aynı malzeme + aynı birim, o yıl  -> SON kayit
+//   2) aynı malzeme, dönüşümlü birim (kg/teneke...), o yıl -> O birimin ILK kaydi
+//   3) aynı malzeme, o yılın son kaydi
+function findBirimFiyatFast(malzemeAdi, birim, yil) {
+  if (!unitPricesCache.length) return null;
+  var ad = normIsim(malzemeAdi);
+  var bn = normBirimGlobal(birim);
+  var map = getPriceMap(yil);
+  var direct = map[ad + '|' + bn];
+  if (direct) return direct;
+  var altMap = getPriceAltMap(yil);
+  var kayit = altMap[ad];
+  if (!kayit) return null;
+  var tg = priceTargets(bn);
+  for (var i = 0; i < tg.length; i++) {
+    var fb = kayit.birimIlk[tg[i]];
+    if (fb) return fb;
+  }
+  return kayit.son || null;
+}
+
+function birimFiyatTutarFast(malzemeAdi, birim, miktar, yil) {
+  var fp = findBirimFiyatFast(malzemeAdi, birim, yil);
   if (!fp) return null;
   var birimNorm = normBirimGlobal(birim);
   var fiyatBirim = normBirimGlobal(fp.birim);
@@ -5793,23 +5904,206 @@ function renderWeeklyTotal(dishEntries, days) {
   section.innerHTML = html;
 }
 
+// ===== MALİYET HESAP MOTORU =====
+// Fiyat yılı = günün KENDİ takvim yılı (dayKey'in yılı).
+// strict=true → yalnızca o yılın fiyatı kullanılır, başka yıldan sessizce
+// fiyat çekilmez; yoksa null döner ve "fiyat tanımlı değil" sayılır.
+let _dishLookupCache = null;
+let _dishLookupSig = '';
+
+function parseDishAdi(val) {
+  return (val || '').trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+}
+
+function getDishLookup() {
+  var list = loadYemekler() || [];
+  var sig = list.length + ':' + (list.length ? list[0].ad + '|' + list[list.length - 1].ad : '');
+  if (_dishLookupCache && _dishLookupSig === sig) return _dishLookupCache;
+  var map = Object.create(null);
+  list.forEach(function(y) {
+    var k = normIsim(y.ad);
+    if (!map[k]) map[k] = y;
+  });
+  _dishLookupCache = { map: map, list: list };
+  _dishLookupSig = sig;
+  return _dishLookupCache;
+}
+
+function findDishByName(name) {
+  if (!name) return null;
+  var lk = getDishLookup();
+  var exact = lk.map[normIsim(name)];
+  if (exact) return exact;
+  var lower = name.toLowerCase();
+  for (var i = 0; i < lk.list.length; i++) {
+    var yl = lk.list[i].ad.toLowerCase();
+    if (yl.startsWith(lower) || lower.startsWith(yl)) return lk.list[i];
+  }
+  return null;
+}
+
+// Bir günün maliyetini hesaplar.
+function computeDayCost(gunAdi, dayKey, yemeklerArr, kisi) {
+  var gunYili = parseInt(String(dayKey || '').slice(0, 4), 10) || new Date().getFullYear();
+  var normBirim = normBirimGlobal;
+  var dayAgg = {};
+  var menuVar = false;
+
+  for (var ci = 0; ci < 5; ci++) {
+    var name = parseDishAdi((yemeklerArr && yemeklerArr[ci]) || '');
+    if (!name) continue;
+    var dish = findDishByName(name);
+    if (!dish || !dish.tarif || !dish.tarif.length) continue;
+    menuVar = true;
+    dish.tarif.forEach(function(ing) {
+      var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+      var birim = normBirim(ing.birim);
+      var ad = (ing.malzeme || '').trim();
+      var key = ad.toLowerCase() + '|' + birim;
+      if (!dayAgg[key]) dayAgg[key] = { ad: ad, birim: birim, total: 0 };
+      dayAgg[key].total += miktarKisi * kisi;
+    });
+  }
+
+  var gunToplam = 0;
+  var katAgg = {};
+  var eksik = [];
+  Object.keys(dayAgg).forEach(function(k) {
+    var e = dayAgg[k];
+    if (e.total <= 0) return;
+    var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
+    var tut = birimFiyatTutarFast(e.ad, e.birim, hesap, gunYili);
+    if (tut === null || tut === undefined || isNaN(tut)) {
+      eksik.push({ ad: e.ad, birim: e.birim, miktar: hesap });
+      tut = 0;
+    }
+    gunToplam = Math.round((gunToplam + tut) * 100) / 100;
+    var kat = menuGetKategori(e.ad);
+    katAgg[kat] = Math.round(((katAgg[kat] || 0) + tut) * 100) / 100;
+  });
+
+  return {
+    gun: gunAdi,
+    key: dayKey,
+    yil: gunYili,
+    ay: parseInt(String(dayKey || '').slice(5, 7), 10) || 0,
+    kisi: kisi || 0,
+    toplam: Math.round(gunToplam * 100) / 100,
+    katAgg: katAgg,
+    eksik: eksik,
+    menuVar: menuVar
+  };
+}
+
+// Bir yılın maliyetini hesapler. allData = { weekKey: { dayKey: {yemekler,kisi} } }
+function computeYearCost(yil, allData) {
+  var result = {
+    yil: yil,
+    toplam: 0,
+    aylar: {},
+    katAgg: {},
+    kisiGun: 0,
+    gunSayisi: 0,
+    menuGunSayisi: 0,
+    haftaSayisi: 0,
+    eksikMap: {},
+    eksikSayi: 0,
+    gunler: [],
+    bolunmusHaftalar: []
+  };
+  for (var m = 1; m <= 12; m++) {
+    result.aylar[m] = { toplam: 0, kisiGun: 0, gunSayisi: 0, menuGunSayisi: 0, eksikSayi: 0 };
+  }
+  if (!allData) return result;
+
+  var haftalar = Object.keys(allData).filter(function(wk) {
+    return typeof wk === 'string' && /^\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}$/.test(wk);
+  }).sort();
+
+  haftalar.forEach(function(wk) {
+    var weekData = allData[wk] || {};
+    var dayKeys = Object.keys(weekData).filter(function(k) { return /^\d{4}-\d{2}-\d{2}$/.test(k); }).sort();
+    var yilDolu = 0;
+    var yilBos = 0;
+    var digerYilGunler = 0;
+    var yilGunleri = [];
+
+    dayKeys.forEach(function(dk) {
+      var gunYili = parseInt(dk.slice(0, 4), 10);
+      var dd = weekData[dk] || {};
+      var kisi = parseInt(dd.kisi, 10) || 0;
+      var dc = computeDayCost(menuGunAdi(dk), dk, dd.yemekler, kisi);
+      if (gunYili !== yil) { digerYilGunler++; return; }
+      yilDolu++;
+      yilGunleri.push(dc);
+      result.gunler.push(dc);
+      if (dc.menuVar) result.menuGunSayisi++;
+      result.gunSayisi++;
+      result.kisiGun += dc.kisi;
+      result.toplam = Math.round((result.toplam + dc.toplam) * 100) / 100;
+      var ay = result.aylar[dc.ay];
+      if (ay) {
+        ay.toplam = Math.round((ay.toplam + dc.toplam) * 100) / 100;
+        ay.kisiGun += dc.kisi;
+        ay.gunSayisi++;
+        if (dc.menuVar) ay.menuGunSayisi++;
+      }
+      Object.keys(dc.katAgg).forEach(function(kat) {
+        result.katAgg[kat] = Math.round(((result.katAgg[kat] || 0) + dc.katAgg[kat]) * 100) / 100;
+      });
+      dc.eksik.forEach(function(x) {
+        var ek = normIsim(x.ad);
+        if (!result.eksikMap[ek]) {
+          result.eksikMap[ek] = { ad: x.ad, birim: x.birim, yil: yil };
+          result.eksikSayi++;
+        }
+        if (ay) ay.eksikSayi++;
+      });
+    });
+
+    if (yilDolu > 0) {
+      result.haftaSayisi++;
+      if (digerYilGunler > 0) {
+        result.bolunmusHaftalar.push({ weekKey: wk, yilDolu: yilDolu, digerYilGunler: digerYilGunler });
+      }
+    }
+  });
+
+  return result;
+}
+
+// 2026-09-21 -> Pazartesi
+function menuGunAdi(dayKey) {
+  var p = String(dayKey || '').split('-');
+  if (p.length !== 3) return '';
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  var idx = d.getDay();
+  if (idx === 0) idx = 6;
+  return ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'][idx - 1] || '';
+}
+
+function menuAvailableYears(allData) {
+  var years = {};
+  var now = new Date().getFullYear();
+  years[now] = true;
+  years[now - 1] = true;
+  if (allData) {
+    Object.keys(allData).forEach(function(wk) {
+      if (typeof wk !== 'string') return;
+      var y = parseInt(wk.slice(0, 4), 10);
+      if (y > 2000 && y < 2100) years[y] = true;
+    });
+  }
+  unitPricesCache.forEach(function(p) {
+    if (p.yil > 2000 && p.yil < 2100) years[p.yil] = true;
+  });
+  return Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
+}
+
 // ===== MALİ TABLO (HAFTALIK MALİYET ÖZETİ) =====
 function renderMaliTablo(days) {
   var container = document.getElementById('menuMaliTablo');
   if (!container) return;
-
-  var yemekler = loadYemekler();
-  var normBirim = normBirimGlobal;
-  var parseDishName = function(val) { return val.trim().split('\n')[0].replace(/ - \(.*/, '').trim(); };
-  var findDish = function(name) {
-    var lower = name.toLowerCase();
-    var exact = yemekler.find(function(y) { return y.ad.toLowerCase() === lower; });
-    if (exact) return exact;
-    return yemekler.find(function(y) {
-      var yLower = y.ad.toLowerCase();
-      return yLower.startsWith(lower) || lower.startsWith(yLower);
-    });
-  };
 
   var gunVerileri = [];
   var katAgg = {};
@@ -5820,45 +6114,37 @@ function renderMaliTablo(days) {
 
   days.forEach(function(d) {
     var kisi = d.data.kisi || 0;
-    var dayAgg = {};
-    var gunMenuVar = false;
-    for (var ci = 0; ci < 5; ci++) {
-      var raw = d.data.yemekler[ci] || '';
-      var name = parseDishName(raw);
-      if (!name) continue;
-      var dish = findDish(name);
-      if (!dish || !dish.tarif || !dish.tarif.length) continue;
-      gunMenuVar = true;
-      dish.tarif.forEach(function(ing) {
-        var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
-        var birim = normBirim(ing.birim);
-        var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-        if (!dayAgg[key]) dayAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0 };
-        dayAgg[key].total += miktarKisi * kisi;
-      });
-    }
-    if (gunMenuVar) menuVar = true;
+    var dc = computeDayCost(d.gun, d.key, d.data.yemekler, kisi);
+    if (dc.menuVar) menuVar = true;
 
-    var tarihStr = '';
-    if (d.tarih) tarihStr = formatDateStrTR(d.tarih);
-    else if (d.key) { var p = d.key.split('-'); if (p.length === 3) tarihStr = p[2] + '.' + p[1] + '.' + p[0]; }
-
-    var gunToplam = 0;
-    Object.keys(dayAgg).forEach(function(k) {
-      var e = dayAgg[k];
-      if (e.total <= 0) return;
-      var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
-      var tut = birimFiyatTutar(e.ad, e.birim, hesap);
-      if (tut === null || tut === undefined || isNaN(tut)) { eksikSet[e.ad.trim().toLowerCase()] = true; tut = 0; }
-      gunToplam += Math.round(tut * 100) / 100;
-      var kat = menuGetKategori(e.ad);
-      katAgg[kat] = Math.round(((katAgg[kat] || 0) + tut) * 100) / 100;
+    dc.eksik.forEach(function(x) { eksikSet[normIsim(x.ad)] = x.ad; });
+    Object.keys(dc.katAgg).forEach(function(kat) {
+      katAgg[kat] = Math.round(((katAgg[kat] || 0) + dc.katAgg[kat]) * 100) / 100;
     });
-    gunToplam = Math.round(gunToplam * 100) / 100;
-    genelToplam = Math.round((genelToplam + gunToplam) * 100) / 100;
+    genelToplam = Math.round((genelToplam + dc.toplam) * 100) / 100;
     toplamKisiGun += kisi;
-    gunVerileri.push({ gun: d.gun, tarih: tarihStr, kisi: kisi, toplam: gunToplam, aktif: gunMenuVar });
+
+    var tarihStr = d.tarih ? formatDateStrTR(d.tarih) : '';
+    if (!tarihStr && d.key) { var p = d.key.split('-'); if (p.length === 3) tarihStr = p[2] + '.' + p[1] + '.' + p[0]; }
+
+    gunVerileri.push({
+      gun: d.gun, tarih: tarihStr, kisi: kisi, toplam: dc.toplam,
+      aktif: dc.menuVar, yil: dc.yil
+    });
   });
+
+  // Yıl bölünmüş hafta kontrolü
+  var yilKarisik = {};
+  gunVerileri.forEach(function(g) { yilKarisik[g.yil] = true; });
+  var yillar = Object.keys(yilKarisik).map(Number);
+  var bolunmus = yillar.length > 1;
+  var minYil = bolunmus ? Math.min.apply(null, yillar) : 0;
+  var maxYil = bolunmus ? Math.max.apply(null, yillar) : 0;
+  var yilKisitGun = [];
+  var yilDigerGun = [];
+  if (bolunmus) {
+    gunVerileri.forEach(function(g) { (g.yil === minYil ? yilKisitGun : yilDigerGun).push(g); });
+  }
 
   if (!menuVar) { container.style.display = 'none'; container.innerHTML = ''; return; }
   container.style.display = 'block';
@@ -5871,6 +6157,16 @@ function renderMaliTablo(days) {
     (eksikSayi > 0 ? '<span class="mali-uyari" title="Birim Fiyatlar sekmesinden tanımlayabilirsiniz">' + eksikSayi + ' malzemenin birim fiyatı tanımlı değil</span>' : '') +
     '</div>';
   html += '<div class="mali-body">';
+
+  // Yıl bölünmüş hafta uyarısı
+  if (bolunmus) {
+    var tKisa = yilKisitGun.reduce(function(s, g) { return Math.round((s + g.toplam) * 100) / 100; }, 0);
+    var tDiger = yilDigerGun.reduce(function(s, g) { return Math.round((s + g.toplam) * 100) / 100; }, 0);
+    html += '<div class="mali-yil-uyari"><div class="mali-yil-uyari-bas"><strong>⚠ Yıl bölünmüş hafta</strong>' +
+      '<span>Bu hafta ' + minYil + ' ve ' + maxYil + ' yıllarına dağıyor. Her gün kendi yılının fiyatıyla hesaplandı.</span></div>' +
+      '<div class="mali-yil-uyari-satir"><span>' + minYil + ' kısmı · ' + yilKisitGun.length + ' gün</span><strong>' + formatTRY(tKisa) + '</strong></div>' +
+      '<div class="mali-yil-uyari-satir"><span>' + maxYil + ' kısmı · ' + yilDigerGun.length + ' gün</span><strong>' + formatTRY(tDiger) + '</strong></div></div>';
+  }
 
   // Özet kartları
   html += '<div class="mali-chips">' +
@@ -5888,7 +6184,7 @@ function renderMaliTablo(days) {
     var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : '—';
     html += '<tr' + (g.aktif ? '' : ' class="mali-pasif"') + '>' +
       '<td><strong>' + escapeHtml(g.gun) + '</strong></td>' +
-      '<td>' + tarihFormatla2(g.tarih) + '</td>' +
+      '<td>' + tarihFormatla2(g.tarih) + (bolunmus ? ' <span class="mali-yil-etiket">' + g.yil + '</span>' : '') + '</td>' +
       '<td style="text-align:center">' + (g.kisi || '—') + '</td>' +
       '<td class="mali-tutar">' + formatTRY(g.toplam) + '</td>' +
       '<td class="mali-tutar-alt">' + basi + '</td></tr>';
@@ -5921,8 +6217,236 @@ function renderMaliTablo(days) {
     html += '</div>';
   }
 
+  // Yıllık özet satırı (HAFTALIK TOPLAM'un altında)
+  html += '<div class="mali-yillik-satir" id="maliYillikSatir">' +
+    '<span class="mali-yillik-etiket">Yıllık Toplam</span>' +
+    '<span class="mali-yillik-yil" id="maliYillikYil">—</span>' +
+    '<span class="mali-yillik-deger" id="maliYillikDeger">—</span>' +
+    '<button type="button" class="btn btn-ghost btn-sm mali-yillik-btn" onclick="scrollToYillikMaliyet()">Yıllık Detay →</button>' +
+    '</div>';
+
   html += '</div></div>';
   container.innerHTML = html;
+  renderYillikMaliyet();
+}
+
+function scrollToYillikMaliyet() {
+  var el = document.getElementById('yillikMaliyetSection');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== YILLIK MALİYET =====
+
+function aktifHaftaYili() {
+  var monday = getWeekStartDate(menuWeekOffset);
+  return monday.getFullYear();
+}
+
+function yillikHesapla(yil) {
+  if (_yillikCache && _yillikCache.yil === yil) return _yillikCache;
+  _yillikCache = computeYearCost(yil, menuAllDataCache);
+  _yillikCache.yil = yil;
+  return _yillikCache;
+}
+
+// menuWeekOffset = bu haftanin pazartesisine gore hafta farki
+function haftaOffsetFor(date) {
+  var baz = getWeekStartDate(0);
+  var d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return Math.round((d - baz) / 604800000);
+}
+
+// Bir weekKey'in pazartesisini Date olarak dondurur
+function weekKeyPazartesi(weekKey) {
+  var p = String(weekKey || '').split('-');
+  if (p.length < 3) return null;
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+}
+
+// Menusu dolu haftalarin pazartesileri (yil, ay filtrelenebilir)
+function menuDoluHaftalar(yil, ay) {
+  var liste = [];
+  Object.keys(menuAllDataCache).forEach(function(wk) {
+    if (typeof wk !== 'string') return;
+    var pzt = weekKeyPazartesi(wk);
+    if (!pzt) return;
+    if (yil !== undefined && yil !== null && pzt.getFullYear() !== Number(yil)) return;
+    if (ay !== undefined && ay !== null && pzt.getMonth() + 1 !== Number(ay)) return;
+    var gunSayisi = Object.keys(menuAllDataCache[wk] || {}).filter(function(k) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(k);
+    }).length;
+    if (gunSayisi > 0) liste.push({ weekKey: wk, pzt: pzt });
+  });
+  liste.sort(function(a, b) { return a.pzt - b.pzt; });
+  return liste;
+}
+
+// Secilen yilda, su an gosterilen haftaya en yakin menu dolu haftayi bul
+function yildaEnYakinHaftaOffset(yil) {
+  var haftalar = menuDoluHaftalar(yil);
+  if (!haftalar.length) return null;
+  var suAn = getWeekStartDate(menuWeekOffset);
+  var enIyi = null, enKisa = Infinity;
+  haftalar.forEach(function(h) {
+    var fark = Math.abs(h.pzt - suAn);
+    if (fark < enKisa) { enKisa = fark; enIyi = h; }
+  });
+  return enIyi ? haftaOffsetFor(enIyi.pzt) : null;
+}
+
+function yillikDegistir(yil) {
+  yil = Number(yil);
+  yillikSeciliYil = yil;
+  _yillikCache = null;
+  var offset = yildaEnYakinHaftaOffset(yil);
+  if (offset !== null) menuWeekOffset = offset;
+  renderMenu();
+}
+
+function yillikAyGit(ay) {
+  var yil = yillikSeciliYil || aktifHaftaYili();
+  // Once o ayda menu girilmis haftalara git
+  var haftalar = menuDoluHaftalar(yil, ay);
+  if (haftalar.length) {
+    menuWeekOffset = haftaOffsetFor(haftalar[0].pzt);
+  } else {
+    // Menusu yoksa ayin ilk pazartesisine git
+    var ilk = new Date(yil, Number(ay) - 1, 1);
+    var g = ilk.getDay();
+    ilk.setDate(ilk.getDate() - (g === 0 ? 6 : g - 1));
+    menuWeekOffset = haftaOffsetFor(ilk);
+  }
+  yillikSeciliYil = yil;
+  renderMenu();
+}
+
+function yillikBuYilDon() {
+  menuWeekOffset = 0;
+  renderMenu();
+}
+
+function renderYillikMaliyet() {
+  var container = document.getElementById('yillikMaliyetSection');
+  if (!container) return;
+
+  // Yıl, haftadan türetilir: menuWeekOffset tek kaynaktır.
+  // ◀/▶ ile geçilen hafta yılı değiştirir, yıl seçici de haftayı değiştirir.
+  var yil = aktifHaftaYili();
+  yillikSeciliYil = yil;
+  var r = yillikHesapla(yil);
+  var yillar = menuAvailableYears(menuAllDataCache);
+  if (yillar.indexOf(yil) === -1) yillar.unshift(yil);
+  yillar.sort(function(a, b) { return b - a; });
+
+  container.style.display = 'block';
+
+  // Haftalık karttaki yıllık satır
+  var yilEl = document.getElementById('maliYillikYil');
+  var dEl = document.getElementById('maliYillikDeger');
+  if (yilEl && dEl) {
+    yilEl.textContent = yil + ' Yıllık';
+    dEl.textContent = r.gunSayisi > 0 ? (r.toplam > 0 ? formatTRY(r.toplam) : 'Tutar yok') : 'Veri yok';
+  }
+
+  var html = '<div class="yillik-card">';
+  html += '<div class="yillik-header"><span class="yillik-header-icon">📅</span><span>Yıllık Maliyet</span>' +
+    '<select class="yillik-yil-sec" onchange="yillikDegistir(this.value)">' +
+    yillar.map(function(y) { return '<option value="' + y + '"' + (y === yil ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
+    '</select>' +
+    '<button type="button" class="btn btn-ghost btn-sm" onclick="yillikBuYilDon()">Bu Hafta</button>' +
+    '</div>';
+  html += '<div class="yillik-body">';
+
+  if (r.gunSayisi === 0) {
+    html += '<div class="yillik-bos">' + yil + ' yılı için menü verisi bulunamadı.</div>';
+    html += '</div></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  var aylikOrt = r.gunSayisi > 0 ? r.toplam / Math.max(1, Object.keys(r.aylar).filter(function(m) { return r.aylar[m].gunSayisi > 0; }).length) : 0;
+  var gunlukOrt = r.gunSayisi > 0 ? r.toplam / r.gunSayisi : 0;
+  var kisBas = r.kisiGun > 0 ? r.toplam / r.kisiGun : 0;
+
+  html += '<div class="yillik-chips">' +
+    '<div class="yillik-chip yillik-chip-vurgu"><div class="yillik-chip-label">' + yil + ' YILLIK TOPLAM</div><div class="yillik-chip-value">' + formatTRY(r.toplam) + '</div></div>' +
+    '<div class="yillik-chip"><div class="yillik-chip-label">Aylık Ortalama</div><div class="yillik-chip-value">' + formatTRY(Math.round(aylikOrt * 100) / 100) + '</div></div>' +
+    '<div class="yillik-chip"><div class="yillik-chip-label">Günlük Ortalama</div><div class="yillik-chip-value">' + formatTRY(Math.round(gunlukOrt * 100) / 100) + '</div></div>' +
+    '<div class="yillik-chip"><div class="yillik-chip-label">Kişi Başı (yıllık)</div><div class="yillik-chip-value">' + formatTRY(Math.round(kisBas * 100) / 100) + '</div></div>' +
+    '<div class="yillik-chip"><div class="yillik-chip-label">Toplam Kişi-Gün</div><div class="yillik-chip-value">' + r.kisiGun + '</div></div>' +
+    '</div>';
+
+  // Aylık dağılım
+  var AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  var maxAy = 0;
+  for (var m = 1; m <= 12; m++) maxAy = Math.max(maxAy, r.aylar[m].toplam);
+  html += '<div class="yillik-ay-baslik">Aylık Dağılım <span class="yillik-ay-not">(tıklayınca o ayın ilk haftasına gider)</span></div>';
+  html += '<div class="yillik-ay-liste">';
+  for (var mm = 1; mm <= 12; mm++) {
+    var ay = r.aylar[mm];
+    var genislik = maxAy > 0 ? Math.max(2, Math.round(ay.toplam / maxAy * 100)) : 0;
+    var pasif = '';
+    if (ay.toplam <= 0 && ay.gunSayisi === 0) pasif = ' yillik-ay-pasif';
+    html += '<div class="yillik-ay' + pasif + '" onclick="yillikAyGit(' + mm + ')" title="' + AYLAR[mm - 1] + ': ' + formatTRY(ay.toplam) + ' (' + ay.gunSayisi + ' gün)">' +
+      '<span class="yillik-ay-ad">' + AYLAR[mm - 1] + '</span>' +
+      '<div class="yillik-ay-bar-wrap"><div class="yillik-ay-bar" style="width:' + genislik + '%"></div></div>' +
+      '<span class="yillik-ay-tutar">' + (ay.toplam > 0 ? formatTRY(ay.toplam) : '—') + '</span>' +
+      '</div>';
+  }
+  html += '</div>';
+
+  // Kategori dağılımı
+  var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return r.katAgg[k] && r.katAgg[k] > 0; });
+  if (katSirali.length) {
+    html += '<div class="yillik-kat-baslik">Kategori Dağılımı</div><div class="yillik-kat-liste">';
+    katSirali.forEach(function(kat) {
+      var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
+      var tutar = r.katAgg[kat];
+      var pctRaw = r.toplam > 0 ? Math.round(tutar / r.toplam * 100) : 0;
+      var gen = Math.max(2, Math.min(100, pctRaw));
+      html += '<div class="yillik-kat-row">' +
+        '<span class="yillik-kat-icon" style="background:' + renk.bg + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
+        '<span class="yillik-kat-ad" style="color:' + renk.renk + '">' + escapeHtml(kat) + '</span>' +
+        '<div class="yillik-kat-bar-wrap"><div class="yillik-kat-bar" style="width:' + gen + '%;background:linear-gradient(90deg,' + renk.renk + '99,' + renk.renk + ')"></div></div>' +
+        '<span class="yillik-kat-tutar">' + formatTRY(tutar) + '</span>' +
+        '<span class="yillik-kat-yuzde">%' + pctRaw + '</span>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Kapsam bilgisi
+  html += '<div class="yillik-kapsam">' +
+    r.haftaSayisi + ' hafta · ' + r.menuGunSayisi + ' gün menü girilmiş' +
+    (r.bolunmusHaftalar.length > 0 ? ' · ' + r.bolunmusHaftalar.length + ' hafta yıl sınırında bölündü' : '') +
+    '</div>';
+
+  // Eksik fiyat uyarısı
+  if (r.eksikSayi > 0) {
+    var eksikler = Object.keys(r.eksikMap).map(function(k) { return r.eksikMap[k]; })
+      .sort(function(a, b) { return a.ad.localeCompare(b.ad, 'tr'); });
+    html += '<div class="yillik-eksik">' +
+      '<div class="yillik-eksik-bas">⚠ ' + yil + ' yılında ' + r.eksikSayi + ' malzemenin birim fiyatı girilmemiş — bu kalemlerin tutarı hesaplanmadı.</div>' +
+      '<div class="yillik-eksik-liste">' +
+      eksikler.map(function(x) { return '<span class="yillik-eksik-ad">' + escapeHtml(x.ad) + ' <em>(' + escapeHtml(x.birim) + ')</em></span>'; }).join('') +
+      '</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" onclick="yillikFiyatlaraGit(' + yil + ')">' + yil + ' Fiyatlarını Gir →</button>' +
+      '</div>';
+  } else {
+    html += '<div class="yillik-eksik yillik-eksik-ok">✓ ' + yil + ' yılındaki tüm malzemelerin birim fiyatı tanımlı.</div>';
+  }
+
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function yillikFiyatlaraGit(yil) {
+  birimFiyatSeciliYil = Number(yil);
+  invalidatePriceMap();
+  _yillikCache = null;
+  if (typeof switchTab === 'function') switchTab('birimfiyat');
+  renderBirimFiyatlar();
 }
 
 function tarihFormatla2(str) {
@@ -6426,16 +6950,17 @@ async function syncDishesToSupabase() {
 
 // -- Menu Supabase sync --
 async function fetchMenuData() {
-  if (!supabaseClient) return {};
+  if (!supabaseClient) return menuAllDataCache;
   try {
     var { data, error } = await supabaseClient.from('weekly_menu').select('*');
-    if (error || !data) return {};
+    if (error || !data) return menuAllDataCache;
     var result = {};
     data.forEach(function(row) {
       if (row.data && typeof row.data === 'object') result[row.week_key] = row.data;
     });
+    menuAllDataCache = result;
     return result;
-  } catch (_) { return {}; }
+  } catch (_) { return menuAllDataCache; }
 }
 
 async function saveMenuData(allData) {
@@ -6449,6 +6974,9 @@ async function saveMenuData(allData) {
       var { error } = await supabaseClient.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
       if (error) showToast('Menü kaydedilemedi: ' + error.message, 'error');
     }
+    // Yerel cache + yillik maliyet cache'ini tazele
+    menuAllDataCache = allData;
+    _yillikCache = null;
   } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
 }
 
@@ -10670,6 +11198,13 @@ function buildExportHTML() {
     var dayCesitler = '';
     var dayHasAny = false;
     var dayAgg = {};
+    var gunTarih = null;
+    if (mondayDate) {
+      gunTarih = new Date(mondayDate);
+      gunTarih.setDate(mondayDate.getDate() + di);
+    }
+    // Maliyet yılı: günün takvim yılı (yıl bölünmüş haftada 2026/2027 ayrışır)
+    var gunYili = gunTarih ? gunTarih.getFullYear() : new Date().getFullYear();
     for (var ci = 0; ci < 5; ci++) {
       var el = document.getElementById('m' + ci + '_' + di);
       var raw = menuCellRaw(el);
@@ -10685,9 +11220,9 @@ function buildExportHTML() {
         var birim = normBirim(ing.birim);
         var birimLabel = birim === 'gr' ? ' gr' : birim === 'ml' ? ' ml' : birim === 'lt' || birim === 'litre' ? ' lt' : ' ' + birim;
         ingHtml += '<div class="ping"><span class="pn">' + escapeHtml(ing.malzeme.trim()) + ' <small style="color:#999">(' + miktarKisi + birimLabel + ')</small></span><span class="pq">' + fmt(total, birim) + '</span></div>';
-        // accumulate for weekly total
-        var key = ing.malzeme.trim().toLowerCase() + '|' + birim;
-        if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel };
+        // accumulate for weekly total (yil anahtarli: ayni malzeme farkli yillarda ayri satir)
+        var key = ing.malzeme.trim().toLowerCase() + '|' + birim + '|' + gunYili;
+        if (!weekAgg[key]) weekAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel, yil: gunYili };
         weekAgg[key].total += total;
         // accumulate for daily total
         if (!dayAgg[key]) dayAgg[key] = { ad: ing.malzeme.trim(), birim: birim, total: 0, miktarKisi: miktarKisi, birimLabel: birimLabel, cesitler: 0, cesitSet: {} };
@@ -10705,7 +11240,7 @@ function buildExportHTML() {
       var dayToplamTutar = 0;
       dayEntries.forEach(function(e) {
         var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
-        var tut = birimFiyatTutar(e.ad, e.birim, hesap);
+        var tut = birimFiyatTutar(e.ad, e.birim, hesap, gunYili, true);
         if (tut === null || tut === undefined || isNaN(tut)) tut = 0;
         dayToplamTutar = Math.round((dayToplamTutar + tut) * 100) / 100;
         var kat = menuGetKategori(e.ad);
@@ -10713,13 +11248,8 @@ function buildExportHTML() {
       });
       genelToplam = Math.round((genelToplam + dayToplamTutar) * 100) / 100;
       toplamKisiGun += kisi;
-      var tarihStr = '';
-      if (mondayDate) {
-        var td = new Date(mondayDate);
-        td.setDate(mondayDate.getDate() + di);
-        tarihStr = formatDateStrTR(td);
-      }
-      gunMali.push({ gun: gunler[di], tarih: tarihStr, kisi: kisi, toplam: dayToplamTutar });
+      var tarihStr = gunTarih ? formatDateStrTR(gunTarih) : '';
+      gunMali.push({ gun: gunler[di], tarih: tarihStr, kisi: kisi, toplam: dayToplamTutar, yil: gunYili });
       if (dayEntries.length) {
         var dayFiyatsiz = 0;
         dayTotalHtml = '<div class="pdt"><div class="pdth"><span>' + t('stockDeductionList') + ' – ' + gunler[di] + '</span>';
@@ -10731,16 +11261,16 @@ function buildExportHTML() {
         dayEntries.forEach(function(e, eIdx) {
           var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' ' + t('inVarieties') + ')</small>' : '';
           var hesapE = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
-          var foundE = findBirimFiyat(e.ad, e.birim);
-          var tutE = birimFiyatTutar(e.ad, e.birim, hesapE);
+          var foundE = findBirimFiyat(e.ad, e.birim, gunYili, true);
+          var tutE = birimFiyatTutar(e.ad, e.birim, hesapE, gunYili, true);
           var fiyatE = (foundE && tutE > 0)
             ? '<span class="pdt-fiyat">' + formatTRY(Math.round(tutE * 100) / 100) + '</span>'
             : '<span class="pdt-fiyat pdt-fiyat-yok">—</span>';
           if (!(foundE && tutE > 0)) dayFiyatsiz++;
           dayTotalHtml += '<div class="pdting"><span class="pdtno">' + (eIdx + 1) + '.</span><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span>' + fiyatE + '</div>';
         });
-        if (dayToplamTutar > 0) {
-          dayTotalHtml += '<div class="pdting pdt-toplamrow"><span class="pdtn">' + t('total') + ' (' + dayEntries.length + ')</span><span class="pdtq">—</span><span class="pdt-fiyat">' + formatTRY(dayToplamTutar) + '</span></div>';
+        if (dayFiyatsiz > 0) {
+          dayTotalHtml += '<div class="pdt-uyari">' + dayFiyatsiz + ' malzemenin ' + gunYili + ' yılı birim fiyatı tanımlı değil</div>';
         }
         if (dayFiyatsiz > 0) {
           dayTotalHtml += '<div class="pdt-uyari">' + dayFiyatsiz + ' malzemenin birim fiyatı tanımlı değil</div>';
@@ -10755,7 +11285,16 @@ function buildExportHTML() {
   var weeklyHtml = '';
   var weekEntries = Object.values(weekAgg).filter(function(e) { return e.total > 0; });
   if (weekEntries.length) {
-    weekEntries.sort(function(a, b) { return a.ad.localeCompare(b.ad); });
+    weekEntries.sort(function(a, b) {
+      var ad = a.ad.localeCompare(b.ad);
+      return ad !== 0 ? ad : a.yil - b.yil;
+    });
+
+    // Yıl bölünmüş hafta kontrolü
+    var wYilSet = {};
+    weekEntries.forEach(function(e) { wYilSet[e.yil] = true; });
+    var wYillar = Object.keys(wYilSet).map(Number).sort();
+    var wBolunmus = wYillar.length > 1;
 
     // category grouping
     var wKategoriler = {};
@@ -10763,17 +11302,18 @@ function buildExportHTML() {
     MENU_KATEGORI_SIRASI.forEach(function(k, i) { wKatSiralama[k] = i; });
     var wGenelToplam = 0;
     var wFiyatsiz = 0;
-    var wRows = [];
+    var wYilToplam = {};
     weekEntries.forEach(function(e) {
       var kat = menuGetKategori(e.ad);
       if (!wKategoriler[kat]) wKategoriler[kat] = [];
       var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
-      var found = findBirimFiyat(e.ad, e.birim);
-      var tut = birimFiyatTutar(e.ad, e.birim, hesap);
+      var found = findBirimFiyat(e.ad, e.birim, e.yil, true);
+      var tut = birimFiyatTutar(e.ad, e.birim, hesap, e.yil, true);
       if (tut === null || tut === undefined || isNaN(tut)) tut = 0;
       var tutVar = !!(found && tut > 0);
       if (!tutVar) { wFiyatsiz++; tut = 0; }
       wGenelToplam = Math.round((wGenelToplam + tut) * 100) / 100;
+      wYilToplam[e.yil] = Math.round(((wYilToplam[e.yil] || 0) + tut) * 100) / 100;
       wKategoriler[kat].push({ e: e, tut: tut, tutVar: tutVar });
     });
     var wKatSirali = Object.keys(wKategoriler).sort(function(a, b) {
@@ -10784,6 +11324,10 @@ function buildExportHTML() {
     });
 
     weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div>';
+    if (wBolunmus) {
+      weeklyHtml += '<div class="wk-uyari">Yıl bölünmüş hafta: her malzeme kendi yılının fiyatıyla hesaplandı. ' +
+        wYillar.map(function(y) { return y + ': ' + formatTRY(wYilToplam[y] || 0); }).join(' · ') + '</div>';
+    }
     if (wGenelToplam > 0) {
       weeklyHtml += '<div class="wk-genel-toplam"><span>Toplam Maliyet</span><span class="wk-genel-deger">' + formatTRY(wGenelToplam) + '</span></div>';
     }
@@ -10800,7 +11344,8 @@ function buildExportHTML() {
         var fiyat = x.tutVar
           ? '<span class="wk-fiyat">' + formatTRY(x.tut) + '</span>'
           : '<span class="wk-fiyat wk-fiyat-yok">—</span>';
-        weeklyHtml += '<div class="wit"><span class="wno">' + wIdx + '.</span><span class="wn">' + escapeHtml(e.ad) + ' <small class="wk-recete">(' + e.miktarKisi + e.birimLabel + ')</small></span><span class="wq">' + fmt(e.total, e.birim) + '</span>' + fiyat + '</div>';
+        var yilEtiket = wBolunmus ? ' <small class="wk-yil">' + e.yil + '</small>' : '';
+        weeklyHtml += '<div class="wit"><span class="wno">' + wIdx + '.</span><span class="wn">' + escapeHtml(e.ad) + yilEtiket + ' <small class="wk-recete">(' + e.miktarKisi + e.birimLabel + ')</small></span><span class="wq">' + fmt(e.total, e.birim) + '</span>' + fiyat + '</div>';
       });
       weeklyHtml += '</div></div>';
     });
@@ -10808,7 +11353,7 @@ function buildExportHTML() {
       weeklyHtml += '<div class="wk-genel-alt"><span><strong>GENEL TOPLAM</strong> (' + weekEntries.length + ')</span><span class="wk-genel-deger">' + formatTRY(wGenelToplam) + '</span></div>';
     }
     if (wFiyatsiz > 0) {
-      weeklyHtml += '<div class="wk-uyari">' + wFiyatsiz + ' malzemenin birim fiyatı tanımlı değil</div>';
+      weeklyHtml += '<div class="wk-uyari">' + wFiyatsiz + ' malzemenin bu haftanın yılına ait birim fiyatı tanımlı değil</div>';
     }
   }
 
@@ -10857,6 +11402,8 @@ function buildExportHTML() {
     '.wk-kat-tutar{margin-left:auto;font-size:9px;font-weight:700;color:#0f766e;white-space:nowrap}' +
     '.wk-kat-bd{padding:2px 6px}' +
     '.wk-recete{color:#999;font-size:8px}' +
+    '.wk-yil{color:#b45309;font-size:8px;font-weight:700}' +
+    '.mtb-yil{color:#b45309;font-size:8px;font-weight:700}' +
     '.wno{width:16px;color:#999;font-size:8px;flex:none}' +
     '.wk-fiyat{font-weight:700;color:#0f766e;white-space:nowrap;min-width:60px;text-align:right}' +
     '.wk-fiyat-yok{color:#ccc;font-weight:400}' +
@@ -10939,10 +11486,22 @@ function buildExportHTML() {
     maliHtml += '<div class="mtb-chip"><div class="mtb-chip-label">Kişi Başı Ortalama</div><div class="mtb-chip-value">' + formatTRY(kisBas) + '</div></div>';
     maliHtml += '<div class="mtb-chip"><div class="mtb-chip-label">Toplam Kişi-Gün</div><div class="mtb-chip-value">' + toplamKisiGun + '</div></div>';
     maliHtml += '</div>';
+    var gunYilSet = {};
+    gunMali.forEach(function(g) { gunYilSet[g.yil] = true; });
+    var gunYillar = Object.keys(gunYilSet).map(Number).sort();
+    var gunBolunmus = gunYillar.length > 1;
+    if (gunBolunmus) {
+      maliHtml += '<div class="wk-uyari">Yıl bölünmüş hafta: her gün kendi yılının fiyatıyla hesaplandı.';
+      maliHtml += '<br>' + gunYillar.map(function(y) {
+        var s = 0;
+        gunMali.forEach(function(g) { if (g.yil === y) s = Math.round((s + g.toplam) * 100) / 100; });
+        return y + ' kısmı: ' + formatTRY(s);
+      }).join(' · ') + '</div>';
+    }
     maliHtml += '<table class="mtb-table"><thead><tr><th>Gün</th><th>Tarih</th><th style="text-align:center">Kişi</th><th style="text-align:right">Günlük Malzeme Maliyeti</th><th style="text-align:right">Kişi Başı</th></tr></thead><tbody>';
     gunMali.forEach(function(g) {
       var basi = g.kisi > 0 ? formatTRY(Math.round(g.toplam / g.kisi * 100) / 100) : '—';
-      maliHtml += '<tr><td><strong>' + escapeHtml(g.gun) + '</strong></td><td>' + (g.tarih ? tarihFormatla2(g.tarih) : '—') + '</td><td style="text-align:center">' + (g.kisi || '—') + '</td><td class="mtb-tutar">' + formatTRY(g.toplam) + '</td><td class="mtb-tutar">' + basi + '</td></tr>';
+      maliHtml += '<tr><td><strong>' + escapeHtml(g.gun) + '</strong></td><td>' + (g.tarih ? tarihFormatla2(g.tarih) : '—') + (gunBolunmus ? ' <span class="mtb-yil">' + g.yil + '</span>' : '') + '</td><td style="text-align:center">' + (g.kisi || '—') + '</td><td class="mtb-tutar">' + formatTRY(g.toplam) + '</td><td class="mtb-tutar">' + basi + '</td></tr>';
     });
     var ortB = toplamKisiGun > 0 ? formatTRY(kisBas) : '—';
     maliHtml += '</tbody><tfoot><tr class="mtb-toplam"><td colspan="2"><strong>HAFTALIK TOPLAM</strong></td><td style="text-align:center"><strong>' + toplamKisiGun + '</strong></td><td class="mtb-tutar"><strong>' + formatTRY(genelToplam) + '</strong></td><td class="mtb-tutar"><strong>' + ortB + '</strong></td></tr></tfoot></table>';
