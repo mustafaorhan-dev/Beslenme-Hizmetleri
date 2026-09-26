@@ -2524,9 +2524,8 @@ function haccpRecordToDB(r) {
     not_: r.not || '',
     // Cihaz alanlari KORUNMALIDIR: burada kaybolursa cihaz kayitlari
     // "manuel"e doner ve dedupe (tekrar calistirma) kilidi acilir.
-    cihaz_id: r.cihazId || null,
-    prob_no: (r.probNo === null || r.probNo === undefined || r.probNo === '') ? null : parseInt(r.probNo, 10),
-    kaynak: r.kaynak || 'manuel',
+      cihaz_id: r.cihazId || null,
+      kaynak: r.kaynak || 'manuel',
     limit_durumu: r.limitDurumu || null,
     cihaz_zaman: r.cihazZaman || null,
     last_modified: new Date().toISOString()
@@ -2601,9 +2600,8 @@ async function syncHaccpFromSupabase() {
           sicaklik: typ === 'sicaklik' ? parseNumComma(r.sicaklik) : null,
           not: r.not_ || r.not || '',
           nem: typ === 'sicaklik' ? parseNumComma(r.nem) : null,
-          cihazId: r.cihaz_id || null,
-          probNo: (r.prob_no === null || r.prob_no === undefined) ? null : r.prob_no,
-          kaynak: r.kaynak || 'manuel',
+            cihazId: r.cihaz_id || null,
+            kaynak: r.kaynak || 'manuel',
           limitDurumu: r.limit_durumu || null,
           cihazZaman: r.cihaz_zaman || null
         };
@@ -2666,13 +2664,13 @@ function canExport() {
 function exportHaccpCSV() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
-  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem','kaynak','probNo'];
+    var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem','kaynak','cihazId'];
   var rows = [headers.join(',')];
   haccpRecords.forEach(function(r) {
     var vals = headers.map(function(h) {
       var v;
       if (h === 'kaynak') v = r.kaynak || 'manuel';
-      else if (h === 'probNo') v = r.probNo == null ? '' : r.probNo;
+      else if (h === 'cihazId') v = r.cihazId == null ? '' : r.cihazId;
       else v = r[h] !== undefined ? r[h] : '';
       if (h === 'sicaklik' && v === undefined) v = r.sicaklik != null ? r.sicaklik : '';
       if (h === 'nem' && v === undefined) v = r.nem != null ? r.nem : '';
@@ -2703,8 +2701,7 @@ var HACCP_FIELD_MAP = {
   'depoAd': 'depoAd', 'depo_ad': 'depoAd', 'sicaklik': 'sicaklik', 'nem': 'nem',
   'not_': 'not', 'last_modified': 'last_modified',
   // Cihaz kolonlari
-  'Kaynak': 'kaynak', 'kaynak': 'kaynak', 'Kanal': 'prob_no', 'Prob': 'prob_no',
-  'prob_no': 'prob_no', 'probNo': 'prob_no', 'cihaz_id': 'cihazId'
+    'Kaynak': 'kaynak', 'kaynak': 'kaynak', 'Cihaz': 'cihaz_id', 'cihaz_id': 'cihazId'
 };
 
 // Virgul veya noktali virgul ayrimini yakalar, tirnak icindeki ayiraclari korur.
@@ -2760,9 +2757,8 @@ function importHaccpFile(event) {
           row.depoAd = row.depoAd || '';
           row.sicaklik = row.sicaklik !== '' ? Number(String(row.sicaklik).replace(',', '.')) : null;
           row.nem = row.nem !== '' ? Number(String(row.nem).replace(',', '.')) : null;
-          row.kaynak = String(row.kaynak || 'manuel').toLowerCase();
-          row.prob_no = row.prob_no !== '' && row.prob_no != null ? parseInt(row.prob_no, 10) : null;
-          rows.push(row);
+            row.kaynak = String(row.kaynak || 'manuel').toLowerCase();
+            rows.push(row);
         }
       }
 
@@ -2780,8 +2776,8 @@ function importHaccpFile(event) {
           idx = haccpRecords.findIndex(function(er) {
             return er.tarih === r.tarih &&
                    (er.saat || '').slice(0, 5) === (r.saat || '').slice(0, 5) &&
-                   (er.depoAd || '') === (r.depoAd || '') &&
-                   (er.probNo == null ? null : er.probNo) === (r.prob_no == null ? null : r.prob_no);
+                     (er.depoAd || '') === (r.depoAd || '') &&
+                     (er.cihazId || null) === (r.cihaz_id || null);
           });
         }
         if (idx !== -1) {
@@ -2795,12 +2791,10 @@ function importHaccpFile(event) {
           guncellenen++;
         } else {
           r.id = Date.now() + Math.floor(Math.random() * 1000);
-          r.cihazId = r.cihaz_id || null;
-          r.probNo = r.prob_no;
-          r.limitDurumu = sicaklikDurum(r.sicaklik, r.depoAd).text || null;
-          delete r.cihaz_id;
-          delete r.prob_no;
-          delete r.last_modified;
+            r.cihazId = r.cihaz_id || null;
+            r.limitDurumu = sicaklikDurum(r.sicaklik, r.depoAd).text || null;
+            delete r.cihaz_id;
+            delete r.last_modified;
           haccpRecords.push(r);
           eklenen++;
         }
@@ -3892,9 +3886,8 @@ function saveHaccpRecord(e) {
   let rec = {
     id: editingHaccpId || Date.now(),
     type,
-    cihazId: onceki ? (onceki.cihazId || null) : null,
-    probNo: onceki ? (onceki.probNo === undefined ? null : onceki.probNo) : null,
-    kaynak: onceki ? (onceki.kaynak || 'manuel') : 'manuel',
+      cihazId: onceki ? (onceki.cihazId || null) : null,
+      kaynak: onceki ? (onceki.kaynak || 'manuel') : 'manuel',
     limitDurumu: onceki ? (onceki.limitDurumu || null) : null,
     cihazZaman: onceki ? (onceki.cihazZaman || null) : null
   };
@@ -3958,7 +3951,7 @@ async function deleteHaccpRecord(type, id) {
 
 var DATALOGGER_FN = 'datalogger-fetch';
 var dataloggerDurum = { configured: false, aktif: false };
-var caProbListesi = [];
+  var caCihazListesi = [];
 
 // ─── Edge Function çağrısı ──────────────────────────────────────────────────
 async function dataloggerCagir(aksiyon, govde) {
@@ -4016,10 +4009,20 @@ function renderHaccpDataloggerDurum() {
     return;
   }
 
+  var cihazSayisi = dataloggerDurum.cihaz_adedi || 0;
+  if (cihazSayisi === 0) {
+    kutu.innerHTML = '<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:#f59e0b;background:rgba(245,158,11,0.08);padding:0.5rem 0.75rem;border-radius:8px;flex-wrap:wrap">' +
+      '<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>' +
+      '<span>Cihaz bağlandı ama <strong>henüz cihaz tanımlı değil</strong> — kayıt yapılmadan önce seri numaraları girilmeli.</span>' +
+      (admin ? ' <button class="btn btn-ghost btn-sm" onclick="openCihazAyarModal()" style="margin-left:auto">Cihazları Ekle</button>' : '') +
+      '</div>';
+    return;
+  }
+
   var slot = suankiSlot();
   kutu.innerHTML = '<div style="display:flex;align-items:center;gap:0.75rem;font-size:0.78rem;color:var(--text-muted);background:rgba(16,185,129,0.06);padding:0.5rem 0.75rem;border-radius:8px;flex-wrap:wrap">' +
     '<span style="width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0"></span>' +
-    '<span>Cihaz bağlı. Günlük otomatı kayıt: <strong style="color:var(--text-primary)">Sabah ' + (dataloggerDurum.saat_sabah || '08:00') + '</strong>, <strong style="color:var(--text-primary)">Öğle ' + (dataloggerDurum.saat_ogle || '12:30') + '</strong>, <strong style="color:var(--text-primary)">Akşam ' + (dataloggerDurum.saat_aksam || '18:00') + '</strong>' +
+    '<span>Cihaz bağlı (<strong style="color:var(--text-primary)">' + cihazSayisi + ' cihaz</strong>). Günlük otomatik kayıt: <strong style="color:var(--text-primary)">Sabah ' + (dataloggerDurum.saat_sabah || '08:00') + '</strong>, <strong style="color:var(--text-primary)">Öğle ' + (dataloggerDurum.saat_ogle || '12:30') + '</strong>, <strong style="color:var(--text-primary)">Akşam ' + (dataloggerDurum.saat_aksam || '18:00') + '</strong>' +
     (dataloggerDurum.aktif ? '' : ' <span class="badge badge-warn">otomatik kayıt kapalı</span>') + '</span>' +
     '<span style="margin-left:auto;font-size:0.72rem">Şu anki dilim: <strong style="color:var(--text-primary)">' + slot.etiket + '</strong></span>' +
     '</div>';
@@ -4086,8 +4089,8 @@ function gosterCekPaneli(sonuc) {
   var satirlar = (sonuc.okunan || []).map(function(o) {
     var lim = o.depo_ad ? getDepoSicaklikLimitleri(o.depo_ad) : null;
     var durum = o.depo_ad ? sicaklikDurum(o.sicaklik, o.depo_ad) : { text: '—', cls: '' };
-    return '<tr>' +
-      '<td>' + (o.prob_no) + '</td>' +
+      return '<tr>' +
+        '<td>' + kacisHtml(o.cihaz_kodu || '—') + '</td>' +
       '<td>' + (o.depo_ad ? o.depo_ad.replace(/</g, '&lt;') : '<span style="color:var(--danger)">eşleşmedi</span>') + '</td>' +
       '<td style="text-align:right"><strong>' + (o.sicaklik != null ? Number(o.sicaklik).toFixed(1) + ' °C' : '—') + '</strong></td>' +
       '<td style="text-align:right">' + (o.nem != null ? Number(o.nem).toFixed(0) + ' %' : '—') + '</td>' +
@@ -4186,27 +4189,34 @@ async function caAyarlariYukle() {
 
   var a = sonuc.ayarlar || {};
   caAlan('caAktif').checked = !!a.aktif;
-  caAlan('caUretici').value = a.uretici || '';
-  caAlan('caCihazAdi').value = a.cihaz_adi || '';
   caAlan('caApiUrl').value = a.api_url || '';
   caAlan('caApiYontem').value = a.api_yontem || 'GET';
   caAlan('caSaatDilimi').value = a.saat_dilimi || 'Europe/Istanbul';
   caAlan('caSaatSabah').value = a.saat_sabah || '08:00';
   caAlan('caSaatOgle').value = a.saat_ogle || '12:30';
   caAlan('caSaatAksam').value = a.saat_aksam || '18:00';
-  caAlan('caEdgeUrl').value = a.edge_function_url || '';
+  caAlan('caEdgeUrl').value = a.edge_function_url || 'Kaydet dediğinizde otomatik dolar';
 
   // Anahtar asla gönderilmez; yalnızca "doluluk" bilgisi vardır.
   caAlan('caApiKey').value = '';
-  caAlan('caApiKey').placeholder = a.api_key_dolu ? '•••••••• (kayıtlı — değiştirmek için yazın)' : 'Anahtarı girin';
+  caAlan('caApiKey').placeholder = a.api_key_dolu ? '•••••••• (kayıtlı — değiştirmek için yazın)' : 'Cihaz gelince buraya yazılacak';
   document.getElementById('caApiKeyNot').textContent = a.api_key_dolu
     ? 'Kayıtlı bir anahtar var. Boş bırakırsanız korunur.'
     : 'Henüz kayıtlı değil.';
-  caAlan('caCronSecret').value = '';
-  caAlan('caCronSecret').placeholder = a.cron_secret_dolu ? '•••••••• (kayıtlı)' : 'Rastgele bir metin';
+  document.getElementById('caCronSecretGoster').value =
+    a.cron_secret_dolu ? 'Otomatik oluşturuldu ✓' : 'Otomatik oluşturulur';
 
-  caProbListesi = sonuc.prob || [];
-  caProbEslestirmeCiz();
+  caCihazListesi = (sonuc.cihazlar || []).map(function(c) {
+    return { cihaz_kodu: c.cihaz_kodu || '', depo_ad: c.depo_ad || '', etiket: c.etiket || '', aktif: c.aktif !== false };
+  });
+  // Hiç kayıt yoksa mevcut depolar kadar boş satır ac: kullanici sadece
+  // seri numarasini yazsin. (5 cihaz / 5 depo senaryosu)
+  if (!caCihazListesi.length) {
+    caCihazListesi = getHaccpDepoAdlari().slice(0, 10).map(function(d) {
+      return { cihaz_kodu: '', depo_ad: d, etiket: '', aktif: true };
+    });
+  }
+  caCihazListesiCiz();
 
   var log = sonuc.log || [];
   document.getElementById('caLog').innerHTML = log.length
@@ -4230,35 +4240,44 @@ function caAnahtarGoster() {
 }
 
 async function caAyarlarKaydet() {
+  // Cron guvenlik anahtari: kullanici girmez, sistem ilk kayitta uretir.
+  // Edge adresi de Supabase proje adresinden turetilir.
   var govde = {
     aktif: caAlan('caAktif').checked,
-    uretici: caAlan('caUretici').value,
-    cihaz_adi: caAlan('caCihazAdi').value,
     api_url: caAlan('caApiUrl').value,
     api_yontem: caAlan('caApiYontem').value,
     saat_dilimi: caAlan('caSaatDilimi').value,
     saat_sabah: caAlan('caSaatSabah').value,
     saat_ogle: caAlan('caSaatOgle').value,
     saat_aksam: caAlan('caSaatAksam').value,
-    edge_function_url: caAlan('caEdgeUrl').value,
-    api_key: caAlan('caApiKey').value,
-    cron_secret: caAlan('caCronSecret').value
+    api_key: caAlan('caApiKey').value
   };
 
-  var probler = caProbListesi.map(function(p) {
-    return { prob_no: p.prob_no, depo_ad: p.depo_ad, etiket: p.etiket, aktif: !!p.aktif };
+  // Bos seri numarali satirlar gonderilmez.
+  var cihazlar = caCihazListesi.filter(function(c) {
+    return (c.cihaz_kodu || '').trim() !== '';
+  }).map(function(c) {
+    return {
+      cihaz_kodu: (c.cihaz_kodu || '').trim(),
+      depo_ad: c.depo_ad || '',
+      etiket: c.etiket || '',
+      aktif: !!c.aktif
+    };
   });
 
-  var sonuc = await dataloggerCagir('settings-save', { ayarlar: govde, prob: probler });
+  var sonuc = await dataloggerCagir('settings-save', { ayarlar: govde, cihazlar: cihazlar });
   if (!sonuc.ok) { showToast(sonuc.error || 'Ayarlar kaydedilemedi.', 'error'); return; }
 
   var zamanli = Array.isArray(sonuc.zamanlama) ? sonuc.zamanlama : [];
-  showToast(
-    zamanli.length
-      ? 'Ayarlar kaydedildi. Zamanlama: ' + zamanli.map(function(z) { return z.slot + ' ' + z.planlanan_saat; }).join(', ')
-      : 'Ayarlar kaydedildi. (Zamanlanmış kayıt için Edge Function adresini girin.)',
-    'success'
-  );
+  var mesaj;
+  if (!zamanli.length) {
+    mesaj = 'Kaydedildi.';
+  } else {
+    mesaj = 'Kaydedildi. Otomatik kayıt: ' + zamanli.map(function(z) {
+      return z.slot + ' ' + z.planlanan_saat;
+    }).join(' · ');
+  }
+  showToast(mesaj, 'success');
   await caAyarlariYukle();
   await dataloggerDurumYenile();
 }
@@ -4277,10 +4296,10 @@ async function caBaglantiTest() {
   }
   if (sonuc.basarili) {
     var satirlar = (sonuc.okunan || []).map(function(o) {
-      return '<tr><td>' + o.prob_no + '</td><td>' + kacisHtml(o.depo_ad || 'eşleşmedi') + '</td>' +
-        '<td style="text-align:right">' + (o.sicaklik != null ? Number(o.sicaklik).toFixed(1) + ' °C' : '—') + '</td></tr>';
-    }).join('');
-    kutu.innerHTML = '<div style="color:#10b981;font-size:0.8rem;font-weight:600;margin-bottom:0.35rem">✓ Bağlantı başarılı — ' + (sonuc.kanal_adedi || 0) + ' kanal okundu</div>' +
+        return '<tr><td>' + kacisHtml(o.cihaz_kodu || '—') + '</td><td>' + kacisHtml(o.depo_ad || 'eşleşmedi') + '</td>' +
+          '<td style="text-align:right">' + (o.sicaklik != null ? Number(o.sicaklik).toFixed(1) + ' °C' : '—') + '</td></tr>';
+      }).join('');
+      kutu.innerHTML = '<div style="color:#10b981;font-size:0.8rem;font-weight:600;margin-bottom:0.35rem">✓ Bağlantı başarılı — ' + (sonuc.cihaz_adedi || 0) + ' cihaz okundu</div>' +
       '<table class="data-table" style="font-size:0.75rem"><tbody>' + satirlar + '</tbody></table>';
     showToast('Bağlantı testi başarılı.', 'success');
   } else {
@@ -4288,58 +4307,67 @@ async function caBaglantiTest() {
   }
 }
 
-// ─── Kanal → Depo eşleştirme tablosu ───────────────────────────────────────
-function caProbEslestirmeCiz() {
-  var kap = document.getElementById('caProbEslestirme');
+// ─── Cihaz → Depo listesi (her cihaz bir depoyu olcer) ───────────────────────
+var caCihazListesi = [];
+
+function caCihazListesiCiz() {
+  var kap = document.getElementById('caCihazListesi');
   if (!kap) return;
-  var depolar = getHaccpDepoAdlari();
-
-  if (!caProbListesi.length) {
-    // Cihaz kanal sayısı bilinmiyor: kullanıcı kendi eklesin.
-    kap.style.color = 'var(--text-muted)';
-    kap.innerHTML = 'Kanal eşleştirmesi yok. Cihaz gelince buradan kanal numarasını depoya bağlayın. ' +
-      '<button class="btn btn-ghost btn-sm" onclick="caProbEkle()">Kanal Ekle</button>';
-    return;
-  }
-
-  var secenekler = ['<option value="">— seçiniz —</option>'].concat(depolar.map(function(d) {
+  var secenekler = ['<option value="">— depo seçiniz —</option>'].concat(getHaccpDepoAdlari().map(function(d) {
     return '<option value="' + kacisHtml(d) + '">' + kacisHtml(d) + '</option>';
   })).join('');
 
-  kap.style.color = 'var(--text)';
-  kap.innerHTML = '<div style="max-height:230px;overflow:auto"><table class="data-table" style="font-size:0.78rem">' +
-    '<thead><tr><th style="width:60px">Kanal</th><th>Depo</th><th style="width:90px">Aktif</th><th style="width:36px"></th></tr></thead><tbody>' +
-    caProbListesi.map(function(p, i) {
+  if (!caCihazListesi.length) {
+    kap.innerHTML = '<div style="color:var(--text-muted)">Cihaz listesi boş.</div>';
+    return;
+  }
+
+  var dolu = caCihazListesi.filter(function(c) { return (c.cihaz_kodu || '').trim() !== ''; }).length;
+
+  kap.innerHTML =
+    '<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.35rem">' +
+      dolu + ' / ' + caCihazListesi.length + ' cihaz tanımlı' +
+      (dolu === 0 ? ' — seri numarası girilmemiş, otomatik kayıt yapmayacak.' : '') +
+    '</div>' +
+    '<div style="max-height:240px;overflow:auto"><table class="data-table" style="font-size:0.78rem">' +
+    '<thead><tr><th>Cihaz Seri No / IP</th><th>Depo</th><th style="width:56px">Aktif</th><th style="width:36px"></th></tr></thead><tbody>' +
+    caCihazListesi.map(function(c, i) {
+      var sec = secenekler;
+      if (c.depo_ad) {
+        sec = secenekler.replace('value="' + kacisHtml(c.depo_ad) + '"',
+                                 'value="' + kacisHtml(c.depo_ad) + '" selected');
+      }
       return '<tr>' +
-        '<td><input type="number" min="1" value="' + (p.prob_no || '') + '" onchange="caProbGuncelle(' + i + ',\'prob_no\',this.value)" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem"></td>' +
-        '<td><select onchange="caProbGuncelle(' + i + ',\'depo_ad\',this.value)" style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' +
-          secenekler.replace('value="' + kacisHtml(p.depo_ad || '') + '"', 'value="' + kacisHtml(p.depo_ad || '') + '" selected') +
-        '</select></td>' +
-        '<td style="text-align:center"><input type="checkbox" ' + (p.aktif !== false ? 'checked' : '') + ' onchange="caProbGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer"></td>' +
-        '<td><button class="btn-icon" onclick="caProbSil(' + i + ')" title="Sil" style="color:var(--danger)">' +
+        '<td><input type="text" value="' + kacisHtml(c.cihaz_kodu || '') + '" placeholder="Seri no" ' +
+          'oninput="caCihazGuncelle(' + i + ',\'cihaz_kodu\',this.value)" ' +
+          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem"></td>' +
+        '<td><select onchange="caCihazGuncelle(' + i + ',\'depo_ad\',this.value)" ' +
+          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' + sec + '</select></td>' +
+        '<td style="text-align:center"><input type="checkbox" ' + (c.aktif !== false ? 'checked' : '') +
+          ' onchange="caCihazGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer"></td>' +
+        '<td><button class="btn-icon" onclick="caCihazSil(' + i + ')" title="Sil" style="color:var(--danger)">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>' +
         '</button></td>' +
       '</tr>';
     }).join('') +
     '</tbody></table></div>' +
-    '<button class="btn btn-ghost btn-sm" onclick="caProbEkle()" style="margin-top:0.4rem">Kanal Ekle</button>';
+    '<button class="btn btn-ghost btn-sm" onclick="caCihazEkle()" style="margin-top:0.4rem">+ Cihaz Ekle</button>';
 }
 
-function caProbGuncelle(i, alan, deger) {
-  if (!caProbListesi[i]) return;
-  if (alan === 'prob_no') caProbListesi[i].prob_no = parseInt(deger, 10) || 0;
-  else if (alan === 'aktif') caProbListesi[i].aktif = !!deger;
-  else caProbListesi[i][alan] = deger;
+function caCihazGuncelle(i, alan, deger) {
+  if (!caCihazListesi[i]) return;
+  if (alan === 'aktif') caCihazListesi[i].aktif = !!deger;
+  else caCihazListesi[i][alan] = deger;
 }
 
-function caProbEkle() {
-  caProbListesi.push({ prob_no: caProbListesi.length + 1, depo_ad: '', etiket: '', aktif: true });
-  caProbEslestirmeCiz();
+function caCihazEkle() {
+  caCihazListesi.push({ cihaz_kodu: '', depo_ad: '', etiket: '', aktif: true });
+  caCihazListesiCiz();
 }
 
-function caProbSil(i) {
-  caProbListesi.splice(i, 1);
-  caProbEslestirmeCiz();
+function caCihazSil(i) {
+  caCihazListesi.splice(i, 1);
+  caCihazListesiCiz();
 }
 
 // ═══════════════════════ SICAKLIK GRAFİĞİ ══════════════════════════════════

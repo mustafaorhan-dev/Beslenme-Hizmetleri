@@ -5,7 +5,16 @@
 //  Kayit, veritabanindaki datalogger_kayit_ekle() fonksiyonu ile yapilir;
 //  boylece ayni slot iki kez calissa bile cift kayit olusmaz.
 //
+//  MODEL: 5 cihaz, her depoya bir tane. API'ye TEK istek atilir, gelen
+//  cihazlar seri numarasindan eslestirilip ilgili depolara yazilir.
+//
 //  Cihaz tanimli degilse sessizce 200 doner: program elle calismaya devam eder.
+//
+//  DEPLOY NOTU: Bu fonksiyon yalnizca veritabanindan gelen isteklere yanit
+//  vermelidir. Authorization basligi gonderilmez, bu yuzden gateway JWT
+//  dogrulamasi KAPALI olmalidir:
+//      supabase functions deploy datalogger-cron --no-verify-jwt
+//  Guvenlik, asagida dogrulanan x-cron-secret ile saglanir.
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -56,7 +65,7 @@ async function cihazApiCagir(ay: any) {
   const secenek: RequestInit = { method: yontem, headers: basliklar };
   if (yontem === 'POST') {
     basliklar['Content-Type'] = 'application/json';
-    secenek.body = JSON.stringify({ device: ay.cihaz_adi || undefined });
+    secenek.body = JSON.stringify({});
   }
 
   const cevap = await fetch(ay.api_url.trim(), secenek);
@@ -69,16 +78,16 @@ async function cihazApiCagir(ay: any) {
   }
 }
 
-function kanallariAyikla(ham: any): any[] {
+function cihazlariAyikla(ham: any): any[] {
   if (Array.isArray(ham)) return ham;
   if (!ham || typeof ham !== 'object') return [];
-  for (const k of ['data', 'channels', 'readings', 'result', 'results', 'items', 'values']) {
+  for (const k of ['data', 'devices', 'device', 'readings', 'result', 'results', 'items', 'values', 'sensors']) {
     const v = ham[k];
     if (Array.isArray(v)) return v;
     if (v && typeof v === 'object') {
       const ic = Object.values(v);
       if (ic.length && ic.every((x) => x && typeof x === 'object')) {
-        return Object.entries(v).map(([no, x]: [string, any]) => ({ channel: no, ...x }));
+        return Object.entries(v).map(([kod, x]: [string, any]) => ({ deviceId: kod, ...x }));
       }
     }
   }
@@ -94,6 +103,24 @@ function sayiyaAl(n: any, anahtarlar: string[]): number | null {
   }
   return null;
 }
+
+function kodAl(n: any, anahtarlar: string[]): string {
+  for (const a of anahtarlar) {
+    const v = n?.[a];
+    if (v === null || v === undefined || v === '') continue;
+    const s = String(v).trim();
+    if (s !== '') return s;
+  }
+  return '';
+}
+
+const normKod = (s: string) => String(s ?? '').trim().toLowerCase();
+
+const KOD_ANAHTARLARI = [
+  'deviceId', 'device_id', 'deviceSerial', 'device_serial', 'serial', 'serialNumber',
+  'serial_number', 'sn', 'mac', 'macAddress', 'imei', 'hwId', 'gatewayId', 'ip', 'host',
+  'id', 'key', 'name'
+];
 
 Deno.serve(async (req: Request) => {
   let istek: any = {};
@@ -128,35 +155,48 @@ Deno.serve(async (req: Request) => {
     }
 
     const { data: eslesmeler } = await admin
-      .from('cihaz_prob').select('*').eq('cihaz_id', SETTINGS_ID).eq('aktif', true);
+      .from('cihaz_ebsleme').select('*').eq('aktif', true);
+
+    // Kod -> depo haritasi (kucuk harfli, tekillestirilmis).
+    const harita = new Map<string, any>();
+    for (const e of (eslesmeler ?? []) as any[]) {
+      const k = normKod(e.cihaz_kodu);
+      if (k !== '' && !harita.has(k)) harita.set(k, e);
+    }
+
+    // Hicbir cihaz tanimli degilse gereksiz API cagrisi yapma.
+    if (harita.size === 0) {
+      return json({ ok: true, atlandi: true, neden: 'cihaz_tanimli_degil' });
+    }
 
     const ham = await cihazApiCagir(ay);
-    const kanallar = kanallariAyikla(ham);
+    const cihazlar = cihazlariAyikla(ham);
 
-    const okunan = kanallar
+    const okunan = cihazlar
       .map((k) => {
         if (!k || typeof k !== 'object') return null;
-        const no = sayisaAl(k, ['prob_no', 'probNo', 'probe', 'channel', 'channelId', 'channel_id', 'ch', 'id', 'no', 'index']);
-        if (no === null) return null;
-        const n = Math.trunc(no);
-        const depo = (eslesmeler ?? []).find((e: any) => Number(e.prob_no) === n)?.depo_ad ?? '';
+        const kod = kodAl(k, KOD_ANAHTARLARI);
+        if (kod === '') return null;
+        const sicaklik = sayiyaAl(k, ['sicaklik', 'temperature', 'temp', 'temperatureC', 'tempC', 'value', 'val', 't']);
+        if (sicaklik === null) return null;
         return {
-          prob_no: n,
-          depo_ad: depo,
-          sicaklik: sayisaAl(k, ['sicaklik', 'temperature', 'temp', 'temperatureC', 'value', 'val', 't']),
-          nem: sayisaAl(k, ['nem', 'humidity', 'rh', 'hum', 'humidityPct'])
+          cihaz_kodu: kod,
+          depo_ad: harita.get(normKod(kod))?.depo_ad ?? '',
+          sicaklik,
+          nem: sayiyaAl(k, ['nem', 'humidity', 'rh', 'hum', 'humidityPct']),
+          cihaz_zaman: k.timestamp ?? k.time ?? k.datetime ?? k.measuredAt ?? k.measured_at ?? null
         };
       })
       .filter((x) => x && x.sicaklik !== null);
 
     if (okunan.length === 0) {
       await admin.from('datalogger_log').insert({
-        slot, cihaz_id: SETTINGS_ID, basarili: false, mesaj: 'Cihaz yanıtından kanal okunamadı'
+        slot, cihaz_id: SETTINGS_ID, basarili: false, mesaj: 'Cihaz yanıtından sıcaklık okunamadı'
       });
       await admin.from('cihaz_ayarlari')
-        .update({ son_sync_zamani: new Date().toISOString(), son_sync_durum: 'Hata: kanal okunamadi' })
+        .update({ son_sync_zamani: new Date().toISOString(), son_sync_durum: 'Hata: sıcaklık okunamadi' })
         .eq('id', SETTINGS_ID);
-      return json({ ok: false, error: 'kanal_okunamadi' });
+      return json({ ok: false, error: 'sicaklik_okunamadi' });
     }
 
     // Otomatik kaydin saati: yapilandirilmis slot saati + ":00".
@@ -172,19 +212,19 @@ Deno.serve(async (req: Request) => {
     let eklendi = 0;
     const atlanan: any[] = [];
     for (const o of okunan) {
-      if (!o.depo_ad) { atlanan.push({ prob_no: o.prob_no, neden: 'depo eslestirilmemis' }); continue; }
+      if (!o.depo_ad) { atlanan.push({ cihaz_kodu: o.cihaz_kodu, neden: 'depo eslestirilmemis' }); continue; }
       const { data: n, error } = await admin.rpc('datalogger_kayit_ekle', {
         p_depo_ad: o.depo_ad,
         p_sicaklik: o.sicaklik,
         p_nem: o.nem,
         p_tarih: tarih,
         p_saat: saat,
-        p_cihaz_id: SETTINGS_ID,
-        p_prob_no: o.prob_no,
-        p_kaynak: slot
+        p_cihaz_id: o.cihaz_kodu,
+        p_kaynak: slot,
+        p_cihaz_zaman: o.cihaz_zaman ? String(o.cihaz_zaman) : null
       });
-      if (error) { atlanan.push({ prob_no: o.prob_no, neden: error.message }); continue; }
-      if (Number(n) > 0) eklendi++; else atlanan.push({ prob_no: o.prob_no, neden: 'zaten kayitli' });
+      if (error) { atlanan.push({ cihaz_kodu: o.cihaz_kodu, neden: error.message }); continue; }
+      if (Number(n) > 0) eklendi++; else atlanan.push({ cihaz_kodu: o.cihaz_kodu, neden: 'zaten kayitli' });
     }
 
     const basarili = atlanan.length === 0;

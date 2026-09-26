@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=30" />
+  <link rel="stylesheet" href="style.css?v=31" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -1872,9 +1872,10 @@
       <div class="modal-body" style="padding:1rem" id="cihazAyarBody">
         <div style="display:flex;align-items:flex-start;gap:0.5rem;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);padding:0.6rem 0.75rem;border-radius:8px;font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Cihaz henüz alınmadıysa boş bırakın — <strong>elle kayıt yapmaya devam edebilirsiniz</strong>. Cihaz gelince API adresi ve anahtarı buraya yazmanız yeterli. Anahtar sunucuda saklanır, tarayıcıya geri dönmez.</span>
+          <span><strong>5 cihaz, her depoya bir tane.</strong> Cihazlar gelene kadar bu ekranda hiçbir şey yapmanız gerekmez — <strong>elle kayıt yapmaya devam edebilirsiniz.</strong> Alttaki saatleri değiştirmek yeterli; API bilgileri cihaz kutularından okununca eklenir.</span>
         </div>
 
+        <!-- ===== SEVİYE 1: Her gün lazım olanlar ===== -->
         <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:1rem">
           <label style="display:flex;align-items:center;gap:0.45rem;font-size:0.85rem;font-weight:600;cursor:pointer">
             <input type="checkbox" id="caAktif" style="width:16px;height:16px;cursor:pointer">
@@ -1883,51 +1884,69 @@
           <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto" id="caAktifNot">Kapalıyken yalnızca "Çek" butonu çalışır</span>
         </div>
 
-        <div class="form-grid" style="grid-template-columns:1fr 1fr">
-          <div class="form-group"><label>Üretici</label><input type="text" id="caUretici" placeholder="Örn. Testo, Elite, Danfoss" /></div>
-          <div class="form-group"><label>Cihaz Adı / Seri No</label><input type="text" id="caCihazAdi" placeholder="Örn. Depo-Logger-01" /></div>
-          <div class="form-group" style="grid-column:span 2"><label>API Adresi</label><input type="url" id="caApiUrl" placeholder="https://cihaz-uretici.com/api/v1/veriler" /></div>
-          <div class="form-group" style="grid-column:span 2">
-            <label>API Anahtarı</label>
-            <div style="display:flex;gap:0.4rem">
-              <input type="password" id="caApiKey" placeholder="Anahtarı girin" autocomplete="off" style="flex:1" />
-              <button class="btn btn-ghost btn-sm" type="button" onclick="caAnahtarGoster()" id="caAnahtarGosterBtn" title="Göster / gizle">Göster</button>
-            </div>
-            <div id="caApiKeyNot" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem"></div>
-          </div>
-          <div class="form-group"><label>İstek Yöntemi</label>
-            <select id="caApiYontem" style="width:100%"><option value="GET">GET</option><option value="POST">POST</option></select>
-          </div>
-          <div class="form-group"><label>Saat Dilimi</label>
-            <select id="caSaatDilimi" style="width:100%">
-              <option value="Europe/Istanbul">Europe/Istanbul</option>
-              <option value="Europe/Berlin">Europe/Berlin</option>
-              <option value="UTC">UTC</option>
-            </select>
-          </div>
-        </div>
-
-        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Günlük Otomatik Kayıt Saatleri</h3>
+        <h3 style="font-size:0.85rem;font-weight:600;margin:0 0 0.5rem">Günlük Otomatik Kayıt Saatleri</h3>
         <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
           <div class="form-group"><label>Sabah</label><input type="time" id="caSaatSabah" value="08:00" /></div>
           <div class="form-group"><label>Öğle</label><input type="time" id="caSaatOgle" value="12:30" /></div>
           <div class="form-group"><label>Akşam</label><input type="time" id="caSaatAksam" value="18:00" /></div>
         </div>
 
-        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Kanal → Depo Eşleştirmesi</h3>
-        <div id="caProbEslestirme" style="font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0">Cihaz olmadan da eşleştirmeyi şimdiden yapabilirsiniz.</div>
+        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.25rem">Cihazlar</h3>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.4rem">
+          Her cihaz bir depoyu ölçer. Cihazın üzerindeki <strong>seri numarasını</strong> (veya yerel IP adresini) yazmanız yeterli; depoyu seçin. Boş bırakılan cihaz kayıt yapmaz.
+        </p>
+        <div id="caCihazListesi" style="font-size:0.8rem;color:var(--text-muted);padding:0.25rem 0"></div>
 
-        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Zamanlanmış Görev (pg_cron)</h3>
-        <div class="form-group" style="grid-column:span 2">
-          <label>Edge Function Adresi</label>
-          <input type="url" id="caEdgeUrl" placeholder="https://PROJE.supabase.co/functions/v1/datalogger-cron" />
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Boşsa otomatik kayıt kurulmaz (elle kayıt çalışmaya devam eder).</div>
-        </div>
-        <div class="form-group">
-          <label>Cron Anahtarı</label>
-          <input type="password" id="caCronSecret" placeholder="Rastgele bir metin" autocomplete="off" />
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">pg_cron bu başlığı doğrulamak için kullanır.</div>
-        </div>
+        <!-- ===== SEVİYE 2: Teknik ayarlar (cihaz gelince gerekir) ===== -->
+        <details style="margin-top:1.25rem;border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem">
+          <summary style="cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--text-muted)">
+            Gelişmiş — API bağlantısı
+          </summary>
+
+          <p style="font-size:0.75rem;color:var(--text-muted);margin:0.6rem 0 0">
+            Aşağıdaki iki bilgi <strong>cihazın üreticisinden</strong> alınır (cihazın kutusunda veya telefon uygulamasında yazar).
+            <strong>API Adresi</strong> = sıcaklığı nereden isteyeceğimiz. <strong>API Anahtarı</strong> = o adrese girmemizi sağlayan şifre.
+          </p>
+
+          <div class="form-group" style="margin-top:0.75rem">
+            <label>API Adresi</label>
+            <input type="url" id="caApiUrl" placeholder="Cihaz gelince buraya yazılacak" />
+          </div>
+          <div class="form-group">
+            <label>API Anahtarı</label>
+            <div style="display:flex;gap:0.4rem">
+              <input type="password" id="caApiKey" placeholder="Cihaz gelince buraya yazılacak" autocomplete="off" style="flex:1" />
+              <button class="btn btn-ghost btn-sm" type="button" onclick="caAnahtarGoster()" id="caAnahtarGosterBtn" title="Göster / gizle">Göster</button>
+            </div>
+            <div id="caApiKeyNot" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem"></div>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="form-group"><label>İstek Yöntemi</label>
+              <select id="caApiYontem" style="width:100%"><option value="GET">GET</option><option value="POST">POST</option></select>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Cihazın dokümanına bakarız; şimdilik GET bırakın.</div>
+            </div>
+            <div class="form-group"><label>Saat Dilimi</label>
+              <select id="caSaatDilimi" style="width:100%">
+                <option value="Europe/Istanbul">Europe/Istanbul</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="border-top:1px dashed var(--border);margin-top:0.75rem;padding-top:0.75rem">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Sistem bağlantısı (siz girmeyeceksiniz)</div>
+            <div class="form-group">
+              <label>Otomatik Kayıt Adresi</label>
+              <input type="text" id="caEdgeUrl" readonly placeholder="Kaydet dediğinizde otomatik dolar" style="opacity:0.7" />
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Veritabanının saati, günlük kayıtları buraya kendisi çağırır.</div>
+            </div>
+            <div class="form-group">
+              <label>Güvenlik Anahtarı</label>
+              <input type="text" id="caCronSecretGoster" readonly value="Otomatik oluşturulur" style="opacity:0.7" />
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Yabancıların bu adrese sahte kayıt yaptırmasını engeller. Sizin bilmenize gerek yok.</div>
+            </div>
+          </div>
+        </details>
 
         <div id="caTestSonuc" style="margin-top:1rem;font-size:0.8rem"></div>
 
@@ -2597,7 +2616,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=30"></script>
+  <script src="app.js?v=31"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

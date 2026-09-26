@@ -1,16 +1,23 @@
 // ============================================================================
 //  datalogger-fetch  —  Datalogger ile tek seferlik iletisim
 //
-//  Tarayicidan gelen istekler icin 4 islem:
-//    status : Ayarlar okunur, cihaz bagli mi diye bakilir (API cagrilmaz)
-//    test   : Ayarlar okunur, API'ye basit bir GET atilir (kayit yazilmaz)
-//    fetch  : API'den anlik degerler okunur ve ekrana doner (kayit yazilmaz)
-//    save   : Anlik degerler okunur ve haccp_records'a kaydedilir
+//  MODEL: 5 ayri cihaz, her depoya bir tane. Cihazlar kendi depolarini
+//  olcer; bu yuzden "kanal/prob" kavrami YOKTUR. Tek eslestirme cihaz
+//  kodunun (seri no veya IP) depo adina baglanmasidir.
+//
+//  Tarayicidan gelen istekler icin islemler:
+//    status       : Ayarlar okunur, cihaz bagli mi diye bakilir (API cagrilmaz)
+//    test         : API'ye bir istek atilir, cihazlar okunur (kayit yazilmaz)
+//    fetch        : Anlik degerler okunur ve ekrana doner (kayit yazilmaz)
+//    save         : Anlik degerler okunur ve haccp_records'a kaydedilir
+//    settings     : Maskeli ayar + cihaz listesi okunur
+//    settings-save: Ayarlar + cihaz listesi yazilir, zamanlama yeniden kurulur
 //
 //  Guvenlik:
-//    * API anahtari SADECE sunucuda (bu fonksiyonda) okunur, tarayiciya donmez.
+//    * API anahtari SADECE sunucuda okunur, tarayiciya donmez.
 //    * Cagiran gercekten admin mi JWT uzerinden dogrulanir.
-//    * Cihaz tanimli degilse 200 doner ama configured:false - program cokmez.
+//    * Cron guvenlik anahtari ve Edge adresi sunucuda OTOMATIK uretilir;
+//      kullanici girmez.
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -20,15 +27,12 @@ const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const SETTINGS_ID = 'datalogger';
 
-// service_role: RLS'i atlar, anahtari sunucuda okumamizi saglar.
 const admin = createClient(SB_URL, SB_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
 type Ayar = {
   aktif: boolean;
-  cihaz_adi: string;
-  uretici: string;
   api_url: string;
   api_key: string;
   api_yontem: string;
@@ -36,15 +40,26 @@ type Ayar = {
   saat_ogle: string;
   saat_aksam: string;
   saat_dilimi: string;
+  edge_function_url: string;
+  cron_secret: string;
 };
 
 type Okuma = {
-  prob_no: number;
+  cihaz_kodu: string;
   etiket: string;
   depo_ad: string;
   sicaklik: number | null;
   nem: number | null;
   cihaz_zaman: string | null;
+};
+
+type Ebsleme = {
+  id: number;
+  cihaz_kodu: string;
+  depo_ad: string;
+  etiket: string;
+  sira: number;
+  aktif: boolean;
 };
 
 const json = (body: unknown, status = 200) =>
@@ -65,7 +80,6 @@ function gunlSaat(bayi: Date, dilim: string) {
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     }).formatToParts(bayi);
     const g = (t: string) => p.find((x) => x.type === t)?.value ?? '00';
-    // en-CA bazi motorlarda 24:00 doner; 00'a indir.
     const sa = g('hour') === '24' ? '00' : g('hour');
     return { tarih: `${g('year')}-${g('month')}-${g('day')}`, saat: `${sa}:${g('minute')}:${g('second')}` };
   } catch {
@@ -77,9 +91,6 @@ function gunlSaat(bayi: Date, dilim: string) {
   }
 }
 
-// ─── Cagiran gercekten admin mi? ─────────────────────────────────────────────
-// Uygulamadaki rol sessionStorage'da tutuluyor ve taklit edilebilir; bu yuzden
-// burada JWT e-postasi -> user_roles -> role kontrolu yapiliyor.
 async function cagiriciAdminMi(req: Request): Promise<boolean> {
   const baslik = req.headers.get('Authorization') ?? '';
   const token = baslik.startsWith('Bearer ') ? baslik.slice(7) : baslik;
@@ -103,9 +114,9 @@ async function ayarlariOku(): Promise<Ayar | null> {
   return (data as Ayar) ?? null;
 }
 
-async function probEslestirmeleriOku() {
-  const { data } = await admin.from('cihaz_prob').select('*').eq('cihaz_id', SETTINGS_ID).eq('aktif', true);
-  return data ?? [];
+async function ebslemeleriOku(): Promise<Ebsleme[]> {
+  const { data } = await admin.from('cihaz_ebsleme').select('*').eq('aktif', true);
+  return (data as Ebsleme[]) ?? [];
 }
 
 async function logYaz(slot: string, basarili: boolean, mesaj: string, adet = 0) {
@@ -119,8 +130,6 @@ async function cihazApiCagir(ay: Ayar) {
   const url = (ay.api_url || '').trim();
   if (!url) throw new Error('API adresi boş');
 
-  // Anahtari iki farkli baslikta birden gonderiyoruz: ureticilerin cogu ya
-  // "Authorization: Bearer" ya da "X-API-Key" bekler. Hangisi dogruysa calisir.
   const basliklar: Record<string, string> = {
     'Accept': 'application/json',
     'Authorization': `Bearer ${ay.api_key}`,
@@ -131,7 +140,7 @@ async function cihazApiCagir(ay: Ayar) {
   const yontem = (ay.api_yontem || 'GET').toUpperCase();
   const secenek: RequestInit = { method: yontem, headers: basliklar };
   if (yontem === 'POST') {
-    secenek.body = JSON.stringify({ device: ay.cihaz_adi || undefined });
+    secenek.body = JSON.stringify({});
     basliklar['Content-Type'] = 'application/json';
   }
 
@@ -146,21 +155,21 @@ async function cihazApiCagir(ay: Ayar) {
   }
 }
 
-// ─── Cihaz yanitini kanallara ayir ──────────────────────────────────────────
+// ─── Cihaz yanitini cihaz listesine ayir ─────────────────────────────────────
 // Cihaz secilmedi; ureticilerin formatlari degiskendir. Bilinen kaliplari
 // deniyoruz, ise yaramazsa ham yaniti donup sonra buna gore uyarlariz.
-function kanallariAyikla(ham: any): any[] {
+function cihazlariAyikla(ham: any): any[] {
   if (Array.isArray(ham)) return ham;
   if (!ham || typeof ham !== 'object') return [];
 
-  for (const anahtar of ['data', 'channels', 'readings', 'result', 'results', 'items', 'values']) {
+  for (const anahtar of ['data', 'devices', 'device', 'readings', 'result', 'results', 'items', 'values', 'sensors']) {
     const v = ham[anahtar];
     if (Array.isArray(v)) return v;
     if (v && typeof v === 'object') {
-      // { data: { "1": {...}, "2": {...} } } gibi harita bicimi
+      // { data: { "SN-001": {...} } } gibi harita bicimi
       const ic = Object.values(v);
       if (ic.length && ic.every((x) => x && typeof x === 'object')) {
-        return Object.entries(v).map(([k, x]: [string, any]) => ({ channel: k, ...x }));
+        return Object.entries(v).map(([k, x]: [string, any]) => ({ deviceId: k, ...x }));
       }
     }
   }
@@ -177,22 +186,49 @@ function sayiyaAl(nesne: any, anahtarlar: string[]): number | null {
   return null;
 }
 
-function kanallariNormalle(kanallar: any[], eslesmeler: any[]): Okuma[] {
-  const depoBul = (no: number) =>
-    eslesmeler.find((e) => Number(e.prob_no) === no)?.depo_ad ?? '';
+// Cihaz kodunu metin olarak al. Sayi olan kodlar da metne cevrilir ki
+// eslestirme her zaman string karsilastirmasiyla yapilsin.
+function kodAl(nesne: any, anahtarlar: string[]): string {
+  for (const a of anahtarlar) {
+    const v = nesne?.[a];
+    if (v === null || v === undefined || v === '') continue;
+    const s = String(v).trim();
+    if (s !== '') return s;
+  }
+  return '';
+}
 
-  return kanallar
+function normKod(s: string): string {
+  return String(s ?? '').trim().toLowerCase();
+}
+
+function cihazlariNormalle(cihazlar: any[], eslesmeler: Ebsleme[]): Okuma[] {
+  // eslesmeleri kucuk harfli kodla indeksle; birden fazla eslesme varsa
+  // siraya gore ilkini sec.
+  const harita = new Map<string, Ebsleme>();
+  for (const e of eslesmeler) {
+    const k = normKod(e.cihaz_kodu);
+    if (k !== '' && !harita.has(k)) harita.set(k, e);
+  }
+
+  return cihazlar
     .map((k) => {
       if (!k || typeof k !== 'object') return null;
 
-      const no = sayisaAl(k, ['prob_no', 'probNo', 'probe', 'channel', 'channelId', 'channel_id', 'ch', 'id', 'no', 'index']);
-      if (no === null) return null;
+      const kod = kodAl(k, [
+        'deviceId', 'device_id', 'deviceSerial', 'device_serial', 'serial', 'serialNumber',
+        'serial_number', 'sn', 'mac', 'macAddress', 'imei', 'hwId', 'gatewayId', 'ip', 'host',
+        'id', 'key', 'name'
+      ]);
+      if (kod === '') return null;
+
+      const eslesme = harita.get(normKod(kod));
 
       return {
-        prob_no: Math.trunc(no),
-        etiket: String(k.label ?? k.name ?? k.etiket ?? k.title ?? `Kanal ${Math.trunc(no)}`),
-        depo_ad: depoBul(Math.trunc(no)),
-        sicaklik: sayisaAl(k, ['sicaklik', 'temperature', 'temp', 'temperatureC', 'value', 'val', 't']),
+        cihaz_kodu: kod,
+        etiket: String(k.label ?? k.name ?? k.etiket ?? k.title ?? eslesme?.etiket ?? kod),
+        depo_ad: eslesme?.depo_ad ?? '',
+        sicaklik: sayisaAl(k, ['sicaklik', 'temperature', 'temp', 'temperatureC', 'tempC', 'value', 'val', 't']),
         nem: sayisaAl(k, ['nem', 'humidity', 'rh', 'hum', 'humidityPct']),
         cihaz_zaman: k.timestamp ?? k.time ?? k.datetime ?? k.measuredAt ?? k.measured_at ?? null
       } as Okuma;
@@ -216,19 +252,25 @@ Deno.serve(async (req: Request) => {
       return json({ ok: false, error: 'Bu işlem için yönetici yetkisi gerekiyor.' }, 403);
     }
   }
+
   try {
     const ay = await ayarlariOku();
-    const eslesmeler = await probEslestirmeleriOku();
+    const eslesmeler = await ebslemeleriOku();
 
     const ayarliMi = !!ay && !!ay.aktif && !!(ay.api_url || '').trim() && !!(ay.api_key || '').trim();
+    const tanimliCihaz = eslesmeler.filter((e) => normKod(e.cihaz_kodu) !== '').length;
 
     if (aksiyon === 'status') {
-      // Yetkisiz cagrilara sadece bayrak doner: API adresi/anahtar/prob bilgisi sizmaz.
+      // Yetkisiz cagrilara sadece bayrak doner: API adresi/anahtar sizmaz.
       return json({
         ok: true,
         configured: ayarliMi,
         aktif: !!ay?.aktif,
-        bugun: gunlSaat(new Date(), ay?.saat_dilimi).tarih
+        cihaz_adedi: tanimliCihaz,
+        bugun: gunlSaat(new Date(), ay?.saat_dilimi).tarih,
+        saat_sabah: ay?.saat_sabah ?? '08:00',
+        saat_ogle: ay?.saat_ogle ?? '12:30',
+        saat_aksam: ay?.saat_aksam ?? '18:00'
       });
     }
 
@@ -240,12 +282,13 @@ Deno.serve(async (req: Request) => {
         .from('datalogger_log').select('slot, basarili, mesaj, olusturma')
         .order('olusturma', { ascending: false }).limit(15);
 
+      const tumEbs = await admin
+        .from('cihaz_ebsleme').select('*').order('sira', { ascending: true });
+
       return json({
         ok: true,
         ayarlar: {
           aktif: !!a.aktif,
-          cihaz_adi: a.cihaz_adi ?? '',
-          uretici: a.uretici ?? '',
           api_url: a.api_url ?? '',
           api_yontem: a.api_yontem ?? 'GET',
           // Anahtar HICBIR ZAMAN gonderilmez; yalnizca doluluk bilgisi doner.
@@ -261,9 +304,7 @@ Deno.serve(async (req: Request) => {
           son_sync_zamani: a.son_sync_zamani ?? null,
           son_sync_durum: a.son_sync_durum ?? null
         },
-        prob: eslesmeler.map((e) => ({
-          id: e.id, prob_no: e.prob_no, depo_ad: e.depo_ad, etiket: e.etiket, aktif: e.aktif
-        })),
+        cihazlar: tumEbs.data ?? [],
         log: log ?? []
       });
     }
@@ -274,41 +315,82 @@ Deno.serve(async (req: Request) => {
       const yama: Record<string, unknown> = { last_modified: new Date().toISOString() };
 
       if (s.aktif !== undefined)      yama.aktif = !!s.aktif;
-      if (s.cihaz_adi !== undefined) yama.cihaz_adi = String(s.cihaz_adi ?? '').trim();
-      if (s.uretici !== undefined)    yama.uretici = String(s.uretici ?? '').trim();
       if (s.api_url !== undefined)    yama.api_url = String(s.api_url ?? '').trim();
       if (s.api_yontem !== undefined) yama.api_yontem = ['GET', 'POST'].includes(s.api_yontem) ? s.api_yontem : 'GET';
       if (s.saat_sabah !== undefined) yama.saat_sabah = saatDogrula(s.saat_sabah, '08:00');
       if (s.saat_ogle !== undefined)  yama.saat_ogle = saatDogrula(s.saat_ogle, '12:30');
       if (s.saat_aksam !== undefined) yama.saat_aksam = saatDogrula(s.saat_aksam, '18:00');
       if (s.saat_dilimi !== undefined) yama.saat_dilimi = String(s.saat_dilimi || 'Europe/Istanbul');
-      if (s.edge_function_url !== undefined) yama.edge_function_url = String(s.edge_function_url ?? '').trim();
 
-      // Bos string gonderilirse mevcut anahtari SILMeyelim: kullanici sadece
-      // diger alanlari degistirip anahtara dokunmak istemeyebilir.
+      // Bos string gonderilirse mevcut anahtari SILMeyelim.
       if (typeof s.api_key === 'string' && s.api_key.trim() !== '') yama.api_key = s.api_key.trim();
-      if (typeof s.cron_secret === 'string' && s.cron_secret.trim() !== '') yama.cron_secret = s.cron_secret.trim();
       if (s.api_key_temizle === true) yama.api_key = '';
-      if (s.cron_secret_temizle === true) yama.cron_secret = '';
+
+      // ── Cron guvenlik anahtari ve Edge adresi: sunucuda uretilir ────────────
+      // Kullanici bunlari gormez/girmez. Supabase zaten kendi proje
+      // adresimizi bize verir; cron fonksiyonunun adresi oradan turetilir.
+      if (!(ay?.cron_secret || '').trim()) {
+        yama.cron_secret = rastgeleAnahtar();
+      }
+      if (!(ay?.edge_function_url || '').trim() && SB_URL) {
+        yama.edge_function_url = `${SB_URL.replace(/\/+$/, '')}/functions/v1/datalogger-cron`;
+      }
+
+      // ── Cihaz listesi ─────────────────────────────────────────────────────
+      // Gelen liste DEDUPE edilerek yazilir. Bos kodlu satirlar atlanir.
+      const gelen: any[] = Array.isArray(istek.cihazlar) ? istek.cihazlar : [];
+      const temiz: Ebsleme[] = [];
+      const gorulenKod = new Set<string>();
+      const gorulenDepo = new Set<string>();
+      for (const c of gelen) {
+        const kod = String(c?.cihaz_kodu ?? '').trim();
+        const depo = String(c?.depo_ad ?? '').trim();
+        if (kod === '' || depo === '') continue;
+        const nk = normKod(kod);
+        const nd = normKod(depo);
+        if (gorulenKod.has(nk) || gorulenDepo.has(nd)) continue;   // UNIQUE ihlali
+        gorulenKod.add(nk);
+        gorulenDepo.add(nd);
+        temiz.push({
+          cihaz_kodu: kod,
+          depo_ad: depo,
+          etiket: String(c?.etiket ?? '').trim(),
+          sira: temiz.length + 1,
+          aktif: c?.aktif !== false
+        });
+      }
 
       const { error } = await admin.from('cihaz_ayarlari').update(yama).eq('id', SETTINGS_ID);
       if (error) return json({ ok: false, error: 'Ayarlar kaydedilemedi: ' + error.message }, 500);
 
-      // Saatler degistigini zamanlamayi da yeniden kur.
-      let zamanlama: any = null;
-      if (s.saat_sabah !== undefined || s.saat_ogle !== undefined || s.saat_aksam !== undefined || s.aktif !== undefined) {
-        const { data } = await admin.rpc('datalogger_zamanlama_ayarla');
-        zamanlama = data ?? [];
+      // Cihaz listesini tamamen degistir (sil + yeniden yaz).
+      // Transaction yoksa iki islemi sirayla yap; arada hata olursa
+      // eski liste korunmaya devam eder.
+      await admin.from('cihaz_ebsleme').delete().neq('id', 0);
+      if (temiz.length) {
+        const { error: e2 } = await admin.from('cihaz_ebsleme').insert(temiz);
+        if (e2) return json({ ok: false, error: 'Cihaz listesi kaydedilemedi: ' + e2.message }, 500);
       }
 
-      await logYaz('test', true, 'Ayarlar guncellendi');
-      return json({ ok: true, zamanlama });
+      // Saatler/aktiflik degistigini zamanlamayi da yeniden kur.
+      let zamanlama: any = null;
+      try {
+        const { data } = await admin.rpc('datalogger_zamanlama_ayarla');
+        zamanlama = data ?? [];
+      } catch (rpcHata: any) {
+        zamanlama = [];
+        await logYaz('test', false, 'Zamanlama kurulamadı: ' + (rpcHata?.message ?? ''));
+      }
+
+      await logYaz('test', true, `Ayarlar guncellendi, ${temiz.length} cihaz`);
+      return json({ ok: true, zamanlama, cihaz_adedi: temiz.length });
     }
 
     if (!ayarliMi) {
       return json({
         ok: true,
         configured: false,
+        cihaz_adedi: tanimliCihaz,
         mesaj: 'Datalogger henüz bağlı değil. Elle kayıt yapmaya devam edebilirsiniz.'
       });
     }
@@ -316,13 +398,13 @@ Deno.serve(async (req: Request) => {
     if (aksiyon === 'test') {
       try {
         const ham = await cihazApiCagir(ay!);
-        const kanallar = kanallariAyikla(ham);
-        const okunan = kanallariNormalle(kanallar, eslesmeler);
+        const cihazlar = cihazlariAyikla(ham);
+        const okunan = cihazlariNormalle(cihazlar, eslesmeler);
         await admin.from('cihaz_ayarlari')
           .update({ son_test_zamani: new Date().toISOString(), son_test_sonuc: 'Basarili' })
           .eq('id', SETTINGS_ID);
-        await logYaz('test', true, `Kanal okundu: ${okunan.length}`);
-        return json({ ok: true, configured: true, basarili: true, kanal_adedi: okunan.length, okunan, ham });
+        await logYaz('test', true, `Cihaz okundu: ${okunan.length}`);
+        return json({ ok: true, configured: true, basarili: true, cihaz_adedi: okunan.length, okunan, ham });
       } catch (hata: any) {
         const mesaj = hata?.message ?? String(hata);
         await admin.from('cihaz_ayarlari')
@@ -335,11 +417,11 @@ Deno.serve(async (req: Request) => {
 
     if (aksiyon === 'fetch' || aksiyon === 'save') {
       const ham = await cihazApiCagir(ay!);
-      const kanallar = kanallariAyikla(ham);
-      let okunan = kanallariNormalle(kanallar, eslesmeler);
+      const cihazlar = cihazlariAyikla(ham);
+      const okunan = cihazlariNormalle(cihazlar, eslesmeler);
 
       if (okunan.length === 0) {
-        await logYaz(aksiyon, false, 'Cihaz yanıtından sıcaklık kanalı okunamadı');
+        await logYaz(aksiyon, false, 'Cihaz yanıtından sıcaklık okunamadı');
         return json({
           ok: false,
           configured: true,
@@ -354,7 +436,7 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true, configured: true, okunan, tarih: zaman.tarih, saat: zaman.saat, ham });
       }
 
-      // save: veritabanindaki ekleme fonksiyonuna yaz (tekrar calistirma korumali)
+      // save: ekleme fonksiyonuna yaz (tekrar calistirma korumali)
       const kaydedilen: any[] = [];
       const atlanan: any[] = [];
       for (const o of okunan) {
@@ -365,8 +447,7 @@ Deno.serve(async (req: Request) => {
           p_nem: o.nem,
           p_tarih: zaman.tarih,
           p_saat: zaman.saat,
-          p_cihaz_id: SETTINGS_ID,
-          p_prob_no: o.prob_no,
+          p_cihaz_id: o.cihaz_kodu,
           p_kaynak: 'cek',
           p_cihaz_zaman: o.cihaz_zaman ? String(o.cihaz_zaman) : null
         });
@@ -395,8 +476,15 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-// Ay girdisini "SS:DD" olarak dogrular; gecersizse varsayilani kullanir.
 function saatDogrula(deger: unknown, varsayilan: string) {
   const v = String(deger ?? '').trim();
   return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(v) ? v : varsayilan;
+}
+
+// Cron guvenlik anahtari: 32 rastgele hex karakter. Kullanicinin bilmesine
+// gerek yok; yalnizca veritabani ile bu Edge Function arasinda tutarli olur.
+function rastgeleAnahtar(): string {
+  const bayt = new Uint8Array(16);
+  crypto.getRandomValues(bayt);
+  return Array.from(bayt).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
