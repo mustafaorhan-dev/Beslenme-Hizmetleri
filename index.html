@@ -2547,12 +2547,18 @@
             <li><strong>LİTRE:</strong> Litre başı fiyat. Tarifte <em>ml</em> kullanılıyorsa otomatik dönüşür (1 lt = 1000 ml).</li>
             <li><strong>ADET:</strong> Tane başı fiyat (yumurta, ekmek, limon gibi). Tarifteki adetle doğrudan çarpılır; dönüşüm gerekmez, çarpan boş kalır.</li>
             <li><strong>TENEKE:</strong> Sıvı yağ gibi ürünlerin teneke ambalajı. Varsayılan <strong>18 litredir</strong>; farklı boy ise çarpan alanına gerçek litre değerini yazın (örn. 5'lik teneke için 5).</li>
-            <li><strong>KOLİ:</strong> Ağırlıkla satılan ürünlerin kolisi. Varsayılan <strong>10 kg'dır</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
+            <li><strong>KOLİ:</strong> Kolide satılan ürünler. Kaydederken <em>Koli içeriği</em> seçilir:
+              <ul>
+                <li><em>KG (ağırlık):</em> Kolinin ağırlığı. Varsayılan <strong>10 kg</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
+                <li><em>ADET (parça):</em> Kolide kaç adet var. Çarpan alanına adet sayısını yazın (örn. yumurta: 30).</li>
+              </ul>
+            </li>
           </ul>
           <p><strong>Örnek Girişler:</strong></p>
           <ul>
-            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em> (195 ÷ 30), Çarpan: boş. DİKKAT: Yumurtayı KOLİ olarak girmeyin! Sistemde koli <em>ağırlık</em> birimidir (10 kg); yumurta gibi adetle kullanılan ürünlerde koli girilmesi hesabı tamamen bozar.</li>
-            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>ADET (parça)</em>, Fiyat: <em>195</em>, Çarpan: <em>30</em>. Bu kayıt adet fiyatı 6,50 ₺ olarak kullanılır; tarifte 30 adet yumurta 195,00 ₺, 40 adet 260,00 ₺ eder.</li>
+            <li><strong>Yumurta – adet fiyatı 6,50 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em>, Çarpan: boş. Yalnızca adetle fiyatlandırılan ürünlerde kullanın.</li>
+            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>KG (ağırlık)</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
             <li><strong>Ayçiçek Yağı – 18 lt teneke 1.950 ₺:</strong> Birim: <em>TENEKE</em>, Fiyat: <em>1950</em>, Çarpan: <em>18</em>. Tarifte ml/lt kullanılıyorsa otomatik çevrilir.</li>
             <li><strong>Pirinç – kilosu 42 ₺:</strong> Birim: <em>KG</em>, Fiyat: <em>42</em>, Çarpan: boş.</li>
           </ul>

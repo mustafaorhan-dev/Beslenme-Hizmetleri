@@ -55,23 +55,66 @@ CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
   USING (true) WITH CHECK (true);
 
 -- 5) BİRİM FİYAT LİSTESİ tablosu + erişim politikası
---    Yemeklerde kullanılan malzemelerin kg/lt birim fiyatlarını tutar
+--    Yemeklerde kullanılan malzemelerin kg/lt/adet birim fiyatlarını tutar
 --    Yıl bazlı: her yıl için ayrı birim fiyat girilir
+--
+--    id TEXT (SERIAL DEĞİL): Uygulama satırları çevrimdışı da kullanılabilsin
+--    diye kendi ürettiği metin id ile saklıyor (Date.now().toString(36)+rastgele),
+--    'dishes' tablosu da aynı şekilde TEXT PRIMARY KEY kullanıyor. id SERIAL
+--    (integer) kaldığı sürece yeni eklenen/güncellenen ürünlerde
+--    "invalid input syntax for type integer" (22P02) hatası veriyor,
+--    hata yutulduğu için ürün "kaydedildi" görünüp sayfa yenilenince kayboluyordu.
 CREATE TABLE IF NOT EXISTS unit_prices (
-  id SERIAL PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   urun_adi TEXT NOT NULL,
   birim TEXT NOT NULL DEFAULT 'kg',
   birim_fiyat NUMERIC(10,2) NOT NULL DEFAULT 0,
   yil INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM now()),
-  created_at TIMESTAMPTZ DEFAULT now()
+  birim_carpan NUMERIC(10,4) DEFAULT 0,
+  birim_alt TEXT NOT NULL DEFAULT 'kg',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
 );
+
+-- 5b) Eski kurulumda id SERIAL (integer) ise TEXT'e çevir.
+--     Mevcut satırların id'si olduğu gibi korunur; yalnızca tip değişir.
+DO $$
+DECLARE
+  mevcut_tip TEXT;
+BEGIN
+  SELECT data_type INTO mevcut_tip
+    FROM information_schema.columns
+   WHERE table_schema = 'public'
+     AND table_name = 'unit_prices'
+     AND column_name = 'id';
+
+  IF mevcut_tip IS NOT NULL AND mevcut_tip <> 'text' THEN
+    EXECUTE 'ALTER TABLE unit_prices ADD COLUMN id_text TEXT';
+    EXECUTE 'UPDATE unit_prices SET id_text = id::TEXT WHERE id_text IS NULL';
+    EXECUTE 'ALTER TABLE unit_prices DROP CONSTRAINT IF EXISTS unit_prices_pkey';
+    EXECUTE 'ALTER TABLE unit_prices DROP COLUMN id';
+    EXECUTE 'ALTER TABLE unit_prices RENAME COLUMN id_text TO id';
+    EXECUTE 'ALTER TABLE unit_prices ADD PRIMARY KEY (id)';
+  END IF;
+END $$;
+
+-- 6) BİRİM ÇARPANI - her ürünün kendi birim dönüşüm oranı
+--    1 teneke = 18 lt, 1 koli = 10 kg, 1 adet = X gr vb.
+--    Bu kolon olmadan uygulamanın upsert'i 42703 (column not found) ile
+--    BAŞARISIZ olur; o yüzden yukarıdaki CREATE TABLE'da da tanımlı.
+ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS birim_carpan NUMERIC(10,4) DEFAULT 0;
+ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS last_modified TEXT DEFAULT (to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+
+-- 6b) KOLİ ALT BİRİMİ - koli iki anlama geliyor:
+--       'kg'   -> 1 koli = X kilogram  (örn. 1 koli = 10 kg)
+--       'adet' -> 1 koli = X adet     (örn. yumurta: 1 koli = 30 adet)
+--     DEFAULT 'kg' eski kayıtların davranışını olduğu gibi korur; bu
+--     kolon olmadan uygulamanın upsert'i 42703 ile başarısız olur.
+ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS birim_alt TEXT NOT NULL DEFAULT 'kg';
+UPDATE unit_prices SET birim_alt = 'kg' WHERE birim_alt IS NULL OR birim_alt NOT IN ('kg', 'adet');
 
 ALTER TABLE unit_prices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "unit_prices_all" ON unit_prices;
 CREATE POLICY "unit_prices_all" ON unit_prices FOR ALL
   USING (true) WITH CHECK (true);
-
--- 6) BİRİM ÇARPANI - her ürünün kendi birim dönüşüm oranı
---    1 teneke = 18 lt, 1 koli = 10 kg vb.
-ALTER TABLE unit_prices ADD COLUMN IF NOT EXISTS birim_carpan NUMERIC(10,4) DEFAULT 0;

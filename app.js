@@ -1,4 +1,4 @@
-/* =============================================
+﻿/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
    ============================================= */
 
@@ -1858,56 +1858,79 @@ function saveUnitPrices(list) {
   invalidatePriceMap();
 }
 
-async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan) {
+// Bu üç fonksiyon sunucuya yazma sonucunu DÖNDÜRÜR (true/false).
+// Önceden hatalar yutuluyor, arayüz "kaydedildi" derken veri kayboluyordu;
+// birim fiyat listesinin bellekte tutulması, hatalı yazma durumunda
+// sayfa yenilenince eski değerlerin geri gelmesine yol açıyordu.
+async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan, birim_alt) {
   var item = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     urun_adi: urun_adi.trim(),
     birim: birim || 'kg',
     birim_fiyat: parseFloat(birim_fiyat) || 0,
     yil: parseInt(yil) || new Date().getFullYear(),
-    birim_carpan: parseFloat(birim_carpan) || 0
+    birim_carpan: parseFloat(birim_carpan) || 0,
+    birim_alt: normBirimAlt(birim_alt)
   };
   unitPricesCache.push(item);
   invalidatePriceMap();
-  if (supabaseClient) {
-    try {
-      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
-        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan },
-        { onConflict: 'id' }
-      );
-      if (error) throw error;
-    } catch (e) { console.error('Supabase addUnitPrice error:', e); }
+  if (!supabaseClient) return true;
+  try {
+    var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
+      { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan, birim_alt: item.birim_alt },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Supabase addUnitPrice error:', e);
+    return false;
   }
 }
 
 async function editUnitPrice(id, alanlar) {
   var item = unitPricesCache.find(function(p) { return p.id === id; });
-  if (!item) return;
+  if (!item) return false;
   if (alanlar.urun_adi !== undefined) item.urun_adi = alanlar.urun_adi.trim();
   if (alanlar.birim !== undefined) item.birim = alanlar.birim;
   if (alanlar.birim_fiyat !== undefined) item.birim_fiyat = parseFloat(alanlar.birim_fiyat) || 0;
   if (alanlar.yil !== undefined) item.yil = parseInt(alanlar.yil) || item.yil;
   if (alanlar.birim_carpan !== undefined) item.birim_carpan = parseFloat(alanlar.birim_carpan) || 0;
+  if (alanlar.birim_alt !== undefined) item.birim_alt = normBirimAlt(alanlar.birim_alt);
+  if (item.birim_alt === undefined) item.birim_alt = 'kg';
   invalidatePriceMap();
-  if (supabaseClient) {
-    try {
-      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
-        { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan || 0 },
-        { onConflict: 'id' }
-      );
-      if (error) throw error;
-    } catch (e) { console.error('Supabase editUnitPrice error:', e); }
+  if (!supabaseClient) return true;
+  try {
+    var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).upsert(
+      { id: item.id, urun_adi: item.urun_adi, birim: item.birim, birim_fiyat: item.birim_fiyat, yil: item.yil, birim_carpan: item.birim_carpan || 0, birim_alt: item.birim_alt },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Supabase editUnitPrice error:', e);
+    return false;
   }
 }
 
 async function deleteUnitPrice(id) {
+  // Sunucu hatasında liste ile veritabanı tutmaz hale geliyordu: kayıt
+  // ekrandan silinip "başarılı" deniyor, yenilemede geri geliyordu. Silinen
+  // satır saklanıp hata halinde geri konur.
+  var silinen = unitPricesCache.filter(function(p) { return p.id === id; });
+  var kaldirilan = unitPricesCache.length - silinen.length;
   unitPricesCache = unitPricesCache.filter(function(p) { return p.id !== id; });
   invalidatePriceMap();
-  if (supabaseClient) {
-    try {
-      var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).delete().eq('id', id);
-      if (error) throw error;
-    } catch (e) { console.error('Supabase deleteUnitPrice error:', e); }
+  if (!supabaseClient) return true;
+  try {
+    var { error } = await supabaseClient.from(UNIT_PRICES_SUPABASE_KEY).delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Supabase deleteUnitPrice error:', e);
+    unitPricesCache = unitPricesCache.slice(0, kaldirilan).concat(silinen, unitPricesCache.slice(kaldirilan));
+    invalidatePriceMap();
+    return false;
   }
 }
 
@@ -1967,7 +1990,8 @@ async function syncUnitPricesFromSupabase() {
           birim: String(p.birim || 'kg').trim(),
           birim_fiyat: parseFloat(p.birim_fiyat) || 0,
           yil: parseInt(p.yil) || new Date().getFullYear(),
-          birim_carpan: parseFloat(p.birim_carpan) || 0
+          birim_carpan: parseFloat(p.birim_carpan) || 0,
+          birim_alt: normBirimAlt(p.birim_alt)
         };
       });
       invalidatePriceMap();
@@ -2012,19 +2036,21 @@ function adetGrVarsayilan(urunAdi) {
   return 0;
 }
 
+// Koli/kutu biriminin alt birimi. 'kg' = ağırlık (varsayılan, eski davranış),
+// 'adet' = parça sayısı ("1 koli = 30 adet"). Yumurta gibi adetle satılan
+// ürünlerde koliyi kg saymak 30 yumurta ≈ 1,8 kg yerine 10 kg varsayıp
+// fiyatı ~5 kat yanlış hesaplıyordu.
+function normBirimAlt(b) {
+  var s = normBirimGlobal(b);
+  return s === 'adet' ? 'adet' : 'kg';
+}
+
 function findBirimFiyat(malzemeAdi, birim, yil, strict) {
   var currentYear = (yil === undefined || yil === null || isNaN(yil)) ? new Date().getFullYear() : Number(yil);
   var normalized = normIsim(malzemeAdi);
   var birimN = normBirimGlobal(birim);
 
-  function birimTarget(bn) {
-    if (bn === 'gr') return ['kg', 'teneke'];
-    if (bn === 'ml') return ['litre', 'teneke'];
-    if (bn === 'litre') return ['teneke', 'ml'];
-    if (bn === 'kg') return ['teneke', 'gr'];
-    if (bn === 'teneke') return ['litre', 'kg'];
-    return [];
-  }
+  var birimTarget = priceTargets;
 
   var exactYearBirim = unitPricesCache.filter(function(p) {
     return normIsim(p.urun_adi) === normalized && p.yil === currentYear && normBirimGlobal(p.birim) === birimN;
@@ -2075,17 +2101,64 @@ var BIRIM_CARPAN = {
   'gr|koli': 0.0001
 };
 
-function birimDonusum(miktar, fromBirim, toBirim, urunCarpan, urunAdi) {
+function birimDonusum(miktar, fromBirim, toBirim, urunCarpan, urunAdi, urunAltBirim) {
   var from = normBirimGlobal(fromBirim);
   var to = normBirimGlobal(toBirim);
   if (from === to) return miktar;
+
+  var alt = normBirimAlt(urunAltBirim);
+  var parcaGr = function() {
+    var g = 0;
+    // Fiyat satırı 'adet' ise çarpanı parça ağırlığıdır ("1 adet = 175 gr").
+    // 'koli' + alt='adet' ise çarpan parça SAYISIDIR, ağırlık değil.
+    if (alt === 'adet' && from === 'adet' && urunCarpan && urunCarpan > 0) g = urunCarpan;
+    if (g <= 0) g = adetGrVarsayilan(urunAdi) || 0;
+    return g;
+  };
+
+  // koli <-> adet: "1 koli = 30 adet" tanımı
+  if ((from === 'koli' && to === 'adet') || (from === 'adet' && to === 'koli')) {
+    // Alt birim açıkça 'adet' ise çarpan zaten parça SAYISIDIR; çarpan
+    // girilmemişse 10 kg varsayılanına düşmek "1 koli = 60 adet" gibi
+    // patlayan bir tutar üretirdi, bu yüzden bilinmiyor diye null dönülür.
+    if (alt === 'adet') {
+      if (urunCarpan && urunCarpan > 0) {
+        return from === 'koli' ? miktar * urunCarpan : miktar / urunCarpan;
+      }
+      return null;
+    }
+    // Alt birim kg ise koli ağırlık birimidir; önce kg'ya, sonra parça
+    // ağırlığıyla adede çevir.
+    var koliKg = (urunCarpan && urunCarpan > 0) ? urunCarpan : 10;
+    var g2 = parcaGr();
+    if (g2 <= 0) return null;
+    if (from === 'koli') return miktar * koliKg * 1000 / g2;
+    return miktar * g2 / 1000 / koliKg;
+  }
+
+  // koli (adet tanımlı) <-> gr/kg: koliyi önce adede çevir
+  if (alt === 'adet' && urunCarpan && urunCarpan > 0 && (from === 'koli' || to === 'koli')) {
+    var g3 = parcaGr();
+    if (g3 <= 0) return null;
+    if (from === 'koli') {
+      var adet = miktar * urunCarpan;
+      if (to === 'gr') return adet * g3;
+      if (to === 'kg') return adet * g3 / 1000;
+    } else {
+      // Bu dala from='gr'|'kg'|'ml'|'litre', to='koli' ile düşülür:
+      // önce parça sayısına, sonra koli adedine çevriliyor.
+      var adet2 = (from === 'gr') ? miktar / g3 : miktar * 1000 / g3;
+      return adet2 / urunCarpan;
+    }
+  }
 
   // adet <-> ağırlık: 1 adet kaç gr?
   // Ürünün kendi çarpanı ancak fiyat satırının birimi 'adet' ise parça ağırlığıdır
   // ("1 adet = 175 gr"). kg satırındaki çarpan ise "1 kg = 1000 gr" anlamına gelir,
   // parça ağırlığı olarak kullanılamaz. O durumda ürün adından ortalamaya bakılır.
+  // Koli+adet satırında çarpan parça SAYISI olduğu için burada da kullanılmaz.
   if (from === 'adet' || to === 'adet') {
-    var g = (to === 'adet' && urunCarpan && urunCarpan > 0) ? urunCarpan : 0;
+    var g = (to === 'adet' && alt !== 'adet' && urunCarpan && urunCarpan > 0) ? urunCarpan : 0;
     if (g <= 0) g = adetGrVarsayilan(urunAdi) || 0;
     if (g > 0) {
       if (from === 'adet' && to === 'gr') return miktar * g;
@@ -2129,7 +2202,17 @@ function birimDonusum(miktar, fromBirim, toBirim, urunCarpan, urunAdi) {
   if (from === 'lt' && to === 'litre') return miktar;
   if (from === 'litre' && to === 'lt') return miktar;
 
-  return miktar;
+  // Ağırlık (gr/kg) ile hacim (ml/litre) birbirine yoğunluk bilgisi olmadan
+  // çevrilemez. Sessizce ham sayıyı fiyatla çarpmak 1000 katlı hata üretiyordu
+  // (ör. "Süt 50 gr/kisi" litre fiyatıyla eşleşince 4.900.000 TL).
+  var fromAgirlik = from === 'gr' || from === 'kg';
+  var toAgirlik = to === 'gr' || to === 'kg';
+  var fromHacim = from === 'ml' || from === 'litre' || from === 'lt';
+  var toHacim = to === 'ml' || to === 'litre' || to === 'lt';
+  if ((fromAgirlik && toHacim) || (fromHacim && toAgirlik)) return null;
+
+  // Bilinmeyen birim çifti: tahmin etme, tutarı patlatmak yerine eksik fiyat bildir.
+  return null;
 }
 
 function birimFiyatTutar(malzemeAdi, birim, miktar, yil, strict) {
@@ -2139,7 +2222,7 @@ function birimFiyatTutar(malzemeAdi, birim, miktar, yil, strict) {
   var fiyatBirim = normBirimGlobal(fp.birim);
   if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
   var carpan = fp.birim_carpan || 0;
-  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi);
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi, fp.birim_alt);
   if (donusumMiktari === null || donusumMiktari === undefined || isNaN(donusumMiktari)) return null;
   return donusumMiktari * fp.birim_fiyat;
 }
@@ -2202,11 +2285,15 @@ function getPriceAltMap(yil) {
 }
 
 function priceTargets(bn) {
-  if (bn === 'gr') return ['kg', 'teneke'];
+  if (bn === 'gr') return ['kg', 'teneke', 'koli'];
   if (bn === 'ml') return ['litre', 'teneke'];
   if (bn === 'litre') return ['teneke', 'ml'];
-  if (bn === 'kg') return ['teneke', 'gr'];
+  if (bn === 'kg') return ['teneke', 'gr', 'koli'];
   if (bn === 'teneke') return ['litre', 'kg'];
+  // Adet ve koli birbirinin karşılığıdır: fiyat "1 koli = 30 adet" olarak
+  // girilmişse tarifteki "adet" miktarı o satırdan hesaplanabilir.
+  if (bn === 'adet') return ['koli', 'kg'];
+  if (bn === 'koli') return ['adet', 'kg'];
   return [];
 }
 
@@ -2240,7 +2327,7 @@ function birimFiyatTutarFast(malzemeAdi, birim, miktar, yil) {
   var fiyatBirim = normBirimGlobal(fp.birim);
   if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
   var carpan = fp.birim_carpan || 0;
-  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi);
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi, fp.birim_alt);
   if (donusumMiktari === null || donusumMiktari === undefined || isNaN(donusumMiktari)) return null;
   return donusumMiktari * fp.birim_fiyat;
 }
@@ -2313,8 +2400,8 @@ function renderBirimFiyatlar() {
           <tbody>
             ${bfSlice.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
             ${bfSlice.map(function(p) {
-              var carpanGoster = bfAltBirimEtiket(p.birim, p.birim_carpan, p.urun_adi);
-              var kgFiyat = bfKgFiyat(p.birim, p.birim_fiyat, p.birim_carpan, p.urun_adi);
+              var carpanGoster = bfAltBirimEtiket(p.birim, p.birim_carpan, p.urun_adi, p.birim_alt);
+              var kgFiyat = bfKgFiyat(p.birim, p.birim_fiyat, p.birim_carpan, p.urun_adi, p.birim_alt);
               var gb = bfGercekBirim(p.birim);
               var kgMetin = kgFiyat === null ? '' : formatTRY(Math.round(kgFiyat * 100) / 100) + '/' + gb;
               var kgHucelle = kgFiyat === null
@@ -2322,7 +2409,7 @@ function renderBirimFiyatlar() {
                 : (kgFiyat > 200
                   ? '<span style="color:#ca8a04;font-weight:600" title="Birim veya alt birim kontrol edilmeli">' + kgMetin + '</span>'
                   : '<span style="color:var(--text-dim)">' + kgMetin + '</span>');
-              return '<tr data-id="' + p.id + '">' +
+              return '<tr data-id="' + escapeHtml(p.id) + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
                 '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺</td>' +
@@ -2331,10 +2418,9 @@ function renderBirimFiyatlar() {
                 '<td style="text-align:center">' + p.yil + '</td>' +
                 (bfPerms ?
                   '<td style="text-align:center;white-space:nowrap">' +
-                    '<button class="btn-icon btn-sm" onclick="bfDuzenle(\'' + p.id + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
-                    '<button class="btn-icon btn-sm" onclick="bfSil(\'' + p.id + '\')" title="Sil" style="color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
-                  '</td>' : '') +
-                '</td>';
+                    '<button class="btn-icon btn-sm" onclick="bfDuzenle(\'' + escapeHtml(p.id) + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 012 2h14a2 2 0 012-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                    '<button class="btn-icon btn-sm" onclick="bfSil(\'' + escapeHtml(p.id) + '\')" title="Sil" style="color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
+                  '</td>' : '');
             }).join('')}
           </tbody>
         </table>
@@ -2383,12 +2469,16 @@ let bfDuzenlemeId = null;
 // kg ve litre tanımı gereği her zaman 1000 alt birime eşittir; o satırlarda
 // girilen çarpan yok sayılır, yoksa "1 litre = 5000 ml" gibi hatalı kayıt
 // fiyatı 5 katına çıkarıyordu.
-function bfAltBirim(birim, carpan, urunAdi) {
+function bfAltBirim(birim, carpan, urunAdi, altBirim) {
   var b = normBirimGlobal(birim);
   var c = parseFloat(carpan) || 0;
   if (b === 'adet') return { ad: 'gr', varsayilan: c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0), sabit: false };
   if (b === 'kg') return { ad: 'gr', varsayilan: 1000, sabit: true };
-  if (b === 'koli') return { ad: 'kg', varsayilan: c > 0 ? c : 10, sabit: false };
+  // Koli iki anlama gelebilir: ağırlık (koli=kg) veya parça sayısı (koli=adet).
+  if (b === 'koli') {
+    if (normBirimAlt(altBirim) === 'adet') return { ad: 'adet', varsayilan: c, sabit: false };
+    return { ad: 'kg', varsayilan: c > 0 ? c : 10, sabit: false };
+  }
   if (b === 'litre') return { ad: 'ml', varsayilan: 1000, sabit: true };
   if (b === 'teneke') return { ad: 'lt', varsayilan: c > 0 ? c : 18, sabit: false };
   return { ad: '', varsayilan: c, sabit: false };
@@ -2396,7 +2486,7 @@ function bfAltBirim(birim, carpan, urunAdi) {
 
 // Fiyatın gerçek ağırlık/hacim karşılığı. Böylece "82 TL x 2000 adet" gibi
 // patlamalar liste üzerinde görünür olur.
-function bfKgFiyat(birim, fiyat, carpan, urunAdi) {
+function bfKgFiyat(birim, fiyat, carpan, urunAdi, altBirim) {
   var b = normBirimGlobal(birim);
   var f = parseFloat(fiyat) || 0;
   var c = parseFloat(carpan) || 0;
@@ -2408,6 +2498,14 @@ function bfKgFiyat(birim, fiyat, carpan, urunAdi) {
     return g > 0 ? f / (g / 1000) : null;
   }
   if (b === 'koli') {
+    // "1 koli = 30 adet" tanımı: önce adet fiyatına in, sonra kg'ya çık.
+    if (normBirimAlt(altBirim) === 'adet') {
+      if (c <= 0) return null;
+      var g2 = adetGrVarsayilan(urunAdi) || 0;
+      var adetFiyat = f / c;
+      if (g2 > 0) return adetFiyat / (g2 / 1000);
+      return null;
+    }
     var kg = c > 0 ? c : 10;
     return f / kg;
   }
@@ -2423,8 +2521,8 @@ function bfGercekBirim(birim) {
   return normBirimGlobal(birim) === 'litre' || normBirimGlobal(birim) === 'teneke' ? 'lt' : 'kg';
 }
 
-function bfAltBirimEtiket(birim, carpan, urunAdi) {
-  var alt = bfAltBirim(birim, carpan, urunAdi);
+function bfAltBirimEtiket(birim, carpan, urunAdi, altBirim) {
+  var alt = bfAltBirim(birim, carpan, urunAdi, altBirim);
   if (!alt.ad) return '—';
   var v = alt.varsayilan > 0 ? alt.varsayilan : null;
   return v ? v + ' ' + alt.ad : '—';
@@ -2438,24 +2536,40 @@ function bfOnizlemeGuncelle() {
   var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
   var carpan = parseFloat(document.getElementById('bf_carpan').value) || 0;
   var ad = (document.getElementById('bf_ad').value || '').trim();
-  var alt = bfAltBirim(birim, carpan, ad);
+  var altSec = document.getElementById('bf_birim_alt');
+  var altBirim = altSec ? altSec.value : 'kg';
+  var alt = bfAltBirim(birim, carpan, ad, altBirim);
   var parcalar = [];
+
+  // Koli seçildiğinde alt birim seçicisini göster/gizle
+  var altKutu = document.getElementById('bf_birim_alt_kutu');
+  if (altKutu) altKutu.style.display = (normBirimGlobal(birim) === 'koli') ? '' : 'none';
+  var carpanLabel = document.getElementById('bf_carpanLabel');
+  if (carpanLabel) {
+    carpanLabel.textContent = normBirimGlobal(birim) === 'koli' && normBirimAlt(altBirim) === 'adet'
+      ? '1 KOLİ = kaç ADET' : '1 Birim = X (alt birim)';
+  }
 
   if (alt.ad) {
     parcalar.push('1 ' + birim + ' = ' + (alt.varsayilan > 0 ? alt.varsayilan + ' ' + alt.ad : '? ' + alt.ad));
   }
-  var kg = bfKgFiyat(birim, fiyat, carpan, ad);
+  var kg = bfKgFiyat(birim, fiyat, carpan, ad, altBirim);
   if (kg !== null) {
     parcalar.push('gerçek: ' + formatTRY(Math.round(kg * 100) / 100) + '/' + bfGercekBirim(birim));
   } else if (fiyat > 0) {
     parcalar.push('kg karşılığı belirlenemiyor');
   }
 
+  var bn = normBirimGlobal(birim);
   var uyari = '';
   if (alt.sabit && carpan > 0 && carpan !== 1000) {
     uyari = ' ⚠️ 1 ' + birim + ' her zaman 1000 ' + alt.ad + ' dir; girilen ' + carpan +
-      ' yok sayıldı. Fiyatı ' + (normBirimGlobal(birim) === 'litre' ? 'litreye' : 'kiloya') + ' çevirmek için Birim = TENEKE/KOLI kullan.';
-  } else if (normBirimGlobal(birim) === 'adet' && alt.varsayilan <= 0) {
+      ' yok sayıldı. Fiyatı ' + (bn === 'litre' ? 'litreye' : 'kiloya') + ' çevirmek için Birim = TENEKE/KOLI kullan.';
+  } else if (bn === 'koli' && normBirimAlt(altBirim) === 'adet' && carpan <= 0) {
+    uyari = ' ⚠️ 1 koli kaç adet? Girilmezse adet fiyatı hesaplanamaz.';
+  } else if (bn === 'koli' && normBirimAlt(altBirim) === 'adet' && carpan > 0) {
+    parcalar.push('adet başı ' + formatTRY(Math.round((fiyat / carpan) * 100) / 100));
+  } else if (bn === 'adet' && alt.varsayilan <= 0) {
     uyari = ' ⚠️ 1 adet kaç gr? Girilmezse adet→kg dönüşümü yapılamaz.';
   } else if (kg !== null && kg > 200) {
     uyari = ' ⚠️ ' + bfGercekBirim(birim) + ' fiyatı çok yüksek, birimi kontrol et.';
@@ -2486,6 +2600,13 @@ function bfYeniUrun() {
           <option value="teneke">TENEKE</option>
         </select>
       </div>
+      <div id="bf_birim_alt_kutu" style="flex:0.6;min-width:90px;display:none">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Koli içeriği</label>
+        <select id="bf_birim_alt" onchange="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+          <option value="kg">KG (ağırlık)</option>
+          <option value="adet">ADET (parça)</option>
+        </select>
+      </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
         <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" oninput="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
@@ -2512,6 +2633,11 @@ function bfDuzenle(id) {
   bfDuzenlemeId = id;
   var form = document.getElementById('bfFormContainer');
   if (!form) return;
+  // Birim karşılaştırması normalize edilmeli: veritabanında "Adet"/"Teneke"
+  // gibi yazılmışsa hiçbir seçenek işaretlenmiyor ve kaydederken birim
+  // sessizce KG'ye dönüşüyordu.
+  var seciliBirim = normBirimGlobal(item.birim);
+  var seciliAlt = normBirimAlt(item.birim_alt);
   form.style.display = 'block';
   form.innerHTML = `<div style="padding:0.75rem;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)">
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
@@ -2522,11 +2648,18 @@ function bfDuzenle(id) {
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
         <select id="bf_birim" onchange="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
-          <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>KG</option>
-          <option value="koli"${item.birim === 'koli' ? ' selected' : ''}>KOLİ</option>
-          <option value="litre"${item.birim === 'litre' ? ' selected' : ''}>LİTRE</option>
-          <option value="adet"${item.birim === 'adet' ? ' selected' : ''}>ADET</option>
-          <option value="teneke"${item.birim === 'teneke' ? ' selected' : ''}>TENEKE</option>
+          <option value="kg"${seciliBirim === 'kg' ? ' selected' : ''}>KG</option>
+          <option value="koli"${seciliBirim === 'koli' ? ' selected' : ''}>KOLİ</option>
+          <option value="litre"${seciliBirim === 'litre' ? ' selected' : ''}>LİTRE</option>
+          <option value="adet"${seciliBirim === 'adet' ? ' selected' : ''}>ADET</option>
+          <option value="teneke"${seciliBirim === 'teneke' ? ' selected' : ''}>TENEKE</option>
+        </select>
+      </div>
+      <div id="bf_birim_alt_kutu" style="flex:0.6;min-width:90px;display:none">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Koli içeriği</label>
+        <select id="bf_birim_alt" onchange="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+          <option value="kg"${seciliAlt === 'kg' ? ' selected' : ''}>KG (ağırlık)</option>
+          <option value="adet"${seciliAlt === 'adet' ? ' selected' : ''}>ADET (parça)</option>
         </select>
       </div>
       <div style="flex:1;min-width:100px">
@@ -2549,30 +2682,42 @@ function bfDuzenle(id) {
   document.getElementById('bf_ad').focus();
 }
 
-function bfKaydet() {
+async function bfKaydet() {
   if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var ad = (document.getElementById('bf_ad').value || '').trim();
   var birim = document.getElementById('bf_birim').value;
   var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
   var carpan = parseFloat(document.getElementById('bf_carpan').value) || 0;
+  var altSec = document.getElementById('bf_birim_alt');
+  var birimAlt = normBirimGlobal(birim) === 'koli' && altSec ? normBirimAlt(altSec.value) : 'kg';
   if (!ad) { showToast('Ürün adı zorunludur.', 'error'); return; }
   if (fiyat <= 0) { showToast('Geçerli bir fiyat girin.', 'error'); return; }
-  if (bfDuzenlemeId) {
-    editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan });
-    showToast('Ürün güncellendi.', 'success');
-  } else {
-    addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil, carpan);
-    showToast('Ürün eklendi.', 'success');
+  if (normBirimGlobal(birim) === 'koli' && birimAlt === 'adet' && carpan <= 0) {
+    showToast('1 koli kaç adet? Çarpan alanına koli içindeki adet sayısını yazın.', 'error');
+    return;
   }
+  var duzenleme = !!bfDuzenlemeId;
+  var ok = duzenleme
+    ? await editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan, birim_alt: birimAlt })
+    : await addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil, carpan, birimAlt);
+  if (!ok) {
+    showToast('Sunucuya kaydedilemedi. Sayfayı yenileyince değişiklik kaybolur — konsolu (F12) kontrol edin.', 'error');
+    return;
+  }
+  showToast(duzenleme ? 'Ürün güncellendi.' : 'Ürün eklendi.', 'success');
   document.getElementById('bfFormContainer').style.display = 'none';
   bfDuzenlemeId = null;
   renderBirimFiyatlar();
 }
 
-function bfSil(id) {
+async function bfSil(id) {
   if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
-  deleteUnitPrice(id);
+  var ok = await deleteUnitPrice(id);
+  if (!ok) {
+    showToast('Sunucudan silinemedi; kayıt listede bırakıldı.', 'error');
+    return;
+  }
   showToast('Ürün silindi.', 'success');
   renderBirimFiyatlar();
 }
@@ -2580,8 +2725,20 @@ function bfSil(id) {
 function bfExportCSV() {
   var filtered = unitPricesCache.filter(function(p) { return p.yil === birimFiyatSeciliYil; });
   if (!filtered.length) { showToast('Dışa aktarılacak ürün yok.', 'error'); return; }
-  var rows = [['Ürün Adı', 'Birim', 'Birim Fiyat (₺)', 'Yıl']];
-  filtered.forEach(function(p) { rows.push([p.urun_adi, p.birim, p.birim_fiyat, p.yil]); });
+  // Çarpan ve koli alt birimi de yazılır: aksi halde CSV yüklemesi
+  // teneke/koli dönüşümlerini ve "1 koli = 30 adet" tanımını sessizce kaybeder.
+  var rows = [['Ürün Adı', 'Birim', 'Birim Fiyat (₺)', '1 Birim =', 'Alt Birim', 'Yıl']];
+  filtered.forEach(function(p) {
+    var alt = bfAltBirim(p.birim, p.birim_carpan, p.urun_adi, p.birim_alt);
+    rows.push([
+      p.urun_adi,
+      p.birim,
+      p.birim_fiyat,
+      alt.varsayilan > 0 ? alt.varsayilan : '',
+      alt.ad || 'kg',
+      p.yil
+    ]);
+  });
   var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
   var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   var link = document.createElement('a');
@@ -2595,23 +2752,98 @@ function bfImportCSV(event) {
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
-  reader.onload = function(e) {
-    var lines = e.target.result.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  reader.onload = async function(e) {
+    var lines = String(e.target.result).split(/\r?\n/).filter(function(l) { return l.trim(); });
     if (lines.length < 2) { showToast('CSV boş veya geçersiz.', 'error'); return; }
-    var imported = 0;
+
+    // Naif split(/[;,]/) tırnak içindeki ondalık virgülü de ayırıcı sanıp
+    // "8,50" değerini 8 ve 50 olarak ikiye bölüyordu; fiyat sessizce 8'e
+    // düşüyordu. Bu yüzden ayırıcı tırnak dışında aranır.
+    function satirParcalari(l) {
+      var d = l.indexOf(';') >= 0 ? ';' : ',';
+      var out = [], cur = '', q = false;
+      for (var i = 0; i < l.length; i++) {
+        var ch = l[i];
+        if (q) {
+          if (ch === '"') {
+            if (l[i + 1] === '"') { cur += '"'; i++; } else { q = false; }
+          } else cur += ch;
+        } else if (ch === '"') q = true;
+        else if (ch === d) { out.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur.trim());
+      return out;
+    }
+    // Sütunlar başlıktan okunur; eski 4 sütunlu (Yıl 4.'de) ve 5 sütunlu
+    // (Çarpan 4.'de) dosyalar da konum bazlı yorumlanabilsin.
+    var baslik = satirParcalari(lines[0]).map(function(c) { return normIsim(c); });
+    function sutun(...adlar) {
+      for (var i = 0; i < adlar.length; i++) {
+        var j = baslik.indexOf(normIsim(adlar[i]));
+        if (j >= 0) return j;
+      }
+      return -1;
+    }
+    var iAd = sutun('Ürün Adı', 'Urun Adi', 'Malzeme');
+    var iBirim = sutun('Birim');
+    var iFiyat = sutun('Birim Fiyat (₺)', 'Birim Fiyat', 'Fiyat');
+    var iCarpan = sutun('1 Birim =', 'Çarpan', 'Carpan');
+    var iAlt = sutun('Alt Birim');
+    var iYil = sutun('Yıl', 'Yil');
+    if (iAd < 0 || iFiyat < 0) { iAd = 0; iBirim = 1; iFiyat = 2; iYil = 3; }
+    // Başlıkta adı bulunamayan sütunlar konumdan tahmin edilir:
+    //   4 sütun -> ad, birim, fiyat, yıl            (çarpan YOK)
+    //   5 sütun -> ad, birim, fiyat, çarpan, yıl
+    //   6 sütun -> ad, birim, fiyat, çarpan, alt, yıl
+    // Yıl her zaman son sütundur.
+    if (iCarpan < 0) iCarpan = baslik.length === 5 ? 3 : -1;
+    if (iAlt < 0) iAlt = baslik.length >= 6 ? 4 : -1;
+    if (iYil < 0) iYil = baslik.length - 1;
+
+    function sayi(v) {
+      if (v === undefined || v === null || v === '') return 0;
+      var s = String(v).replace(/[^\d,.\-]/g, '');
+      // "1.234,56" -> binlik ayracı; "6.50" / "6,50" -> ondalık. Nokta
+      // her zaman kaldırılırsa dışa aktarımın kendi çıktısı 650'ye dönüşür.
+      if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+      else s = s.replace(/,/g, '.');
+      var n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    var eklendi = 0, guncellendi = 0, atlandi = 0, hatali = 0;
     for (var i = 1; i < lines.length; i++) {
-      var cols = lines[i].split(/[;,]/).map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
-      if (cols.length < 3) continue;
-      var ad = cols[0];
-      var birim = cols[1] || 'kg';
-      var fiyat = parseFloat(cols[2].replace(/\./g, '').replace(',', '.')) || 0;
-      var yil = parseInt(cols[3]) || birimFiyatSeciliYil;
-      if (ad && fiyat > 0) {
-        addUnitPrice(ad, birim, fiyat, yil);
-        imported++;
+      var cols = satirParcalari(lines[i]);
+      var ad = (cols[iAd] || '').trim();
+      if (!ad) continue;
+      var birim = normBirimGlobal(cols[iBirim] || 'kg');
+      var fiyat = sayi(cols[iFiyat]);
+      if (fiyat <= 0) { atlandi++; continue; }
+      var carpan = iCarpan >= 0 ? sayi(cols[iCarpan]) : 0;
+      var birimAlt = normBirimAlt(iAlt >= 0 ? cols[iAlt] : 'kg');
+      if (birim !== 'koli') birimAlt = 'kg';
+      var yil = iYil >= 0 ? (parseInt(cols[iYil], 10) || birimFiyatSeciliYil) : birimFiyatSeciliYil;
+
+      // Aynı ürün+yıl+birim zaten varsa yeni satır açmak yerine güncelle;
+      // aksi halde fiyat eşleşmesi belirsizleşiyor ve "duplike" uyarısı çıkıyor.
+      var mevcut = unitPricesCache.find(function(p) {
+        return p.yil === yil && normIsim(p.urun_adi) === normIsim(ad) && normBirimGlobal(p.birim) === birim;
+      });
+      if (mevcut) {
+        var oki = await editUnitPrice(mevcut.id, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan, birim_alt: birimAlt });
+        if (oki) guncellendi++; else hatali++;
+      } else {
+        var eki = await addUnitPrice(ad, birim, fiyat, yil, carpan, birimAlt);
+        if (eki) eklendi++; else hatali++;
       }
     }
-    showToast(imported + ' ürün içe aktarıldı.', 'success');
+    var parcalar = [];
+    if (eklendi) parcalar.push(eklendi + ' eklendi');
+    if (guncellendi) parcalar.push(guncellendi + ' güncellendi');
+    if (atlandi) parcalar.push(atlandi + ' satır atlandı');
+    if (hatali) parcalar.push(hatali + ' satır sunucuya yazılamadı');
+    showToast(parcalar.length ? parcalar.join(', ') : 'İçe aktarılacak veri yok.', hatali ? 'error' : 'success');
     renderBirimFiyatlar();
   };
   reader.readAsText(file, 'UTF-8');
