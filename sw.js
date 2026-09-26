@@ -1,5 +1,5 @@
-const CACHE = 'atik-kontrol-v42';
-const URLS = ['index.html', 'style.css?v=36', 'app.js?v=36', 'manifest.json', 'config.js'];
+const CACHE = 'atik-kontrol-v43';
+const URLS = ['index.html', 'style.css?v=37', 'app.js?v=37', 'manifest.json', 'config.js'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -18,8 +18,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Network-first: çevrimiçiyken her zaman güncel dosyalar alınır,
-  // çevrimdışıysa önbellekteki kopya kullanılır.
+  // Network-first: Ã§evrimiÃ§iyken her zaman gÃ¼ncel dosyalar alÄ±nÄ±r,
+  // Ã§evrimdÄ±ÅŸÄ±ysa Ã¶nbellekteki kopya kullanÄ±lÄ±r.
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       try {

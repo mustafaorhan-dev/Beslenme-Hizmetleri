@@ -1994,6 +1994,24 @@ function normIsim(s) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
 }
 
+// Sayı (adet) ile takip edilen ürünlerin ortalama parça ağırlığı, gr.
+// Reçetede "adet", fiyat listesinde "kg" (veya tersi) yazıldığında
+// dönüşüm bu değerle yapılır; ürünün kendi "1 Birim = X" değeri varsa o üstün gelir.
+var ADET_AGIRLIK = {
+  armut: 175, elma: 180, portakal: 200, mandalina: 120, kivi: 90, muz: 120,
+  domates: 120, salatalik: 250, biber: 180, patates: 250, sogan: 200,
+  havuc: 200, patlican: 350, kabak: 800, brokoli: 500, yumurta: 60
+};
+
+function adetGrVarsayilan(urunAdi) {
+  if (!urunAdi) return 0;
+  var n = normIsim(urunAdi);
+  for (var k in ADET_AGIRLIK) {
+    if (Object.prototype.hasOwnProperty.call(ADET_AGIRLIK, k) && n.indexOf(k) >= 0) return ADET_AGIRLIK[k];
+  }
+  return 0;
+}
+
 function findBirimFiyat(malzemeAdi, birim, yil, strict) {
   var currentYear = (yil === undefined || yil === null || isNaN(yil)) ? new Date().getFullYear() : Number(yil);
   var normalized = normIsim(malzemeAdi);
@@ -2057,10 +2075,28 @@ var BIRIM_CARPAN = {
   'gr|koli': 0.0001
 };
 
-function birimDonusum(miktar, fromBirim, toBirim, urunCarpan) {
+function birimDonusum(miktar, fromBirim, toBirim, urunCarpan, urunAdi) {
   var from = normBirimGlobal(fromBirim);
   var to = normBirimGlobal(toBirim);
   if (from === to) return miktar;
+
+  // adet <-> ağırlık: 1 adet kaç gr?
+  // Ürünün kendi çarpanı ancak fiyat satırının birimi 'adet' ise parça ağırlığıdır
+  // ("1 adet = 175 gr"). kg satırındaki çarpan ise "1 kg = 1000 gr" anlamına gelir,
+  // parça ağırlığı olarak kullanılamaz. O durumda ürün adından ortalamaya bakılır.
+  if (from === 'adet' || to === 'adet') {
+    var g = (to === 'adet' && urunCarpan && urunCarpan > 0) ? urunCarpan : 0;
+    if (g <= 0) g = adetGrVarsayilan(urunAdi) || 0;
+    if (g > 0) {
+      if (from === 'adet' && to === 'gr') return miktar * g;
+      if (from === 'adet' && to === 'kg') return miktar * g / 1000;
+      if (from === 'gr' && to === 'adet') return miktar / g;
+      if (from === 'kg' && to === 'adet') return miktar * 1000 / g;
+    }
+    // Parça ağırlığı bilinmiyorsa kg'yı adede çevirmek yanlış olur; null döner,
+    // çağıran taraf bunu "fiyat tanımlı değil" gibi ele alır, patlayan tutar üretmez.
+    return null;
+  }
 
   var pair = from + '|' + to;
   if (urunCarpan && urunCarpan > 0) {
@@ -2103,7 +2139,8 @@ function birimFiyatTutar(malzemeAdi, birim, miktar, yil, strict) {
   var fiyatBirim = normBirimGlobal(fp.birim);
   if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
   var carpan = fp.birim_carpan || 0;
-  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null);
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi);
+  if (donusumMiktari === null || donusumMiktari === undefined || isNaN(donusumMiktari)) return null;
   return donusumMiktari * fp.birim_fiyat;
 }
 
@@ -2203,7 +2240,8 @@ function birimFiyatTutarFast(malzemeAdi, birim, miktar, yil) {
   var fiyatBirim = normBirimGlobal(fp.birim);
   if (birimNorm === fiyatBirim) return miktar * fp.birim_fiyat;
   var carpan = fp.birim_carpan || 0;
-  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null);
+  var donusumMiktari = birimDonusum(miktar, birimNorm, fiyatBirim, carpan > 0 ? carpan : null, malzemeAdi);
+  if (donusumMiktari === null || donusumMiktari === undefined || isNaN(donusumMiktari)) return null;
   return donusumMiktari * fp.birim_fiyat;
 }
 
@@ -2263,23 +2301,31 @@ function renderBirimFiyatlar() {
         <table class="data-table" style="width:100%">
           <thead>
             <tr>
-              <th style="text-align:left;width:30%">Ürün Adı</th>
-              <th style="text-align:center;width:12%">Birim</th>
-              <th style="text-align:center;width:18%">Birim Fiyat (₺)</th>
-              <th style="text-align:center;width:18%">1 Birim =</th>
-              <th style="text-align:center;width:10%">Yıl</th>
+              <th style="text-align:left;width:26%">Ürün Adı</th>
+              <th style="text-align:center;width:10%">Birim</th>
+              <th style="text-align:center;width:15%">Birim Fiyat (₺)</th>
+              <th style="text-align:center;width:14%">1 Birim =</th>
+              <th style="text-align:center;width:13%">Gerçek ₺/kg</th>
+              <th style="text-align:center;width:8%">Yıl</th>
               ${bfPerms ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
             </tr>
           </thead>
           <tbody>
             ${bfSlice.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">Bu yıl için henüz ürün eklenmemiş.</td></tr>' : ''}
             ${bfSlice.map(function(p) {
-              var carpanGoster = p.birim_carpan > 0 ? p.birim_carpan + ' ' + (p.birim === 'teneke' ? 'lt' : p.birim === 'koli' ? 'kg' : p.birim === 'kg' ? 'gr' : p.birim === 'litre' ? 'ml' : '') : '—';
+              var carpanGoster = bfAltBirimEtiket(p.birim, p.birim_carpan, p.urun_adi);
+              var kgFiyat = bfKgFiyat(p.birim, p.birim_fiyat, p.birim_carpan, p.urun_adi);
+              var kgHucelle = kgFiyat === null
+                ? '<span style="color:var(--text-muted)">—</span>'
+                : (kgFiyat > 200
+                  ? '<span style="color:#ca8a04;font-weight:600" title="Birim veya alt birim kontrol edilmeli">' + formatTRY(Math.round(kgFiyat * 100) / 100) + '</span>'
+                  : '<span style="color:var(--text-dim)">' + formatTRY(Math.round(kgFiyat * 100) / 100) + '</span>');
               return '<tr data-id="' + p.id + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
                 '<td style="text-align:center;font-weight:600;color:var(--accent-cyan)">' + p.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺</td>' +
                 '<td style="text-align:center;font-size:0.8rem;color:var(--text-dim)">' + carpanGoster + '</td>' +
+                '<td style="text-align:center;font-size:0.82rem">' + kgHucelle + '</td>' +
                 '<td style="text-align:center">' + p.yil + '</td>' +
                 (bfPerms ?
                   '<td style="text-align:center;white-space:nowrap">' +
@@ -2331,6 +2377,79 @@ function bfYilSeciciAc() {
 
 let bfDuzenlemeId = null;
 
+// "1 Birim = X (alt birim)" alanının hangi alt birimi göstermesi gerektiği.
+function bfAltBirim(birim, carpan, urunAdi) {
+  var b = normBirimGlobal(birim);
+  var c = parseFloat(carpan) || 0;
+  if (b === 'adet') return { ad: 'gr', varsayilan: c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0) };
+  if (b === 'kg') return { ad: 'gr', varsayilan: c > 0 ? c : 1000 };
+  if (b === 'koli') return { ad: 'kg', varsayilan: c > 0 ? c : 10 };
+  if (b === 'litre') return { ad: 'ml', varsayilan: c > 0 ? c : 1000 };
+  if (b === 'teneke') return { ad: 'lt', varsayilan: c > 0 ? c : 18 };
+  return { ad: '', varsayilan: c };
+}
+
+// Fiyatın gerçek kg karşılığı. Böylece "82 TL x 2000 adet" gibi patlamalar
+// liste üzerinde görünür olur.
+function bfKgFiyat(birim, fiyat, carpan, urunAdi) {
+  var b = normBirimGlobal(birim);
+  var f = parseFloat(fiyat) || 0;
+  var c = parseFloat(carpan) || 0;
+  if (f <= 0) return null;
+  if (b === 'kg') return f;
+  if (b === 'adet') {
+    var g = c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0);
+    return g > 0 ? f / (g / 1000) : null;
+  }
+  if (b === 'koli') {
+    var kg = c > 0 ? c : 10;
+    return f / kg;
+  }
+  if (b === 'teneke') {
+    var lt = c > 0 ? c : 18;
+    return f / lt;
+  }
+  return null;
+}
+
+function bfAltBirimEtiket(birim, carpan, urunAdi) {
+  var alt = bfAltBirim(birim, carpan, urunAdi);
+  if (!alt.ad) return '—';
+  var v = alt.varsayilan > 0 ? alt.varsayilan : null;
+  return v ? v + ' ' + alt.ad : '—';
+}
+
+// Form içindeki canlı önizleme: gerçek kg fiyatı ve 1 porsiyonluk maliyet.
+function bfOnizlemeGuncelle() {
+  var el = document.getElementById('bfOnizleme');
+  if (!el) return;
+  var birim = document.getElementById('bf_birim').value;
+  var fiyat = parseFloat(document.getElementById('bf_fiyat').value) || 0;
+  var carpan = parseFloat(document.getElementById('bf_carpan').value) || 0;
+  var ad = (document.getElementById('bf_ad').value || '').trim();
+  var alt = bfAltBirim(birim, carpan, ad);
+  var parcalar = [];
+
+  if (alt.ad) {
+    parcalar.push('1 ' + birim + ' = ' + (alt.varsayilan > 0 ? alt.varsayilan + ' ' + alt.ad : '? ' + alt.ad));
+  }
+  var kg = bfKgFiyat(birim, fiyat, carpan, ad);
+  if (kg !== null) {
+    parcalar.push('gerçek: ' + formatTRY(Math.round(kg * 100) / 100) + '/kg');
+  } else if (fiyat > 0) {
+    parcalar.push('kg karşılığı belirlenemiyor');
+  }
+
+  var uyari = '';
+  if (normBirimGlobal(birim) === 'adet' && alt.varsayilan <= 0) {
+    uyari = ' ⚠️ 1 adet kaç gr? Girilmezse adet→kg dönüşümü yapılamaz.';
+  } else if (kg !== null && kg > 200) {
+    uyari = ' ⚠️ kg fiyatı çok yüksek, birimi kontrol et.';
+  }
+  el.innerHTML = (parcalar.length ? parcalar.join(' · ') : 'Fiyat ve alt birim gir') + uyari;
+  el.style.color = uyari ? '#ca8a04' : 'var(--text-muted)';
+}
+
 function bfYeniUrun() {
   if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   bfDuzenlemeId = null;
@@ -2345,7 +2464,7 @@ function bfYeniUrun() {
       </div>
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
-        <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+        <select id="bf_birim" onchange="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
           <option value="kg">KG</option>
           <option value="koli">KOLİ</option>
           <option value="litre">LİTRE</option>
@@ -2355,12 +2474,12 @@ function bfYeniUrun() {
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
-        <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <input type="number" id="bf_fiyat" step="0.01" min="0" placeholder="0.00" oninput="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
-      <div style="flex:0.8;min-width:90px">
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
-        <input type="number" id="bf_carpan" step="any" min="0" placeholder="Örn: 18" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
-        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">teneke=18, koli=10</div>
+      <div style="flex:0.8;min-width:110px">
+        <label id="bf_carpanLabel" style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
+        <input type="number" id="bf_carpan" step="any" min="0" placeholder="Örn: 1000" oninput="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <div id="bfOnizleme" style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">Fiyat ve alt birim gir</div>
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Kaydet</button>
@@ -2368,6 +2487,8 @@ function bfYeniUrun() {
       </div>
     </div>
   </div>`;
+  document.getElementById('bf_ad').addEventListener('input', bfOnizlemeGuncelle);
+  bfOnizlemeGuncelle();
   document.getElementById('bf_ad').focus();
 }
 
@@ -2386,7 +2507,7 @@ function bfDuzenle(id) {
       </div>
       <div style="flex:0.5;min-width:80px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim</label>
-        <select id="bf_birim" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
+        <select id="bf_birim" onchange="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem">
           <option value="kg"${item.birim === 'kg' ? ' selected' : ''}>KG</option>
           <option value="koli"${item.birim === 'koli' ? ' selected' : ''}>KOLİ</option>
           <option value="litre"${item.birim === 'litre' ? ' selected' : ''}>LİTRE</option>
@@ -2396,12 +2517,12 @@ function bfDuzenle(id) {
       </div>
       <div style="flex:1;min-width:100px">
         <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">Birim Fiyat (₺)</label>
-        <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <input type="number" id="bf_fiyat" step="0.01" min="0" value="${item.birim_fiyat}" oninput="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
       </div>
-      <div style="flex:0.8;min-width:90px">
-        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
-        <input type="number" id="bf_carpan" step="any" min="0" value="${item.birim_carpan || ''}" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
-        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">teneke=18, koli=10</div>
+      <div style="flex:0.8;min-width:110px">
+        <label id="bf_carpanLabel" style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:0.15rem">1 Birim = X (alt birim)</label>
+        <input type="number" id="bf_carpan" step="any" min="0" value="${item.birim_carpan || ''}" oninput="bfOnizlemeGuncelle()" style="width:100%;padding:0.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem" />
+        <div id="bfOnizleme" style="font-size:0.65rem;color:var(--text-muted);margin-top:2px"></div>
       </div>
       <div style="display:flex;gap:0.3rem;align-items:end;padding-bottom:1px">
         <button class="btn btn-primary btn-sm" onclick="bfKaydet()">Güncelle</button>
@@ -2409,6 +2530,8 @@ function bfDuzenle(id) {
       </div>
     </div>
   </div>`;
+  document.getElementById('bf_ad').addEventListener('input', bfOnizlemeGuncelle);
+  bfOnizlemeGuncelle();
   document.getElementById('bf_ad').focus();
 }
 
