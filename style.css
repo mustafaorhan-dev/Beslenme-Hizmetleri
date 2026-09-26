@@ -1770,9 +1770,11 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   color: var(--cesit-accent);
   color: color-mix(in srgb, var(--cesit-accent) 72%, #000);
   background: var(--cesit-bg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow: visible;
+  text-overflow: unset;
   border-radius: 6px;
   border-left: 2px solid var(--cesit-accent);
   letter-spacing: 0.01em;
@@ -1874,10 +1876,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   gap: 0.35rem;
 }
 .prod-day-total-body .prod-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .prod-day-total-body .prod-num {
   font-size: 0.66rem;
@@ -1976,10 +1980,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   border-bottom: none;
 }
 .weekly-total-item .weekly-total-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .wt-kategori {
   margin-bottom: 0.6rem;
