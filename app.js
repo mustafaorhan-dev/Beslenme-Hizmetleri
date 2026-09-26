@@ -4348,30 +4348,67 @@ var _haccpGrafik = null;
 function renderHaccpSicaklikGrafik() {
   var kap = document.getElementById('haccpSicaklikGrafikKutu');
   var tuval = document.getElementById('haccpSicaklikGrafik');
+  var tuvalKutu = document.getElementById('haccpGrafikTuvalKutu');
+  var bosKutu = document.getElementById('haccpGrafikBos');
   var depoSec = document.getElementById('haccpGrafikDepo');
-  if (!kap || !tuval) return;
-  if (typeof Chart === 'undefined') { kap.style.display = 'none'; return; }
+  if (!kap || !tuval || !depoSec) return;
+
+  // Hiç sıcaklık kaydı yoksa özelliği gizle (ama o zaman seçici de gereksiz).
+  var herhangiKayit = haccpRecords.some(function(r) {
+    return r.type === 'sicaklik' && r.sicaklik !== null && r.sicaklik !== '' && !isNaN(r.sicaklik);
+  });
+  if (!herhangiKayit || typeof Chart === 'undefined') {
+    if (_haccpGrafik) { _haccpGrafik.destroy(); _haccpGrafik = null; }
+    kap.style.display = 'none';
+    return;
+  }
+
+  // Kayıt varsa KUTU HER ZAMAN görünür kalır. Aksi halde verisi olmayan bir
+  // depo seçilince seçici de kaybolur ve kullanıcı seçim geri alamaz.
+  kap.style.display = '';
 
   var depolar = getHaccpDepoAdlari();
   var cur = depoSec.value;
   depoSec.innerHTML = '<option value="">Tüm Depolar</option>' + depolar.map(function(d) {
     return '<option value="' + kacisHtml(d) + '"' + (d === cur ? ' selected' : '') + '>' + kacisHtml(d) + '</option>';
   }).join('');
+  depoSec.value = cur;
 
-  var gunSayisi = parseInt(document.getElementById('haccpGrafikGun').value, 10) || 30;
-  var sinir = new Date();
-  sinir.setDate(sinir.getDate() - gunSayisi);
-  var sinirStr = formatLocalDate(sinir);
+  var gunSayisi = parseInt(document.getElementById('haccpGrafikGun').value, 10);
+  var sinirStr = null;
+  if (!isNaN(gunSayisi) && gunSayisi > 0) {
+    var sinir = new Date();
+    sinir.setDate(sinir.getDate() - gunSayisi);
+    sinirStr = formatLocalDate(sinir);
+  }
 
   var veriler = haccpRecords.filter(function(r) {
-    if (r.type !== 'sicaklik' || r.sicaklik === null || r.sicaklik === '') return false;
-    if (r.tarih < sinirStr) return false;
+    if (r.type !== 'sicaklik' || r.sicaklik === null || r.sicaklik === '' || isNaN(r.sicaklik)) return false;
+    if (sinirStr && r.tarih < sinirStr) return false;
     if (depoSec.value && r.depoAd !== depoSec.value) return false;
     return true;
   });
 
-  kap.style.display = veriler.length ? '' : 'none';
-  if (!veriler.length) return;
+  // Veri yoksa tuvali gizle, kutu yerine açıklama göster (seçici yerinde kalır).
+  if (!veriler.length) {
+    if (_haccpGrafik) { _haccpGrafik.destroy(); _haccpGrafik = null; }
+    if (tuvalKutu) tuvalKutu.style.display = 'none';
+    if (bosKutu) {
+      var aralik = sinirStr ? 'son ' + gunSayisi + ' günde' : 'bu depoya ait';
+      bosKutu.innerHTML = '<strong style="color:var(--text-primary)">' + kacisHtml(depoSec.value) + '</strong> için ' +
+        kacisHtml(aralik) + ' sıcaklık kaydı yok.<br>' +
+        '<span style="font-size:0.75rem">Tüm zamanları görmek için “Tüm Zamanlar”ı seçin veya kayıt girin.</span>';
+      bosKutu.style.display = '';
+    }
+    var pdfBtn = document.getElementById('haccpGrafikPdfBtn');
+    if (pdfBtn) pdfBtn.disabled = true;
+    return;
+  }
+
+  if (tuvalKutu) tuvalKutu.style.display = '';
+  if (bosKutu) bosKutu.style.display = 'none';
+  var pdfBtn2 = document.getElementById('haccpGrafikPdfBtn');
+  if (pdfBtn2) pdfBtn2.disabled = false;
 
   var etiketler = [];
   var saatSet = {};
