@@ -6467,7 +6467,7 @@ function refreshMenuProduction() {
     const notlar = [];
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.textContent : '');
+      yemekler.push(menuCellRaw(el));
     }
     for (let n = 0; n < 10; n++) {
       const el = document.getElementById('mn_' + n + '_' + i);
@@ -8728,7 +8728,7 @@ function collectMenuWeekFromDOM() {
     const yemekler = [];
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      yemekler.push(el ? el.textContent : '');
+      yemekler.push(menuCellRaw(el));
     }
     const notlar = [];
     for (let n = 0; n < 10; n++) {
@@ -8982,8 +8982,14 @@ async function renderMenu() {
     return `<tr>
       <td><strong>${label}</strong></td>
       ${days.map((d, di) => {
-        const val = escapeHtml(d.data.yemekler[ci] || '');
-        return `<td><div class="menu-cell-pick" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" style="min-height:50px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.82rem;cursor:pointer;white-space:pre-wrap;word-break:break-word;overflow:hidden">${val || '<span style="color:var(--text-muted);opacity:0.5">' + escapeHtml(label) + '</span>'}</div></td>`;
+        const ham = d.data.yemekler[ci] || '';
+        const bos = !ham;
+        const parcalar = ham.split('\n');
+        const adSatiri = parcalar[0] || '';
+        const alerjen = parcalar.slice(1).join(' · ');
+        const val = escapeHtml(adSatiri) + (alerjen ? `<span class="menu-cell-alerjen">${escapeHtml(alerjen)}</span>` : '');
+        return `<td><div class="menu-cell-pick${bos ? ' is-empty' : menuCellLenClass(ham)}" id="m${ci}_${di}" data-ci="${ci}" data-di="${di}" data-placeholder="${escapeHtml(label)}"${bos ? '' : ` title="${escapeHtml(ham)}"`}>${val || escapeHtml(label)}</div>
+        </td>`;
       }).join('')}
     </tr>`;
   }).join('') + `<tr style="pointer-events:none"><td colspan="6" style="height:8px;padding:0;border:none;background:var(--bg-card)"></td></tr>` + `<tr onclick="event.stopPropagation()">
@@ -9124,7 +9130,7 @@ function selectMealFromPicker(el) {
   if (!y) return;
   const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   if (cell) {
-    cell.textContent = formatYemek(y);
+    menuCellSetValue(cell, formatYemek(y));
     refreshMenuProduction();
   }
   document.getElementById('mealPickerOverlay').style.display = 'none';
@@ -9133,7 +9139,7 @@ function selectMealFromPicker(el) {
 function clearMenuCell() {
   const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   if (cell) {
-    cell.textContent = '';
+    menuCellSetValue(cell, '');
     refreshMenuProduction();
   }
   document.getElementById('mealPickerOverlay').style.display = 'none';
@@ -9143,6 +9149,50 @@ function autoResizeTextarea(el) {
   if (!el) return;
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 2 + 'px';
+}
+
+// Menü hücresinin ham değerini döndürür (isim + \n + alerjen)
+function menuCellRaw(el) {
+  if (!el) return '';
+  const t = el.getAttribute('title');
+  if (t) return t;
+  const alerjenEl = el.querySelector('.menu-cell-alerjen');
+  const ad = alerjenEl ? el.textContent.replace(alerjenEl.textContent, '').trim() : el.textContent.trim();
+  return alerjenEl ? ad + '\n' + alerjenEl.textContent : ad;
+}
+
+// Menü hücresinde uzun çeşit ismi sığdırmak için punto sınıfı
+function menuCellLenClass(raw) {
+  const ad = (raw || '').trim().split('\n')[0];
+  const n = ad.length;
+  if (n > 60) return ' len-xlong';
+  if (n > 42) return ' len-long';
+  if (n > 26) return ' len-mid';
+  return '';
+}
+
+// Menü hücresine yemek yazar (isim + alerjen ayrı satır, punto sınıfı uygula)
+function menuCellSetValue(cell, ham) {
+  const parcalar = (ham || '').split('\n');
+  const adSatiri = parcalar[0] || '';
+  const alerjen = parcalar.slice(1).join(' · ');
+  cell.textContent = '';
+  if (adSatiri) cell.appendChild(document.createTextNode(adSatiri));
+  if (alerjen) {
+    const sp = document.createElement('span');
+    sp.className = 'menu-cell-alerjen';
+    sp.textContent = alerjen;
+    cell.appendChild(sp);
+  }
+  cell.classList.remove('is-empty', 'len-mid', 'len-long', 'len-xlong');
+  if (!ham) {
+    cell.classList.add('is-empty');
+    cell.textContent = cell.getAttribute('data-placeholder') || '';
+    cell.removeAttribute('title');
+  } else {
+    cell.className = 'menu-cell-pick' + menuCellLenClass(ham);
+    cell.setAttribute('title', ham);
+  }
 }
 
 // ─── MENU HELPERS ──────────────────────────────────────────────────────────
@@ -9252,7 +9302,7 @@ function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem i
   getGUNLER().forEach((_, i) => {
     for (let c = 0; c < 5; c++) {
       const el = document.getElementById('m' + c + '_' + i);
-      if (el) el.textContent = '';
+      if (el) menuCellSetValue(el, '');
     }
     for (let n = 0; n < 10; n++) {
       const el = document.getElementById('mn_' + n + '_' + i);
@@ -10560,7 +10610,7 @@ function buildExportHTML() {
     var cells = [];
     for (var di = 0; di < 5; di++) {
       var el = document.getElementById('m' + ci + '_' + di);
-      cells.push(el ? el.textContent : '');
+      cells.push(menuCellRaw(el));
     }
     tableData.push({ label: cesitler[ci], cells: cells });
   }
@@ -10622,7 +10672,7 @@ function buildExportHTML() {
     var dayAgg = {};
     for (var ci = 0; ci < 5; ci++) {
       var el = document.getElementById('m' + ci + '_' + di);
-      var raw = el ? el.textContent : '';
+      var raw = menuCellRaw(el);
       var name = parseName(raw);
       if (!name) continue;
       var dish = findDish(name);
