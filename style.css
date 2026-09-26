@@ -3769,8 +3769,17 @@ input.production-input:focus {
   font-size: 0.78rem;
 }
 
+/* ---- YEMEK LİSTESİ MODALI (geniş alan) ---- */
+.yemek-modal {
+  max-width: min(1220px, 96vw);
+  width: 100%;
+}
+.yemek-modal .modal-body { padding: 1rem 1.25rem 1.5rem; }
+
 /* ---- YEMEK LİSTESİ TABLOSU (uzun adlar kırpılmaz) ---- */
 #yemekListesiContainer .data-table { table-layout: fixed; }
+#yemekListesiContainer th,
+#yemekListesiContainer td { padding-left: 0.6rem; padding-right: 0.6rem; }
 #yemekListesiContainer .yl-ad,
 #yemekListesiContainer .yl-alerjen {
   white-space: normal;
@@ -3785,6 +3794,18 @@ input.production-input:focus {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+/* İşlem sütunu butonlara nefes payı bırakır, kenara yapışmaz */
+#yemekListesiContainer th:last-child,
+#yemekListesiContainer td:last-child {
+  padding-left: 0.9rem;
+  padding-right: 1.1rem;
+}
+#yemekListesiContainer .yl-islem {
+  white-space: nowrap;
+  text-align: center;
+}
+#yemekListesiContainer .yl-islem .btn-icon { vertical-align: middle; }
+#yemekListesiContainer .yl-islem .btn-icon + .btn-icon { margin-left: 0.45rem; }
 
 /* ---- MENÜ HÜCRE (ÇEŞİT) ---- */
 .menu-cell-pick {

@@ -6611,13 +6611,13 @@ function renderYemekListesi() {
   }
 
   container.innerHTML = `<table class="data-table" style="width:100%;table-layout:fixed">
-    <thead><tr><th style="width:40%">Yemek Adı</th><th style="width:12%">Kalori</th><th style="width:28%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:70px">İşlem</th></tr></thead>
+    <thead><tr><th style="width:42%">Yemek Adı</th><th style="width:11%">Kalori</th><th style="width:29%">Alerjen</th><th style="width:52px">Reçete</th><th style="width:104px">İşlem</th></tr></thead>
     <tbody>${filtered.map(y => `<tr>
       <td class="yl-ad" title="${escapeHtml(y.ad)}"><strong>${escapeHtml(y.ad)}</strong></td>
       <td style="font-size:0.8rem;white-space:nowrap">${escapeHtml(y.kalori || '')}</td>
       <td class="yl-alerjen" title="${escapeHtml(y.alerjen || '')}">${escapeHtml(y.alerjen || '')}</td>
       <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
-      <td style="white-space:nowrap;text-align:center">
+      <td class="yl-islem">
         <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
