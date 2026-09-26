@@ -4919,11 +4919,11 @@ function kayitlarPdfSatirlari(list) {
   return { rows: rows, t: t };
 }
 
-function exportRecordsPDF(tumu) {
+function exportRecordsPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  const kaynak = tumu ? [...records] : getYearFilteredRecords();
-  if (kaynak.length === 0) { showToast('Yazdırılacak kayıt bulunamadı.', 'error'); return; }
-  const list = sortRecords(kaynak);
+  if (records.length === 0) { showToast('Yazdırılacak kayıt bulunamadı.', 'error'); return; }
+  // Yil filtresi uygulanmaz - CSV ile ayni davranis: daima TUM kayitlar.
+  const list = sortRecords([...records]);
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
 
@@ -4935,9 +4935,6 @@ function exportRecordsPDF(tumu) {
   const aralik = tarihler.length
     ? displayDate(tarihler[0]) + ' – ' + displayDate(tarihler[tarihler.length - 1])
     : '—';
-  const kapsam = tumu
-    ? 'TÜM KAYITLAR &bull; yıl filtresi uygulanmadı'
-    : (Number(recordsYearFilter) ? Number(recordsYearFilter) + ' yılı' : 'Tüm yıllar');
   const siralama = sortField
     ? 'Sıralama: ' + sortField + (sortDir === -1 ? ' (yeni → eski)' : ' (eski → yeni)')
     : '';
@@ -4990,7 +4987,7 @@ function exportRecordsPDF(tumu) {
     <h1>Kayıt Listesi - Atık Kontrol Yönetim Sistemi</h1>
     <div class="date">Yazdırma tarihi: ${bugun}</div>
     <div class="meta">
-      <span class="chip">Kapsam: <b>${kapsam}</b></span>
+      <span class="chip">Kapsam: <b>TÜM KAYITLAR</b></span>
       <span class="chip">Kayıt: <b>${list.length}</b></span>
       <span class="chip">Tarih aralığı: <b>${aralik}</b></span>
       <span class="chip">Toplam atık: <b>${t.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg</b></span>
@@ -13381,7 +13378,6 @@ var I18N = {
   yearlyMonthlyWasteRate: "Aylık Atık Verimliliği (%)",
   yearlyMonthlyWasteRateNote: "Atık porsiyon ÷ üretilen porsiyon × 100 · kırmızı kesikli çizgi = hedef",
   yearlyRateTarget: "Hedef",
-  recordsPrintAllBtn: "PDF (T?m?)",
     yearlyWasteListTitle: "Yıllık Atık Listesi",
     spendingRatesTitle: "Kişi Başı Harcama Oranları (Öğrenci, Personel & Yemek)",
     spendingStudentRate: "Öğrenci Başı Harcama Tutarı (TL)",
@@ -13784,7 +13780,6 @@ var I18N = {
   yearlyMonthlyWasteRate: "Monthly Waste Efficiency (%)",
   yearlyMonthlyWasteRateNote: "Waste portions ÷ produced portions × 100 · red dashed line = target",
   yearlyRateTarget: "Target",
-  recordsPrintAllBtn: "PDF (All)",
     yearlyWasteListTitle: "Yearly Waste List",
     spendingRatesTitle: "Per Person Spending Rates (Students, Staff & Meals)",
     spendingStudentRate: "Student Per Person Spending Amount (TL)",
