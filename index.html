@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=28" />
+  <link rel="stylesheet" href="style.css?v=29" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -855,10 +855,23 @@
           <h2 style="font-size:1rem" data-i18n="haccpTitle">Gıda Güvenliği Yönetimi</h2>
         </div>
         <div class="toolbar-actions">
+          <button class="btn btn-secondary btn-sm" onclick="dataloggerCekKademeli()" id="haccpCekBtn" style="display:none" title="Cihazdan anlık değer çek ve kaydet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+            <span id="haccpCekBtnText">Çek</span>
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="openCihazAyarModal()" id="haccpCihazAyarBtn" style="display:none" title="Datalogger API ayarları">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Cihaz Ayarları
+          </button>
           <button class="btn btn-outline btn-sm" onclick="exportHaccpCSV()" title="CSV olarak indir (ID dahil)" data-i18n="haccpCsvBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             CSV İndir
           </button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('haccpDosyaYukle').click()" title="Cihazdan gelen CSV/JSON dosyasını toplu yükle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            CSV Yükle
+          </button>
+          <input type="file" id="haccpDosyaYukle" accept=".csv,.json,.txt" style="display:none" onchange="importHaccpFile(event)" />
         </div>
       </div>
 
@@ -887,6 +900,22 @@
         </div>
         <!-- Quick Depo Summary -->
         <div id="haccpDepoSummary" style="margin-bottom:0.75rem"></div>
+        <!-- Datalogger durum şeridi -->
+        <div id="haccpDataloggerDurum" style="margin-bottom:0.75rem"></div>
+        <!-- Sıcaklık grafiği -->
+        <div id="haccpSicaklikGrafikKutu" style="margin-bottom:0.75rem;display:none">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+            <span style="font-size:0.8rem;font-weight:600;color:var(--text-muted)">Depo Sıcaklık Grafiği</span>
+            <select id="haccpGrafikDepo" onchange="renderHaccpSicaklikGrafik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem"></select>
+            <select id="haccpGrafikGun" onchange="renderHaccpSicaklikGrafik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+              <option value="7">Son 7 gün</option>
+              <option value="30" selected>Son 30 gün</option>
+              <option value="90">Son 90 gün</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="haccpSicaklikGrafikYazdir()" title="Grafiği PDF olarak kaydet" style="margin-left:auto">PDF</button>
+          </div>
+          <div style="height:260px"><canvas id="haccpSicaklikGrafik"></canvas></div>
+        </div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
           <label style="font-size:0.85rem;color:var(--text-muted)" data-i18n="filterDepot">Depo Filtresi:</label>
           <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
@@ -907,7 +936,7 @@
           </div>
           <table class="data-table" id="haccpSicaklikTable" style="display:none">
             <thead>
-              <tr><th style="width:32px"><input type="checkbox" id="haccpSelectAllChk" onchange="haccpToggleSelectAll(this.checked)" style="cursor:pointer"></th><th data-i18n="haccpColDate">Tarih</th><th data-i18n="haccpColTime">Saat</th><th data-i18n="haccpColDepot">Depo Adı</th><th data-i18n="haccpColTemp">Sıcaklık (°C)</th><th data-i18n="haccpColHumidity">Nem (%)</th><th data-i18n="haccpColNote">Not</th><th data-i18n="haccpColAction">İşlem</th></tr>
+              <tr><th style="width:32px"><input type="checkbox" id="haccpSelectAllChk" onchange="haccpToggleSelectAll(this.checked)" style="cursor:pointer"></th><th data-i18n="haccpColDate">Tarih</th><th data-i18n="haccpColTime">Saat</th><th data-i18n="haccpColDepot">Depo Adı</th><th data-i18n="haccpColTemp">Sıcaklık (°C)</th><th data-i18n="haccpColHumidity">Nem (%)</th><th data-i18n="haccpColNote">Not</th><th style="width:78px">Kaynak</th><th data-i18n="haccpColAction">İşlem</th></tr>
             </thead>
             <tbody id="haccpSicaklikTbody"></tbody>
           </table>
@@ -1829,6 +1858,90 @@
     </div>
   </div>
 
+  <!-- ===== DATALOGGER CIHAZ AYARLARI MODAL ===== -->
+  <div class="modal-overlay" id="cihazAyarModal" onclick="if(event.target===this)closeCihazAyarModal()">
+    <div class="modal" style="max-width:660px">
+      <div class="modal-header">
+        <h2>Datalogger Cihaz Ayarları</h2>
+        <button class="modal-close" onclick="closeCihazAyarModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem" id="cihazAyarBody">
+        <div style="display:flex;align-items:flex-start;gap:0.5rem;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);padding:0.6rem 0.75rem;border-radius:8px;font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Cihaz henüz alınmadıysa boş bırakın — <strong>elle kayıt yapmaya devam edebilirsiniz</strong>. Cihaz gelince API adresi ve anahtarı buraya yazmanız yeterli. Anahtar sunucuda saklanır, tarayıcıya geri dönmez.</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:1rem">
+          <label style="display:flex;align-items:center;gap:0.45rem;font-size:0.85rem;font-weight:600;cursor:pointer">
+            <input type="checkbox" id="caAktif" style="width:16px;height:16px;cursor:pointer">
+            Otomatik kayıt aktif
+          </label>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto" id="caAktifNot">Kapalıyken yalnızca "Çek" butonu çalışır</span>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-group"><label>Üretici</label><input type="text" id="caUretici" placeholder="Örn. Testo, Elite, Danfoss" /></div>
+          <div class="form-group"><label>Cihaz Adı / Seri No</label><input type="text" id="caCihazAdi" placeholder="Örn. Depo-Logger-01" /></div>
+          <div class="form-group" style="grid-column:span 2"><label>API Adresi</label><input type="url" id="caApiUrl" placeholder="https://cihaz-uretici.com/api/v1/veriler" /></div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>API Anahtarı</label>
+            <div style="display:flex;gap:0.4rem">
+              <input type="password" id="caApiKey" placeholder="Anahtarı girin" autocomplete="off" style="flex:1" />
+              <button class="btn btn-ghost btn-sm" type="button" onclick="caAnahtarGoster()" id="caAnahtarGosterBtn" title="Göster / gizle">Göster</button>
+            </div>
+            <div id="caApiKeyNot" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem"></div>
+          </div>
+          <div class="form-group"><label>İstek Yöntemi</label>
+            <select id="caApiYontem" style="width:100%"><option value="GET">GET</option><option value="POST">POST</option></select>
+          </div>
+          <div class="form-group"><label>Saat Dilimi</label>
+            <select id="caSaatDilimi" style="width:100%">
+              <option value="Europe/Istanbul">Europe/Istanbul</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+        </div>
+
+        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Günlük Otomatik Kayıt Saatleri</h3>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="form-group"><label>Sabah</label><input type="time" id="caSaatSabah" value="08:00" /></div>
+          <div class="form-group"><label>Öğle</label><input type="time" id="caSaatOgle" value="12:30" /></div>
+          <div class="form-group"><label>Akşam</label><input type="time" id="caSaatAksam" value="18:00" /></div>
+        </div>
+
+        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Kanal → Depo Eşleştirmesi</h3>
+        <div id="caProbEslestirme" style="font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0">Cihaz olmadan da eşleştirmeyi şimdiden yapabilirsiniz.</div>
+
+        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.5rem">Zamanlanmış Görev (pg_cron)</h3>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Edge Function Adresi</label>
+          <input type="url" id="caEdgeUrl" placeholder="https://PROJE.supabase.co/functions/v1/datalogger-cron" />
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Boşsa otomatik kayıt kurulmaz (elle kayıt çalışmaya devam eder).</div>
+        </div>
+        <div class="form-group">
+          <label>Cron Anahtarı</label>
+          <input type="password" id="caCronSecret" placeholder="Rastgele bir metin" autocomplete="off" />
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">pg_cron bu başlığı doğrulamak için kullanır.</div>
+        </div>
+
+        <div id="caTestSonuc" style="margin-top:1rem;font-size:0.8rem"></div>
+
+        <details style="margin-top:1rem">
+          <summary style="cursor:pointer;font-size:0.8rem;color:var(--text-muted);font-weight:600">Son Senkron Kayıtları</summary>
+          <div id="caLog" style="margin-top:0.5rem;max-height:180px;overflow:auto;font-size:0.72rem"></div>
+        </details>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeCihazAyarModal()">Kapat</button>
+        <button type="button" class="btn btn-outline" onclick="caBaglantiTest()">Bağlantı Testi</button>
+        <button type="button" class="btn btn-primary" onclick="caAyarlarKaydet()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== QR KOD MODAL ===== -->
   <div class="modal-overlay" id="qrModal" onclick="if(event.target===this)closeQrModal()">
     <div class="modal" style="max-width:420px;text-align:center">
@@ -2482,7 +2595,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=28"></script>
+  <script src="app.js?v=29"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

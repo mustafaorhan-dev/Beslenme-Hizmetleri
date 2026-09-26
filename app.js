@@ -1684,9 +1684,12 @@ function formatLocalDate(d) {
 function normalizeSaat(v) {
   if (!v) return '';
   if (/^\d{2}:\d{2}$/.test(v)) return v;
+  // Saniye varsa koru: cihazdan gelen anlik ("Cek") kayitlari
+  // HH:MM:SS ile saklanir ve ayni dakika icinde iki kayit birbirine karismaz.
+  if (/^\d{2}:\d{2}:\d{2}$/.test(v)) return v;
   const d = new Date(v);
   if (!isNaN(d)) {
-    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
   }
   return v;
 }
@@ -2519,6 +2522,13 @@ function haccpRecordToDB(r) {
     sicaklik: parseNumComma(r.sicaklik),
     nem: parseNumComma(r.nem),
     not_: r.not || '',
+    // Cihaz alanlari KORUNMALIDIR: burada kaybolursa cihaz kayitlari
+    // "manuel"e doner ve dedupe (tekrar calistirma) kilidi acilir.
+    cihaz_id: r.cihazId || null,
+    prob_no: (r.probNo === null || r.probNo === undefined || r.probNo === '') ? null : parseInt(r.probNo, 10),
+    kaynak: r.kaynak || 'manuel',
+    limit_durumu: r.limitDurumu || null,
+    cihaz_zaman: r.cihazZaman || null,
     last_modified: new Date().toISOString()
   };
 }
@@ -2590,7 +2600,12 @@ async function syncHaccpFromSupabase() {
           depoAd: r.depo_ad || '',
           sicaklik: typ === 'sicaklik' ? parseNumComma(r.sicaklik) : null,
           not: r.not_ || r.not || '',
-          nem: typ === 'sicaklik' ? parseNumComma(r.nem) : null
+          nem: typ === 'sicaklik' ? parseNumComma(r.nem) : null,
+          cihazId: r.cihaz_id || null,
+          probNo: (r.prob_no === null || r.prob_no === undefined) ? null : r.prob_no,
+          kaynak: r.kaynak || 'manuel',
+          limitDurumu: r.limit_durumu || null,
+          cihazZaman: r.cihaz_zaman || null
         };
       });
       lastHaccpSyncHash = JSON.stringify(haccpRecords);
@@ -2651,11 +2666,14 @@ function canExport() {
 function exportHaccpCSV() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (haccpRecords.length === 0) { showToast('İndirilecek kayıt yok.', 'error'); return; }
-  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem'];
+  var headers = ['id','type','tarih','saat','depoAd','sicaklik','not','lastModified','nem','kaynak','probNo'];
   var rows = [headers.join(',')];
   haccpRecords.forEach(function(r) {
     var vals = headers.map(function(h) {
-      var v = r[h] !== undefined ? r[h] : '';
+      var v;
+      if (h === 'kaynak') v = r.kaynak || 'manuel';
+      else if (h === 'probNo') v = r.probNo == null ? '' : r.probNo;
+      else v = r[h] !== undefined ? r[h] : '';
       if (h === 'sicaklik' && v === undefined) v = r.sicaklik != null ? r.sicaklik : '';
       if (h === 'nem' && v === undefined) v = r.nem != null ? r.nem : '';
       if (h === 'depoAd' && (!v || v === 'undefined')) v = r.depoAd || '';
@@ -2683,8 +2701,29 @@ var HACCP_FIELD_MAP = {
   'Nem (%)': 'nem', 'Nem': 'nem', 'Not': 'not', 'not': 'not',
   'id': 'id', 'type': 'type', 'tarih': 'tarih', 'saat': 'saat',
   'depoAd': 'depoAd', 'depo_ad': 'depoAd', 'sicaklik': 'sicaklik', 'nem': 'nem',
-  'not_': 'not', 'last_modified': 'last_modified'
+  'not_': 'not', 'last_modified': 'last_modified',
+  // Cihaz kolonlari
+  'Kaynak': 'kaynak', 'kaynak': 'kaynak', 'Kanal': 'prob_no', 'Prob': 'prob_no',
+  'prob_no': 'prob_no', 'probNo': 'prob_no', 'cihaz_id': 'cihazId'
 };
+
+// Virgul veya noktali virgul ayrimini yakalar, tirnak icindeki ayiraclari korur.
+function parseCsvSatir(line, delim) {
+  var out = [], cur = '', inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === delim) { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
 
 function importHaccpFile(event) {
   if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
@@ -2694,54 +2733,90 @@ function importHaccpFile(event) {
   reader.onload = function(e) {
     try {
       var text = e.target.result;
-      var rows;
-      if (file.name.endsWith('.json')) {
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      var rows = [];
+
+      if (file.name.toLowerCase().endsWith('.json')) {
         rows = JSON.parse(text);
         if (!Array.isArray(rows)) rows = [rows];
       } else {
         var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
         if (lines.length < 2) { showToast('CSV en az 2 satır olmalı (başlık + veri).', 'error'); return; }
-        var delim = lines[0].includes(';') ? ';' : ',';
-        var headers = lines[0].split(delim).map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
-        rows = [];
+        // Ayiriciyi ilk satirdaki ilk tutarli karakterden sec.
+        var delim = lines[0].indexOf(';') > -1 ? ';' : ',';
+        var basliklar = parseCsvSatir(lines[0], delim).map(function(h) { return h.trim(); });
+
         for (var i = 1; i < lines.length; i++) {
-          var vals = lines[i].split(delim).map(function(v) { return v.replace(/^"|"$/g, '').trim(); });
+          var degerler = parseCsvSatir(lines[i], delim);
           var row = {};
-          for (var j = 0; j < headers.length; j++) {
-            var field = HACCP_FIELD_MAP[headers[j]] || headers[j];
-            row[field] = vals[j] || '';
+          for (var j = 0; j < basliklar.length; j++) {
+            var alan = HACCP_FIELD_MAP[basliklar[j]] || basliklar[j];
+            row[alan] = (degerler[j] == null ? '' : String(degerler[j]).trim());
           }
-          if (row.tarih) {
-            row.tarih = normalizeDate(row.tarih);
-            row.type = row.type || 'sicaklik';
-            row.id = row.id || Date.now() + Math.random();
-            row.sicaklik = row.sicaklik !== '' ? Number(String(row.sicaklik).replace(',', '.')) : null;
-            row.nem = row.nem !== '' ? Number(String(row.nem).replace(',', '.')) : null;
-            rows.push(row);
-          }
+          if (!row.tarih) continue;
+          row.tarih = normalizeDate(row.tarih);
+          row.saat = normalizeSaat(row.saat);
+          row.type = row.type || 'sicaklik';
+          row.depoAd = row.depoAd || '';
+          row.sicaklik = row.sicaklik !== '' ? Number(String(row.sicaklik).replace(',', '.')) : null;
+          row.nem = row.nem !== '' ? Number(String(row.nem).replace(',', '.')) : null;
+          row.kaynak = String(row.kaynak || 'manuel').toLowerCase();
+          row.prob_no = row.prob_no !== '' && row.prob_no != null ? parseInt(row.prob_no, 10) : null;
+          rows.push(row);
         }
       }
+
       if (rows.length === 0) { showToast('Dosyada kayıt bulunamadı.', 'error'); return; }
-      var eklenen = 0;
-      var guncellenen = 0;
+
+      // Esleme sirasi: 1) acik id varsa id, 2) yoksa tarih+saat+depo.
+      // Cihaz CSV'lerinde id olmadigi icin ikinci kural mükerrer kaydi onler.
+      var eklenen = 0, guncellenen = 0, atlanan = 0;
       rows.forEach(function(r) {
-        var idx = haccpRecords.findIndex(function(er) { return String(er.id) === String(r.id); });
+        var idx = -1;
+        if (r.id !== undefined && r.id !== '' && !isNaN(Number(r.id))) {
+          idx = haccpRecords.findIndex(function(er) { return String(er.id) === String(r.id); });
+        }
+        if (idx === -1) {
+          idx = haccpRecords.findIndex(function(er) {
+            return er.tarih === r.tarih &&
+                   (er.saat || '').slice(0, 5) === (r.saat || '').slice(0, 5) &&
+                   (er.depoAd || '') === (r.depoAd || '') &&
+                   (er.probNo == null ? null : er.probNo) === (r.prob_no == null ? null : r.prob_no);
+          });
+        }
         if (idx !== -1) {
-          haccpRecords[idx] = r;
+          // Mevcut kaydin kimligi ve cihaz alanlari korunur.
+          haccpRecords[idx] = Object.assign({}, haccpRecords[idx], r, {
+            id: haccpRecords[idx].id,
+            cihazId: r.cihaz_id ? r.cihaz_id : (haccpRecords[idx].cihazId || null),
+            kaynak: r.kaynak || (haccpRecords[idx].kaynak || 'manuel'),
+            limitDurumu: sicaklikDurum(r.sicaklik, r.depoAd).text || null
+          });
           guncellenen++;
         } else {
+          r.id = Date.now() + Math.floor(Math.random() * 1000);
+          r.cihazId = r.cihaz_id || null;
+          r.probNo = r.prob_no;
+          r.limitDurumu = sicaklikDurum(r.sicaklik, r.depoAd).text || null;
+          delete r.cihaz_id;
+          delete r.prob_no;
+          delete r.last_modified;
           haccpRecords.push(r);
           eklenen++;
         }
       });
+
       saveHaccpData();
       renderHaccp();
       var mesaj = eklenen + ' yeni kayıt eklendi';
       if (guncellenen > 0) mesaj += ', ' + guncellenen + ' kayıt güncellendi';
-      showToast(mesaj + ' (' + haccpRecords.length + ' toplam).', 'success');
-    } catch (err) { showToast('Dosya okuma hatası: ' + err.message, 'error'); }
+      if (atlanan > 0) mesaj += ', ' + atlanan + ' kayıt atlandı';
+      showToast(mesaj + ' (' + haccpRecords.length + ' toplam).', eklenen || guncellenen ? 'success' : 'error');
+    } catch (err) {
+      showToast('Dosya okuma hatası: ' + err.message, 'error');
+    }
   };
-  reader.readAsText(file);
+  reader.readAsText(file, 'utf-8');
   event.target.value = '';
 }
 
@@ -3513,6 +3588,8 @@ function renderHaccpDepoSummary() {
 function renderHaccp() {
   renderHaccpDepoSummary();
   renderHaccpSicaklik();
+  renderHaccpDataloggerDurum();
+  try { renderHaccpSicaklikGrafik(); } catch (_) {}
 }
 
 function getHaccpRecords(type) {
@@ -3636,6 +3713,7 @@ function renderHaccpSicaklik() {
       <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</strong></td>
       <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : '—'}</td>
       <td>${r.not || '—'}</td>
+      <td>${haccpKaynakRozeti(r.kaynak)}</td>
       ${actionCell}
     </tr>`;
   }).join('');
@@ -3808,7 +3886,18 @@ function saveHaccpRecord(e) {
     if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   }
   const type = editingHaccpType;
-  let rec = { id: editingHaccpId || Date.now(), type };
+  // Duzenlemede cihaz alanlari korunur; aksi halde cihaz kaydi "manuel"e
+  // doner ve dedupe kilidi acilir. Yeni kayitlar her zaman "manuel"dir.
+  const onceki = editingHaccpId ? haccpRecords.find(function(r) { return r.id === editingHaccpId; }) : null;
+  let rec = {
+    id: editingHaccpId || Date.now(),
+    type,
+    cihazId: onceki ? (onceki.cihazId || null) : null,
+    probNo: onceki ? (onceki.probNo === undefined ? null : onceki.probNo) : null,
+    kaynak: onceki ? (onceki.kaynak || 'manuel') : 'manuel',
+    limitDurumu: onceki ? (onceki.limitDurumu || null) : null,
+    cihazZaman: onceki ? (onceki.cihazZaman || null) : null
+  };
 
   rec.tarih = document.getElementById('hfTarih').value;
   rec.saat = document.getElementById('hfSaat').value;
@@ -3816,6 +3905,8 @@ function saveHaccpRecord(e) {
   rec.sicaklik = parseNumComma(document.getElementById('hfSicaklik').value);
   rec.nem = parseNumComma(document.getElementById('hfNem').value);
   rec.not = document.getElementById('hfNot').value.trim();
+  // Limit durumu elle girilen degere gore yeniden hesaplanir.
+  rec.limitDurumu = sicaklikDurum(rec.sicaklik, rec.depoAd).text || null;
 
   if (editingHaccpId) {
     const idx = haccpRecords.findIndex(r => r.id === editingHaccpId);
@@ -3852,6 +3943,527 @@ async function deleteHaccpRecord(type, id) {
   saveHaccpData();
   renderHaccp();
   showToast('Kayıt silindi.', 'success');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DATALOGGER (SICAKLIK KAYIT CİHAZI) ARAYÜZ
+//
+//  Tasarım:
+//    * Cihaz YOKKEN de her şey çalışır; yalnızca "Çek" gizlenir.
+//    * API anahtarı tarayıcıya hiç girmez: her şey Edge Function üzerinden
+//      gider, anahtar sunucuda kalır.
+//    * Elle girilen kayıtlar "Kaynak: Manuel" olarak işaretlenir; cihazdan
+//      gelenler "Sabah / Öğle / Akşam / Çek" olur.
+// ════════════════════════════════════════════════════════════════════════════
+
+var DATALOGGER_FN = 'datalogger-fetch';
+var dataloggerDurum = { configured: false, aktif: false };
+var caProbListesi = [];
+
+// ─── Edge Function çağrısı ──────────────────────────────────────────────────
+async function dataloggerCagir(aksiyon, govde) {
+  if (!supabaseClient) return { ok: false, error: 'Supabase bağlantısı yok.' };
+  try {
+    var sonuc = await supabaseClient.functions.invoke(DATALOGGER_FN, {
+      body: Object.assign({ action: aksiyon }, govde || {})
+    });
+    // functions.invoke yalnızca 2xx'te data döner; 4xx/5xx'te error dolar.
+    if (sonuc.error) {
+      var k = String(sonuc.error.context || '');
+      if (sonuc.error.status === 401 || sonuc.error.status === 403) {
+        return {
+          ok: false,
+          error: 'Yetkilendirme hatası. Cihaz ayarları için Supabase hesabınızla giriş yapmalısınız ( kullanıcı adı: e-posta ).'
+        };
+      }
+      if (k) { try { return await sonuc.error.context.json(); } catch (_) {} }
+      return { ok: false, error: 'Sunucu hatası (' + sonuc.error.status + ')' };
+    }
+    return sonuc.data || { ok: false, error: 'Boş yanıt' };
+  } catch (hata) {
+    return { ok: false, error: 'Bağlantı hatası: ' + (hata?.message || hata) };
+  }
+}
+
+// ─── Durum şeridi + buton görünürlüğü ──────────────────────────────────────
+async function dataloggerDurumYenile() {
+  var sonuc = await dataloggerCagir('status');
+  dataloggerDurum = sonuc && sonuc.ok ? sonuc : { configured: false, aktif: false };
+  renderHaccpDataloggerDurum();
+  return dataloggerDurum;
+}
+
+function renderHaccpDataloggerDurum() {
+  var kutu = document.getElementById('haccpDataloggerDurum');
+  var cekBtn = document.getElementById('haccpCekBtn');
+  var ayarBtn = document.getElementById('haccpCihazAyarBtn');
+  if (!kutu) return;
+
+  var admin = getRole() === ROLE_ADMIN;
+  if (ayarBtn) ayarBtn.style.display = admin ? '' : 'none';
+  if (cekBtn) {
+    cekBtn.style.display = dataloggerDurum.configured ? '' : 'none';
+    var yazi = document.getElementById('haccpCekBtnText');
+    if (yazi) yazi.textContent = 'Çek ve Kaydet';
+  }
+
+  if (!dataloggerDurum.configured) {
+    kutu.innerHTML = '<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-muted);background:rgba(148,163,184,0.06);padding:0.5rem 0.75rem;border-radius:8px">' +
+      '<span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span>' +
+      'Elle kayıt modu aktif — cihaz bağlanana kadar sıcaklık kayıtlarını elle girebilirsiniz.' +
+      (admin ? ' <button class="btn btn-ghost btn-sm" onclick="openCihazAyarModal()" style="margin-left:auto">Cihaz Ayarları</button>' : '') +
+      '</div>';
+    return;
+  }
+
+  var slot = suankiSlot();
+  kutu.innerHTML = '<div style="display:flex;align-items:center;gap:0.75rem;font-size:0.78rem;color:var(--text-muted);background:rgba(16,185,129,0.06);padding:0.5rem 0.75rem;border-radius:8px;flex-wrap:wrap">' +
+    '<span style="width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0"></span>' +
+    '<span>Cihaz bağlı. Günlük otomatı kayıt: <strong style="color:var(--text-primary)">Sabah ' + (dataloggerDurum.saat_sabah || '08:00') + '</strong>, <strong style="color:var(--text-primary)">Öğle ' + (dataloggerDurum.saat_ogle || '12:30') + '</strong>, <strong style="color:var(--text-primary)">Akşam ' + (dataloggerDurum.saat_aksam || '18:00') + '</strong>' +
+    (dataloggerDurum.aktif ? '' : ' <span class="badge badge-warn">otomatik kayıt kapalı</span>') + '</span>' +
+    '<span style="margin-left:auto;font-size:0.72rem">Şu anki dilim: <strong style="color:var(--text-primary)">' + slot.etiket + '</strong></span>' +
+    '</div>';
+}
+
+// Şu an hangi kayıt dilimindeyiz?
+function suankiSlot() {
+  var d = new Date();
+  var dk = d.getHours() * 60 + d.getMinutes();
+  var s = parseSaatDk(dataloggerDurum.saat_sabah || '08:00');
+  var o = parseSaatDk(dataloggerDurum.saat_ogle || '12:30');
+  var a = parseSaatDk(dataloggerDurum.saat_aksam || '18:00');
+  if (dk < s) return { etiket: 'Sabah öncesi', kaynak: 'sabah' };
+  if (dk < o) return { etiket: 'Sabah', kaynak: 'sabah' };
+  if (dk < a) return { etiket: 'Öğle', kaynak: 'ogle' };
+  return { etiket: 'Akşam', kaynak: 'aksam' };
+}
+
+function parseSaatDk(v) {
+  var m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
+  if (!m) return 0;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+
+// ─── Kaynak rozeti ─────────────────────────────────────────────────────────
+function haccpKaynakRozeti(kaynak) {
+  var k = String(kaynak || 'manuel').toLowerCase();
+  if (k === 'sabah') return '<span class="badge badge-ok">Sabah</span>';
+  if (k === 'ogle') return '<span class="badge badge-ok">Öğle</span>';
+  if (k === 'aksam') return '<span class="badge badge-ok">Akşam</span>';
+  if (k === 'cek') return '<span class="badge badge-ok">Çek</span>';
+  return '<span class="badge" style="background:rgba(148,163,184,0.15);color:var(--text-muted)">Manuel</span>';
+}
+
+// ═══════════════════════ "ÇEK" AKIŞI (2 ADIMLI) ════════════════════════════
+// 1. Adım: cihazdan anlık değerleri oku ve ekranda göster (kayıt YAZILMAZ)
+// 2. Adım: kullanıcı onaylayınca kaydet
+// Böylece yanlış ölçüm kaydedilmez; ölçümü gözle kontrol etme imkânı kalır.
+var _cekPanelOku = null;
+
+async function dataloggerCekKademeli() {
+  if (!dataloggerDurum.configured) { showToast('Cihaz bağlı değil.', 'error'); return; }
+  var btn = document.getElementById('haccpCekBtn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
+  var yaziEl = document.getElementById('haccpCekBtnText');
+  if (yaziEl) yaziEl.textContent = 'Çekiliyor…';
+
+  var sonuc = await dataloggerCagir('fetch');
+
+  if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  if (yaziEl) yaziEl.textContent = 'Çek ve Kaydet';
+
+  if (!sonuc.ok) { showToast(sonuc.error || 'Değer çekilemedi.', 'error'); return; }
+  if (sonuc.configured === false) { showToast(sonuc.mesaj || 'Cihaz bağlı değil.', 'error'); return; }
+
+  _cekPanelOku = sonuc;
+  gosterCekPaneli(sonuc);
+}
+
+function gosterCekPaneli(sonuc) {
+  var eski = document.getElementById('haccpCekPanel');
+  if (eski) eski.remove();
+
+  var satirlar = (sonuc.okunan || []).map(function(o) {
+    var lim = o.depo_ad ? getDepoSicaklikLimitleri(o.depo_ad) : null;
+    var durum = o.depo_ad ? sicaklikDurum(o.sicaklik, o.depo_ad) : { text: '—', cls: '' };
+    return '<tr>' +
+      '<td>' + (o.prob_no) + '</td>' +
+      '<td>' + (o.depo_ad ? o.depo_ad.replace(/</g, '&lt;') : '<span style="color:var(--danger)">eşleşmedi</span>') + '</td>' +
+      '<td style="text-align:right"><strong>' + (o.sicaklik != null ? Number(o.sicaklik).toFixed(1) + ' °C' : '—') + '</strong></td>' +
+      '<td style="text-align:right">' + (o.nem != null ? Number(o.nem).toFixed(0) + ' %' : '—') + '</td>' +
+      '<td style="text-align:right;font-size:0.72rem;color:var(--text-muted)">' + (lim ? lim.min + ' … ' + lim.max + ' °C' : '—') + '</td>' +
+      '<td style="text-align:center">' + (o.depo_ad ? '<span class="' + durum.cls + '">' + durum.text + '</span>' : '—') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  var kutular = (sonuc.okunan || []).filter(function(o) { return !o.depo_ad; }).length;
+  var uyari = kutular > 0
+    ? '<div style="font-size:0.75rem;color:var(--danger);margin-bottom:0.5rem">' + kutular + ' kanal için depo eşleştirmesi yok — Cihaz Ayarları\'ndan eşleştirin.</div>'
+    : '';
+
+  var el = document.createElement('div');
+  el.id = 'haccpCekPanel';
+  el.style.cssText = 'margin-bottom:0.75rem;padding:0.75rem;border:1px solid rgba(99,102,241,0.35);border-radius:8px;background:rgba(99,102,241,0.05)';
+  el.innerHTML =
+    '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">' +
+      '<strong style="font-size:0.85rem">Cihazdan okunan değerler</strong>' +
+      '<span style="font-size:0.72rem;color:var(--text-muted)">' + (sonuc.tarih || '') + ' ' + (sonuc.saat || '') + '</span>' +
+      '<button class="btn btn-ghost btn-sm" onclick="kapatCekPaneli()" style="margin-left:auto">Kapat</button>' +
+    '</div>' + uyari +
+    '<div style="max-height:220px;overflow:auto"><table class="data-table" style="font-size:0.78rem">' +
+      '<thead><tr><th>Kanal</th><th>Depo</th><th style="text-align:right">Sıcaklık</th><th style="text-align:right">Nem</th><th style="text-align:right">Limit</th><th style="text-align:center">Durum</th></tr></thead>' +
+      '<tbody>' + satirlar + '</tbody>' +
+    '</table></div>' +
+    '<div style="display:flex;gap:0.4rem;margin-top:0.6rem">' +
+      '<button class="btn btn-primary btn-sm" onclick="dataloggerCekKaydet()">Bu değerleri kaydet</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="kapatCekPaneli()">Vazgeç</button>' +
+    '</div>';
+
+  var hedef = document.getElementById('haccpDataloggerDurum');
+  if (hedef && hedef.parentNode) hedef.parentNode.insertBefore(el, hedef.nextSibling);
+}
+
+function kapatCekPaneli() {
+  var el = document.getElementById('haccpCekPanel');
+  if (el) el.remove();
+  _cekPanelOku = null;
+}
+
+async function dataloggerCekKaydet() {
+  if (!_cekPanelOku) { showToast('Önce değerleri çekin.', 'error'); return; }
+  var kaydedilebilir = (_cekPanelOku.okunan || []).filter(function(o) { return !!o.depo_ad; });
+  if (kaydedilebilir.length === 0) {
+    showToast('Kaydedilebilir kanal yok — depo eşleştirmesi gerekli.', 'error');
+    return;
+  }
+  var sonuc = await dataloggerCagir('save');
+  if (!sonuc.ok) { showToast(sonuc.error || 'Kaydedilemedi.', 'error'); return; }
+
+  kapatCekPaneli();
+  var n = (sonuc.kaydedilen || []).length;
+  var a = (sonuc.atlanan || []).length;
+  showToast(n + ' kayıt eklendi' + (a ? ', ' + a + ' kayıt atlandı' : '') + '.', n ? 'success' : 'error');
+  if (n) { await syncHaccpFromSupabase(); loadHaccpData(); dataloggerDurumYenile(); }
+}
+
+// ═══════════════════════ CIHAZ AYARLARI MODALI ══════════════════════════════
+async function openCihazAyarModal() {
+  if (getRole() !== ROLE_ADMIN) { showToast('Bu işlem için yönetici yetkisi gerekiyor.', 'error'); return; }
+  var overlay = document.getElementById('cihazAyarModal');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('caTestSonuc').innerHTML = '';
+  await caAyarlariYukle();
+}
+
+function closeCihazAyarModal() {
+  document.getElementById('cihazAyarModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function caAlan(id) { return document.getElementById(id); }
+
+async function caAyarlariYukle() {
+  var kutu = document.getElementById('cihazAyarBody');
+  var eski = kutu.querySelector('.ca-yukleniyor');
+  if (!eski) {
+    var y = document.createElement('div');
+    y.className = 'ca-yukleniyor';
+    y.style.cssText = 'font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0';
+    y.textContent = 'Ayarlar yükleniyor…';
+    kutu.appendChild(y);
+  }
+
+  var sonuc = await dataloggerCagir('settings');
+  var eski2 = kutu.querySelector('.ca-yukleniyor');
+  if (eski2) eski2.remove();
+
+  if (!sonuc.ok) {
+    document.getElementById('caTestSonuc').innerHTML =
+      '<div style="color:var(--danger);font-size:0.8rem">' + kacisHtml(sonuc.error || 'Ayarlar okunamadı.') + '</div>';
+    return;
+  }
+
+  var a = sonuc.ayarlar || {};
+  caAlan('caAktif').checked = !!a.aktif;
+  caAlan('caUretici').value = a.uretici || '';
+  caAlan('caCihazAdi').value = a.cihaz_adi || '';
+  caAlan('caApiUrl').value = a.api_url || '';
+  caAlan('caApiYontem').value = a.api_yontem || 'GET';
+  caAlan('caSaatDilimi').value = a.saat_dilimi || 'Europe/Istanbul';
+  caAlan('caSaatSabah').value = a.saat_sabah || '08:00';
+  caAlan('caSaatOgle').value = a.saat_ogle || '12:30';
+  caAlan('caSaatAksam').value = a.saat_aksam || '18:00';
+  caAlan('caEdgeUrl').value = a.edge_function_url || '';
+
+  // Anahtar asla gönderilmez; yalnızca "doluluk" bilgisi vardır.
+  caAlan('caApiKey').value = '';
+  caAlan('caApiKey').placeholder = a.api_key_dolu ? '•••••••• (kayıtlı — değiştirmek için yazın)' : 'Anahtarı girin';
+  document.getElementById('caApiKeyNot').textContent = a.api_key_dolu
+    ? 'Kayıtlı bir anahtar var. Boş bırakırsanız korunur.'
+    : 'Henüz kayıtlı değil.';
+  caAlan('caCronSecret').value = '';
+  caAlan('caCronSecret').placeholder = a.cron_secret_dolu ? '•••••••• (kayıtlı)' : 'Rastgele bir metin';
+
+  caProbListesi = sonuc.prob || [];
+  caProbEslestirmeCiz();
+
+  var log = sonuc.log || [];
+  document.getElementById('caLog').innerHTML = log.length
+    ? '<table class="data-table" style="font-size:0.72rem"><tbody>' + log.map(function(l) {
+        return '<tr><td style="white-space:nowrap">' + kacisHtml(l.olusturma || '') + '</td>' +
+          '<td>' + kacisHtml(l.slot || '') + '</td>' +
+          '<td style="color:' + (l.basarili ? '#10b981' : '#ef4444') + '">' + kacisHtml(l.mesaj || '') + '</td></tr>';
+      }).join('') + '</tbody></table>'
+    : '<div style="color:var(--text-muted)">Henüz kayıt yok.</div>';
+}
+
+function kacisHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function caAnahtarGoster() {
+  var el = caAlan('caApiKey');
+  var gizli = el.type === 'password';
+  el.type = gizli ? 'text' : 'password';
+  document.getElementById('caAnahtarGosterBtn').textContent = gizli ? 'Gizle' : 'Göster';
+}
+
+async function caAyarlarKaydet() {
+  var govde = {
+    aktif: caAlan('caAktif').checked,
+    uretici: caAlan('caUretici').value,
+    cihaz_adi: caAlan('caCihazAdi').value,
+    api_url: caAlan('caApiUrl').value,
+    api_yontem: caAlan('caApiYontem').value,
+    saat_dilimi: caAlan('caSaatDilimi').value,
+    saat_sabah: caAlan('caSaatSabah').value,
+    saat_ogle: caAlan('caSaatOgle').value,
+    saat_aksam: caAlan('caSaatAksam').value,
+    edge_function_url: caAlan('caEdgeUrl').value,
+    api_key: caAlan('caApiKey').value,
+    cron_secret: caAlan('caCronSecret').value
+  };
+
+  var probler = caProbListesi.map(function(p) {
+    return { prob_no: p.prob_no, depo_ad: p.depo_ad, etiket: p.etiket, aktif: !!p.aktif };
+  });
+
+  var sonuc = await dataloggerCagir('settings-save', { ayarlar: govde, prob: probler });
+  if (!sonuc.ok) { showToast(sonuc.error || 'Ayarlar kaydedilemedi.', 'error'); return; }
+
+  var zamanli = Array.isArray(sonuc.zamanlama) ? sonuc.zamanlama : [];
+  showToast(
+    zamanli.length
+      ? 'Ayarlar kaydedildi. Zamanlama: ' + zamanli.map(function(z) { return z.slot + ' ' + z.planlanan_saat; }).join(', ')
+      : 'Ayarlar kaydedildi. (Zamanlanmış kayıt için Edge Function adresini girin.)',
+    'success'
+  );
+  await caAyarlariYukle();
+  await dataloggerDurumYenile();
+}
+
+async function caBaglantiTest() {
+  var kutu = document.getElementById('caTestSonuc');
+  kutu.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem">Bağlantı sınanıyor…</div>';
+  var sonuc = await dataloggerCagir('test');
+  if (!sonuc.ok) {
+    kutu.innerHTML = '<div style="color:var(--danger);font-size:0.8rem">' + kacisHtml(sonuc.error || 'Test edilemedi.') + '</div>';
+    return;
+  }
+  if (sonuc.configured === false) {
+    kutu.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem">Ayarlar eksik: API adresi ve anahtar girin, sonra tekrar test edin.</div>';
+    return;
+  }
+  if (sonuc.basarili) {
+    var satirlar = (sonuc.okunan || []).map(function(o) {
+      return '<tr><td>' + o.prob_no + '</td><td>' + kacisHtml(o.depo_ad || 'eşleşmedi') + '</td>' +
+        '<td style="text-align:right">' + (o.sicaklik != null ? Number(o.sicaklik).toFixed(1) + ' °C' : '—') + '</td></tr>';
+    }).join('');
+    kutu.innerHTML = '<div style="color:#10b981;font-size:0.8rem;font-weight:600;margin-bottom:0.35rem">✓ Bağlantı başarılı — ' + (sonuc.kanal_adedi || 0) + ' kanal okundu</div>' +
+      '<table class="data-table" style="font-size:0.75rem"><tbody>' + satirlar + '</tbody></table>';
+    showToast('Bağlantı testi başarılı.', 'success');
+  } else {
+    kutu.innerHTML = '<div style="color:var(--danger);font-size:0.8rem">✗ ' + kacisHtml(sonuc.hata || 'Bağlantı kurulamadı.') + '</div>';
+  }
+}
+
+// ─── Kanal → Depo eşleştirme tablosu ───────────────────────────────────────
+function caProbEslestirmeCiz() {
+  var kap = document.getElementById('caProbEslestirme');
+  if (!kap) return;
+  var depolar = getHaccpDepoAdlari();
+
+  if (!caProbListesi.length) {
+    // Cihaz kanal sayısı bilinmiyor: kullanıcı kendi eklesin.
+    kap.style.color = 'var(--text-muted)';
+    kap.innerHTML = 'Kanal eşleştirmesi yok. Cihaz gelince buradan kanal numarasını depoya bağlayın. ' +
+      '<button class="btn btn-ghost btn-sm" onclick="caProbEkle()">Kanal Ekle</button>';
+    return;
+  }
+
+  var secenekler = ['<option value="">— seçiniz —</option>'].concat(depolar.map(function(d) {
+    return '<option value="' + kacisHtml(d) + '">' + kacisHtml(d) + '</option>';
+  })).join('');
+
+  kap.style.color = 'var(--text)';
+  kap.innerHTML = '<div style="max-height:230px;overflow:auto"><table class="data-table" style="font-size:0.78rem">' +
+    '<thead><tr><th style="width:60px">Kanal</th><th>Depo</th><th style="width:90px">Aktif</th><th style="width:36px"></th></tr></thead><tbody>' +
+    caProbListesi.map(function(p, i) {
+      return '<tr>' +
+        '<td><input type="number" min="1" value="' + (p.prob_no || '') + '" onchange="caProbGuncelle(' + i + ',\'prob_no\',this.value)" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem"></td>' +
+        '<td><select onchange="caProbGuncelle(' + i + ',\'depo_ad\',this.value)" style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' +
+          secenekler.replace('value="' + kacisHtml(p.depo_ad || '') + '"', 'value="' + kacisHtml(p.depo_ad || '') + '" selected') +
+        '</select></td>' +
+        '<td style="text-align:center"><input type="checkbox" ' + (p.aktif !== false ? 'checked' : '') + ' onchange="caProbGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer"></td>' +
+        '<td><button class="btn-icon" onclick="caProbSil(' + i + ')" title="Sil" style="color:var(--danger)">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>' +
+        '</button></td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div>' +
+    '<button class="btn btn-ghost btn-sm" onclick="caProbEkle()" style="margin-top:0.4rem">Kanal Ekle</button>';
+}
+
+function caProbGuncelle(i, alan, deger) {
+  if (!caProbListesi[i]) return;
+  if (alan === 'prob_no') caProbListesi[i].prob_no = parseInt(deger, 10) || 0;
+  else if (alan === 'aktif') caProbListesi[i].aktif = !!deger;
+  else caProbListesi[i][alan] = deger;
+}
+
+function caProbEkle() {
+  caProbListesi.push({ prob_no: caProbListesi.length + 1, depo_ad: '', etiket: '', aktif: true });
+  caProbEslestirmeCiz();
+}
+
+function caProbSil(i) {
+  caProbListesi.splice(i, 1);
+  caProbEslestirmeCiz();
+}
+
+// ═══════════════════════ SICAKLIK GRAFİĞİ ══════════════════════════════════
+var _haccpGrafik = null;
+
+function renderHaccpSicaklikGrafik() {
+  var kap = document.getElementById('haccpSicaklikGrafikKutu');
+  var tuval = document.getElementById('haccpSicaklikGrafik');
+  var depoSec = document.getElementById('haccpGrafikDepo');
+  if (!kap || !tuval) return;
+  if (typeof Chart === 'undefined') { kap.style.display = 'none'; return; }
+
+  var depolar = getHaccpDepoAdlari();
+  var cur = depoSec.value;
+  depoSec.innerHTML = '<option value="">Tüm Depolar</option>' + depolar.map(function(d) {
+    return '<option value="' + kacisHtml(d) + '"' + (d === cur ? ' selected' : '') + '>' + kacisHtml(d) + '</option>';
+  }).join('');
+
+  var gunSayisi = parseInt(document.getElementById('haccpGrafikGun').value, 10) || 30;
+  var sinir = new Date();
+  sinir.setDate(sinir.getDate() - gunSayisi);
+  var sinirStr = formatLocalDate(sinir);
+
+  var veriler = haccpRecords.filter(function(r) {
+    if (r.type !== 'sicaklik' || r.sicaklik === null || r.sicaklik === '') return false;
+    if (r.tarih < sinirStr) return false;
+    if (depoSec.value && r.depoAd !== depoSec.value) return false;
+    return true;
+  });
+
+  kap.style.display = veriler.length ? '' : 'none';
+  if (!veriler.length) return;
+
+  var etiketler = [];
+  var saatSet = {};
+  veriler.forEach(function(r) { saatSet[r.tarih + ' ' + (r.saat || '').slice(0, 5)] = true; });
+  etiketler = Object.keys(saatSet).sort();
+
+  var depoListesi = depoSec.value
+    ? [depoSec.value]
+    : depolar.filter(function(d) {
+        return veriler.some(function(r) { return r.depoAd === d; });
+      });
+
+  var renkler = ['#6366f1', '#f97316', '#10b981', '#0ea5e9', '#22d3ee', '#f59e0b', '#ef4444', '#14b8a6'];
+
+  var setler = depoListesi.map(function(depo, i) {
+    var degerler = etiketler.map(function(et) {
+      var oyle = veriler.filter(function(r) {
+        return r.depoAd === depo && (r.tarih + ' ' + (r.saat || '').slice(0, 5)) === et;
+      })[0];
+      return oyle && oyle.sicaklik !== null && oyle.sicaklik !== '' ? Number(oyle.sicaklik) : null;
+    });
+    return {
+      label: depo,
+      data: degerler,
+      borderColor: renkler[i % renkler.length],
+      backgroundColor: renkler[i % renkler.length],
+      tension: 0.25,
+      pointRadius: 2,
+      pointHoverRadius: 4,
+      borderWidth: 2,
+      spanGaps: true
+    };
+  });
+
+  // Limit çizgileri (seçili tek depo varsa anlamlı)
+  if (depoSec.value) {
+    var lim = getDepoSicaklikLimitleri(depoSec.value);
+    [lim.max, lim.min].forEach(function(v, idx) {
+      setler.push({
+        label: idx === 0 ? 'Üst limit' : 'Alt limit',
+        data: etiketler.map(function() { return v; }),
+        borderColor: idx === 0 ? 'rgba(239,68,68,0.65)' : 'rgba(59,130,246,0.65)',
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false
+      });
+    });
+  }
+
+  if (_haccpGrafik) { _haccpGrafik.destroy(); _haccpGrafik = null; }
+  _haccpGrafik = new Chart(tuval.getContext('2d'), {
+    type: 'line',
+    data: { labels: etiketler, datasets: setler },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(1) + ' °C');
+            }
+          }
+        }
+      },
+      scales: {
+        y: { ticks: { callback: function(v) { return v + '°C'; }, font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.12)' } },
+        x: { ticks: { maxTicksLimit: 12, font: { size: 9 }, maxRotation: 60, minRotation: 0 }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function haccpSicaklikGrafikYazdir() {
+  if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  var tuval = document.getElementById('haccpSicaklikGrafik');
+  if (!tuval || !_haccpGrafik) { showToast('Grafik yok.', 'error'); return; }
+  var win = window.open('', '_blank', 'width=1000,height=700');
+  if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
+  var depo = document.getElementById('haccpGrafikDepo').value || 'Tüm Depolar';
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Depo Sıcaklık Grafiği</title>' +
+    '<style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:1.2rem;margin-bottom:.25rem}' +
+    '.meta{font-size:.8rem;color:#666;margin-bottom:1rem}img{max-width:100%}' +
+    '.footer{text-align:center;font-size:.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:.5rem}</style></head><body>' +
+    '<h1>Depo Sıcaklık Grafiği</h1><div class="meta">' + kacisHtml(depo) + ' &bull; ' + formatTarihTR(formatLocalDate(new Date())) + '</div>' +
+    '<img src="' + tuval.toDataURL() + '" style="max-width:100%">' +
+    '<div class="footer">Kırşehir Ahi Evran Üniversitesi &bull; Beslenme Hizmetleri</div></body></html>');
+  win.document.close();
+  setTimeout(function() { win.print(); }, 400);
 }
 
 
@@ -4269,7 +4881,7 @@ async function switchTab(name) {
   }
   closeSidebar();
   if (name === 'menu') await renderMenu();
-  if (name === 'haccp') loadHaccpData();
+  if (name === 'haccp') { loadHaccpData(); dataloggerDurumYenile(); }
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }

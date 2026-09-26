@@ -1523,6 +1523,26 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .badge-warn { background: rgba(245,158,11,0.12); color: #f59e0b; border-color: rgba(245,158,11,0.2); }
 .badge-err { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.2); }
 
+/* ---- DATALOGGER (SICAKLIK KAYIT CİHAZI) ---- */
+/* Ayar modalındaki "input + buton" grubu: input esnek, buton sabit */
+#cihazAyarModal .form-group > div { display: flex; gap: 0.4rem; align-items: stretch; }
+#cihazAyarModal .form-group > div input { flex: 1 1 auto; min-width: 0; }
+#cihazAyarModal .form-group > div .btn { flex: 0 0 auto; white-space: nowrap; }
+/* Üst bilgi kutusu küçük ekranlarda taşmasın */
+#cihazAyarModal h3 { color: var(--text-primary); }
+/* Kanal eşleştirme tablosunda sayısal girişler hizlansın */
+#caProbEslestirme table td { vertical-align: middle; }
+/* "Çek" paneli tablo satırları */
+#haccpCekPanel table th { font-size: 0.72rem; white-space: nowrap; }
+#haccpCekPanel table td { white-space: nowrap; }
+#haccpCekPanel .badge { font-size: 0.68rem; padding: 0.15rem 0.5rem; }
+/* Kaynak sütunu dar kalsın */
+#haccpSicaklikTable th:nth-last-child(2),
+#haccpSicaklikTable td:nth-last-child(2) { width: 78px; text-align: center; }
+#haccpSicaklikTable .badge { font-size: 0.68rem; padding: 0.15rem 0.5rem; }
+/* Grafik kutusu dar ekranda taşmasın */
+#haccpSicaklikGrafikKutu canvas { max-width: 100%; }
+
 /* ---- TOOLBAR ---- */
 .toolbar {
   display: flex;
