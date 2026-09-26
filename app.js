@@ -8600,9 +8600,12 @@ const chartValueLabelPlugin = {
     const top = chart.chartArea ? chart.chartArea.top : 0;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const insideColor = isDark ? '#ffffff' : '#000000';
+    const isVertical = chart.options.indexAxis !== 'y';
     chart.data.datasets.forEach((ds, di) => {
+      if (ds.type === 'line') return;
       const meta = chart.getDatasetMeta(di);
       meta.data.forEach((bar, idx) => {
+        if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number') return;
         const val = ds.data[idx];
         if (val === undefined || val === null || isNaN(val)) return;
         const isTL = ds.label && ds.label.includes('₺');
@@ -8610,14 +8613,16 @@ const chartValueLabelPlugin = {
         const display = isTL
           ? val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
           : val === 0 ? '0' : val >= 100 ? Math.round(val).toString() : val >= 10 ? val.toFixed(1) : val.toFixed(2);
-        let inside = pos === 'inside';
+        if (pos === 'inside' && Number(val) === 0) return;
+        const barH = (isVertical && typeof bar.height === 'number') ? bar.height : 0;
+        let inside = pos === 'inside' && barH >= 14;
         let labelX = bar.x;
         let labelY;
         if (!inside && bar.y - 7 < top) inside = true;
         if (inside) {
           ctx.fillStyle = insideColor;
           ctx.textBaseline = 'middle';
-          labelY = bar.y + bar.height / 2;
+          labelY = bar.y + barH / 2;
           if (bar.y < top) labelY = Math.max(top + 12, labelY);
         } else {
           ctx.fillStyle = chart.options.plugins?.legend?.labels?.color || '#334155';
@@ -11197,8 +11202,8 @@ function drawYagChart(list) {
           display: datasets.length > 1,
           labels: { color: textColor, font: { size: 11 } }
         },
-        valueLabels: !hasPrev,
-        valueLabelsPosition: 'above',
+        valueLabels: true,
+        valueLabelsPosition: 'inside',
         tooltip: {
           backgroundColor: '#000',
           titleColor: '#fff',
