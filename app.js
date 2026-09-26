@@ -8377,9 +8377,7 @@ function renderYillikWasteTable(year1, year2) {
       totals2.atik += d2.atik;
       totals2.porsiyon += d2.porsiyon;
     }
-    var atikGr1 = d1.porsiyon > 0 ? (d1.atik * 1000 / d1.porsiyon) : 0;
-    var atikGr2 = d2 && d2.porsiyon > 0 ? (d2.atik * 1000 / d2.porsiyon) : 0;
-    return { food: food, d1: d1, d2: d2, atikGr1: atikGr1, atikGr2: atikGr2 };
+    return { food: food, d1: d1, d2: d2 };
   });
 
   rows.sort(function(a, b) { return b.d1.atik - a.d1.atik; });
@@ -8389,11 +8387,9 @@ function renderYillikWasteTable(year1, year2) {
   h += '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap">' + (t('thFoodType') || 'Yemek Türü') + '</th>';
   h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Üretim</th>';
   h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Atık (kg)</th>';
-  h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year1 + ' Atık (gr/pors.)</th>';
   if (hasComparison) {
     h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Üretim</th>';
     h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Atık (kg)</th>';
-    h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">' + year2 + ' Atık (gr/pors.)</th>';
     h += '<th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);white-space:nowrap">Fark (kg)</th>';
   }
   h += '</tr></thead><tbody>';
@@ -8403,11 +8399,9 @@ function renderYillikWasteTable(year1, year2) {
     h += '<td style="padding:7px 10px;font-weight:500">' + escapeHtml(row.food) + '</td>';
     h += '<td style="padding:7px 10px;text-align:right">' + fmtInt(row.d1.uretim) + '</td>';
     h += '<td style="padding:7px 10px;text-align:right;color:var(--accent-orange);font-weight:600">' + fmt(row.d1.atik) + '</td>';
-    h += '<td style="padding:7px 10px;text-align:right">' + fmt(row.atikGr1) + '</td>';
     if (hasComparison) {
       h += '<td style="padding:7px 10px;text-align:right">' + fmtInt(row.d2.uretim) + '</td>';
       h += '<td style="padding:7px 10px;text-align:right;color:var(--accent-orange);font-weight:600">' + fmt(row.d2.atik) + '</td>';
-      h += '<td style="padding:7px 10px;text-align:right">' + fmt(row.atikGr2) + '</td>';
       var fark = row.d1.atik - row.d2.atik;
       var farkCls = fark > 0 ? 'color:var(--accent-red)' : fark < 0 ? 'color:var(--accent-green)' : '';
       h += '<td style="padding:7px 10px;text-align:right;font-weight:600;' + farkCls + '">' + (fark > 0 ? '+' : '') + fmt(fark) + '</td>';
@@ -8415,19 +8409,15 @@ function renderYillikWasteTable(year1, year2) {
     h += '</tr>';
   });
 
-  var toplamAtikGr1 = totals1.porsiyon > 0 ? (totals1.atik * 1000 / totals1.porsiyon) : 0;
   h += '<tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg-card)">';
   h += '<td style="padding:8px 10px">TOPLAM</td>';
   h += '<td style="padding:8px 10px;text-align:right">' + fmtInt(totals1.uretim) + '</td>';
   h += '<td style="padding:8px 10px;text-align:right;color:var(--accent-orange)">' + fmt(totals1.atik) + '</td>';
-  h += '<td style="padding:8px 10px;text-align:right">' + fmt(toplamAtikGr1) + '</td>';
   if (hasComparison) {
-    var toplamAtikGr2 = totals2.porsiyon > 0 ? (totals2.atik * 1000 / totals2.porsiyon) : 0;
     var toplamFark = totals1.atik - totals2.atik;
     var tfCls = toplamFark > 0 ? 'color:var(--accent-red)' : toplamFark < 0 ? 'color:var(--accent-green)' : '';
     h += '<td style="padding:8px 10px;text-align:right">' + fmtInt(totals2.uretim) + '</td>';
     h += '<td style="padding:8px 10px;text-align:right;color:var(--accent-orange)">' + fmt(totals2.atik) + '</td>';
-    h += '<td style="padding:8px 10px;text-align:right">' + fmt(toplamAtikGr2) + '</td>';
     h += '<td style="padding:8px 10px;text-align:right;font-weight:700;' + tfCls + '">' + (toplamFark > 0 ? '+' : '') + fmt(toplamFark) + '</td>';
   }
   h += '</tr>';
