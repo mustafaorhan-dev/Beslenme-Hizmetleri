@@ -236,6 +236,13 @@ COMMENT ON FUNCTION public.datalogger_kayit_ekle IS
 -- DIKKAT: pg_cron veritabani saat diliminde (Supabase'de UTC) calisir. Kurum
 -- saatiyle (Europe/Istanbul) verilen saatler burada UTC'ye cevrilir. Aksi
 -- halde 08:00 kaydi 05:00'te yapilirdi.
+-- Onceki surum 4 OUT parametre donuyordu (utc_sati yoktu); yeni surum 5
+-- donuyor. Postgres CREATE OR REPLACE ile OUT parametrelerini degistiremez
+-- ("cannot change return type"), bu yuzden eskisini once dusuruyoruz.
+-- Bu fonksiyon Edge Function tarafindan yalnizca rpc ile cagrildigi icin
+-- dusurulmesi guvenlidir.
+DROP FUNCTION IF EXISTS public.datalogger_zamanlama_ayarla();
+
 CREATE OR REPLACE FUNCTION public.datalogger_zamanlama_ayarla()
 RETURNS TABLE (slot TEXT, planlanan_saat TEXT, utc_saat TEXT, cron_ifadesi TEXT, etkin BOOLEAN)
 LANGUAGE plpgsql
