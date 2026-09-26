@@ -4887,29 +4887,121 @@ function exportDashboardPDF() {
   triggerPrint(printWin);
 }
 
-function exportRecordsPDF() {
+// Kayıtlar PDF'i: ekrandaki tek sayfayi DEGIL, filtrelenmis listenin TAMAMINI basar.
+// Sayfa basina 20 kayit siniri YOK; tarayici sayfalari kendi kirar,
+// tablo basligi her sayfada tekrarlanir (thead -> table-header-group).
+function kayitlarPdfSatirlari(list) {
+  const fmt = (v, o) => (v == null ? 0 : v).toLocaleString('tr-TR', o);
+  let rows = '';
+  const t = { yemek: 0, fire: 0, turnike: 0, personel: 0, toplam: 0, ogrenci: 0, atik: 0, atikPorsiyon: 0 };
+  list.forEach(r => {
+    const y = Number(r.yemek) || 0, f = Number(r.fire) || 0, tu = Number(r.turnike) || 0;
+    const pe = Number(r.personel) || 0, tp = Number(r.toplam) || 0, og = Number(r.ogrenci) || 0;
+    const p = Number(r.porsiyon) || 0, a = Number(r.atik) || 0;
+    t.yemek += y; t.fire += f; t.turnike += tu; t.personel += pe;
+    t.toplam += tp; t.ogrenci += og; t.atik += a;
+    if (p > 0) t.atikPorsiyon += a * 1000 / p;
+    const wPort = p > 0 ? (a * 1000 / p) : 0;
+    rows += '<tr>'
+      + '<td class="sol">' + escapeHtml(displayDate(r.tarih)) + '</td>'
+      + '<td>' + fmt(y) + '</td>'
+      + '<td>' + fmt(f) + '</td>'
+      + '<td>' + fmt(tu) + '</td>'
+      + '<td>' + fmt(pe) + '</td>'
+      + '<td>' + fmt(tp) + '</td>'
+      + '<td' + (p !== 400 ? ' class="uyari"' : '') + '>' + fmt(p) + '</td>'
+      + '<td>' + fmt(a, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '</td>'
+      + '<td>' + fmt(og) + '</td>'
+      + '<td class="vurgu">' + wPort.toFixed(0) + '</td>'
+      + '<td class="sol">' + (r.yemek_adi ? escapeHtml(r.yemek_adi) : '<span class="bos">Belirsiz</span>') + '</td>'
+      + '</tr>';
+  });
+  return { rows: rows, t: t };
+}
+
+function exportRecordsPDF(tumu) {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  const kaynak = tumu ? [...records] : getYearFilteredRecords();
+  if (kaynak.length === 0) { showToast('Yazdırılacak kayıt bulunamadı.', 'error'); return; }
+  const list = sortRecords(kaynak);
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-  const tableHtml = document.querySelector('#content-records .table-wrapper')?.outerHTML || '<p>Kayıt yok</p>';
+
+  const veri = kayitlarPdfSatirlari(list);
+  const t = veri.t;
+  const verim = t.yemek > 0 ? (t.atikPorsiyon / t.yemek * 100) : 0;
+
+  const tarihler = list.map(r => r.tarih).filter(Boolean).sort();
+  const aralik = tarihler.length
+    ? displayDate(tarihler[0]) + ' – ' + displayDate(tarihler[tarihler.length - 1])
+    : '—';
+  const kapsam = tumu
+    ? 'TÜM KAYITLAR &bull; yıl filtresi uygulanmadı'
+    : (Number(recordsYearFilter) ? Number(recordsYearFilter) + ' yılı' : 'Tüm yıllar');
+  const siralama = sortField
+    ? 'Sıralama: ' + sortField + (sortDir === -1 ? ' (yeni → eski)' : ' (eski → yeni)')
+    : '';
+  const bugun = new Date().toLocaleDateString('tr-TR');
+
+  const basliklar = ['Tarih', 'Üretilen Yemek<br>(Kişi)', '%10 Fire', 'Turnike<br>Geçiş', 'Yemekhane<br>Personeli',
+    'Toplam<br>Geçiş', 'Porsiyon<br>(gr)', 'Atık<br>(kg)', 'Yemek Hiz.<br>Öğr.', 'Çöpe Giden<br>(pors.)', 'Yemek Türü'];
+  const th = basliklar.map(b => '<th>' + b + '</th>').join('');
+
+  const tRow = '<tr class="toplam">'
+    + '<td class="sol">TOPLAM (' + list.length + ' kayıt)</td>'
+    + '<td>' + t.yemek.toLocaleString('tr-TR') + '</td>'
+    + '<td>' + t.fire.toLocaleString('tr-TR') + '</td>'
+    + '<td>' + t.turnike.toLocaleString('tr-TR') + '</td>'
+    + '<td>' + t.personel.toLocaleString('tr-TR') + '</td>'
+    + '<td>' + t.toplam.toLocaleString('tr-TR') + '</td>'
+    + '<td>—</td>'
+    + '<td>' + t.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '</td>'
+    + '<td>' + t.ogrenci.toLocaleString('tr-TR') + '</td>'
+    + '<td>' + t.atikPorsiyon.toFixed(0) + '</td>'
+    + '<td class="sol"></td>'
+    + '</tr>';
+
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"><title>Kayıtlar - Atık Kontrol</title>
     <style>
-      body { font-family: Arial, sans-serif; padding: 20px; }
-      h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
-      .date { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
-      .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-      .data-table th { background: #f5f5f5; padding: 0.4rem 0.5rem; text-align: left; white-space: nowrap; }
-      .data-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #eee; }
-      .toolbar, .bulk-bar, .pagination, .btn, .empty-state svg { display: none; }
-      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
+      @page { size: A4 landscape; margin: 10mm; }
+      * { box-sizing: border-box; }
+      body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; }
+      h1 { font-size: 1.3rem; margin: 0 0 0.3rem; }
+      .date { font-size: 0.8rem; color: #666; margin-bottom: 0.8rem; }
+      .meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; margin-bottom: 0.9rem; }
+      .chip { font-size: 0.7rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 999px; padding: 3px 9px; color: #475569; }
+      .chip b { color: #0f172a; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+      thead { display: table-header-group; }
+      tr { page-break-inside: avoid; break-inside: avoid; }
+      th { background: #f1f5f9; border-bottom: 2px solid #cbd5e1; padding: 5px 6px; text-align: right; vertical-align: bottom; line-height: 1.25; font-size: 0.62rem; }
+      th:first-child, td:first-child { text-align: left; }
+      td { padding: 3px 6px; border-bottom: 1px solid #e5e7eb; text-align: right; white-space: nowrap; }
+      td.sol, th:first-child { text-align: left; }
+      tr.toplam td { font-weight: 700; background: #f8fafc; border-top: 2px solid #cbd5e1; border-bottom: none; }
+      .vurgu { color: #c2410c; font-weight: 600; }
+      .uyari { color: #b45309; font-weight: 700; }
+      .bos { color: #94a3b8; font-style: italic; }
+      .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 1.5rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       ${harcamaHiddenCss()}
     </style>
   </head><body>
-    <h1>Tüm Kayıtlar</h1>
-    <div class="date">${new Date().toLocaleDateString('tr-TR')}</div>
-    ${tableHtml}
-    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${new Date().toLocaleDateString('tr-TR')}</div>
+    <h1>Kayıt Listesi - Atık Kontrol Yönetim Sistemi</h1>
+    <div class="date">Yazdırma tarihi: ${bugun}</div>
+    <div class="meta">
+      <span class="chip">Kapsam: <b>${kapsam}</b></span>
+      <span class="chip">Kayıt: <b>${list.length}</b></span>
+      <span class="chip">Tarih aralığı: <b>${aralik}</b></span>
+      <span class="chip">Toplam atık: <b>${t.atik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} kg</b></span>
+      <span class="chip">Atık verimliliği: <b>%${verim.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}</b></span>
+      <span class="chip">${siralama}</span>
+    </div>
+    <table>
+      <thead><tr>${th}</tr></thead>
+      <tbody>${veri.rows}${tRow}</tbody>
+    </table>
+    <div class="footer">Atık Kontrol Yönetim Sistemi &bull; ${bugun} &bull; ${list.length} kayıt listelenmiştir</div>
   </body></html>`);
   printWin.document.close();
   printWin.focus();
@@ -13289,6 +13381,7 @@ var I18N = {
   yearlyMonthlyWasteRate: "Aylık Atık Verimliliği (%)",
   yearlyMonthlyWasteRateNote: "Atık porsiyon ÷ üretilen porsiyon × 100 · kırmızı kesikli çizgi = hedef",
   yearlyRateTarget: "Hedef",
+  recordsPrintAllBtn: "PDF (T?m?)",
     yearlyWasteListTitle: "Yıllık Atık Listesi",
     spendingRatesTitle: "Kişi Başı Harcama Oranları (Öğrenci, Personel & Yemek)",
     spendingStudentRate: "Öğrenci Başı Harcama Tutarı (TL)",
@@ -13691,6 +13784,7 @@ var I18N = {
   yearlyMonthlyWasteRate: "Monthly Waste Efficiency (%)",
   yearlyMonthlyWasteRateNote: "Waste portions ÷ produced portions × 100 · red dashed line = target",
   yearlyRateTarget: "Target",
+  recordsPrintAllBtn: "PDF (All)",
     yearlyWasteListTitle: "Yearly Waste List",
     spendingRatesTitle: "Per Person Spending Rates (Students, Staff & Meals)",
     spendingStudentRate: "Student Per Person Spending Amount (TL)",
