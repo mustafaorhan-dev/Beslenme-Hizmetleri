@@ -8435,6 +8435,126 @@ function renderYillikWasteTable(year1, year2) {
   container.innerHTML = h;
 }
 
+const YEMEK_ADI_SECENEKLERI = ['Çorba', 'Ana Yemek', 'Yardımcı Yemek', 'Tatlı', 'Ekmek', 'Salata', 'İçecek', 'Genel'];
+
+function yillikEksikYemekKayitlari() {
+  return records.filter(function (r) { return r && !String(r.yemek_adi || '').trim(); });
+}
+
+function yillikKayitYili(r) {
+  if (!r || !r.tarih) return null;
+  var d = new Date(r.tarih + 'T12:00:00');
+  return isNaN(d) ? null : d.getFullYear();
+}
+
+function yillikYemekAdiPanelToggle() {
+  var panel = document.getElementById('yillikYemekAdiPanel');
+  if (!panel) return;
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  yillikYemekAdiPanelCiz();
+}
+
+function yillikYemekAdiPanelCiz() {
+  var panel = document.getElementById('yillikYemekAdiPanel');
+  if (!panel) return;
+  var eksik = yillikEksikYemekKayitlari();
+
+  if (eksik.length === 0) {
+    panel.style.display = 'block';
+    panel.innerHTML = '<div style="font-size:0.85rem;font-weight:600;color:var(--accent-green)">'
+      + escapeHtml('✓ Tüm kayıtlarda Yemek Türü dolu. Eksik kayıt yok.') + '</div>';
+    return;
+  }
+
+  var yilSayisi = {};
+  eksik.forEach(function (r) {
+    var y = yillikKayitYili(r);
+    if (y) yilSayisi[y] = (yilSayisi[y] || 0) + 1;
+  });
+  var yilListesi = Object.keys(yilSayisi).sort(function (a, b) { return b - a; });
+
+  var yilSecenekleri = yilListesi.map(function (y) {
+    return '<option value="' + y + '">' + y + ' yılı — ' + yilSayisi[y] + ' kayıt</option>';
+  }).join('');
+
+  var turSecenekleri = YEMEK_ADI_SECENEKLERI.map(function (t) {
+    return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>';
+  }).join('');
+
+  var inputStyle = 'padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem';
+
+  panel.style.display = 'block';
+  panel.innerHTML = ''
+    + '<div style="font-size:0.85rem;font-weight:600;margin-bottom:0.6rem">'
+    + escapeHtml('Yemek Türü boş ' + eksik.length + ' kayıt bulundu. Toplu doldurabilirsiniz.')
+    + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:flex-end">'
+    +   '<div><label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-dim);margin-bottom:0.25rem">Yıl</label>'
+    +   '<select id="yilYemekAdiYil" onchange="yillikYemekAdiOnizle()" style="' + inputStyle + ';min-width:170px">' + yilSecenekleri + '</select></div>'
+    +   '<div><label style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-dim);margin-bottom:0.25rem">Yemek Türü</label>'
+    +   '<select id="yilYemekAdiTur" style="' + inputStyle + ';min-width:150px">' + turSecenekleri + '</select></div>'
+    +   '<button type="button" class="btn btn-primary btn-sm" onclick="yillikYemekAdiUygula()">Seçili Yılı Doldur</button>'
+    +   '<button type="button" class="btn btn-outline btn-sm" onclick="yillikYemekAdiTumunuDoldur()">Tümünü Doldur</button>'
+    +   '<button type="button" class="btn btn-ghost btn-sm" onclick="yillikYemekAdiPanelToggle()">Kapat</button>'
+    + '</div>'
+    + '<div id="yilYemekAdiOnizle" style="font-size:0.8rem;color:var(--text-muted);margin-top:0.55rem"></div>';
+
+  yillikYemekAdiOnizle();
+}
+
+function yillikYemekAdiOnizle() {
+  var onizle = document.getElementById('yilYemekAdiOnizle');
+  var yilEl = document.getElementById('yilYemekAdiYil');
+  if (!onizle || !yilEl) return;
+  var y = Number(yilEl.value);
+  var adet = 0;
+  yillikEksikYemekKayitlari().forEach(function (r) {
+    if (yillikKayitYili(r) === y) adet++;
+  });
+  onizle.textContent = y + ' yılında ' + adet + ' kayıt güncellenecek.';
+}
+
+function yillikYemekAdiUygula() {
+  if (!requireAdmin()) return;
+  var yilEl = document.getElementById('yilYemekAdiYil');
+  var turEl = document.getElementById('yilYemekAdiTur');
+  if (!yilEl || !turEl) return;
+  var y = Number(yilEl.value);
+  var tur = turEl.value;
+  if (!tur) return;
+  var adet = 0;
+  records.forEach(function (r) {
+    if (!r || String(r.yemek_adi || '').trim()) return;
+    if (yillikKayitYili(r) !== y) return;
+    r.yemek_adi = tur;
+    adet++;
+  });
+  yillikYemekAdiKaydet(adet, y + ' yılı', tur);
+}
+
+function yillikYemekAdiTumunuDoldur() {
+  if (!requireAdmin()) return;
+  var turEl = document.getElementById('yilYemekAdiTur');
+  if (!turEl) return;
+  var tur = turEl.value;
+  if (!tur) return;
+  var adet = 0;
+  records.forEach(function (r) {
+    if (!r || String(r.yemek_adi || '').trim()) return;
+    r.yemek_adi = tur;
+    adet++;
+  });
+  yillikYemekAdiKaydet(adet, 'tüm yıllar', tur);
+}
+
+function yillikYemekAdiKaydet(adet, kapsam, tur) {
+  if (adet === 0) { showToast('Güncellenecek kayıt bulunamadı.', 'error'); return; }
+  saveData();
+  renderAll();
+  showToast(adet + ' kayıt güncellendi (' + kapsam + ' → "' + tur + '")', 'success');
+  yillikYemekAdiPanelCiz();
+}
+
 const chartInstances = new Map();
 
 const donutLabelsPlugin = {
