@@ -2100,10 +2100,10 @@ function birimDonusum(miktar, fromBirim, toBirim, urunCarpan, urunAdi) {
 
   var pair = from + '|' + to;
   if (urunCarpan && urunCarpan > 0) {
-    var fromPair = from + '|' + normBirimGlobal('lt');
-    var toPair = to + '|' + normBirimGlobal('lt');
-    if (from === 'teneke' && to === 'lt') return miktar * urunCarpan;
-    if (from === 'lt' && to === 'teneke') return miktar / urunCarpan;
+    // normBirimGlobal 'lt' değil 'litre' döndürür; 'lt' ile yazılan dallar hiç çalışmıyordu
+    // ve litre<->teneke dönüşümü ürünün lt değeri yerine varsayılan 18 lt ile yapılıyordu.
+    if (from === 'teneke' && to === 'litre') return miktar * urunCarpan;
+    if (from === 'litre' && to === 'teneke') return miktar / urunCarpan;
     if (from === 'teneke' && to === 'ml') return miktar * urunCarpan * 1000;
     if (from === 'ml' && to === 'teneke') return miktar / (urunCarpan * 1000);
     if (from === 'teneke' && to === 'gr') return miktar * urunCarpan * 1000;
@@ -2305,7 +2305,7 @@ function renderBirimFiyatlar() {
               <th style="text-align:center;width:10%">Birim</th>
               <th style="text-align:center;width:15%">Birim Fiyat (₺)</th>
               <th style="text-align:center;width:14%">1 Birim =</th>
-              <th style="text-align:center;width:13%">Gerçek ₺/kg</th>
+              <th style="text-align:center;width:13%">Gerçek Fiyat</th>
               <th style="text-align:center;width:8%">Yıl</th>
               ${bfPerms ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
             </tr>
@@ -2315,11 +2315,13 @@ function renderBirimFiyatlar() {
             ${bfSlice.map(function(p) {
               var carpanGoster = bfAltBirimEtiket(p.birim, p.birim_carpan, p.urun_adi);
               var kgFiyat = bfKgFiyat(p.birim, p.birim_fiyat, p.birim_carpan, p.urun_adi);
+              var gb = bfGercekBirim(p.birim);
+              var kgMetin = kgFiyat === null ? '' : formatTRY(Math.round(kgFiyat * 100) / 100) + '/' + gb;
               var kgHucelle = kgFiyat === null
                 ? '<span style="color:var(--text-muted)">—</span>'
                 : (kgFiyat > 200
-                  ? '<span style="color:#ca8a04;font-weight:600" title="Birim veya alt birim kontrol edilmeli">' + formatTRY(Math.round(kgFiyat * 100) / 100) + '</span>'
-                  : '<span style="color:var(--text-dim)">' + formatTRY(Math.round(kgFiyat * 100) / 100) + '</span>');
+                  ? '<span style="color:#ca8a04;font-weight:600" title="Birim veya alt birim kontrol edilmeli">' + kgMetin + '</span>'
+                  : '<span style="color:var(--text-dim)">' + kgMetin + '</span>');
               return '<tr data-id="' + p.id + '">' +
                 '<td style="text-align:left"><strong>' + escapeHtml(p.urun_adi) + '</strong></td>' +
                 '<td style="text-align:center">' + escapeHtml(p.birim) + '</td>' +
@@ -2378,25 +2380,29 @@ function bfYilSeciciAc() {
 let bfDuzenlemeId = null;
 
 // "1 Birim = X (alt birim)" alanının hangi alt birimi göstermesi gerektiği.
+// kg ve litre tanımı gereği her zaman 1000 alt birime eşittir; o satırlarda
+// girilen çarpan yok sayılır, yoksa "1 litre = 5000 ml" gibi hatalı kayıt
+// fiyatı 5 katına çıkarıyordu.
 function bfAltBirim(birim, carpan, urunAdi) {
   var b = normBirimGlobal(birim);
   var c = parseFloat(carpan) || 0;
-  if (b === 'adet') return { ad: 'gr', varsayilan: c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0) };
-  if (b === 'kg') return { ad: 'gr', varsayilan: c > 0 ? c : 1000 };
-  if (b === 'koli') return { ad: 'kg', varsayilan: c > 0 ? c : 10 };
-  if (b === 'litre') return { ad: 'ml', varsayilan: c > 0 ? c : 1000 };
-  if (b === 'teneke') return { ad: 'lt', varsayilan: c > 0 ? c : 18 };
-  return { ad: '', varsayilan: c };
+  if (b === 'adet') return { ad: 'gr', varsayilan: c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0), sabit: false };
+  if (b === 'kg') return { ad: 'gr', varsayilan: 1000, sabit: true };
+  if (b === 'koli') return { ad: 'kg', varsayilan: c > 0 ? c : 10, sabit: false };
+  if (b === 'litre') return { ad: 'ml', varsayilan: 1000, sabit: true };
+  if (b === 'teneke') return { ad: 'lt', varsayilan: c > 0 ? c : 18, sabit: false };
+  return { ad: '', varsayilan: c, sabit: false };
 }
 
-// Fiyatın gerçek kg karşılığı. Böylece "82 TL x 2000 adet" gibi patlamalar
-// liste üzerinde görünür olur.
+// Fiyatın gerçek ağırlık/hacim karşılığı. Böylece "82 TL x 2000 adet" gibi
+// patlamalar liste üzerinde görünür olur.
 function bfKgFiyat(birim, fiyat, carpan, urunAdi) {
   var b = normBirimGlobal(birim);
   var f = parseFloat(fiyat) || 0;
   var c = parseFloat(carpan) || 0;
   if (f <= 0) return null;
   if (b === 'kg') return f;
+  if (b === 'litre') return f;
   if (b === 'adet') {
     var g = c > 0 ? c : (adetGrVarsayilan(urunAdi) || 0);
     return g > 0 ? f / (g / 1000) : null;
@@ -2410,6 +2416,11 @@ function bfKgFiyat(birim, fiyat, carpan, urunAdi) {
     return f / lt;
   }
   return null;
+}
+
+// Gerçek fiyatın birimi: kg mı lt mi?
+function bfGercekBirim(birim) {
+  return normBirimGlobal(birim) === 'litre' || normBirimGlobal(birim) === 'teneke' ? 'lt' : 'kg';
 }
 
 function bfAltBirimEtiket(birim, carpan, urunAdi) {
@@ -2435,16 +2446,19 @@ function bfOnizlemeGuncelle() {
   }
   var kg = bfKgFiyat(birim, fiyat, carpan, ad);
   if (kg !== null) {
-    parcalar.push('gerçek: ' + formatTRY(Math.round(kg * 100) / 100) + '/kg');
+    parcalar.push('gerçek: ' + formatTRY(Math.round(kg * 100) / 100) + '/' + bfGercekBirim(birim));
   } else if (fiyat > 0) {
     parcalar.push('kg karşılığı belirlenemiyor');
   }
 
   var uyari = '';
-  if (normBirimGlobal(birim) === 'adet' && alt.varsayilan <= 0) {
+  if (alt.sabit && carpan > 0 && carpan !== 1000) {
+    uyari = ' ⚠️ 1 ' + birim + ' her zaman 1000 ' + alt.ad + ' dir; girilen ' + carpan +
+      ' yok sayıldı. Fiyatı ' + (normBirimGlobal(birim) === 'litre' ? 'litreye' : 'kiloya') + ' çevirmek için Birim = TENEKE/KOLI kullan.';
+  } else if (normBirimGlobal(birim) === 'adet' && alt.varsayilan <= 0) {
     uyari = ' ⚠️ 1 adet kaç gr? Girilmezse adet→kg dönüşümü yapılamaz.';
   } else if (kg !== null && kg > 200) {
-    uyari = ' ⚠️ kg fiyatı çok yüksek, birimi kontrol et.';
+    uyari = ' ⚠️ ' + bfGercekBirim(birim) + ' fiyatı çok yüksek, birimi kontrol et.';
   }
   el.innerHTML = (parcalar.length ? parcalar.join(' · ') : 'Fiyat ve alt birim gir') + uyari;
   el.style.color = uyari ? '#ca8a04' : 'var(--text-muted)';
