@@ -1,5 +1,5 @@
-const CACHE = 'atik-kontrol-v39';
-const URLS = ['index.html', 'style.css?v=33', 'app.js?v=33', 'manifest.json', 'config.js'];
+const CACHE = 'atik-kontrol-v40';
+const URLS = ['index.html', 'style.css?v=34', 'app.js?v=34', 'manifest.json', 'config.js'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
