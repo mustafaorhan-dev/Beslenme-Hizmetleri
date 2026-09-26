@@ -8084,19 +8084,24 @@ function renderYearlyCharts() {
   var hasPrev = prev !== null && prev > 0;
   var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
 
+  var _hedefEl = document.getElementById('yillikVerimHedef');
+  if (_hedefEl && document.activeElement !== _hedefEl) _hedefEl.value = getYillikVerimHedef();
+
   function buildYear(year) {
     var monthly = [];
-    for (var m = 0; m < 12; m++) monthly.push({ uretim: 0, turnike: 0, ogrenci: 0, atik: 0, toplam: 0 });
+    for (var m = 0; m < 12; m++) monthly.push({ uretim: 0, turnike: 0, ogrenci: 0, atik: 0, toplam: 0, atikPorsiyon: 0 });
     records.forEach(function(r) {
       if (!r.tarih) return;
       var d = new Date(r.tarih + 'T12:00:00');
       if (isNaN(d) || d.getFullYear() !== year) return;
       var m = d.getMonth();
+      var porsiyonGr = Number(r.porsiyon) || 0;
       monthly[m].uretim += Number(r.yemek) || 0;
       monthly[m].turnike += Number(r.turnike) || 0;
       monthly[m].ogrenci += Number(r.ogrenci) || 0;
       monthly[m].toplam += Number(r.toplam) || 0;
       monthly[m].atik += Number(r.atik) || 0;
+      if (porsiyonGr > 0) monthly[m].atikPorsiyon += (Number(r.atik) || 0) * 1000 / porsiyonGr;
     });
     return monthly;
   }
@@ -8320,10 +8325,139 @@ function renderYearlyCharts() {
     chartInstances.set(canvasId, chart);
   }
 
+  function verimOrani(v) {
+    var uretim = v.uretim || 0;
+    return uretim > 0 ? ((v.atikPorsiyon || 0) / uretim * 100) : 0;
+  }
+
+  function makeYillikVerimChart() {
+    var canvasId = 'canvasYillikVerim';
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var staleInstance = chartInstances.get(canvasId);
+    if (staleInstance) { try { staleInstance.destroy(); } catch (_) {} chartInstances.delete(canvasId); }
+    var empty = document.getElementById('chartYillikVerimEmpty');
+
+    var thisArr = monthLabels.map(function(_, m) { return verimOrani(thisData[m]); });
+    var prevArr = monthLabels.map(function(_, m) { return hasPrev ? verimOrani(prevData[m]) : 0; });
+    var hasThis = thisArr.some(function(v) { return v > 0; });
+    var hasPrevData = hasPrev && prevArr.some(function(v) { return v > 0; });
+
+    if (!hasThis && !hasPrevData) {
+      if (empty) empty.style.display = 'block';
+      canvas.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    canvas.style.display = 'block';
+
+    var parent = canvas.parentElement;
+    var w = Math.min(parent.offsetWidth || 400, parent.clientWidth || 400);
+    var h = Math.min(parent.offsetHeight || 280, parent.clientHeight || 280);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var colors = {
+      text: isDark ? '#e2e8f0' : '#1e293b',
+      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+    };
+    var metricColor = '#e11d48';
+    var hedef = getYillikVerimHedef();
+
+    var maxVal = Math.max.apply(null, thisArr.concat(hasPrevData ? prevArr : []));
+    var suggestedMax = hedef > 0 ? Math.max(maxVal * 1.18, hedef * 1.3) : (maxVal > 0 ? maxVal * 1.18 : 10);
+
+    var datasets = [{
+      label: String(sel),
+      data: thisArr,
+      backgroundColor: metricColor,
+      borderColor: metricColor,
+      borderWidth: 0,
+      borderRadius: 6,
+      barPercentage: 0.8,
+      categoryPercentage: hasPrevData ? 0.65 : 0.5,
+      maxBarThickness: 60
+    }];
+    if (hasPrevData) {
+      datasets.push({
+        label: String(prev),
+        data: prevArr,
+        backgroundColor: metricColor + '35',
+        borderColor: metricColor,
+        borderWidth: 1,
+        borderDash: [4, 4],
+        borderRadius: 6,
+        barPercentage: 0.8,
+        categoryPercentage: 0.65,
+        maxBarThickness: 60
+      });
+    }
+
+    var fmtPct = function(v) { return v.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + '%'; };
+
+    var chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: monthLabels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+        animation: { duration: 900, easing: 'easeOutCubic' },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+          valueLabels: true,
+          hedefCizgisi: { deger: hedef },
+          tooltip: {
+            backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 10, cornerRadius: 8,
+            bodyFont: { size: 11, family: 'Inter' },
+            titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+            callbacks: {
+              label: function(c) {
+                var v = c.parsed.y;
+                var durum = v > 0 && hedef > 0 ? (v <= hedef ? ' · hedef içi' : ' · hedef aşıldı') : '';
+                return ' ' + c.dataset.label + ': ' + fmtPct(v) + durum;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' } }, grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            suggestedMax: suggestedMax,
+            ticks: {
+              color: colors.text,
+              font: { size: 12, family: 'Inter' },
+              callback: function(v) { return v + '%'; }
+            },
+            grid: { color: colors.grid }
+          }
+        },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            var m = elements[0].index;
+            var recs = records.filter(function(r) {
+              if (!r.tarih) return false;
+              var d = new Date(r.tarih + 'T12:00:00');
+              return !isNaN(d) && d.getFullYear() === sel && d.getMonth() === m;
+            });
+            if (recs.length > 0) showChartDetailModal(monthLabels[m] + ' ' + sel, recs);
+          }
+        }
+      },
+      plugins: [chartValueLabelPlugin, hedefCizgisiPlugin]
+    });
+    chartInstances.set(canvasId, chart);
+  }
+
   try { makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; }); } catch (e) { console.warn('yillik uretim:', e); }
   try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
   try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#0ea5e9', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
   try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
+  try { makeYillikVerimChart(); } catch (e) { console.warn('yillik verim:', e); }
   renderYillikWasteTable(sel, hasPrev ? prev : null);
 }
 
@@ -8634,6 +8768,57 @@ const chartValueLabelPlugin = {
         ctx.fillText(display, labelX, labelY);
       });
     });
+  }
+};
+
+const YILLIK_VERIM_HEDEF_KEY = 'atik_kontrol_verim_hedef';
+
+function getYillikVerimHedef() {
+  try {
+    var v = parseFloat(localStorage.getItem(YILLIK_VERIM_HEDEF_KEY));
+    if (!isNaN(v) && v >= 0 && v <= 100) return v;
+  } catch (_) {}
+  return 5;
+}
+
+function yillikVerimHedefKaydet() {
+  var el = document.getElementById('yillikVerimHedef');
+  if (!el) return;
+  var v = parseFloat(el.value);
+  if (isNaN(v) || v < 0) v = 0;
+  if (v > 100) v = 100;
+  el.value = v;
+  try { localStorage.setItem(YILLIK_VERIM_HEDEF_KEY, String(v)); } catch (_) {}
+  try { renderYearlyCharts(); } catch (e) { console.warn('verim hedef:', e); }
+}
+
+const hedefCizgisiPlugin = {
+  id: 'hedefCizgisi',
+  afterDatasetsDraw(chart) {
+    var o = chart.options.plugins.hedefCizgisi;
+    if (!o || !o.deger) return;
+    var area = chart.chartArea;
+    var yScale = chart.scales && chart.scales.y;
+    if (!area || !yScale) return;
+    var yPos = yScale.getPixelForValue(o.deger);
+    if (yPos < area.top || yPos > area.bottom) return;
+    var ctx = chart.ctx;
+    var renk = o.renk || 'rgba(220,38,38,0.65)';
+    ctx.save();
+    ctx.strokeStyle = renk;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(area.left, yPos);
+    ctx.lineTo(area.right, yPos);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = renk;
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Hedef %' + String(o.deger).replace('.', ','), area.right - 4, yPos - 3);
+    ctx.restore();
   }
 };
 
@@ -13101,6 +13286,9 @@ var I18N = {
     yearlyMonthlyStudentNote: "1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı",
     yearlyMonthlyWaste: "Aylık Atık Karşılaştırması (kg)",
     yearlyMonthlyWasteNote: "1. yıl vs 2. yıl - atık miktarı (kg)",
+  yearlyMonthlyWasteRate: "Aylık Atık Verimliliği (%)",
+  yearlyMonthlyWasteRateNote: "Atık porsiyon ÷ üretilen porsiyon × 100 · kırmızı kesikli çizgi = hedef",
+  yearlyRateTarget: "Hedef",
     yearlyWasteListTitle: "Yıllık Atık Listesi",
     spendingRatesTitle: "Kişi Başı Harcama Oranları (Öğrenci, Personel & Yemek)",
     spendingStudentRate: "Öğrenci Başı Harcama Tutarı (TL)",
@@ -13500,6 +13688,9 @@ var I18N = {
     yearlyMonthlyStudentNote: "Year 1 vs Year 2 - student turnstile pass count",
     yearlyMonthlyWaste: "Monthly Waste Comparison (kg)",
     yearlyMonthlyWasteNote: "Year 1 vs Year 2 - waste amount (kg)",
+  yearlyMonthlyWasteRate: "Monthly Waste Efficiency (%)",
+  yearlyMonthlyWasteRateNote: "Waste portions ÷ produced portions × 100 · red dashed line = target",
+  yearlyRateTarget: "Target",
     yearlyWasteListTitle: "Yearly Waste List",
     spendingRatesTitle: "Per Person Spending Rates (Students, Staff & Meals)",
     spendingStudentRate: "Student Per Person Spending Amount (TL)",
