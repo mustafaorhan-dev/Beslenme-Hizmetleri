@@ -4176,10 +4176,10 @@ function exportDashboardPDF() {
       .prod-day-body { padding: 0.5rem 0.75rem; }
       .prod-cesit-row { display: flex; gap: 0.5rem; }
       .prod-cesit-col { flex: 1; min-width: 120px; }
-      .prod-cesit { font-weight: 600; font-size: 0.78rem; margin-bottom: 0.2rem; color: #333; white-space: nowrap; border-bottom: 1px solid #ddd; padding-bottom: 0.15rem; }
+      .prod-cesit { font-weight: 600; font-size: 0.78rem; margin-bottom: 0.2rem; color: #333; white-space: normal; overflow-wrap: anywhere; border-bottom: 1px solid #ddd; padding-bottom: 0.15rem; }
       .prod-ing { display: flex; gap: 0.25rem; font-size: 0.72rem; line-height: 1.6; color: #555; align-items: baseline; }
       .prod-num { width: 1.3rem; text-align: right; flex-shrink: 0; }
-      .prod-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .prod-name { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
       .prod-sep { width: 1.2rem; text-align: center; flex-shrink: 0; color: #999; }
       .prod-qty { width: 4.5rem; text-align: right; flex-shrink: 0; font-weight: 600; }
       .section-title { font-size: 0.9rem; font-weight: 700; margin: 0.5rem 0; color: #333; }
@@ -6610,12 +6610,12 @@ function renderYemekListesi() {
     return;
   }
 
-  container.innerHTML = `<table class="data-table" style="width:100%">
-    <thead><tr><th style="width:30%">Yemek Adı</th><th style="width:12%">Kalori</th><th style="width:20%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:70px">İşlem</th></tr></thead>
+  container.innerHTML = `<table class="data-table" style="width:100%;table-layout:fixed">
+    <thead><tr><th style="width:40%">Yemek Adı</th><th style="width:12%">Kalori</th><th style="width:28%">Alerjen</th><th style="width:50px">Reçete</th><th style="width:70px">İşlem</th></tr></thead>
     <tbody>${filtered.map(y => `<tr>
-      <td style="max-width:0;overflow:hidden;text-overflow:ellipsis"><strong>${escapeHtml(y.ad)}</strong></td>
+      <td class="yl-ad" title="${escapeHtml(y.ad)}"><strong>${escapeHtml(y.ad)}</strong></td>
       <td style="font-size:0.8rem;white-space:nowrap">${escapeHtml(y.kalori || '')}</td>
-      <td style="font-size:0.8rem;color:var(--text-muted);max-width:0;overflow:hidden;text-overflow:ellipsis">${escapeHtml(y.alerjen || '')}</td>
+      <td class="yl-alerjen" title="${escapeHtml(y.alerjen || '')}">${escapeHtml(y.alerjen || '')}</td>
       <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
       <td style="white-space:nowrap;text-align:center">
         <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">

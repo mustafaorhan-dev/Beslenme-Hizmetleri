@@ -3769,6 +3769,23 @@ input.production-input:focus {
   font-size: 0.78rem;
 }
 
+/* ---- YEMEK LİSTESİ TABLOSU (uzun adlar kırpılmaz) ---- */
+#yemekListesiContainer .data-table { table-layout: fixed; }
+#yemekListesiContainer .yl-ad,
+#yemekListesiContainer .yl-alerjen {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  vertical-align: top;
+}
+#yemekListesiContainer .yl-alerjen {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 /* ---- MENÜ HÜCRE (ÇEŞİT) ---- */
 .menu-cell-pick {
   min-height: 50px;
