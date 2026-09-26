@@ -3775,6 +3775,20 @@ input.production-input:focus {
   width: 100%;
 }
 .yemek-modal .modal-body { padding: 1rem 1.25rem 1.5rem; }
+.yemek-modal #yemekSortSelect {
+  padding: 0.45rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.yemek-modal #yemekSortSelect:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
 
 /* ---- YEMEK LİSTESİ TABLOSU (uzun adlar kırpılmaz) ---- */
 #yemekListesiContainer .data-table { table-layout: fixed; }

@@ -6595,11 +6595,19 @@ function formatYemek(y) {
   return s;
 }
 
+function yemekSirala(liste, mod) {
+  return liste.slice().sort(function(a, b) {
+    var s = String(a.ad || '').localeCompare(String(b.ad || ''), 'tr', { sensitivity: 'base', numeric: true });
+    return mod === 'za' ? -s : s;
+  });
+}
+
 function renderYemekListesi() {
   const container = document.getElementById('yemekListesiContainer');
   const list = loadYemekler();
   const query = (document.getElementById('yemekSearchInput').value || '').toLowerCase();
-  const filtered = query ? list.filter(y => y.ad.toLowerCase().includes(query)) : list;
+  const mod = (document.getElementById('yemekSortSelect') || {}).value || 'az';
+  const filtered = yemekSirala(query ? list.filter(y => (y.ad || '').toLowerCase().includes(query)) : list, mod);
 
   if (!filtered.length) {
     if (query) {
