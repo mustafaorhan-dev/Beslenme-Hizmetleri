@@ -10671,11 +10671,30 @@ function buildExportHTML() {
       }
       gunMali.push({ gun: gunler[di], tarih: tarihStr, kisi: kisi, toplam: dayToplamTutar });
       if (dayEntries.length) {
-        dayTotalHtml = '<div class="pdt"><div class="pdth">' + t('stockDeductionList') + ' – ' + gunler[di] + '</div>';
-        dayEntries.forEach(function(e) {
+        var dayFiyatsiz = 0;
+        dayTotalHtml = '<div class="pdt"><div class="pdth"><span>' + t('stockDeductionList') + ' – ' + gunler[di] + '</span>';
+        if (dayToplamTutar > 0) dayTotalHtml += '<span class="pdth-tutar">' + t('total') + ': ' + formatTRY(dayToplamTutar) + '</span>';
+        dayTotalHtml += '</div>';
+        if (dayToplamTutar > 0) {
+          dayTotalHtml += '<div class="pdt-kisibasi">' + t('perPersonCost') + ': ' + (kisi > 0 ? formatTRY(Math.round(dayToplamTutar / kisi * 100) / 100) : '—') + '</div>';
+        }
+        dayEntries.forEach(function(e, eIdx) {
           var cInfo = e.cesitler > 1 ? ' <small style="color:#999">(' + e.cesitler + ' ' + t('inVarieties') + ')</small>' : '';
-          dayTotalHtml += '<div class="pdting"><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span></div>';
+          var hesapE = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
+          var foundE = findBirimFiyat(e.ad, e.birim);
+          var tutE = birimFiyatTutar(e.ad, e.birim, hesapE);
+          var fiyatE = (foundE && tutE > 0)
+            ? '<span class="pdt-fiyat">' + formatTRY(Math.round(tutE * 100) / 100) + '</span>'
+            : '<span class="pdt-fiyat pdt-fiyat-yok">—</span>';
+          if (!(foundE && tutE > 0)) dayFiyatsiz++;
+          dayTotalHtml += '<div class="pdting"><span class="pdtno">' + (eIdx + 1) + '.</span><span class="pdtn">' + escapeHtml(e.ad) + cInfo + '</span><span class="pdtq">' + fmt(e.total, e.birim) + '</span>' + fiyatE + '</div>';
         });
+        if (dayToplamTutar > 0) {
+          dayTotalHtml += '<div class="pdting pdt-toplamrow"><span class="pdtn">' + t('total') + ' (' + dayEntries.length + ')</span><span class="pdtq">—</span><span class="pdt-fiyat">' + formatTRY(dayToplamTutar) + '</span></div>';
+        }
+        if (dayFiyatsiz > 0) {
+          dayTotalHtml += '<div class="pdt-uyari">' + dayFiyatsiz + ' malzemenin birim fiyatı tanımlı değil</div>';
+        }
         dayTotalHtml += '</div>';
       }
       prodDaysHtml += '<div class="pday"><div class="phd"><span class="plab">' + gunler[di] + '</span><span class="pkisi">' + kisi + ' ' + t('person') + '</span></div><div class="pbd"><div class="prow">' + dayCesitler + '</div>' + dayTotalHtml + '</div></div>';
@@ -10687,11 +10706,60 @@ function buildExportHTML() {
   var weekEntries = Object.values(weekAgg).filter(function(e) { return e.total > 0; });
   if (weekEntries.length) {
     weekEntries.sort(function(a, b) { return a.ad.localeCompare(b.ad); });
-    weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div><div class="wcard"><div class="whd">Malzeme &mdash; Miktar</div><div class="wbd">';
+
+    // category grouping
+    var wKategoriler = {};
+    var wKatSiralama = {};
+    MENU_KATEGORI_SIRASI.forEach(function(k, i) { wKatSiralama[k] = i; });
+    var wGenelToplam = 0;
+    var wFiyatsiz = 0;
+    var wRows = [];
     weekEntries.forEach(function(e) {
-      weeklyHtml += '<div class="wit"><span class="wn">' + escapeHtml(e.ad) + '</span><span class="wq">' + fmt(e.total, e.birim) + '</span></div>';
+      var kat = menuGetKategori(e.ad);
+      if (!wKategoriler[kat]) wKategoriler[kat] = [];
+      var hesap = (e.birim === 'adet') ? Math.ceil(e.total) : e.total;
+      var found = findBirimFiyat(e.ad, e.birim);
+      var tut = birimFiyatTutar(e.ad, e.birim, hesap);
+      if (tut === null || tut === undefined || isNaN(tut)) tut = 0;
+      var tutVar = !!(found && tut > 0);
+      if (!tutVar) { wFiyatsiz++; tut = 0; }
+      wGenelToplam = Math.round((wGenelToplam + tut) * 100) / 100;
+      wKategoriler[kat].push({ e: e, tut: tut, tutVar: tutVar });
     });
-    weeklyHtml += '</div></div>';
+    var wKatSirali = Object.keys(wKategoriler).sort(function(a, b) {
+      var sa = wKatSiralama[a] !== undefined ? wKatSiralama[a] : 99;
+      var sb = wKatSiralama[b] !== undefined ? wKatSiralama[b] : 99;
+      if (sa !== sb) return sa - sb;
+      return a.localeCompare(b);
+    });
+
+    weeklyHtml = '<div class="s-title">Haftalık Toplam İhtiyaç Listesi</div>';
+    if (wGenelToplam > 0) {
+      weeklyHtml += '<div class="wk-genel-toplam"><span>Toplam Maliyet</span><span class="wk-genel-deger">' + formatTRY(wGenelToplam) + '</span></div>';
+    }
+    var wIdx = 0;
+    wKatSirali.forEach(function(kat) {
+      var items = wKategoriler[kat].filter(function(x) { return x.e.total > 0; });
+      if (!items.length) return;
+      var katToplam = 0;
+      items.forEach(function(x) { katToplam = Math.round((katToplam + x.tut) * 100) / 100; });
+      weeklyHtml += '<div class="wk-kat"><div class="wk-kat-hd"><span class="wk-kat-ad">' + escapeHtml(kat) + '</span><span class="wk-kat-sayi">(' + items.length + ')</span>' + (katToplam > 0 ? '<span class="wk-kat-tutar">' + formatTRY(katToplam) + '</span>' : '') + '</div><div class="wk-kat-bd">';
+      items.forEach(function(x) {
+        wIdx++;
+        var e = x.e;
+        var fiyat = x.tutVar
+          ? '<span class="wk-fiyat">' + formatTRY(x.tut) + '</span>'
+          : '<span class="wk-fiyat wk-fiyat-yok">—</span>';
+        weeklyHtml += '<div class="wit"><span class="wno">' + wIdx + '.</span><span class="wn">' + escapeHtml(e.ad) + ' <small class="wk-recete">(' + e.miktarKisi + e.birimLabel + ')</small></span><span class="wq">' + fmt(e.total, e.birim) + '</span>' + fiyat + '</div>';
+      });
+      weeklyHtml += '</div></div>';
+    });
+    if (wGenelToplam > 0) {
+      weeklyHtml += '<div class="wk-genel-alt"><span><strong>GENEL TOPLAM</strong> (' + weekEntries.length + ')</span><span class="wk-genel-deger">' + formatTRY(wGenelToplam) + '</span></div>';
+    }
+    if (wFiyatsiz > 0) {
+      weeklyHtml += '<div class="wk-uyari">' + wFiyatsiz + ' malzemenin birim fiyatı tanımlı değil</div>';
+    }
   }
 
   // Assemble full HTML
@@ -10719,14 +10787,33 @@ function buildExportHTML() {
     '.ping{font-size:9px;line-height:1.4;color:#555;display:flex;gap:2px}' +
     '.pn{flex:1}.pq{text-align:right;font-weight:600;color:#333;white-space:nowrap}' +
     '.pdt{margin-top:4px;border-top:1px dashed #bbb;padding-top:3px}' +
-    '.pdth{font-size:10px;font-weight:700;color:#333;margin-bottom:2px}' +
-    '.pdting{display:flex;gap:4px;font-size:9px;line-height:1.4;break-inside:avoid;page-break-inside:avoid}' +
-    '.pdtn{flex:1;color:#333}.pdtq{font-weight:600;color:#333;white-space:nowrap}' +
-    '.wcard{border:1px solid #ddd;border-radius:3px;overflow:clip;page-break-inside:avoid;break-inside:avoid}' +
-    '.whd{padding:3px 6px;background:#f5f5f5;border-bottom:1px solid #ddd;font-size:12px;font-weight:700;color:#333}' +
-    '.wbd{padding:3px 6px}' +
-    '.wit{display:flex;gap:6px;font-size:9px;line-height:1.5;padding:1px 0;border-bottom:1px solid #f0f0f0}' +
-    '.wn{color:#333}.wq{font-weight:600;color:#333;white-space:nowrap;margin-left:auto}' +
+    '.pdting{display:flex;gap:4px;font-size:9px;line-height:1.4;break-inside:avoid;page-break-inside:avoid;align-items:baseline}' +
+    '.pdtno{width:14px;color:#999;font-size:8px;flex:none}' +
+    '.pdtn{flex:1;color:#333}.pdtq{font-weight:600;color:#333;white-space:nowrap;min-width:52px;text-align:right}' +
+    '.pdt-fiyat{font-weight:700;color:#0f766e;white-space:nowrap;min-width:58px;text-align:right}' +
+    '.pdt-fiyat-yok{color:#ccc;font-weight:400}' +
+    '.pdth{display:flex;align-items:center;font-size:10px;font-weight:700;color:#333;margin-bottom:2px;gap:6px}' +
+    '.pdth-tutar{margin-left:auto;font-size:9px;font-weight:700;color:#0f766e;white-space:nowrap}' +
+    '.pdt-kisibasi{font-size:8px;color:#0f766e;font-weight:600;margin-bottom:2px}' +
+    '.pdt-toplamrow{margin-top:3px;padding-top:2px;border-top:1px solid #ccc;font-size:9px}' +
+    '.pdt-toplamrow .pdtn{font-weight:700}' +
+    '.pdt-toplamrow .pdt-fiyat{font-size:10px}' +
+    '.pdt-uyari{margin-top:3px;font-size:7.5px;color:#b45309;font-style:italic}' +
+    '.wk-genel-toplam{display:flex;align-items:center;gap:6px;margin:0 0 5px;padding:4px 7px;border:1px solid #6366f1;border-left:4px solid #6366f1;border-radius:3px;background:#eef2ff;font-size:10px;font-weight:700;color:#4338ca}' +
+    '.wk-genel-deger{margin-left:auto;font-size:13px;font-weight:700;color:#111;white-space:nowrap}' +
+    '.wk-kat{border:1px solid #ddd;border-radius:3px;margin-bottom:4px;overflow:clip;page-break-inside:avoid;break-inside:avoid}' +
+    '.wk-kat-hd{display:flex;align-items:center;gap:5px;padding:2px 6px;background:#f1f0f6;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;color:#1e293b}' +
+    '.wk-kat-sayi{font-weight:400;font-size:8px;color:#888}' +
+    '.wk-kat-tutar{margin-left:auto;font-size:9px;font-weight:700;color:#0f766e;white-space:nowrap}' +
+    '.wk-kat-bd{padding:2px 6px}' +
+    '.wk-recete{color:#999;font-size:8px}' +
+    '.wno{width:16px;color:#999;font-size:8px;flex:none}' +
+    '.wk-fiyat{font-weight:700;color:#0f766e;white-space:nowrap;min-width:60px;text-align:right}' +
+    '.wk-fiyat-yok{color:#ccc;font-weight:400}' +
+    '.wk-genel-alt{display:flex;align-items:center;gap:6px;margin-top:4px;padding:4px 7px;border:1px solid #6366f1;border-radius:3px;background:#eef2ff;font-size:10px;color:#4338ca}' +
+    '.wk-uyari{margin-top:4px;font-size:7.5px;color:#b45309;font-style:italic}' +
+    '.wit{display:flex;gap:6px;font-size:9px;line-height:1.5;padding:1px 0;border-bottom:1px solid #f0f0f0;align-items:baseline;break-inside:avoid;page-break-inside:avoid}' +
+    '.wn{flex:1;color:#333}.wq{font-weight:600;color:#333;white-space:nowrap;min-width:52px;text-align:right}' +
     '.mtb-chips{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}' +
     '.mtb-chip{flex:1;min-width:90px;border:1px solid #ddd;border-radius:3px;padding:4px 6px;background:#f9fafb}' +
     '.mtb-chip-label{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:.3px}' +
