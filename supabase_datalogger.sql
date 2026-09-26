@@ -330,7 +330,7 @@ END;
 $f$;
 
 COMMENT ON FUNCTION public.datalogger_zamanlama_ayarla() IS
-  'Kurum saatlerini UTC'ye cevirip 3 gunluk is kurar; pasifse isleri kaldirir.';
+  'Kurum saatlerini UTC saatine cevirip 3 gunluk is kurar; pasifse isleri kaldirir.';
 
 
 -- ─── 8) DOGRULAMA ───────────────────────────────────────────────────────────
