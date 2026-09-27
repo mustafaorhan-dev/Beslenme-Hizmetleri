@@ -1454,6 +1454,25 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
 .kpi-purple { background: rgba(59,130,246,0.15); color: #3b82f6; }
 
+/* Paneldeki logo kartı: Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon
+   Alarmı arasında durur, sayaç göstermez. */
+.kpi-logo-card { align-items: center; }
+.kpi-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+}
+.kpi-logo-svg { width: 100%; height: 100%; display: block; }
+.kpi-logo-card .kpi-body { flex-direction: column; gap: 0.15rem; }
+.kpi-logo-card .kpi-label { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+
 .kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
 
 .kpi-label {

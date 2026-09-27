@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=38" />
+  <link rel="stylesheet" href="style.css?v=39" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -383,6 +383,35 @@
             <span class="kpi-trend" id="kpiHaccpAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
           </div>
         </div>
+        <div class="kpi-card kpi-logo-card">
+          <div class="kpi-logo-wrap">
+            <svg viewBox="0 0 220 112" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="kpi-logo-svg">
+              <circle cx="110" cy="60" r="58" fill="url(#plateGlow)"/>
+              <g fill="url(#cutleryGrad)">
+                <path d="M25.75 36V11Q25.75 6.5 27.25 6.5Q28.75 6.5 28.75 11V36Z"/>
+                <path d="M32.42 39V11Q32.42 6.5 33.92 6.5Q35.42 6.5 35.42 11V39Z"/>
+                <path d="M38.59 39V11Q38.59 6.5 40.09 6.5Q41.59 6.5 41.59 11V39Z"/>
+                <path d="M44.75 36V11Q44.75 6.5 46.25 6.5Q47.75 6.5 47.75 11V36Z"/>
+                <path d="M25 32h23.5c0 7-3.5 11-8.75 13v49a3 3 0 0 1-6 0V45c-5.25-2-8.75-6-8.75-13z"/>
+              </g>
+              <circle cx="110" cy="60" r="42" stroke="url(#cutleryGrad)" stroke-width="6"/>
+              <circle cx="110" cy="60" r="27" stroke="url(#cutleryGrad)" stroke-width="4" opacity="0.45"/>
+              <circle cx="110" cy="60" r="5" fill="url(#cutleryGrad)"/>
+              <g fill="url(#cutleryGrad)">
+                <path d="M161 8c-9 13-11 31-4 46h9c2-16 0-33-5-46z"/>
+                <rect x="157" y="54" width="9" height="48" rx="4.5"/>
+              </g>
+              <g fill="url(#cutleryGrad)">
+                <ellipse cx="184.5" cy="26" rx="10.5" ry="16"/>
+                <rect x="180" y="40" width="9" height="62" rx="4.5"/>
+              </g>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label" data-i18n="kpiBrand">Atık Kontrol Sistemi</span>
+            <span class="kpi-trend" data-i18n="kpiBrandSub" style="font-size:0.72rem;color:var(--text-muted)">Gıda güvenliği ve atık takibi</span>
+          </div>
+        </div>
         <div class="kpi-card" id="kpi-kalibrasyon-alarm">
           <div class="kpi-icon kpi-purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
@@ -412,16 +441,6 @@
             <span class="kpi-label" data-i18n="kpiTotalPasses">Turnikeden Toplam Geçiş Rakamı</span>
             <span class="kpi-value" id="kpiLastGecis">0</span>
             <canvas class="kpi-sparkline" id="sparklineGecis"></canvas>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-fire-oran">
-          <div class="kpi-icon kpi-red">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiTotalWaste">Toplam Atık (kg)</span>
-            <span class="kpi-value" id="kpiTotalAtik">0.00</span>
-            <span class="kpi-trend" id="trendTotalAtik"></span>
           </div>
         </div>
       </div>
@@ -2416,10 +2435,10 @@
             <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
             <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
             <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
+            <li><strong>Logo kartı:</strong> İki alarm kartı arasında uygulamanın logosu yer alır; sayaç göstermez.</li>
             <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
             <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
             <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
-            <li><strong>Toplam Atık (kg):</strong> Toplam atık miktarı ve değişim yüzdesi.</li>
           </ul>
           <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz.</p>
           <p><strong>Karşılaştırma Bölümü:</strong> Panelde <strong>Haftalık</strong>, <strong>Aylık</strong> ve <strong>Yıllık</strong> karşılaştırma kartları bulunur. Her biri belirli bir dönem ile bir önceki dönemi karşılaştırır; <strong>↑ artış</strong>, <strong>↓ azalış</strong> yön göstergeleriyle değişimi gösterir. Atık ve kişi başı atıkta düşüş (↓) iyi bir sonuçtur. Veri türü, dönem adı ve fark sütunları dillé desteklidir.</p>
@@ -2641,7 +2660,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=38"></script>
+  <script src="app.js?v=39"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

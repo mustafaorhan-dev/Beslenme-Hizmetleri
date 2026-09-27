@@ -6299,17 +6299,23 @@ function renderTrend(elId, pct, reverse) {
   const cls = up ? '#ef4444' : '#10b981';
   el.innerHTML = `<span style="color:${cls};font-size:0.75rem;font-weight:600">${up ? '▲' : '▼'} %${Math.abs(pct).toFixed(1)}</span>`;
 }
+// kpiTotalAtik kartı panelden kaldırıldı; yazma çağrıları buradan geçiyor
+// aksi halde getElementById null döner ve renderKPIs tüm paneli çökertir.
+function kpiYaz(id, metin) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = metin;
+}
 function renderKPIs() {
   const n = records.length;
-  document.getElementById('kpiTotalRecords').textContent = n;
+  kpiYaz('kpiTotalRecords', n);
 
   if (n === 0) {
-    document.getElementById('kpiAvgAtik').textContent = '0';
-    document.getElementById('kpiLastGecis').textContent = '0';
-    document.getElementById('kpiTotalAtik').textContent = '0';
-    document.getElementById('kpiBugunYemek').textContent = '—';
-    document.getElementById('kpiHaccpAlarm').textContent = '0';
-    document.getElementById('kpiKalibrasyonAlarm').textContent = '0';
+    kpiYaz('kpiAvgAtik', '0');
+    kpiYaz('kpiLastGecis', '0');
+    kpiYaz('kpiTotalAtik', '0');
+    kpiYaz('kpiBugunYemek', '—');
+    kpiYaz('kpiHaccpAlarm', '0');
+    kpiYaz('kpiKalibrasyonAlarm', '0');
     renderTrend('trendAvgAtik', null);
     renderTrend('trendTotalAtik', null);
     return;
@@ -6317,11 +6323,11 @@ function renderKPIs() {
 
   const totalAtik = records.reduce((s, r) => s + (r.atik || 0), 0);
   const avgAtik = totalAtik / n;
-  document.getElementById('kpiAvgAtik').textContent = avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  kpiYaz('kpiAvgAtik', avgAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
   const lastRec = records[0];
   const totalGecis = records.reduce((s, r) => s + (r.turnike || 0), 0);
-  document.getElementById('kpiLastGecis').textContent = totalGecis.toLocaleString('tr-TR');
-  document.getElementById('kpiTotalAtik').textContent = totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  kpiYaz('kpiLastGecis', totalGecis.toLocaleString('tr-TR'));
+  kpiYaz('kpiTotalAtik', totalAtik.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
 
@@ -13579,6 +13585,8 @@ var I18N = {
     kpiTodayProduction: "Bugünkü Üretim",
     kpiHaccpAlarm: "Soğuk Hava Depo Sıcaklık Alarmı",
     kpiCalibrationAlarm: "Kalibrasyon Alarmı",
+    kpiBrand: "Atık Kontrol Sistemi",
+    kpiBrandSub: "Gıda güvenliği ve atık takibi",
     kpiAvgWaste: "Ort. Atık (kg)",
     kpiTotalPasses: "Turnikeden Toplam Geçiş Rakamı",
     kpiTotalWaste: "Toplam Atık (kg)",
@@ -13981,6 +13989,8 @@ var I18N = {
     kpiTodayProduction: "Today's Production",
     kpiHaccpAlarm: "Cold Storage Temperature Alarm",
     kpiCalibrationAlarm: "Calibration Alarm",
+    kpiBrand: "Waste Control System",
+    kpiBrandSub: "Food safety and waste tracking",
     kpiAvgWaste: "Avg. Waste (kg)",
     kpiTotalPasses: "Total Turnstile Passes",
     kpiTotalWaste: "Total Waste (kg)",
@@ -14383,6 +14393,8 @@ var I18N = {
     kpiTodayProduction: "Bu günün İstehsalı",
     kpiHaccpAlarm: "Soyuducu Anbar Temperaturu Alarmı",
     kpiCalibrationAlarm: "Kalibrləmə Alarmı",
+    kpiBrand: "Tullantıların İdarəetmə Sistemi",
+    kpiBrandSub: "Qida təhlükəsizliyi və tullantıların izlənməsi",
     kpiAvgWaste: "Ort. Tullantı (kg)",
     kpiTotalPasses: "Toplam Turnike Keçidi",
     kpiTotalWaste: "Ümumi Tullantı (kg)",
@@ -14771,6 +14783,8 @@ var I18N = {
     kpiTodayProduction: "Производство сегодня",
     kpiHaccpAlarm: "Тревога температуры холодильника",
     kpiCalibrationAlarm: "Тревога калибровки",
+    kpiBrand: "Система контроля отходов",
+    kpiBrandSub: "Безопасность пищи и учёт отходов",
     kpiAvgWaste: "Средн. отходы (кг)",
     kpiTotalPasses: "Всего проходов через турникет",
     kpiTotalWaste: "Всего отходов (кг)",
@@ -15159,6 +15173,8 @@ var I18N = {
     kpiTodayProduction: "إنتاج اليوم",
     kpiHaccpAlarm: "تنبيه درجة حرارة التخزين البارد",
     kpiCalibrationAlarm: "تنبيه المعايرة",
+    kpiBrand: "نظام مراقبة النفايات",
+    kpiBrandSub: "سلامة الأغذية وتتبع النفايات",
     kpiAvgWaste: "متوسط النفايات (كغ)",
     kpiTotalPasses: "إجمالي عبور البوابة الدوّارة",
     kpiTotalWaste: "إجمالي النفايات (كغ)",
@@ -15547,6 +15563,8 @@ var I18N = {
     kpiTodayProduction: "Heutige Produktion",
     kpiHaccpAlarm: "Kühllager-Temperaturalarm",
     kpiCalibrationAlarm: "Kalibrierungsalarm",
+    kpiBrand: "Abfallkontrollsystem",
+    kpiBrandSub: "Lebensmittelsicherheit und Abfallverfolgung",
     kpiAvgWaste: "Durchschn. Abfall (kg)",
     kpiTotalPasses: "Gesamte Drehkreuzdurchgänge",
     kpiTotalWaste: "Gesamter Abfall (kg)",
@@ -15935,6 +15953,8 @@ var I18N = {
     kpiTodayProduction: "Production du jour",
     kpiHaccpAlarm: "Alarme température chambre froide",
     kpiCalibrationAlarm: "Alarme de calibration",
+    kpiBrand: "Système de contrôle des déchets",
+    kpiBrandSub: "Sécurité alimentaire et suivi des déchets",
     kpiAvgWaste: "Déchets moyens (kg)",
     kpiTotalPasses: "Total des passages au tourniquet",
     kpiTotalWaste: "Total des déchets (kg)",
@@ -16323,6 +16343,8 @@ var I18N = {
     kpiTodayProduction: "Producción de hoy",
     kpiHaccpAlarm: "Alarma de temperatura de cámara frigorífica",
     kpiCalibrationAlarm: "Alarma de calibración",
+    kpiBrand: "Sistema de control de residuos",
+    kpiBrandSub: "Seguridad alimentaria y control de residuos",
     kpiAvgWaste: "Residuos promedio (kg)",
     kpiTotalPasses: "Total de pasadas por torniquete",
     kpiTotalWaste: "Total de residuos (kg)",
@@ -16711,6 +16733,8 @@ var I18N = {
     kpiTodayProduction: "Produção de hoje",
     kpiHaccpAlarm: "Alarme de temperatura da câmara fria",
     kpiCalibrationAlarm: "Alarme de calibração",
+    kpiBrand: "Sistema de controlo de resíduos",
+    kpiBrandSub: "Segurança alimentar e controlo de resíduos",
     kpiAvgWaste: "Resíduos médios (kg)",
     kpiTotalPasses: "Total de passagens pelo catraca",
     kpiTotalWaste: "Total de resíduos (kg)",
@@ -17099,6 +17123,8 @@ var I18N = {
     kpiTodayProduction: "Bugungi ishlab chiqarish",
     kpiHaccpAlarm: "Sovutgich harorati signalizatsiyasi",
     kpiCalibrationAlarm: "Kalibrlash signalizatsiyasi",
+    kpiBrand: "Chiqindilarni nazorat qilish tizimi",
+    kpiBrandSub: "Oziq-ovqat xavfsizligi va chiqindi monitoringi",
     kpiAvgWaste: "O'rt. chiqindi (kg)",
     kpiTotalPasses: "Shlagbirdan jami o'tish",
     kpiTotalWaste: "Jami chiqindi (kg)",
