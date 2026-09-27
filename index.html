@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=96" />
+  <link rel="stylesheet" href="style.css?v=97" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -1684,7 +1684,7 @@
         </button>
       </div>
       <div class="modal-body" style="padding:1rem">
-        <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 0.5rem">data-i18n="modalRejectDesc">Red gerekçesi zorunludur. Diyetisyen bu gerekçeyi görerek menüyü düzeltip yeniden onaya gönderebilir.</p>
+        <p data-i18n="modalRejectDesc" style="font-size:0.82rem;color:var(--text-muted);margin:0 0 0.5rem">Red gerekçesi zorunludur. Diyetisyen bu gerekçeyi görerek menüyü düzeltip yeniden onaya gönderebilir.</p>
         <textarea id="menuRedNotu" rows="4" placeholder="Red gerekçesi..." style="width:100%;box-sizing:border-box"></textarea>
         <div id="menuRedError" style="display:none;color:var(--danger, #ef4444);font-size:0.78rem;margin-top:0.35rem">Lütfen red gerekçesini yazın.</div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.75rem">
@@ -2000,7 +2000,7 @@
         <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem" id="qrUrlDisplay"></p>
         <p style="font-size:0.72rem;color:var(--text-muted)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          data-i18n="qrHint">QR kodu depo kapısına asmak için yazdırın.
+          <span data-i18n="qrHint">QR kodu depo kapısına asmak için yazdırın.</span>
         </p>
       </div>
       <div class="modal-footer" style="justify-content:center">
@@ -2191,7 +2191,7 @@
       <div class="modal-body" style="padding:1rem;max-height:70vh;overflow-y:auto">
         <!-- Admin Şifre Doğrulama (ilk açılış) -->
         <div id="apReAuthContainer">
-          <p style="font-size:0.85rem;color:var(--text-muted);margin:0 0 1rem">data-i18n="adminReAuthText">Admin paneline erişmek için lütfen admin şifrenizi girin.</p>
+          <p data-i18n="adminReAuthText" style="font-size:0.85rem;color:var(--text-muted);margin:0 0 1rem">Admin paneline erişmek için lütfen admin şifrenizi girin.</p>
           <div style="margin-bottom:0.75rem">
             <label for="apReAuthPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem" data-i18n="adminPassword">Admin Şifresi</label>
             <div style="display:flex;gap:0.5rem">
@@ -2642,7 +2642,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=96"></script>
+  <script src="app.js?v=97"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
