@@ -17511,6 +17511,11 @@ function applyTranslations() {
     if (dict[key]) el.title = dict[key];
   });
 
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n-aria-label');
+    if (dict[key]) el.setAttribute('aria-label', dict[key]);
+  });
+
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
     var key = el.getAttribute('data-i18n-placeholder');
     if (dict[key]) el.placeholder = dict[key];

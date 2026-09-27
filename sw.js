@@ -1,5 +1,8 @@
-const CACHE = 'atik-kontrol-v49';
-const URLS = ['index.html', 'style.css?v=42', 'app.js?v=42', 'manifest.json', 'config.js'];
+const CACHE = 'atik-kontrol-v51';
+// VER, index.html'deki ?v= degeriyle ayni olmak zorunda: fetch handler
+// cevrimdisi tam URL eslestirmesi yapiyor, surum kayarsa eski dosya verilir.
+const VER = '44';
+const URLS = ['index.html', 'style.css?v=' + VER, 'app.js?v=' + VER, 'manifest.json', 'config.js', 'logo.gif'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -18,8 +21,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Network-first: Ã§evrimiÃ§iyken her zaman gÃ¼ncel dosyalar alÄ±nÄ±r,
-  // Ã§evrimdÄ±ÅŸÄ±ysa Ã¶nbellekteki kopya kullanÄ±lÄ±r.
+  // Network-first: çevrimiçiyken her zaman güncel dosyalar alınır,
+  // çevrimdışıysa önbellekteki kopya kullanılır.
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       try {
