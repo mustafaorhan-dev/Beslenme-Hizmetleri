@@ -1460,8 +1460,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-hero {
   position: relative;
   overflow: visible;
-  margin: 7rem 0 1.5rem;
-  padding: 6.5rem 1.5rem 1.5rem;
+  margin: 7.75rem 0 1.5rem;
+  padding: 5rem 1.5rem 1.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1469,7 +1469,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .kpi-hero-grid {
   display: grid;
-  grid-template-columns: 1fr 10rem 1fr;
+  grid-template-columns: 1fr 11.5rem 1fr;
   gap: 1rem;
   align-items: stretch;
 }
@@ -1482,17 +1482,18 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .kpi-hero-mid { min-width: 0; }
 
-/* Notched amblem: dairenin merkezi konteynerin üst kenarının biraz üstünde,
-   yarısından fazlası dışarıda taşar. 8px halka, konteynerin üst çizgisini
-   dairenin arkasında maskeler. Amblem açık tonlu olduğu için yüz beyaz ve
-   çerçeve kalın; aksi halde --bg-card zeminine karışıp görünmez. */
+/* Notched amblem: dairenin merkezi konteynerin ust kenarinin 1.5rem ustunde,
+   yani agirliginin biraz fazlasi disari tassar. 8px halka, konteynerin ust
+   cizgisini dairenin arkasinda maskeler. Daire cevresinde cerceve yok:
+   amblemin kendi acik halkasi ve golge yuvarlakligi tanimlar.
+   Dikey bosluklar: amblemin ustunde 8px, altinda 12px. */
 .kpi-hero-logo {
   position: absolute;
   top: -1.5rem;
   left: 50%;
   z-index: 3;
-  width: 10rem;
-  height: 10rem;
+  width: 11.5rem;
+  height: 11.5rem;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
@@ -1500,7 +1501,6 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   padding: 0.6rem;
   box-sizing: border-box;
   background: #fff;
-  border: 5px solid var(--accent);
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 0 0 8px var(--bg-card), 0 10px 24px rgba(15, 23, 42, 0.18);
@@ -1526,9 +1526,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #kpi-toplam-gecis { animation-delay: 0.26s; }
 
 @media (max-width: 1100px) {
-  .kpi-hero { margin-top: 5.5rem; padding-top: 5.5rem; }
-  .kpi-hero-grid { grid-template-columns: 1fr 9rem 1fr; }
-  .kpi-hero-logo { width: 9rem; height: 9rem; }
+  .kpi-hero { margin-top: 6.5rem; padding-top: 4.5rem; }
+  .kpi-hero-grid { grid-template-columns: 1fr 10.5rem 1fr; }
+  .kpi-hero-logo { width: 10.5rem; height: 10.5rem; }
 }
 
 @media (max-width: 900px) {
@@ -1538,16 +1538,16 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   .kpi-hero-logo {
     position: static;
     transform: none;
-    margin: 0 auto 1.5rem;
-    width: 8rem;
-    height: 8rem;
+    margin: 0 auto 1.25rem;
+    width: 9rem;
+    height: 9rem;
   }
 }
 
 @media (max-width: 600px) {
   .kpi-hero { padding: 1.25rem; }
   .kpi-hero-col { grid-template-columns: 1fr; }
-  .kpi-hero-logo { width: 6.5rem; height: 6.5rem; }
+  .kpi-hero-logo { width: 7.5rem; height: 7.5rem; }
 }
 
 /* Simge butonu: yazdır gibi ikincil eylemlerde metin yerine yalnizca ikon. */
