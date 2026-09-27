@@ -1,8 +1,27 @@
-const CACHE = 'atik-kontrol-v54';
-// VER, index.html'deki ?v= degeriyle ayni olmak zorunda: fetch handler
-// cevrimdisi tam URL eslestirmesi yapiyor, surum kayarsa eski dosya verilir.
-const VER = '47';
-const URLS = ['index.html', 'style.css?v=' + VER, 'app.js?v=' + VER, 'manifest.json', 'config.js', 'logo.gif'];
+/* =============================================
+   ATIK KONTROL - SERVICE WORKER
+   Ag Yuklemeler: ag varsa her zaman agdan, yoksa
+   onbellekten. Yeni surum CACHE/VER ile hemen gecerli
+   olur; skipWaiting + clients.claim acik sekmeleri de
+   guncelleyen sekilde tutar.
+   ============================================= */
+
+const CACHE = 'atik-kontrol-v99';
+const VER = '92';
+
+/* index.html dogrudan istenir; style.css ve app.js
+   ?v=VER ile istenir, onbellege de AYNI surumle yazilir
+   (fetch handler e.request'i birebir eslestirir, bu yuzden
+   surumlu istek onbellekte birebir bulunmalidir).
+   logo.gif surumsuz istenir, bu yuzden surumsuz yazilir. */
+const URLS = [
+  'index.html',
+  'style.css?v=' + VER,
+  'app.js?v=' + VER,
+  'manifest.json',
+  'config.js',
+  'logo.gif'
+];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -21,8 +40,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Network-first: çevrimiçiyken her zaman güncel dosyalar alınır,
-  // çevrimdışıysa önbellekteki kopya kullanılır.
+  // Network-first: cevrimiciyken her zaman guncel dosyalar alinir,
+  // cevrimdisiyse onbellekteki kopya kullanilir.
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       try {

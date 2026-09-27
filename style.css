@@ -1457,13 +1457,17 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 /* ---- KPI HERO: ortada yarısı dışarıda logo, sağda/solda 2'şer kart ----
    Konteyner yalnızca yüzey + çerçeve taşır; kart, isim ve alt başlık yok.
    Tüm renkler tema değişkeni olduğu için açık/koyu temada doğru çalışır. */
+/* Panelin üst kenarı ince --border kalır; U geçişi (aşağıda) 2px ve
+   belirgin tonda çizilir. Böylece panelin gövdesi sade, yalnız logonun
+   altındaki U belirgin kalır. */
 .kpi-hero {
   position: relative;
   overflow: visible;
-  margin: 7.75rem 0 1.5rem;
-  padding: 4.75rem 1.5rem 1.5rem;
+  margin: 4.5rem 0 1.5rem;
+  padding: 1rem 1.5rem 1.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-top: none;
   border-radius: var(--radius-lg);
 }
 
@@ -1482,14 +1486,15 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .kpi-hero-mid { min-width: 0; }
 
-/* Notched amblem: dairenin merkezi konteynerin ust kenarinin 1.75rem ustunde.
-   Daire cevresinde ne cerceve ne de maske halkasi var: amblem ust kenara
-   dayanir, yalnizca konteyner renginde dikey bosluk kalir. Konteynerin ust
-   cizgisi, dairenin opak yuzunun altinda kalarak notched kesik yapar.
-   Dikey bosluklar: amblemin ustunde 4px, altinda 12px. */
+/* Notched amblem: dairenin merkezi konteynerin ust kenarinin tam ustunde
+   (top: 0) — yani logonun alt yarisi yarim daire tepenin icine girer, ust
+   yarisi disari tasar. Daire cevresinde ne cerceve ne de maske halkasi var.
+   Konteynerin ust kenari 3.5rem + yaricap kadar yukseldigi icin ust bosluk
+   margin-top ile acilir. Kartlar orta kolonun iki yaninda oldugu icin
+   daireyle yatayda caprazlasmaz. */
 .kpi-hero-logo {
   position: absolute;
-  top: -1.75rem;
+  top: 0;
   left: 50%;
   z-index: 3;
   width: 11.5rem;
@@ -1498,23 +1503,47 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem;
+  padding: 0;
   box-sizing: border-box;
   background: #fff;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 5px 4px rgba(15, 23, 42, 0.8);
 }
 
 .kpi-hero-logo img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: contain;
   display: block;
   filter: contrast(1.08) saturate(1.06);
 }
 
-[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); }
+[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 5px 4px rgba(0, 0, 0, 0.95); }
+
+/* Yarım daire tepe (kabarma): panele oyulan çukur yerine panelin üst kenarı
+   ortada DIŞARI doğru kabarır — madal/kalkan görünümü. Tabanı panelin üst
+   kenarının tam üstünde durur, logonun alt yarısı tepeye girer, üst yarısı
+   dışarı taşar (logo merkezi top: 0).
+
+   Artık ÇİZGİSİZ: ne panelin üst kenarı (border-top: none) ne de tepe yayı
+   (border yok) çizilmiyor. Görünürlüğü çizgiden değil siluetten geliyor: tepe
+   top: -6.5rem ile panelin üst kenarının 104px ÜSTÜNE kabarıyor ve --bg-card
+   rengiyle sayfa zemininden (--bg-primary) ayrılıyor. Logo merkezi yine
+   top: 0, yani logonun alt yarısı panelde, üst yarısı tepenin içinde. */
+.kpi-hero::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -6.5rem;
+  width: 13rem;
+  height: 6.5rem;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  z-index: 2;
+  pointer-events: none;
+}
 
 /* nth-child gecikmeleri yeni kapsayıcıda sıfırlanacağı için kartlar kimliğe
    göre kademelenir: logodan sonra soldan sağa ve alt satıra doğru. */
@@ -1526,15 +1555,17 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #kpi-toplam-gecis { animation-delay: 0.26s; }
 
 @media (max-width: 1100px) {
-  .kpi-hero { margin-top: 7.25rem; padding-top: 4.25rem; }
+  .kpi-hero { margin-top: 4rem; padding-top: 1rem; }
   .kpi-hero-grid { grid-template-columns: 1fr 10.5rem 1fr; }
   .kpi-hero-logo { width: 10.5rem; height: 10.5rem; }
+  .kpi-hero::before { top: -6rem; width: 12rem; height: 6rem; }
 }
 
 @media (max-width: 900px) {
   .kpi-hero { margin-top: 0; padding-top: 1.5rem; }
   .kpi-hero-grid { grid-template-columns: 1fr; }
   .kpi-hero-mid { display: none; }
+  .kpi-hero::before { display: none; }
   .kpi-hero-logo {
     position: static;
     transform: none;
