@@ -5210,7 +5210,7 @@ function exportDashboardPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
-  const kpiHtml = content.querySelector('.kpi-grid').outerHTML;
+  const kpiHtml = '<div class="kpi-grid">' + [...content.querySelectorAll('.kpi-hero .kpi-card, #kpiGrid > .kpi-card')].map(c => c.outerHTML).join('') + '</div>';
   const weeklyHtml = content.querySelector('.weekly-summary') ? content.querySelector('.weekly-summary').outerHTML : '';
   const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
