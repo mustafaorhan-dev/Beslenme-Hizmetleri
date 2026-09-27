@@ -1508,7 +1508,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   background: #fff;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 5px 4px rgba(15, 23, 42, 0.8);
+  box-shadow: 0 5px 4px rgba(15, 23, 42, 0.32);
 }
 
 .kpi-hero-logo img {
@@ -1518,7 +1518,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   filter: contrast(1.08) saturate(1.06);
 }
 
-[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 5px 4px rgba(0, 0, 0, 0.95); }
+[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 5px 4px rgba(0, 0, 0, 0.46); }
 
 /* Yarım daire tepe (kabarma): panele oyulan çukur yerine panelin üst kenarı
    ortada DIŞARI doğru kabarır — madal/kalkan görünümü. Tabanı panelin üst
