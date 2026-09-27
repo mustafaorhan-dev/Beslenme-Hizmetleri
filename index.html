@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=41" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -383,13 +383,7 @@
             <span class="kpi-trend" id="kpiHaccpAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
           </div>
         </div>
-        <div class="kpi-card kpi-logo-card">
-          <img src="logo.gif" alt="Atık Kontrol Sistemi" class="kpi-logo-img" />
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiBrand">Atık Kontrol Sistemi</span>
-            <span class="kpi-trend" data-i18n="kpiBrandSub" style="font-size:0.72rem;color:var(--text-muted)">Gıda güvenliği ve atık takibi</span>
-          </div>
-        </div>
+        <img src="logo.gif" alt="Atık Kontrol Sistemi" class="kpi-logo-img" />
         <div class="kpi-card" id="kpi-kalibrasyon-alarm">
           <div class="kpi-icon kpi-purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
@@ -2413,7 +2407,7 @@
             <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
             <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
             <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
-            <li><strong>Logo kartı:</strong> İki alarm kartı arasında uygulamanın logosu yer alır; sayaç göstermez.</li>
+            <li><strong>Logo:</strong> Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı arasında, kart olmadan yalnızca uygulama logosu görünür.</li>
             <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
             <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
             <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
@@ -2638,7 +2632,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=40"></script>
+  <script src="app.js?v=41"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

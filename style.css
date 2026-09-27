@@ -1454,19 +1454,19 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
 .kpi-purple { background: rgba(59,130,246,0.15); color: #3b82f6; }
 
-/* Paneldeki logo kartı: Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon
-   Alarmı arasında durur, sayaç göstermez. logo.gif 480x480 kare olduğu
-   için img kare yerleştirilir; çevresinde kutu/çerçeve yoktur. */
-.kpi-logo-card { align-items: center; }
+/* Panelde logo: Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı
+   arasında, kart/çerçeve/isim olmadan yalnızca logo.gif (480x480 kare).
+   .kpi-grid bir CSS grid olduğu için öğe justify-self ile hücresinde
+   ortalanır; kutu, çerçeve ve gölge bilerek tanımlanmıyor. */
 .kpi-logo-img {
-  width: 76px;
-  height: 76px;
+  width: 84px;
+  height: 84px;
   object-fit: contain;
-  flex-shrink: 0;
+  justify-self: center;
+  align-self: center;
   display: block;
+  margin: 0.25rem 0;
 }
-.kpi-logo-card .kpi-body { flex-direction: column; gap: 0.15rem; }
-.kpi-logo-card .kpi-label { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
 
 .kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
 
