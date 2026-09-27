@@ -1461,7 +1461,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   position: relative;
   overflow: visible;
   margin: 7.75rem 0 1.5rem;
-  padding: 5rem 1.5rem 1.5rem;
+  padding: 4.75rem 1.5rem 1.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1482,14 +1482,14 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .kpi-hero-mid { min-width: 0; }
 
-/* Notched amblem: dairenin merkezi konteynerin ust kenarinin 1.5rem ustunde,
-   yani agirliginin biraz fazlasi disari tassar. 8px halka, konteynerin ust
-   cizgisini dairenin arkasinda maskeler. Daire cevresinde cerceve yok:
-   amblemin kendi acik halkasi ve golge yuvarlakligi tanimlar.
-   Dikey bosluklar: amblemin ustunde 8px, altinda 12px. */
+/* Notched amblem: dairenin merkezi konteynerin ust kenarinin 1.75rem ustunde.
+   Daire cevresinde ne cerceve ne de maske halkasi var: amblem ust kenara
+   dayanir, yalnizca konteyner renginde dikey bosluk kalir. Konteynerin ust
+   cizgisi, dairenin opak yuzunun altinda kalarak notched kesik yapar.
+   Dikey bosluklar: amblemin ustunde 4px, altinda 12px. */
 .kpi-hero-logo {
   position: absolute;
-  top: -1.5rem;
+  top: -1.75rem;
   left: 50%;
   z-index: 3;
   width: 11.5rem;
@@ -1503,7 +1503,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   background: #fff;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 0 8px var(--bg-card), 0 10px 24px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
 }
 
 .kpi-hero-logo img {
@@ -1514,7 +1514,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   filter: contrast(1.08) saturate(1.06);
 }
 
-[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 0 0 8px var(--bg-card), 0 10px 24px rgba(0, 0, 0, 0.45); }
+[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); }
 
 /* nth-child gecikmeleri yeni kapsayıcıda sıfırlanacağı için kartlar kimliğe
    göre kademelenir: logodan sonra soldan sağa ve alt satıra doğru. */
@@ -1526,7 +1526,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #kpi-toplam-gecis { animation-delay: 0.26s; }
 
 @media (max-width: 1100px) {
-  .kpi-hero { margin-top: 6.5rem; padding-top: 4.5rem; }
+  .kpi-hero { margin-top: 7.25rem; padding-top: 4.25rem; }
   .kpi-hero-grid { grid-template-columns: 1fr 10.5rem 1fr; }
   .kpi-hero-logo { width: 10.5rem; height: 10.5rem; }
 }

@@ -1,7 +1,7 @@
-const CACHE = 'atik-kontrol-v53';
+const CACHE = 'atik-kontrol-v54';
 // VER, index.html'deki ?v= degeriyle ayni olmak zorunda: fetch handler
 // cevrimdisi tam URL eslestirmesi yapiyor, surum kayarsa eski dosya verilir.
-const VER = '46';
+const VER = '47';
 const URLS = ['index.html', 'style.css?v=' + VER, 'app.js?v=' + VER, 'manifest.json', 'config.js', 'logo.gif'];
 
 self.addEventListener('install', e => {
