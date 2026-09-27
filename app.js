@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    ATIK KONTROL YÖNETİM SİSTEMİ - APP LOGIC
    ============================================= */
 
@@ -1862,6 +1862,32 @@ function saveUnitPrices(list) {
 // Önceden hatalar yutuluyor, arayüz "kaydedildi" derken veri kayboluyordu;
 // birim fiyat listesinin bellekte tutulması, hatalı yazma durumunda
 // sayfa yenilenince eski değerlerin geri gelmesine yol açıyordu.
+// Supabase hatasını kullanıcının yapabileceği bir adıma çevirir.
+// "birim_alt sütunu yok" hatasında sessizce sütunsuz yeniden yazmak
+// yanıltıcı olurdu: koli=adet kaydı koli=kg olarak saklanıp yumurta
+// 195/30 = 6,50 ₺/kg gibi patlama bir fiyata dönüşürdü. Bu yüzden sütun
+// eksikse yazma yapılmıyor, migration çalıştırılması isteniyor.
+function bfSupabaseHataMesaji(e) {
+  var code = (e && e.code) || '';
+  var msg = String((e && (e.message || e.details)) || '');
+  var lc = msg.toLowerCase();
+  var sutunYok = code === '42703' || code === 'PGRST204' ||
+    lc.indexOf('birim_alt') >= 0 ||
+    (lc.indexOf('unit_prices') >= 0 && lc.indexOf('column') >= 0);
+  if (sutunYok) {
+    return 'Sunucuda gerekli sütun yok ("birim_alt"). Supabase Dashboard → SQL Editor\'de supabase_migration.sql dosyasını çalıştır, sonra sayfayı yenile.';
+  }
+  if (code === '22P02' || lc.indexOf('invalid input syntax for type integer') >= 0) {
+    return 'Sunucudaki unit_prices.id sütunu hâlâ sayı tipinde. supabase_migration.sql çalıştırılmalı.';
+  }
+  if (code === '42501' || lc.indexOf('row-level security') >= 0 || lc.indexOf('permission denied') >= 0) {
+    return 'Yetki hatası: bu kaydı sunucuya yazma iznin yok.';
+  }
+  return 'Sunucuya kaydedilemedi: ' + (msg || 'bilinmeyen hata') + ' (F12 → Console)';
+}
+
+var bfSonHata = null;
+
 async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan, birim_alt) {
   var item = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -1883,6 +1909,7 @@ async function addUnitPrice(urun_adi, birim, birim_fiyat, yil, birim_carpan, bir
     if (error) throw error;
     return true;
   } catch (e) {
+    bfSonHata = e;
     console.error('Supabase addUnitPrice error:', e);
     return false;
   }
@@ -1908,6 +1935,7 @@ async function editUnitPrice(id, alanlar) {
     if (error) throw error;
     return true;
   } catch (e) {
+    bfSonHata = e;
     console.error('Supabase editUnitPrice error:', e);
     return false;
   }
@@ -1927,6 +1955,7 @@ async function deleteUnitPrice(id) {
     if (error) throw error;
     return true;
   } catch (e) {
+    bfSonHata = e;
     console.error('Supabase deleteUnitPrice error:', e);
     unitPricesCache = unitPricesCache.slice(0, kaldirilan).concat(silinen, unitPricesCache.slice(kaldirilan));
     invalidatePriceMap();
@@ -2697,11 +2726,12 @@ async function bfKaydet() {
     return;
   }
   var duzenleme = !!bfDuzenlemeId;
+  bfSonHata = null;
   var ok = duzenleme
     ? await editUnitPrice(bfDuzenlemeId, { urun_adi: ad, birim: birim, birim_fiyat: fiyat, birim_carpan: carpan, birim_alt: birimAlt })
     : await addUnitPrice(ad, birim, fiyat, birimFiyatSeciliYil, carpan, birimAlt);
   if (!ok) {
-    showToast('Sunucuya kaydedilemedi. Sayfayı yenileyince değişiklik kaybolur — konsolu (F12) kontrol edin.', 'error');
+    showToast(bfSonHata ? bfSupabaseHataMesaji(bfSonHata) : 'Sunucuya kaydedilemedi. Sayfayı yenileyince değişiklik kaybolur — konsolu (F12) kontrol edin.', 'error');
     return;
   }
   showToast(duzenleme ? 'Ürün güncellendi.' : 'Ürün eklendi.', 'success');
@@ -2713,9 +2743,10 @@ async function bfKaydet() {
 async function bfSil(id) {
   if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+  bfSonHata = null;
   var ok = await deleteUnitPrice(id);
   if (!ok) {
-    showToast('Sunucudan silinemedi; kayıt listede bırakıldı.', 'error');
+    showToast(bfSonHata ? bfSupabaseHataMesaji(bfSonHata) : 'Sunucudan silinemedi; kayıt listede bırakıldı.', 'error');
     return;
   }
   showToast('Ürün silindi.', 'success');
