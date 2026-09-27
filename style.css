@@ -264,6 +264,17 @@
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(23,105,224,0.13);
 }
+/* Gece modunda giris ekrani acik kalsin: global [data-theme="dark"] input,select
+   kurali .login-field'i eziyor ve kullanici/sifre alanlarini siyah yapiyordu. */
+[data-theme="dark"] .login-overlay { color-scheme: light; }
+[data-theme="dark"] .login-overlay input,
+[data-theme="dark"] .login-overlay select { background: #f8fafd; border: 1px solid #d7e0ee; color: #172B4D; }
+[data-theme="dark"] .login-overlay input:hover,
+[data-theme="dark"] .login-overlay select:hover { border-color: #b8c7dd; }
+[data-theme="dark"] .login-overlay .login-field:focus { border-color: #1769E0; background: #ffffff; color: #172B4D; box-shadow: 0 0 0 4px rgba(23,105,224,0.13); }
+[data-theme="dark"] .login-overlay .login-field::placeholder { color: #9aa8bd; }
+[data-theme="dark"] .login-overlay .login-field-chevron,
+[data-theme="dark"] .login-overlay .login-pw-toggle { color: #8a99b1; }
 .login-field-chevron {
   position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
   color: #8a99b1; pointer-events: none;
@@ -1518,7 +1529,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   filter: contrast(1.08) saturate(1.06);
 }
 
-[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 5px 4px rgba(0, 0, 0, 0.46); }
+[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 5px 4px rgba(0, 0, 0, 0.46), 0 8px 14px rgba(34, 211, 238, 0.18); }
 
 /* Yarım daire tepe (kabarma): panele oyulan çukur yerine panelin üst kenarı
    ortada DIŞARI doğru kabarır — madal/kalkan görünümü. Tabanı panelin üst
