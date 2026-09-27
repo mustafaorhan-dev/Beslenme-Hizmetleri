@@ -1454,18 +1454,92 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .kpi-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
 .kpi-purple { background: rgba(59,130,246,0.15); color: #3b82f6; }
 
-/* Panelde logo: Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı
-   arasında, kart/çerçeve/isim olmadan yalnızca logo.gif (480x480 kare).
-   .kpi-grid bir CSS grid olduğu için öğe justify-self ile hücresinde
-   ortalanır; kutu, çerçeve ve gölge bilerek tanımlanmıyor. */
-.kpi-logo-img {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  justify-self: center;
-  align-self: center;
-  display: block;
-  margin: 0.25rem 0;
+/* ---- KPI HERO: ortada yarısı dışarıda logo, sağda/solda 2'şer kart ----
+   Konteyner yalnızca yüzey + çerçeve taşır; kart, isim ve alt başlık yok.
+   Tüm renkler tema değişkeni olduğu için açık/koyu temada doğru çalışır. */
+.kpi-hero {
+  position: relative;
+  overflow: visible;
+  margin: 5rem 0 1.5rem;
+  padding: 6.25rem 1.5rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.kpi-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 8.5rem 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.kpi-hero-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.kpi-hero-mid { min-width: 0; }
+
+/* Notched logo: dairenin merkezi konteynerin üst kenarıyla çakışır, yarısı
+   dışarı taşar. 7px halka, konteynerin üst çizgisini dairenin arkasında maskeler. */
+.kpi-hero-logo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: 8.5rem;
+  height: 8.5rem;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border: 4px solid var(--accent);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 7px var(--bg-card), 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+.kpi-hero-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+[data-theme="dark"] .kpi-hero-logo { box-shadow: 0 0 0 7px var(--bg-card), 0 8px 22px rgba(0, 0, 0, 0.45); }
+
+/* nth-child gecikmeleri yeni kapsayıcıda sıfırlanacağı için kartlar kimliğe
+   göre kademelenir: logodan sonra soldan sağa ve alt satıra doğru. */
+#kpi-toplam-kayit { animation-delay: 0.06s; }
+#kpi-bugun-uretim { animation-delay: 0.10s; }
+#kpi-haccp-alarm { animation-delay: 0.14s; }
+#kpi-kalibrasyon-alarm { animation-delay: 0.18s; }
+#kpi-ort-atik { animation-delay: 0.22s; }
+#kpi-toplam-gecis { animation-delay: 0.26s; }
+
+@media (max-width: 1100px) {
+  .kpi-hero { margin-top: 4.25rem; padding-top: 5.5rem; }
+  .kpi-hero-grid { grid-template-columns: 1fr 7.25rem 1fr; }
+  .kpi-hero-logo { width: 7.25rem; height: 7.25rem; }
+}
+
+@media (max-width: 900px) {
+  .kpi-hero { margin-top: 0; padding-top: 1.5rem; }
+  .kpi-hero-grid { grid-template-columns: 1fr; }
+  .kpi-hero-mid { display: none; }
+  .kpi-hero-logo {
+    position: static;
+    transform: none;
+    margin: 0 auto 1.5rem;
+    width: 7.5rem;
+    height: 7.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpi-hero { padding: 1.25rem; }
+  .kpi-hero-col { grid-template-columns: 1fr; }
+  .kpi-hero-logo { width: 6.5rem; height: 6.5rem; }
 }
 
 .kpi-body { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0; }
