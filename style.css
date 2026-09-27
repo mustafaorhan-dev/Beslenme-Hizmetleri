@@ -1459,8 +1459,8 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
    .kpi-grid bir CSS grid olduğu için öğe justify-self ile hücresinde
    ortalanır; kutu, çerçeve ve gölge bilerek tanımlanmıyor. */
 .kpi-logo-img {
-  width: 84px;
-  height: 84px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   justify-self: center;
   align-self: center;
