@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=110" />
+  <link rel="stylesheet" href="style.css?v=121" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -103,13 +103,6 @@
             </button>
           </div>
           <div class="login-form-options">
-            <label class="login-remember">
-              <input type="checkbox" id="rememberMe" />
-              <span class="login-remember-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>
-              </span>
-              <span data-i18n="loginRemember">Beni Hatırla</span>
-            </label>
             <a href="javascript:void(0)" class="login-forgot" onclick="showForgotPw()" data-i18n="loginForgot">Şifremi Unuttum?</a>
           </div>
           <button type="submit" class="btn login-submit">
@@ -1481,6 +1474,11 @@
             <canvas id="canvasYillikUretim"></canvas>
             <div class="chart-empty" id="chartYillikUretimEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctUretim">
+            <canvas id="canvasYillikPctUretim"></canvas>
+            <div class="chart-empty" id="chartYillikPctUretimEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
           <div class="chart-note" data-i18n="yearlyMonthlyProdNote">1. yıl vs 2. yıl - üretilen yemek sayısı (porsiyon)</div>
         </div>
 
@@ -1492,6 +1490,11 @@
           <div class="chart-area" id="chartYillikTurnike">
             <canvas id="canvasYillikTurnike"></canvas>
             <div class="chart-empty" id="chartYillikTurnikeEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctTurnike">
+            <canvas id="canvasYillikPctTurnike"></canvas>
+            <div class="chart-empty" id="chartYillikPctTurnikeEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
           </div>
           <div class="chart-note" data-i18n="yearlyMonthlyTurnstileNote">1. yıl vs 2. yıl - turnike geçiş sayısı</div>
         </div>
@@ -1505,6 +1508,11 @@
             <canvas id="canvasYillikOgrenci"></canvas>
             <div class="chart-empty" id="chartYillikOgrenciEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
           </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctOgrenci">
+            <canvas id="canvasYillikPctOgrenci"></canvas>
+            <div class="chart-empty" id="chartYillikPctOgrenciEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
           <div class="chart-note" data-i18n="yearlyMonthlyStudentNote">1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı</div>
         </div>
 
@@ -1516,6 +1524,11 @@
           <div class="chart-area" id="chartYillikAtik">
             <canvas id="canvasYillikAtik"></canvas>
             <div class="chart-empty" id="chartYillikAtikEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctAtik">
+            <canvas id="canvasYillikPctAtik"></canvas>
+            <div class="chart-empty" id="chartYillikPctAtikEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
           </div>
           <div class="chart-note" data-i18n="yearlyMonthlyWasteNote">1. yıl vs 2. yıl - atık miktarı (kg)</div>
         </div>
@@ -2397,13 +2410,14 @@
             <a href="#man-ambalaj">8. Ambalaj Atıkları</a>
             <a href="#man-kalibrasyon">9. Kalibrasyona Tabi Cihazlar</a>
             <a href="#man-grafik">10. Grafikler</a>
-            <a href="#man-harcama">11. Harcama</a>
-            <a href="#man-birimfiyat">12. Birim Fiyatlar ve Maliyet Hesabı</a>
-            <a href="#man-dil">13. Çok Dilli Destek (10 Dil)</a>
-            <a href="#man-yedek">14. Veri Yedekleme ve Senkronizasyon</a>
-            <a href="#man-sistem">15. Tema ve Görünüm</a>
-            <a href="#man-yonetim">16. Yönetim, İzinler ve Log Kayıtları</a>
-            <a href="#man-ipucu">17. İpuçları</a>
+            <a href="#man-yillik">11. Yıllık Karşılaştırma</a>
+            <a href="#man-harcama"> 12. Harcama</a>
+            <a href="#man-birimfiyat"> 13. Birim Fiyatlar ve Maliyet Hesabı</a>
+            <a href="#man-dil"> 14. Çok Dilli Destek (10 Dil)</a>
+            <a href="#man-yedek"> 15. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem"> 16. Tema ve Görünüm</a>
+            <a href="#man-yonetim"> 17. Yönetim, İzinler ve Log Kayıtları</a>
+            <a href="#man-ipucu"> 18. İpuçları</a>
           </div>
         </div>
 
@@ -2417,7 +2431,10 @@
             <li><strong>Aşçı:</strong> Üretim/tüketim/atık kayıtları girişi.</li>
             <li><strong>Gıda Mühendisi:</strong> Gıda güvenliği ve kalite takibi.</li>
           </ul>
-          <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir. Çıkış yapmak için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın.</p>
+        <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir.</p>
+        <p><strong>Oturum kalıcıdır:</strong> Giriş yaptığınızda oturumunuz tarayıcı belleğine kaydedilir. Sekmeyi kapatıp yeniden açtığınızda veya tarayıcıyı tamamen kapattığınızda tekrar şifre girmenize gerek kalmaz.</p>
+        <p><strong>Hareketsizlik kilidi (varsayılan 5 dakika):</strong> Belirtilen süre boyunca işlem yapılmazsa giriş ekranı açılır ve şifre istenir. <strong>Bu kilit oturumu silmez</strong>, yalnızca giriş ekranını kapatmanız yeterlidir. Sayfayı yenilediğinizde de şifre istenir; ancak tarayıcıyı kapatıp açtığınızda oturumunuz kendiliğinden geri gelir. Süreyi <em>Yönetim &rsaquo; Hareketsizlik Kapanma Süresi</em> ayarından değiştirebilirsiniz.</p>
+        <p><strong>Çıkış yapmak</strong> için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın. Çıkış yaptığınızda oturum kalıcı olarak silinir ve bir sonraki açılışta şifre yeniden gerekir. Ortak kullanılan bilgisayarlarda çıkış yapmayı unutmayın.</p>
         </div>
 
         <div class="manual-section" id="man-panel">
@@ -2525,13 +2542,30 @@
             <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
             <li><strong>"Tümü | Ocak | Şubat ... Aralık"</strong> butonları ile görünüm tek aya veya tüm yıla göre ayarlanır.</li>
             <li>Çubukların üzerindeki sayılar değeri gösterir; uzun grafiklerde yatay kaydırma çubuğu kullanılır.</li>
-            <li><strong>"Word'e Aktar"</strong> butonu ile grafikler Word belgesine aktarılabilir.</li>
+            <li><strong>"Word'e Aktar"</strong> butonu ile grafikler Word belgesine aktarılabilir.; <strong>"PDF Yazdır"</strong> ile yazdırılabilir.</li>
             <li>Seçili dile göre grafik etiketleri ve başlıklar otomatik çevrilir.</li>
           </ul>
         </div>
 
+        <div class="manual-section" id="man-yillik">
+        <h3>11. Yıllık Karşılaştırma</h3>
+        <p>Bu sekme, <strong>1. yıl</strong> ile <strong>2. yılı</strong> yan yana karşılaştırır ve yıllık değişimi gösterir.</p>
+        <ul>
+          <li><strong>Yıl seçicileri:</strong> Üstte <strong>"1. Yıl"</strong> ve <strong>"2. Yıl"</strong> açılır kutuları vardır; aynı yıl her ikisinde birden seçilemez. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. 2. yıl boş bırakılırsa yalnızca 1. yıl verileri gösterilir.</li>
+          <li>Herhangi bir <strong>çubuğa tıklamak</strong>, o ayın kayıtlarını açan <em>Kayıtlar</em> ekranında gösterir.</li>
+          <li><strong>Yıllık toplam halka grafikleri:</strong> Toplam Üretim, Toplam Turnike Geçişi, Öğrenci (1. yıl ve 2. yıl) ve Atık (kg).</li>
+          <li><strong>Aylık karşılaştırma çubuk grafikleri:</strong> Üretim, Turnike Geçişi, Öğrenci, Atık (kg) ve Atık Verimliliği (%).</li>
+          <li><strong>Aylık Yüzde Değişim çizgileri:</strong> Üretim, Turnike, Öğrenci ve Atık kartlarının altında yer alır; 1. yıla göre 2. yıldaki aylık yüzde değişimi gösterir. <strong>%0</strong> referans kesikli çizgisi "değişim yok" satırını belirtir; fare ile üzerine gelindiğinde mutlak değişim değeri de görülür. Verimlilik kartında bu çizgi bulunmaz.</li>
+          <li><strong>Atık Verimliliği:</strong> <em>Atık porsiyon ÷ üretilen porsiyon × 100</em> olarak hesaplanır. <strong>Hedef</strong> kutusundan hedef değer (varsayılan %5) girilir ve grafikte kırmızı kesikli çizgi olarak gösterilir.</li>
+          <li><strong>Yıllık Atık Listesi</strong> tablosunda her yemek türü için 1. yıl üretim ve atık, 2. yıl seçiliyse 2. yıl üretim ve atık ile <em>Fark (kg)</em> sütunları yer alır; en altta toplam satırı bulunur.</li>
+          <li><strong>"Yemek Türü Eksikleri"</strong> butonu, yemek türü boş bırakılmış kayıtları yıla göre listeler; tek tek veya <em>"Tümünü Doldur"</em> ile topluca doldurulabilir. Bu tablo doldurulduğunda yıllık atık listesi ve verim grafiği daha doğru sonuç verir.</li>
+          <li><strong>"PDF Yazdır"</strong> butonu ile tüm yıllık karşılaştırma yazdırılabilir.</li>
+          <li>Seçili dile göre tüm başlıklar, etiketler ve boş durumlar otomatik çevrilir.</li>
+        </ul>
+        </div>
+
         <div class="manual-section" id="man-harcama">
-          <h3>11. Harcama</h3>
+          <h3>12. Harcama</h3>
           <ul>
             <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
             <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
@@ -2543,7 +2577,7 @@
         </div>
 
         <div class="manual-section" id="man-birimfiyat">
-          <h3>12. Birim Fiyatlar ve Maliyet Hesabı</h3>
+          <h3>13. Birim Fiyatlar ve Maliyet Hesabı</h3>
           <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
           <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
           <ul>
@@ -2583,7 +2617,7 @@
         </div>
 
         <div class="manual-section" id="man-dil">
-          <h3>13. Çok Dilli Destek (10 Dil)</h3>
+          <h3>14. Çok Dilli Destek (10 Dil)</h3>
           <p>Sistem 10 dilde tam destek sağlar: <strong>Türkçe (TR)</strong>, <strong>İngilizce (EN)</strong>, <strong>Azerice (AZ)</strong>, <strong>Rusça (RU)</strong>, <strong>Arapça (AR)</strong>, <strong>Almanca (DE)</strong>, <strong>Fransızca (FR)</strong>, <strong>İspanyolca (ES)</strong>, <strong>Portekizce (PT)</strong> ve <strong>Özbekçe (UZ)</strong>.</p>
           <ul>
             <li>Sayfanın sağ üstündeki <strong>globe (🌍) butonu</strong> ile dil seçilir. Seçilen dil tüm sayfalarda anında geçerli olur.</li>
@@ -2596,7 +2630,7 @@
         </div>
 
         <div class="manual-section" id="man-yedek">
-          <h3>14. Veri Yedekleme ve Senkronizasyon</h3>
+          <h3>15. Veri Yedekleme ve Senkronizasyon</h3>
           <ul>
             <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
             <li><strong>Supabase'e Yedekle:</strong> Tüm verileri bulut veritabanına (Supabase) yükler; farklı cihazlar arasında senkronizasyon sağlar.</li>
@@ -2608,7 +2642,7 @@
         </div>
 
         <div class="manual-section" id="man-sistem">
-          <h3>15. Tema ve Görünüm</h3>
+          <h3>16. Tema ve Görünüm</h3>
           <ul>
             <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
             <li>Tema tercihi otomatik olarak hatırlanır.</li>
@@ -2617,7 +2651,7 @@
         </div>
 
         <div class="manual-section" id="man-yonetim">
-          <h3>16. Yönetim, İzinler ve Log Kayıtları</h3>
+          <h3>17. Yönetim, İzinler ve Log Kayıtları</h3>
           <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
           <ul>
             <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
@@ -2633,7 +2667,7 @@
         </div>
 
         <div class="manual-section" id="man-ipucu">
-          <h3>17. İpuçları</h3>
+          <h3>18. İpuçları</h3>
           <ul>
             <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
             <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
@@ -2652,7 +2686,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=110"></script>
+  <script src="app.js?v=121"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

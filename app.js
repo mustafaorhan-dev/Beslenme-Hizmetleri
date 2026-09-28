@@ -52,8 +52,20 @@ async function initSupabaseAuth() {
       handleSupabaseLogin(session);
     } else if (event === 'SIGNED_OUT') {
       handleSupabaseLogout();
+    } else if (event === 'INITIAL_SESSION' && session) {
+      // Sayfa yenilendiğinde/ilk açılışta localStorage'daki geçerli token
+      // geri yüklenir. Bu event önceden yok sayılıyordu; rol geri
+      // yüklenmediği için "Beni Hatırla" işaretli olsa bile giriş ekranı
+      // tekrar çıkıyordu. Aynı işi aşağıda handleSupabaseLogin ile de
+      // tetikliyoruz (abonelik bazen INITIAL_SESSION'i kaçırabiliyor).
+      if (!oturumGet('atik_kontrol_role')) handleSupabaseLogin(session);
     }
   });
+
+  // Abonelik INITIAL_SESSION'i kaçırırsa burada da ele al (güvenlik ağı).
+  if (session && !oturumGet('atik_kontrol_role')) {
+    await handleSupabaseLogin(session);
+  }
 }
 
 async function handleSupabaseLogin(session) {
@@ -90,12 +102,33 @@ async function handleSupabaseLogin(session) {
   } catch (_) {}
 }
 
+// ─── OTURUM DEPOLAMA ───────────────────────────────────────────────────────────
+// Giriş ekranındaki "Beni Hatırla" kaldırıldı; oturum artık HER ZAMAN
+// kalıcıdır. Bu yüzden rol/ad/token bilgisi localStorage'a yazılır, sekme
+// kapatılsa da oturum korunur. (Supabase token zaten localStorage'da idi.)
+// Geriye dönük uyum: eski sürümden sessionStorage'da kalmış veri de okunur.
+function oturumSet(k, v) {
+  try { localStorage.setItem(k, v); } catch (_) {}
+  try { sessionStorage.removeItem(k); } catch (_) {}
+}
+function oturumGet(k) {
+  var v = null;
+  try { v = localStorage.getItem(k); } catch (_) {}
+  if (v === null || v === undefined) { try { v = sessionStorage.getItem(k); } catch (_) {} }
+  return v;
+}
+function oturumSil(k) {
+  try { localStorage.removeItem(k); } catch (_) {}
+  try { sessionStorage.removeItem(k); } catch (_) {}
+}
+
 function applyLoginState(role, displayName, isSupabaseAuth) {
-  sessionStorage.setItem('atik_kontrol_role', role);
-  sessionStorage.setItem('atik_kontrol_display_name', displayName);
-  if (isSupabaseAuth) sessionStorage.setItem('atik_kontrol_supabase_auth', 'true');
-  else sessionStorage.removeItem('atik_kontrol_supabase_auth');
-  sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+  oturumSet('atik_kontrol_role', role);
+  oturumSet('atik_kontrol_display_name', displayName);
+  if (isSupabaseAuth) oturumSet('atik_kontrol_supabase_auth', 'true');
+  else oturumSil('atik_kontrol_supabase_auth');
+  oturumSet('atik_kontrol_login_time', String(Date.now()));
+  try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
   localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
   document.getElementById('loginOverlay').classList.add('hidden');
   document.body.setAttribute('data-role', role);
@@ -106,9 +139,9 @@ function applyLoginState(role, displayName, isSupabaseAuth) {
 }
 
 function handleSupabaseLogout() {
-  sessionStorage.removeItem('atik_kontrol_role');
-  sessionStorage.removeItem('atik_kontrol_display_name');
-  sessionStorage.removeItem('atik_kontrol_supabase_auth');
+  oturumSil('atik_kontrol_role');
+  oturumSil('atik_kontrol_display_name');
+  oturumSil('atik_kontrol_supabase_auth');
 }
 
 // ─── REMOTE PASSWORD HASH CACHE (legacy) ──────────────────────────────────────
@@ -541,7 +574,7 @@ async function sha256(str) {
 }
 
 function getRole() {
-  return sessionStorage.getItem('atik_kontrol_role') || '';
+  return oturumGet('atik_kontrol_role') || '';
 }
 
 // Harcama (₺) bilgileri yalnızca admin rolüne görünür
@@ -555,7 +588,7 @@ function harcamaHiddenCss() {
 }
 
 function isUsingSupabaseAuth() {
-  return sessionStorage.getItem('atik_kontrol_supabase_auth') === 'true';
+  return oturumGet('atik_kontrol_supabase_auth') === 'true';
 }
 
 function isAdminSessionValid() {
@@ -567,7 +600,7 @@ function isAdminSessionValid() {
   }
 
   // Legacy: client-side hash kontrolü
-  const storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
+  const storedHash = oturumGet('atik_kontrol_admin_hash_proof');
   if (!storedHash) return false;
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
 
@@ -586,13 +619,13 @@ function requireAdmin() {
   if (isUsingSupabaseAuth() && supabaseClient) {
     if (!supabaseSession) {
       showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
-      sessionStorage.removeItem('atik_kontrol_role');
+      oturumSil('atik_kontrol_role');
       location.reload();
       return false;
     }
   } else if (role === ROLE_ADMIN) {
     // Legacy admin: hash proof kontrolü
-    var storedHash = sessionStorage.getItem('atik_kontrol_admin_hash_proof');
+    var storedHash = oturumGet('atik_kontrol_admin_hash_proof');
     if (!storedHash) {
       showToast('Bu işlem için admin yetkisi gerekli.', 'error');
       return false;
@@ -631,15 +664,15 @@ async function doLogin() {
   }
 
   if (role) {
-    sessionStorage.setItem('atik_kontrol_role', role);
-    sessionStorage.setItem('atik_kontrol_display_name', displayName);
-    sessionStorage.removeItem('atik_kontrol_supabase_auth');
+    oturumSet('atik_kontrol_role', role);
+    oturumSet('atik_kontrol_display_name', displayName);
+    oturumSil('atik_kontrol_supabase_auth');
     if (role === ROLE_ADMIN) {
-      sessionStorage.setItem('atik_kontrol_admin_hash_proof', inputHash);
-      sessionStorage.setItem('atik_kontrol_login_time', String(Date.now()));
+      oturumSet('atik_kontrol_admin_hash_proof', inputHash);
+      oturumSet('atik_kontrol_login_time', String(Date.now()));
     }
     localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
-    rememberLoginUser(username);
+    try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
     document.getElementById('loginOverlay').classList.add('hidden');
     document.body.setAttribute('data-role', role);
     document.getElementById('roleBadge').textContent = displayName;
@@ -658,8 +691,9 @@ async function doLogin() {
       password: password
     });
     if (!signInError && signInData && signInData.session) {
-      // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek
-      rememberLoginUser(username);
+      // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek.
+      // applyLoginState() handleSupabaseLogin() içinde çağrılır.
+      try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
       return;
     }
   }
@@ -766,23 +800,33 @@ function closeAdminPanel() {
   document.body.style.overflow = '';
 }
 
-function doLogout() {
-  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' çıkış yaptı');
-  // Supabase Auth'ten çıkış yap
+async function doLogout() {
+  logIslem('logout', (oturumGet('atik_kontrol_display_name') || 'bilinmiyor') + ' çıkış yaptı');
+  // Supabase Auth'ten çıkış yap. localStorage'a yazıldığı için token'ı
+  // AWAIT ile silinmeli; aksi halde aşağıdaki koruma listesi geçici token'ı
+  // geri yazıp oturumu canlandırırdı.
   if (supabaseClient && isUsingSupabaseAuth()) {
-    supabaseClient.auth.signOut();
+    try { await supabaseClient.auth.signOut(); } catch (_) {}
   }
-  // Tüm veriyi temizle (sekme bazlı sessionStorage)
+  // Oturum verisi artık localStorage'da; çıkışta silinmeli.
+  oturumSil('atik_kontrol_role');
+  oturumSil('atik_kontrol_display_name');
+  oturumSil('atik_kontrol_supabase_auth');
+  oturumSil('atik_kontrol_admin_hash_proof');
+  oturumSil('atik_kontrol_login_time');
+  try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
+  // Tüm veriyi temizle
   var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel', 'atik_kontrol_inactivity_timeout'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
   });
+  // Token çıkışta silinmiş olmalı; yine de kalıntı varsa geri yazma.
+  delete preserved['sb-' + SUPABASE_URL + '-auth-token'];
   localStorage.clear();
   Object.keys(preserved).forEach(function(k) {
     try { localStorage.setItem(k, preserved[k]); } catch (_) {}
   });
-  // sessionStorage'ı da temizle (veriler burada duruyor)
   try { sessionStorage.clear(); } catch (_) {}
   // Service Worker önbelleğini temizle
   if ('caches' in window) {
@@ -1363,26 +1407,6 @@ function populateLoginUsers() {
     opt.textContent = user.displayName;
     select.appendChild(opt);
   });
-  // Beni Hatırla: daha önce seçilmiş kullanıcıyı geri yükle
-  var remembered = localStorage.getItem('atik_kontrol_remember_user');
-  if (remembered) {
-    var found = false;
-    for (var i = 0; i < select.options.length; i++) {
-      if (select.options[i].value === remembered) { select.selectedIndex = i; found = true; break; }
-    }
-    var rm = document.getElementById('rememberMe');
-    if (found && rm) rm.checked = true;
-    if (remembered && !found && rm) rm.checked = false;
-  }
-}
-
-function rememberLoginUser(username) {
-  var rm = document.getElementById('rememberMe');
-  if (rm && rm.checked && username) {
-    localStorage.setItem('atik_kontrol_remember_user', username);
-  } else if (!rm || !rm.checked) {
-    localStorage.removeItem('atik_kontrol_remember_user');
-  }
 }
 
 function togglePwVisibility() {
@@ -1422,8 +1446,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   populateLoginUsers();
   document.getElementById('loginPassword').focus();
 
-  var existingRole = sessionStorage.getItem('atik_kontrol_role');
+  var existingRole = oturumGet('atik_kontrol_role');
   var isSupabaseAuth = isUsingSupabaseAuth();
+
+  // Hareketsizlik kilidi: oturum verisi korunur ama kullanıcı şifre girmeli.
+  // Bayrak sessionStorage'da tutulur -> sayfa yenilense bile kilitli kalır,
+  // tarayıcı tamamen kapatılıp açılınca ise oturum otomatik geri gelir.
+  var kilitli = false;
+  try { kilitli = sessionStorage.getItem('atik_kontrol_locked') === '1'; } catch (_) {}
+  if (kilitli) {
+    try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
+    existingRole = '';
+  }
 
   if (existingRole) {
     // Supabase Auth ile giriş yapıldıysa session'ı doğrula
@@ -1431,22 +1465,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       var { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         // Session geçersiz, legacy'e düş veya login göster
-        sessionStorage.removeItem('atik_kontrol_role');
-        sessionStorage.removeItem('atik_kontrol_supabase_auth');
+        oturumSil('atik_kontrol_role');
+        oturumSil('atik_kontrol_supabase_auth');
       }
     }
-    existingRole = sessionStorage.getItem('atik_kontrol_role');
+    existingRole = oturumGet('atik_kontrol_role');
     if (existingRole) {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.body.setAttribute('data-role', existingRole);
-      var displayName = sessionStorage.getItem('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
+      var displayName = oturumGet('atik_kontrol_display_name') || (existingRole === ROLE_ADMIN ? 'Admin' : 'Görüntüleme');
       document.getElementById('roleBadge').textContent = displayName;
       renderAdminPanelBtn();
       applyRolePermissions();
     }
   }
 
-  if (!sessionStorage.getItem('atik_kontrol_role')) {
+  if (!oturumGet('atik_kontrol_role')) {
     await new Promise(resolve => {
       window._loginResolve = resolve;
       window._loginAttempts = 0;
@@ -1622,12 +1656,15 @@ function apRenderInactivityTimeout() {
 }
 
 function lockScreen() {
-  logIslem('logout', (sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kapattı');
+  logIslem('logout', (oturumGet('atik_kontrol_display_name') || 'bilinmiyor') + ' oturumu kilitledi');
   stopPolling();
-  if (supabaseClient && isUsingSupabaseAuth()) {
-    supabaseClient.auth.signOut();
-  }
-  sessionStorage.removeItem('atik_kontrol_role');
+  // Oturum KALICI: token ve rol SİLİNMEZ. Önceden burada signOut() çağrılıyor
+  // ve rol siliniyordu; bu yüzden "Beni Hatırla" işareti olsa bile 5 dakika
+  // sonra kullanıcı tamamen çıkış yapılmış oluyordu.
+  // Sadece aynı sekmede "kilitli" bayrağı set edilir: şifre girilmeden
+  // içeri girilemez, sayfa yenilense bile kilitli kalır. Tarayıcı tamamen
+  // kapatılıp açıldığında bayrak gider ve oturum otomatik geri gelir.
+  try { sessionStorage.setItem('atik_kontrol_locked', '1'); } catch (_) {}
   document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').style.display = 'none';
@@ -3329,8 +3366,8 @@ function syncAmbalajSilent() {
 
 async function logIslem(islem, detay) {
   if (!supabaseClient) return;
-  var displayName = sessionStorage.getItem('atik_kontrol_display_name') || 'bilinmiyor';
-  var role = sessionStorage.getItem('atik_kontrol_role') || '';
+  var displayName = oturumGet('atik_kontrol_display_name') || 'bilinmiyor';
+  var role = oturumGet('atik_kontrol_role') || '';
   try {
     await supabaseClient.from('user_logs').insert({
       tarih: new Date().toISOString(),
@@ -7785,7 +7822,12 @@ function loadYemekler() {
   return yemeklerCache;
 }
 
-function saveYemekler(list) { if (!requireAdmin()) return;
+function saveYemekler(list) {
+  // canEditMenuRecords() adminleri de kapsar (hasPerm). Yetki yoksa requireAdmin'a
+  // düşülür; onda ek olarak oturum geçerliliği kontrol edilir. Önceden sadece
+  // requireAdmin vardı: canEditMenu yetkisi olan (admin olmayan) kullanıcı
+  // değişiklik yapamıyordu.
+  if (!canEditMenuRecords() && !requireAdmin()) return;
   yemeklerCache = list;
   renderMenuCesidiKpi();
   syncDishesToSupabase().catch(() => {});
@@ -8046,12 +8088,37 @@ function editYemek(id) {
   showYemekForm(id);
 }
 
-function deleteYemek(id) { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+async function deleteYemek(id) {
+  if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
-  let list = loadYemekler();
-  list = list.filter(y => y.id !== id);
-  saveYemekler(list);
+  // Yalnızca verilen id silinir; aynı adlı mükerrer kayıtlar etkilenmez.
+  // ASIL HATA: saveYemekler -> syncDishesToSupabase sadece upsert yapar, dishes
+  // tablosuna HİÇ DELETE gitmezdi. Satır ekrandan silinip "başarılı" deniyor,
+  // modal tekrar açılınca (syncDishesFromSupabase) veya sayfa yenilenince geri
+  // geliyordu. Mükerrer kayıtta geri dönen satır diğeriyle karıştığı için
+  // "silinmiyor" izlenimi veriyordu.
+  // Sunucu hatasında liste ile veritabanı tutmaz hale gelmesin diye silinen
+  // satır saklanıp hata halinde geri konur (deleteUnitPrice deseni).
+  var onceki = yemeklerCache.slice();
+  var hedef = onceki.filter(function(y) { return y.id === id; });
+  if (hedef.length === 0) { showToast('Kayıt bulunamadı.', 'error'); return; }
+  yemeklerCache = onceki.filter(function(y) { return y.id !== id; });
+  renderMenuCesidiKpi();
   renderYemekListesi();
+  if (!supabaseClient) { showToast('Yemek silindi.', 'success'); return; }
+  bfSonHata = null;
+  try {
+    var { error } = await supabaseClient.from('dishes').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    bfSonHata = e;
+    console.error('Supabase deleteYemek error:', e);
+    yemeklerCache = onceki;
+    renderMenuCesidiKpi();
+    renderYemekListesi();
+    showToast(bfSonHata ? bfSupabaseHataMesaji(bfSonHata) : 'Sunucudan silinemedi; kayıt listede bırakıldı.', 'error');
+    return;
+  }
   showToast('Yemek silindi.', 'success');
 }
 
@@ -8653,6 +8720,86 @@ function setYillikPrevYear(year) {
 // Bu yüzden formatter/renk fonksiyonları ASLA options'a yazılmaz; sadece
 // anahtar (string) verilir, fonksiyonlar aşağıda seçilir.
 
+// Yıllık yüzde-değişim çizgisi için %0 referans çizgisi.
+// options.yearlyPctZeroLine: { color, grid } sadece renk string'leri alır.
+const yearlyPctZeroLinePlugin = {
+  id: 'yearlyPctZeroLine',
+  beforeDatasetsDraw(chart) {
+    var opts = chart.options.plugins.yearlyPctZeroLine;
+    chart.$zeroLineBox = null;
+    if (!opts) return;
+    var y = chart.scales && chart.scales.y ? chart.scales.y.getPixelForValue(0) : null;
+    var area = chart.chartArea;
+    if (y === null || !area) return;
+    var ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = opts.color || '#94a3b8';
+    ctx.moveTo(area.left, y);
+    ctx.lineTo(area.right, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '600 9px Inter, sans-serif';
+    ctx.fillStyle = opts.grid || '#94a3b8';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('0%', area.right, y - 2);
+    // "0%" yazısı sağ kenarda, ARALIK noktasının üstüne biner.
+    // yearlyPctPointLabelPlugin bunu çakışma listesine eklesin.
+    var w = ctx.measureText('0%').width;
+    chart.$zeroLineBox = { x1: area.right - w - 1, x2: area.right + 1, y1: y - 2 - 9, y2: y - 2 + 1 };
+    ctx.restore();
+  }
+};
+
+// Yıllık yıllar-arası fark çizgisinde nokta üstü rakam etiketleri.
+// chartValueLabelPlugin çizgi dataset'lerini attığı için ayrı eklenti.
+// options.yearlyPctPointLabels: { fontSize, renkPos, renkNeg } -> hepsi string.
+// Etiketler çakışırsa atlanır (kutu çakışma testi).
+const yearlyPctPointLabelPlugin = {
+  id: 'yearlyPctPointLabels',
+  afterDatasetsDraw(chart) {
+    var opts = chart.options.plugins.yearlyPctPointLabels;
+    if (!opts || opts.enabled === false) return;
+    var ctx = chart.ctx;
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var fallback = isDark ? '#e2e8f0' : '#334155';
+    var size = opts.fontSize || 12;
+    ctx.save();
+    ctx.font = '700 ' + size + 'px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    var half = size * 0.62;
+    var boxes = [];
+    // %0 referans yazısı ("0%") nokta etiketiyle çakışabilir -> önce mevcut say
+    if (chart.$zeroLineBox) boxes.push(chart.$zeroLineBox);
+    chart.data.datasets.forEach(function(ds, di) {
+      var meta = chart.getDatasetMeta(di);
+      meta.data.forEach(function(pt, idx) {
+        if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') return;
+        var raw = ds.data[idx];
+        if (typeof raw !== 'number' || !isFinite(raw)) return;
+        var text = (raw > 0 ? '+' : '') + raw.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + '%';
+        var w = ctx.measureText(text).width / 2;
+        var y = raw < 0 ? pt.y + half + 2 : pt.y - half - 2;
+        var box = { x1: pt.x - w, x2: pt.x + w, y1: y - half, y2: y + half };
+        for (var i = 0; i < boxes.length; i++) {
+          var o = boxes[i];
+          if (!(box.x2 < o.x1 || box.x1 > o.x2 || box.y2 < o.y1 || box.y1 > o.y2)) return;
+        }
+        boxes.push(box);
+        // renk: pozitif/negatif ayrımı varsa onu kullan, yoksa çizgi rengi
+        if (opts.renkPos && opts.renkNeg) ctx.fillStyle = raw >= 0 ? opts.renkPos : opts.renkNeg;
+        else ctx.fillStyle = ds.borderColor || fallback;
+        ctx.fillText(text, pt.x, y);
+      });
+    });
+    ctx.restore();
+  }
+};
+
 function renderYearlyCharts() {
   renderYillikYearFilter();
 
@@ -8903,6 +9050,170 @@ function renderYearlyCharts() {
     chartInstances.set(canvasId, chart);
   }
 
+  // Yıllık üretim grafiğinin altındaki YÜZDE DEĞİŞİM çizgileri (2 çizgi).
+  // Seçili iki yılın AYdan AYA % değişimi: (bu ay - önceki ay) / önceki ay * 100.
+  // Üstteki çubuk grafiğinin iki yılını (düz + kesikli) aynen yansıtır:
+  // Yıllık karşılaştırma kartlarının altındaki YILLAR ARASI FARK çizgisi.
+  // (seçili yıl - karşılaştırma yılı) / karşılaştırma yılı * 100, aynı ay için.
+  // Taban ay 0 ise yüzde hesaplanamaz -> o nokta null (boşluk), 0 DEĞİL.
+  // Tooltip mutlak değerleri de gösterir, böylece yüzdenin nereye göre
+  // olduğu görülür (küçük tabanda şişen yüzde okunur hale gelir).
+  function makeYillikPctLineChart(canvasId, emptyId, unitLabel, metricColor, getThis, getPrev) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var staleInstance = chartInstances.get(canvasId);
+    if (staleInstance) { try { staleInstance.destroy(); } catch (_) {} chartInstances.delete(canvasId); }
+    var empty = document.getElementById(emptyId);
+
+    function emptyGoster(key) {
+      if (empty) {
+        empty.style.display = 'block';
+        empty.setAttribute('data-i18n', key);
+        empty.textContent = t(key);
+      }
+      canvas.style.display = 'none';
+    }
+    function bosDoldur() {
+      if (empty) { empty.style.display = 'none'; empty.setAttribute('data-i18n', 'yearlyPctNoPrev'); }
+      canvas.style.display = 'block';
+    }
+
+    if (!hasPrev) { emptyGoster('yearlyPctNoPrev'); return; }
+
+    var data = monthLabels.map(function(_, m) {
+      var simdi = getThis(thisData[m]) || 0;
+      var once = getPrev(prevData[m]) || 0;
+      if (once <= 0) return null;
+      return (simdi - once) / once * 100;
+    });
+    if (!data.some(function(v) { return v !== null; })) { emptyGoster('chartEmpty'); return; }
+    bosDoldur();
+
+    var parent = canvas.parentElement;
+    var w = Math.min(parent.offsetWidth || 900, parent.clientWidth || 900);
+    var h = Math.min(parent.offsetHeight || 200, parent.clientHeight || 200);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var colors = {
+      text: isDark ? '#e2e8f0' : '#1e293b',
+      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    };
+    var up = isDark ? '#4ade80' : '#16a34a';
+    var down = isDark ? '#f87171' : '#dc2626';
+    // çizgi rengi kartın ana rengiyle aynı -> hangi karta ait olduğu belli olur
+    var line = metricColor;
+    var fillUp = isDark ? 'rgba(74,222,128,0.16)' : 'rgba(22,163,74,0.12)';
+    var fillDown = isDark ? 'rgba(248,113,113,0.16)' : 'rgba(220,38,38,0.12)';
+
+    var pts = data.filter(function(v) { return v !== null; });
+    var maxAbs = Math.max.apply(null, pts.map(function(v) { return Math.abs(v); }));
+    var bound = Math.max(5, Math.ceil(maxAbs * 1.2 / 5) * 5);
+
+    var chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [{
+          label: sel + ' vs ' + prev,
+          data: data,
+          borderColor: line,
+          borderWidth: 2,
+          tension: 0.55,
+          // yüksek tension'da eğri veri noktalarının dışına taşabilir; monotone
+          // bunu engeller (yoksa %0 altına inip yanlış dalgalanma izlenimi verir)
+          cubicInterpolationMode: 'monotone',
+          spanGaps: true,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: isDark ? '#0f172a' : '#ffffff',
+          pointBorderColor: line,
+          pointBorderWidth: 2,
+          pointHitRadius: 12,
+          fill: {
+            target: 'origin',
+            above: fillUp,
+            below: fillDown,
+          },
+          // 0'ın üstü yeşil, altı kırmızı
+          segment: {
+            borderColor: function(c) { return c.p1.parsed.y >= 0 ? up : down; },
+          },
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+        animation: { duration: 900, easing: 'easeOutCubic' },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#000000',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: 'rgba(255,255,255,0.2)',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            bodyFont: { size: 11, family: 'Inter' },
+            titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+            callbacks: {
+              label: function(c) {
+                if (c.parsed.y === null || c.parsed.y === undefined) return ' -';
+                return ' ' + (c.parsed.y > 0 ? '+' : '') + c.parsed.y.toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + '%';
+              },
+              // mutlak değerler: yüzdenin tabanını da göster
+              afterBody: function(items) {
+                var m = items[0].dataIndex;
+                var simdi = getThis(thisData[m]) || 0;
+                var once = getPrev(prevData[m]) || 0;
+                return [
+                  '',
+                  prev + ': ' + once.toLocaleString('tr-TR') + unitLabel + ' → ' + sel + ': ' + simdi.toLocaleString('tr-TR') + unitLabel,
+                  'Fark: ' + (simdi - once > 0 ? '+' : '') + (simdi - once).toLocaleString('tr-TR') + unitLabel,
+                ];
+              }
+            }
+          },
+          yearlyPctZeroLine: { color: colors.text, grid: colors.grid },
+          yearlyPctPointLabels: { fontSize: 14, renkPos: up, renkNeg: down },
+        },
+        scales: {
+          x: {
+            ticks: { color: colors.text, font: { size: 11, family: 'Inter' }, maxRotation: 0, autoSkip: false },
+            grid: { display: false }
+          },
+          y: {
+            min: -bound,
+            max: bound,
+            ticks: {
+              color: colors.text,
+              font: { size: 11, family: 'Inter' },
+              maxTicksLimit: 5,
+              callback: function(v) { return (v > 0 ? '+' : '') + v + '%'; }
+            },
+            grid: { color: function(ctx) { return ctx.tick.value === 0 ? 'rgba(148,163,184,0.55)' : 'rgba(0,0,0,0.04)'; } }
+          }
+        },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            var m = elements[0].index;
+            var recs = records.filter(function(r) {
+              if (!r.tarih) return false;
+              var d = new Date(r.tarih + 'T12:00:00');
+              return !isNaN(d) && d.getFullYear() === sel && d.getMonth() === m;
+            });
+            if (recs.length > 0) showChartDetailModal(monthLabels[m] + ' ' + sel, recs);
+          }
+        }
+      },
+      plugins: [yearlyPctZeroLinePlugin, yearlyPctPointLabelPlugin]
+    });
+    chartInstances.set(canvasId, chart);
+  }
 
   function verimOrani(v) {
     var uretim = v.uretim || 0;
@@ -9031,12 +9342,18 @@ function renderYearlyCharts() {
     });
     chartInstances.set(canvasId, chart);
   }
-
   try { makeYillikChart('canvasYillikUretim', 'chartYillikUretimEmpty', '#6366f1', function(v) { return v.uretim; }, function(v) { return v.uretim; }); } catch (e) { console.warn('yillik uretim:', e); }
   try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
   try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#0ea5e9', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
   try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
 
+  // Her "1. yıl vs 2. yıl" kartının altına yıllar arası % fark çizgisi.
+  // Atık Verimliliği kartı hariç: zaten % olduğu için yüzde farkı anlamsız.
+  function pctYillikField(field) { return function(v) { return v[field]; }; }
+  try { makeYillikPctLineChart('canvasYillikPctUretim', 'chartYillikPctUretimEmpty', ' porsiyon', '#6366f1', pctYillikField('uretim'), pctYillikField('uretim')); } catch (e) { console.warn('yillik uretim yuzde:', e); }
+  try { makeYillikPctLineChart('canvasYillikPctTurnike', 'chartYillikPctTurnikeEmpty', ' geçiş', '#10b981', pctYillikField('turnike'), pctYillikField('turnike')); } catch (e) { console.warn('yillik turnike yuzde:', e); }
+  try { makeYillikPctLineChart('canvasYillikPctOgrenci', 'chartYillikPctOgrenciEmpty', ' geçiş', '#0ea5e9', pctYillikField('ogrenci'), pctYillikField('ogrenci')); } catch (e) { console.warn('yillik ogrenci yuzde:', e); }
+  try { makeYillikPctLineChart('canvasYillikPctAtik', 'chartYillikPctAtikEmpty', ' kg', '#f97316', pctYillikField('atik'), pctYillikField('atik')); } catch (e) { console.warn('yillik atik yuzde:', e); }
 
   try { makeYillikVerimChart(); } catch (e) { console.warn('yillik verim:', e); }
 
@@ -10854,7 +11171,7 @@ async function menuOnayaGonder() {
   weekData._durum = { durum: MENU_DURUMLAR.ONAY_BEKLIYOR, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_onaya_gonder', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
+  logIslem('menu_onaya_gonder', oturumGet('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
   showToast('Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.', 'success');
   await renderMenu();
 }
@@ -10867,7 +11184,7 @@ async function menuOnayla() {
     showToast('Onaylanacak bekleyen menü yok (durum: ' + menuDurumLabel(meta.durum) + ').', 'error');
     return;
   }
-  const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
+  const displayName = oturumGet('atik_kontrol_display_name') || getRole();
   ctx.weekData._durum = { durum: MENU_DURUMLAR.ONAYLANDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: '' };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
@@ -10897,7 +11214,7 @@ async function menuReddetApply(not) {
     showToast('Menü bekleyen durumda değil.', 'error');
     return;
   }
-  const displayName = sessionStorage.getItem('atik_kontrol_display_name') || getRole();
+  const displayName = oturumGet('atik_kontrol_display_name') || getRole();
   ctx.weekData._durum = { durum: MENU_DURUMLAR.REDDEDILDI, onaylayan: displayName, onay_tarihi: new Date().toISOString(), onay_notu: not };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
@@ -10918,7 +11235,7 @@ async function menuOnayGeriCek() {
   ctx.weekData._durum = { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
-  logIslem('menu_onay_kaldir', sessionStorage.getItem('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünün onayını kaldırdı');
+  logIslem('menu_onay_kaldir', oturumGet('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünün onayını kaldırdı');
   showToast('Onay kaldırıldı, menü düzenlemeye açık.', 'success');
   await renderMenu();
 }
@@ -13638,7 +13955,6 @@ var I18N = {
     loginFeature1: "Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi",
     loginFeature2: "Detaylı Raporlama",
     loginFeature3: "Canlı Panel ve Grafikler",
-    loginRemember: "Beni Hatırla",
     loginForgot: "Şifremi Unuttum?",
     loginForgotTitle: "Şifremi Unuttum",
     loginForgotText: "Şifre talebi için lütfen mustafa.orhan@ahievran.edu.tr adresine e-posta gönderin.",
@@ -13870,6 +14186,8 @@ var I18N = {
     yearlyWasteComp: "Atık Karşılaştırması (kg)",
     yearlyWasteNote: "Yıl toplamı - 1. yıl vs 2. yıl (kg)",
     yearlyMonthlyProd: "Aylık Üretim Karşılaştırması",
+    yearlyPctLineTitle: "Aylık Yüzde Değişim",
+    yearlyPctNoPrev: "Karşılaştırma için 2. yıl seçiniz",
     yearlyMonthlyProdNote: "1. yıl vs 2. yıl - üretilen yemek sayısı (porsiyon)",
     yearlyMonthlyTurnstile: "Aylık Turnike Geçiş Karşılaştırması",
     yearlyMonthlyTurnstileNote: "1. yıl vs 2. yıl - turnike geçiş sayısı",
@@ -14043,7 +14361,6 @@ var I18N = {
     loginFeature1: "Menu Planning, Daily Production, Consumption & Waste Tracking",
     loginFeature2: "Detailed Reporting",
     loginFeature3: "Live Dashboard & Charts",
-    loginRemember: "Remember Me",
     loginForgot: "Forgot Password?",
     loginForgotTitle: "Forgot Password",
     loginForgotText: "Please contact your System Administrator to reset your password.",
@@ -14275,6 +14592,8 @@ var I18N = {
     yearlyWasteComp: "Waste Comparison (kg)",
     yearlyWasteNote: "Year total - Year 1 vs Year 2 (kg)",
     yearlyMonthlyProd: "Monthly Production Comparison",
+    yearlyPctLineTitle: "Monthly Percentage Change",
+    yearlyPctNoPrev: "Select a 2nd year to compare",
     yearlyMonthlyProdNote: "Year 1 vs Year 2 - meals produced (portions)",
     yearlyMonthlyTurnstile: "Monthly Turnstile Pass Comparison",
     yearlyMonthlyTurnstileNote: "Year 1 vs Year 2 - turnstile pass count",
@@ -14448,7 +14767,6 @@ var I18N = {
     loginFeature1: "Menyu Planlaması, Günlük İstehsal, İstehlak və Tullantı İzləmə",
     loginFeature2: "Ətraflı Hesabatlar",
     loginFeature3: "Canlı Panel və Qrafiklər",
-    loginRemember: "Məni Xatırla",
     loginForgot: "Şifrəmi Unutdum?",
     loginForgotTitle: "Şifrəmi Unutdum",
     loginForgotText: "Şifrənizi sıfırlamaq üçün Sistem Administratorunuzla əlaqə saxlayın.",
@@ -14680,6 +14998,8 @@ var I18N = {
     yearlyWasteComp: "Tullantı Müqayisəsi (kg)",
     yearlyWasteNote: "İl cəmi - 1. il vs 2. il (kg)",
     yearlyMonthlyProd: "Aylıq İstehsal Müqayisəsi",
+    yearlyPctLineTitle: "Aylıq Faiz Dəyişməsi",
+    yearlyPctNoPrev: "Müqayisə üçün 2-ci il seçin",
     yearlyMonthlyProdNote: "1. il vs 2. il - istehsal olunan yemək sayı (porsiyon)",
     yearlyMonthlyTurnstile: "Aylıq Turnike Keçid Müqayisəsi",
     yearlyMonthlyTurnstileNote: "1. il vs 2. il - turnike keçid sayı",
@@ -14839,7 +15159,6 @@ var I18N = {
     loginFeature1: "Меню, ежедневное производство, потребление и отходы",
     loginFeature2: "Подробные отчёты",
     loginFeature3: "Живая панель и графики",
-    loginRemember: "Запомнить меня",
     loginForgot: "Забыли пароль?",
     loginForgotTitle: "Забыли пароль",
     loginForgotText: "Для сброса пароля свяжитесь с системным администратором.",
@@ -15071,6 +15390,8 @@ var I18N = {
     yearlyWasteComp: "Сравнение отходов (кг)",
     yearlyWasteNote: "Итого за год - 1-й год vs 2-й год (кг)",
     yearlyMonthlyProd: "Ежемесячное сравнение производства",
+    yearlyPctLineTitle: "Ежемесячное изменение в процентах",
+    yearlyPctNoPrev: "Выберите 2-й год для сравнения",
     yearlyMonthlyProdNote: "1-й год vs 2-й год - произведённые блюда (порции)",
     yearlyMonthlyTurnstile: "Ежемесячное сравнение проходов через турникет",
     yearlyMonthlyTurnstileNote: "1-й год vs 2-й год - количество проходов",
@@ -15230,7 +15551,6 @@ var I18N = {
     loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
     loginFeature2: "تقارير مفصلة",
     loginFeature3: "لوحة مباشرة ورسوم بيانية",
-    loginRemember: "تذكرني",
     loginForgot: "نسيت كلمة المرور؟",
     loginForgotTitle: "نسيت كلمة المرور",
     loginForgotText: "لإعادة تعيين كلمة المرور، يرجى التواصل مع مسؤول النظام.",
@@ -15462,6 +15782,8 @@ var I18N = {
     yearlyWasteComp: "مقارنة النفايات (كغ)",
     yearlyWasteNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (كغ)",
     yearlyMonthlyProd: "مقارنة الإنتاج الشهري",
+    yearlyPctLineTitle: "التغير الشهري بالنسبة المئوية",
+    yearlyPctNoPrev: "اختر السنة الثانية للمقارنة",
     yearlyMonthlyProdNote: "السنة الأولى vs السنة الثانية - الوجبات المُنتجة (حصص)",
     yearlyMonthlyTurnstile: "مقارنة عبور البوابة الدوّارة الشهري",
     yearlyMonthlyTurnstileNote: "السنة الأولى vs السنة الثانية - عدد عبور البوابة الدوّارة",
@@ -15621,7 +15943,6 @@ var I18N = {
     loginFeature1: "Menüplanung, tägliche Produktion, Verbrauch & Abfallverfolgung",
     loginFeature2: "Detaillierte Berichte",
     loginFeature3: "Live-Dashboard & Diagramme",
-    loginRemember: "Angemeldet bleiben",
     loginForgot: "Passwort vergessen?",
     loginForgotTitle: "Passwort vergessen",
     loginForgotText: "Bitte wenden Sie sich zum Zurücksetzen des Passworts an Ihren Systemadministrator.",
@@ -15853,6 +16174,8 @@ var I18N = {
     yearlyWasteComp: "Abfall-Vergleich (kg)",
     yearlyWasteNote: "Jahresgesamt - Jahr 1 vs Jahr 2 (kg)",
     yearlyMonthlyProd: "Monatlicher Produktionsvergleich",
+    yearlyPctLineTitle: "Monatliche prozentuale Änderung",
+    yearlyPctNoPrev: "Wählen Sie ein 2. Jahr zum Vergleich",
     yearlyMonthlyProdNote: "Jahr 1 vs Jahr 2 - hergestellte Mahlzeiten (Portionen)",
     yearlyMonthlyTurnstile: "Monatlicher Drehkreuz-Vergleich",
     yearlyMonthlyTurnstileNote: "Jahr 1 vs Jahr 2 - Anzahl der Drehkreuzdurchgänge",
@@ -16012,7 +16335,6 @@ var I18N = {
     loginFeature1: "Planification du menu, production quotidienne, consommation et déchets",
     loginFeature2: "Rapports détaillés",
     loginFeature3: "Tableau de bord en direct et graphiques",
-    loginRemember: "Se souvenir de moi",
     loginForgot: "Mot de passe oublié ?",
     loginForgotTitle: "Mot de passe oublié",
     loginForgotText: "Veuillez contacter votre administrateur système pour réinitialiser le mot de passe.",
@@ -16244,6 +16566,8 @@ var I18N = {
     yearlyWasteComp: "Comparaison des déchets (kg)",
     yearlyWasteNote: "Total annuel - Année 1 vs Année 2 (kg)",
     yearlyMonthlyProd: "Comparaison mensuelle de la production",
+    yearlyPctLineTitle: "Variation mensuelle en pourcentage",
+    yearlyPctNoPrev: "Sélectionnez une 2e année pour comparer",
     yearlyMonthlyProdNote: "Année 1 vs Année 2 - repas produits (portions)",
     yearlyMonthlyTurnstile: "Comparaison mensuelle des passages au tourniquet",
     yearlyMonthlyTurnstileNote: "Année 1 vs Année 2 - nombre de passages au tourniquet",
@@ -16403,7 +16727,6 @@ var I18N = {
     loginFeature1: "Planificación de menú, producción diaria, consumo y residuos",
     loginFeature2: "Informes detallados",
     loginFeature3: "Panel en vivo y gráficos",
-    loginRemember: "Recuérdame",
     loginForgot: "¿Olvidó su contraseña?",
     loginForgotTitle: "Contraseña olvidada",
     loginForgotText: "Para restablecer su contraseña, póngase en contacto con el administrador del sistema.",
@@ -16635,6 +16958,8 @@ var I18N = {
     yearlyWasteComp: "Comparación de residuos (kg)",
     yearlyWasteNote: "Total anual - Año 1 vs Año 2 (kg)",
     yearlyMonthlyProd: "Comparación mensual de producción",
+    yearlyPctLineTitle: "Cambio porcentual mensual",
+    yearlyPctNoPrev: "Seleccione un 2º año para comparar",
     yearlyMonthlyProdNote: "Año 1 vs Año 2 - comidas producidas (porciones)",
     yearlyMonthlyTurnstile: "Comparación mensual de pasadas por torniquete",
     yearlyMonthlyTurnstileNote: "Año 1 vs Año 2 - cantidad de pasadas por torniquete",
@@ -16794,7 +17119,6 @@ var I18N = {
     loginFeature1: "Planejamento de cardápio, produção diária, consumo e resíduos",
     loginFeature2: "Relatórios detalhados",
     loginFeature3: "Painel ao vivo e gráficos",
-    loginRemember: "Lembrar de mim",
     loginForgot: "Esqueceu a senha?",
     loginForgotTitle: "Senha esquecida",
     loginForgotText: "Para redefinir sua senha, entre em contato com o administrador do sistema.",
@@ -17026,6 +17350,8 @@ var I18N = {
     yearlyWasteComp: "Comparação de resíduos (kg)",
     yearlyWasteNote: "Total anual - Ano 1 vs Ano 2 (kg)",
     yearlyMonthlyProd: "Comparação mensal da produção",
+    yearlyPctLineTitle: "Variação percentual mensal",
+    yearlyPctNoPrev: "Selecione um 2º ano para comparação",
     yearlyMonthlyProdNote: "Ano 1 vs Ano 2 - refeições produzidas (porções)",
     yearlyMonthlyTurnstile: "Comparação mensal de passagens pela catraca",
     yearlyMonthlyTurnstileNote: "Ano 1 vs Ano 2 - quantidade de passagens pela catraca",
@@ -17185,7 +17511,6 @@ var I18N = {
     loginFeature1: "Menyu rejalashtirish, kunlik ishlab chiqarish, iste'mol va chiqindilarni kuzatish",
     loginFeature2: "Batafsil hisobotlar",
     loginFeature3: "Jonli panel va grafiklar",
-    loginRemember: "Meni eslab qol",
     loginForgot: "Parolni unutdingizmi?",
     loginForgotTitle: "Parolni unutdingiz",
     loginForgotText: "Parolni tiklash uchun tizim administratoringiz bilan bog'laning.",
@@ -17417,6 +17742,8 @@ var I18N = {
     yearlyWasteComp: "Chiqindi taqqoslash (kg)",
     yearlyWasteNote: "Yil umumiy - 1-yil vs 2-yil (kg)",
     yearlyMonthlyProd: "Oylik ishlab chiqarish taqqoslash",
+    yearlyPctLineTitle: "Oylik foiz o'zgarishi",
+    yearlyPctNoPrev: "Taqqoslash uchun 2-yilni tanlang",
     yearlyMonthlyProdNote: "1-yil vs 2-yil - ishlab chiqarilgan ovqat soni (porsiya)",
     yearlyMonthlyTurnstile: "Oylik shlagbirdan o'tish taqqoslash",
     yearlyMonthlyTurnstileNote: "1-yil vs 2-yil - shlagbirdan o'tish soni",
