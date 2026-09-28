@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=99" />
+  <link rel="stylesheet" href="style.css?v=110" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -367,14 +367,14 @@
                 <span class="kpi-value" id="kpiTotalRecords">0</span>
               </div>
             </div>
-            <div class="kpi-card" id="kpi-bugun-uretim">
+            <div class="kpi-card" id="kpi-hafta-uretim">
               <div class="kpi-icon kpi-cyan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20v2a10 10 0 01-10 10h0a10 10 0 01-10-10v-2z"/><path d="M7 8l2-6h6l2 6H7z"/><path d="M10 4v2M14 4v2"/><path d="M12 14v4"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/><path d="M8 15h8"/></svg>
               </div>
               <div class="kpi-body">
-                <span class="kpi-label" data-i18n="kpiTodayProduction">Bugünkü Üretim</span>
-                <span class="kpi-value" id="kpiBugunYemek">—</span>
-                <span class="kpi-trend" id="kpiBugunYemekSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
+                <span class="kpi-label" data-i18n="kpiWeekProduction">Bu Haftaki Üretim</span>
+                <span class="kpi-value" id="kpiHaftaYemek">—</span>
+                <span class="kpi-trend" id="kpiHaftaYemekSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
               </div>
             </div>
           </div>
@@ -423,6 +423,16 @@
             <span class="kpi-label" data-i18n="kpiTotalPasses">Turnikeden Toplam Geçiş Rakamı</span>
             <span class="kpi-value" id="kpiLastGecis">0</span>
             <canvas class="kpi-sparkline" id="sparklineGecis"></canvas>
+          </div>
+        </div>
+        <div class="kpi-card" id="kpi-menu-cesit">
+          <div class="kpi-icon kpi-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M7 3v18M17 3v18"/><path d="M3 9h18M3 15h18"/></svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label" data-i18n="kpiMenuVariety">Toplam Menü Çeşidi Sayısı</span>
+            <span class="kpi-value" id="kpiMenuCesit">0</span>
+            <span class="kpi-trend" id="kpiMenuCesitSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
           </div>
         </div>
       </div>
@@ -1396,8 +1406,8 @@
     <div class="tab-content" id="content-yillik">
       <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
         <div class="chart-year-filter" id="yillikYearFilter" style="flex:1"></div>
-        <div class="toolbar-actions">
-          <button class="btn btn-outline" onclick="exportYillikPDF()" title="Yıllık karşılaştırmayı PDF olarak yazdır" data-i18n="yearlyPdfBtn">
+  <div class="toolbar-actions">
+  <button class="btn btn-outline" onclick="exportYillikPDF()" title="Yıllık karşılaştırmayı PDF olarak yazdır" data-i18n="yearlyPdfBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             PDF Yazdır
           </button>
@@ -2642,7 +2652,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=99"></script>
+  <script src="app.js?v=110"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

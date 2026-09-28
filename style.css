@@ -1559,11 +1559,12 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 /* nth-child gecikmeleri yeni kapsayıcıda sıfırlanacağı için kartlar kimliğe
    göre kademelenir: logodan sonra soldan sağa ve alt satıra doğru. */
 #kpi-toplam-kayit { animation-delay: 0.06s; }
-#kpi-bugun-uretim { animation-delay: 0.10s; }
+#kpi-hafta-uretim { animation-delay: 0.10s; }
 #kpi-haccp-alarm { animation-delay: 0.14s; }
 #kpi-kalibrasyon-alarm { animation-delay: 0.18s; }
 #kpi-ort-atik { animation-delay: 0.22s; }
 #kpi-toplam-gecis { animation-delay: 0.26s; }
+#kpi-menu-cesit { animation-delay: 0.30s; }
 
 @media (max-width: 1100px) {
   .kpi-hero { margin-top: 4rem; padding-top: 1rem; }
@@ -2501,6 +2502,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .chart-card .chart-area { margin: 0; }
 .chart-card-full { grid-column: 1 / -1; }
+
 .donut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
 .donut-grid .chart-card { padding: 1rem; margin-bottom: 0; }
 .donut-grid .chart-card .section-header { padding: 0; margin-bottom: 0.75rem; }

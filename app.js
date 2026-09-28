@@ -247,7 +247,7 @@ let lastPollData = null;
 let chartYearFilter = String(new Date().getFullYear());
 let chartMonthFilter = 0;
 let yillikYearFilter = String(new Date().getFullYear());
-let yillikPrevYearFilter = '';
+let yillikPrevYearFilter = String(new Date().getFullYear() - 1);
 let reportYearFilter = 0;
 let recordsYearFilter = 0;
 function getAvailableYears() {
@@ -5441,9 +5441,9 @@ async function switchTab(name) {
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
   const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
   document.getElementById('pageTitle').textContent = labels[name] || name;
-  localStorage.setItem('atik_kontrol_active_tab', name);
-  applyTranslations();
-}
+    localStorage.setItem('atik_kontrol_active_tab', name);
+    applyTranslations();
+  }
 
 // ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
 function toggleSidebar() {
@@ -6305,15 +6305,37 @@ function kpiYaz(id, metin) {
   const el = document.getElementById(id);
   if (el) el.textContent = metin;
 }
+// Toplam Menü Çeşidi Sayısı: aynı adlı menüleri tekilleştirir
+function renderMenuCesidiKpi() {
+  const list = loadYemekler() || [];
+  const names = new Set();
+  list.forEach(function(y) {
+    const ad = String(y && y.ad != null ? y.ad : '').trim();
+    if (ad) names.add(ad.toLocaleLowerCase('tr'));
+  });
+  const el = document.getElementById('kpiMenuCesit');
+  const sub = document.getElementById('kpiMenuCesitSub');
+  const adet = names.size;
+  if (el) el.textContent = adet.toLocaleString('tr-TR');
+  if (sub) {
+    const dup = list.length - adet;
+    sub.textContent = adet > 0
+      ? (dup > 0 ? dup + ' tekrar eden kayıt' : 'tanımlı menü')
+      : 'menü tanımlanmadı';
+  }
+}
+
 function renderKPIs() {
   const n = records.length;
   kpiYaz('kpiTotalRecords', n);
+  renderMenuCesidiKpi();
 
   if (n === 0) {
     kpiYaz('kpiAvgAtik', '0');
     kpiYaz('kpiLastGecis', '0');
     kpiYaz('kpiTotalAtik', '0');
-    kpiYaz('kpiBugunYemek', '—');
+    kpiYaz('kpiHaftaYemek', '—');
+    kpiYaz('kpiHaftaYemekSub', 'Bu hafta kayıt yok');
     kpiYaz('kpiHaccpAlarm', '0');
     kpiYaz('kpiKalibrasyonAlarm', '0');
     renderTrend('trendAvgAtik', null);
@@ -6331,17 +6353,25 @@ function renderKPIs() {
   renderTrend('trendAvgAtik', getTrend(avgAtik, records, 'atik'), true);
   renderTrend('trendTotalAtik', getTrend(totalAtik, records, 'atik'), true);
 
-  // Bugünkü Üretim
+  // Bu Haftaki Üretim: Pazartesi'den bugüne (geçmiş haftalar dahil değil)
   const todayStr = formatLocalDate(new Date());
-  const todayRec = records.find(r => r.tarih === todayStr);
-  const elBugunYemek = document.getElementById('kpiBugunYemek');
-  const elBugunYemekSub = document.getElementById('kpiBugunYemekSub');
-  if (todayRec) {
-    elBugunYemek.textContent = (todayRec.yemek || 0).toLocaleString('tr-TR');
-    elBugunYemekSub.textContent = 'Yararlanan: ' + (todayRec.toplam || 0).toLocaleString('tr-TR');
+  const weekRange = getWeeklyDateRange(0);
+  const mondayStr = formatLocalDate(weekRange.monday);
+  const weekRecs = records.filter(function(r) {
+    if (!r.tarih) return false;
+    return r.tarih >= mondayStr && r.tarih <= todayStr;
+  });
+  const weekYemek = weekRecs.reduce((s, r) => s + (Number(r.yemek) || 0), 0);
+  const weekToplam = weekRecs.reduce((s, r) => s + (Number(r.toplam) || 0), 0);
+  const dayCount = new Set(weekRecs.map(r => r.tarih)).size;
+  const elHaftaYemek = document.getElementById('kpiHaftaYemek');
+  const elHaftaYemekSub = document.getElementById('kpiHaftaYemekSub');
+  if (weekRecs.length > 0) {
+    elHaftaYemek.textContent = weekYemek.toLocaleString('tr-TR');
+    elHaftaYemekSub.textContent = 'Yararlanan: ' + weekToplam.toLocaleString('tr-TR') + ' · ' + dayCount + ' gün';
   } else {
-    elBugunYemek.textContent = '—';
-    elBugunYemekSub.textContent = 'Bugün kayıt yok';
+    elHaftaYemek.textContent = '—';
+    elHaftaYemekSub.textContent = 'Bu hafta kayıt yok';
   }
 
   // HACCP Alarm: son 24 saatteki uygunsuz sıcaklıklar
@@ -7757,6 +7787,7 @@ function loadYemekler() {
 
 function saveYemekler(list) { if (!requireAdmin()) return;
   yemeklerCache = list;
+  renderMenuCesidiKpi();
   syncDishesToSupabase().catch(() => {});
 }
 
@@ -8114,6 +8145,7 @@ async function syncDishesFromSupabase() {
         };
       });
       if (document.getElementById('productionSection')) refreshMenuProduction();
+      renderMenuCesidiKpi();
       return true;
     }
     return false;
@@ -8517,12 +8549,42 @@ function renderChartYearFilter() {
 }
 
 // ─── YILLIK KARŞILAŞTIRMA TAB ───────────────────────────────────────────────
+// getAvailableYears() veri olmasa bile icinde bulunulan yili ve gecen yili listeye
+// ekler; bu yuzden "en yeni yil" daima takvim yili olur ve veri olmayan bir yil
+// secildiginde tum grafikler bos kaliyor. Burada SADECE kaydi olan yillar.
+function getYearsWithData() {
+  const years = new Set();
+  records.forEach(r => {
+    if (r.tarih) {
+      const y = new Date(r.tarih + 'T12:00:00').getFullYear();
+      if (!isNaN(y)) years.add(y);
+    }
+  });
+  return [...years].sort();
+}
+
 function getEffectiveYillikYears() {
-  const years = getAvailableYears();
-  const latest = years.length > 0 ? Number(years[years.length - 1]) : new Date().getFullYear();
-  const sel = Number(yillikYearFilter) > 0 ? Number(yillikYearFilter) : latest;
+  const withData = getYearsWithData();
+  const latest = withData.length > 0 ? Number(withData[withData.length - 1]) : new Date().getFullYear();
+  let sel = Number(yillikYearFilter) > 0 ? Number(yillikYearFilter) : latest;
+  if (withData.length > 0 && withData.indexOf(sel) === -1) sel = latest;
   let prev = Number(yillikPrevYearFilter) > 0 ? Number(yillikPrevYearFilter) : 0;
+  if (prev !== 0 && withData.length > 0 && withData.indexOf(prev) === -1) {
+    const d = defaultPrevYear(sel);
+    prev = d ? Number(d) : 0;
+  }
+  // secili yil veriye gore dustugilse onceki yil da secimle ayni kalir; o durumda
+  // veri olan en yakin yili karsilastirma olarak al (kullanici "" yaptiysa dokunma)
+  if (prev === sel && yillikPrevYearFilter !== '') {
+    const d = defaultPrevYear(sel);
+    prev = d ? Number(d) : 0;
+  }
   if (prev === sel) prev = 0;
+  // hic kayit yoksa karsilastirma anlamsiz
+  if (withData.length === 0) prev = 0;
+  // secimi gercekten kullanilan yila sabitle: dropdown ile grafikler hep ayni yili gostermeli
+  yillikYearFilter = String(sel);
+  yillikPrevYearFilter = prev > 0 ? String(prev) : '';
   return { sel: sel, prev: prev > 0 ? prev : null };
 }
 
@@ -8531,6 +8593,9 @@ function renderYillikYearFilter() {
   if (!container) return;
   const years = getAvailableYears();
   const eff = getEffectiveYillikYears();
+  // Secim gercekten hangi yili gosteriyorsa dropdown da onu gostermeli
+  yillikYearFilter = String(eff.sel);
+  yillikPrevYearFilter = eff.prev ? String(eff.prev) : '';
   function yearOptions(rawVal, disableVal) {
     let h = '<option value=""' + (rawVal === '' ? ' selected' : '') + '>Seçiniz</option>';
     years.forEach(function(y) {
@@ -8557,10 +8622,18 @@ function renderYillikYearFilter() {
   container.innerHTML = html;
 }
 
+function defaultPrevYear(selYear) {
+  const years = getYearsWithData();
+  for (let i = years.length - 1; i >= 0; i--) {
+    if (Number(years[i]) !== Number(selYear)) return String(years[i]);
+  }
+  return '';
+}
+
 function setYillikYear(year) {
   if (year === '') return;
   yillikYearFilter = String(year);
-  yillikPrevYearFilter = '';
+  yillikPrevYearFilter = defaultPrevYear(year);
   renderYillikYearFilter();
   renderYearlyCharts();
 }
@@ -8571,8 +8644,18 @@ function setYillikPrevYear(year) {
   renderYearlyCharts();
 }
 
+// --- Rakam etiketleri: kısa gösterim (1,2 B) ---
+// ⚠ Chart.js, plugin options içindeki FONKSİYON değerlerini "scriptable option"
+// olarak kendisi çağırır ve context nesnesi (Object.create(null) prototipli)
+// gönderir. Böyle bir nesne Number()/isNaN() ile çevrilemez ve
+// "TypeError: Cannot convert object to primitive value" patlar; patlama
+// Chart.js'in draw() zincirini kırdığı için O GRAFİK hiç çizilmez.
+// Bu yüzden formatter/renk fonksiyonları ASLA options'a yazılmaz; sadece
+// anahtar (string) verilir, fonksiyonlar aşağıda seçilir.
+
 function renderYearlyCharts() {
   renderYillikYearFilter();
+
   var eff = getEffectiveYillikYears();
   var sel = eff.sel;
   var prev = eff.prev;
@@ -8820,6 +8903,7 @@ function renderYearlyCharts() {
     chartInstances.set(canvasId, chart);
   }
 
+
   function verimOrani(v) {
     var uretim = v.uretim || 0;
     return uretim > 0 ? ((v.atikPorsiyon || 0) / uretim * 100) : 0;
@@ -8952,7 +9036,10 @@ function renderYearlyCharts() {
   try { makeYillikChart('canvasYillikTurnike', 'chartYillikTurnikeEmpty', '#10b981', function(v) { return v.turnike; }, function(v) { return v.turnike; }); } catch (e) { console.warn('yillik turnike:', e); }
   try { makeYillikChart('canvasYillikOgrenci', 'chartYillikOgrenciEmpty', '#0ea5e9', function(v) { return v.ogrenci; }, function(v) { return v.ogrenci; }); } catch (e) { console.warn('yillik ogrenci:', e); }
   try { makeYillikChart('canvasYillikAtik', 'chartYillikAtikEmpty', '#f97316', function(v) { return v.atik; }, function(v) { return v.atik; }); } catch (e) { console.warn('yillik atik:', e); }
+
+
   try { makeYillikVerimChart(); } catch (e) { console.warn('yillik verim:', e); }
+
   renderYillikWasteTable(sel, hasPrev ? prev : null);
 }
 
@@ -9432,8 +9519,14 @@ function drawAllCharts() {
   }
 
   // Destroy old Chart.js instances
-  chartInstances.forEach(c => c.destroy());
-  chartInstances.clear();
+  // ⚠ YILLIK sekmesinin (canvasYillik* / canvasDonut*) örnekleri BURAYA
+  // dokunulmaz; aksi halde veri kaydından sonra drawAllCharts() çağrısı
+  // yıllık grafikleri yok edip yerine çizmediği için ekran boş kalıyor.
+  chartInstances.forEach(function(c, id) {
+    if (String(id).indexOf('canvasYillik') === 0 || String(id).indexOf('canvasDonut') === 0) return;
+    c.destroy();
+    chartInstances.delete(id);
+  });
 
   function makeChart(id, labels, datasets, extra) {
     const canvas = document.getElementById(id);
@@ -13582,7 +13675,8 @@ var I18N = {
     sidebarManual: "Kullanım Kılavuzu",
     dashboardPrintPdf: "PDF Yazdır",
     kpiTotalRecords: "Toplam Üretim Günü",
-    kpiTodayProduction: "Bugünkü Üretim",
+    kpiWeekProduction: "Bu Haftaki Üretim",
+    kpiMenuVariety: "Toplam Menü Çeşidi Sayısı",
     kpiHaccpAlarm: "Soğuk Hava Depo Sıcaklık Alarmı",
     kpiCalibrationAlarm: "Kalibrasyon Alarmı",
     kpiBrand: "Atık Kontrol Sistemi",
@@ -13986,7 +14080,8 @@ var I18N = {
     sidebarManual: "User Manual",
     dashboardPrintPdf: "Print PDF",
     kpiTotalRecords: "Total Production Days",
-    kpiTodayProduction: "Today's Production",
+    kpiWeekProduction: "This Week's Production",
+    kpiMenuVariety: "Total Menu Variety",
     kpiHaccpAlarm: "Cold Storage Temperature Alarm",
     kpiCalibrationAlarm: "Calibration Alarm",
     kpiBrand: "Waste Control System",
@@ -14390,7 +14485,8 @@ var I18N = {
     sidebarManual: "İstifadəçi Təlimatı",
     dashboardPrintPdf: "PDF Çap Et",
     kpiTotalRecords: "Ümumi İstehsal Günü",
-    kpiTodayProduction: "Bu günün İstehsalı",
+    kpiWeekProduction: "Bu Həftənin İstehsalı",
+    kpiMenuVariety: "Ümumi menyu növü sayı",
     kpiHaccpAlarm: "Soyuducu Anbar Temperaturu Alarmı",
     kpiCalibrationAlarm: "Kalibrləmə Alarmı",
     kpiBrand: "Tullantıların İdarəetmə Sistemi",
@@ -14780,7 +14876,8 @@ var I18N = {
     sidebarManual: "Руководство пользователя",
     dashboardPrintPdf: "Печать PDF",
     kpiTotalRecords: "Всего дней производства",
-    kpiTodayProduction: "Производство сегодня",
+    kpiWeekProduction: "Производство за неделю",
+    kpiMenuVariety: "Всего видов меню",
     kpiHaccpAlarm: "Тревога температуры холодильника",
     kpiCalibrationAlarm: "Тревога калибровки",
     kpiBrand: "Система контроля отходов",
@@ -15170,7 +15267,8 @@ var I18N = {
     sidebarManual: "دليل المستخدم",
     dashboardPrintPdf: "طباعة PDF",
     kpiTotalRecords: "إجمالي أيام الإنتاج",
-    kpiTodayProduction: "إنتاج اليوم",
+    kpiWeekProduction: "إنتاج هذا الأسبوع",
+    kpiMenuVariety: "إجمالي أنواع القائمة",
     kpiHaccpAlarm: "تنبيه درجة حرارة التخزين البارد",
     kpiCalibrationAlarm: "تنبيه المعايرة",
     kpiBrand: "نظام مراقبة النفايات",
@@ -15560,7 +15658,8 @@ var I18N = {
     sidebarManual: "Benutzerhandbuch",
     dashboardPrintPdf: "PDF drucken",
     kpiTotalRecords: "Gesamte Produktions Tage",
-    kpiTodayProduction: "Heutige Produktion",
+    kpiWeekProduction: "Produktion diese Woche",
+    kpiMenuVariety: "Menüvielfalt gesamt",
     kpiHaccpAlarm: "Kühllager-Temperaturalarm",
     kpiCalibrationAlarm: "Kalibrierungsalarm",
     kpiBrand: "Abfallkontrollsystem",
@@ -15950,7 +16049,8 @@ var I18N = {
     sidebarManual: "Manuel utilisateur",
     dashboardPrintPdf: "Imprimer PDF",
     kpiTotalRecords: "Total des jours de production",
-    kpiTodayProduction: "Production du jour",
+    kpiWeekProduction: "Production de la semaine",
+    kpiMenuVariety: "Total des variétés de menus",
     kpiHaccpAlarm: "Alarme température chambre froide",
     kpiCalibrationAlarm: "Alarme de calibration",
     kpiBrand: "Système de contrôle des déchets",
@@ -16340,7 +16440,8 @@ var I18N = {
     sidebarManual: "Manual de usuario",
     dashboardPrintPdf: "Imprimir PDF",
     kpiTotalRecords: "Total de días de producción",
-    kpiTodayProduction: "Producción de hoy",
+    kpiWeekProduction: "Producción de la semana",
+    kpiMenuVariety: "Total de tipos de menú",
     kpiHaccpAlarm: "Alarma de temperatura de cámara frigorífica",
     kpiCalibrationAlarm: "Alarma de calibración",
     kpiBrand: "Sistema de control de residuos",
@@ -16730,7 +16831,8 @@ var I18N = {
     sidebarManual: "Manual do usuário",
     dashboardPrintPdf: "Imprimir PDF",
     kpiTotalRecords: "Total de dias de produção",
-    kpiTodayProduction: "Produção de hoje",
+    kpiWeekProduction: "Produção da semana",
+    kpiMenuVariety: "Total de tipos de menu",
     kpiHaccpAlarm: "Alarme de temperatura da câmara fria",
     kpiCalibrationAlarm: "Alarme de calibração",
     kpiBrand: "Sistema de controlo de resíduos",
@@ -17120,7 +17222,8 @@ var I18N = {
     sidebarManual: "Foydalanuvchi qo'llanmasi",
     dashboardPrintPdf: "PDF chop etish",
     kpiTotalRecords: "Jami ishlab chiqarish kunlari",
-    kpiTodayProduction: "Bugungi ishlab chiqarish",
+    kpiWeekProduction: "Shu haftaning ishlab chiqarishi",
+    kpiMenuVariety: "Menyu turlari jami",
     kpiHaccpAlarm: "Sovutgich harorati signalizatsiyasi",
     kpiCalibrationAlarm: "Kalibrlash signalizatsiyasi",
     kpiBrand: "Chiqindilarni nazorat qilish tizimi",
@@ -17488,10 +17591,10 @@ function setLanguage(lang) {
   });
   var flagEl = document.getElementById('langCurrentFlag');
   if (flagEl) flagEl.textContent = langLabels[lang] || lang.toUpperCase();
-  var dd = document.getElementById('langDropdown');
-  if (dd) dd.classList.remove('open');
-  applyTranslations();
-}
+    var dd = document.getElementById('langDropdown');
+    if (dd) dd.classList.remove('open');
+    applyTranslations();
+  }
 
 function t(key) {
   var dict = I18N[currentLang] || I18N['tr'];
