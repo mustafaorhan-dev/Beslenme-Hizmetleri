@@ -547,32 +547,34 @@ select.login-field {
   --color-scheme: light;
 }
 
-/* Accent color themes */
-[data-accent="cyan"] {
+/* Accent color themes — html[data-accent] seçicisi, aynı özgüllükteki
+   :root ve [data-theme] kurallarından sonra gelmediği için daha özgü
+   (0,1,1) ile yazılır; aksi halde renk seçimi hiç uygulanmaz. */
+html[data-accent="cyan"] {
   --accent: #22d3ee;
   --gradient-main: linear-gradient(135deg, #0891b2, #22d3ee);
 }
-[data-accent="turquoise"] {
+html[data-accent="turquoise"] {
   --accent: #14b8a6;
   --gradient-main: linear-gradient(135deg, #0d9488, #2dd4bf);
 }
-[data-accent="blue"] {
+html[data-accent="blue"] {
   --accent: #6366f1;
   --gradient-main: linear-gradient(135deg, #4f46e5, #6366f1);
 }
-[data-accent="green"] {
+html[data-accent="green"] {
   --accent: #10b981;
   --gradient-main: linear-gradient(135deg, #059669, #10b981);
 }
-[data-accent="purple"] {
+html[data-accent="purple"] {
   --accent: #0ea5e9;
   --gradient-main: linear-gradient(135deg, #0284c7, #0ea5e9);
 }
-[data-accent="orange"] {
+html[data-accent="orange"] {
   --accent: #f59e0b;
   --gradient-main: linear-gradient(135deg, #d97706, #f59e0b);
 }
-[data-accent="rose"] {
+html[data-accent="rose"] {
   --accent: #f43f5e;
   --gradient-main: linear-gradient(135deg, #e11d48, #f43f5e);
 }
