@@ -1190,13 +1190,16 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .accent-dot:hover { transform: scale(1.2); }
 .accent-dot.active { border-color: var(--text-primary); box-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
-/* ---- YAN MENÜ Mavi Tema (giris ekranina uyumlu) ---- */
+/* ---- YAN MENÜ Tema (secilen aksan rengine uyar) ---- */
 .sidebar,
 [data-theme="dark"] .sidebar {
   background:
-    radial-gradient(circle at 82% 6%, rgba(34,211,238,0.14), transparent 50%),
-    radial-gradient(circle at 8% 96%, rgba(245,158,11,0.10), transparent 55%),
-    linear-gradient(168deg, #1e3a8a 0%, #17244f 45%, #0b1430 100%);
+    radial-gradient(circle at 82% 6%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 50%),
+    radial-gradient(circle at 8% 96%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 55%),
+    linear-gradient(168deg,
+      color-mix(in srgb, var(--accent) 42%, #0b1430) 0%,
+      color-mix(in srgb, var(--accent) 24%, #0d1730) 45%,
+      #0b1430 100%);
   border-right: 1px solid rgba(255,255,255,0.08);
 }
 .sidebar-header {
@@ -1214,7 +1217,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .sidebar-nav .tab-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(37,99,235,0.55), rgba(34,211,238,0.30));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 58%, transparent),
+    color-mix(in srgb, var(--accent) 28%, transparent));
 }
 .sidebar-nav .tab-btn.active svg {
   stroke: currentColor;
@@ -1240,12 +1245,15 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
   background: rgba(255,255,255,0.12);
 }
 
-/* ---- UST BAR Mavi Tema ---- */
+/* ---- UST BAR Tema (secilen aksan rengine uyar) ---- */
 .header,
 [data-theme="dark"] .header {
   background:
-    radial-gradient(circle at 88% 8%, rgba(34,211,238,0.12), transparent 45%),
-    linear-gradient(120deg, #1e3a8a 0%, #17244f 55%, #0b1430 100%);
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%),
+    linear-gradient(120deg,
+      color-mix(in srgb, var(--accent) 44%, #0b1430) 0%,
+      color-mix(in srgb, var(--accent) 26%, #0d1730) 55%,
+      #0b1430 100%);
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .page-title {
