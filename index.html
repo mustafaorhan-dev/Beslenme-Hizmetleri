@@ -16,7 +16,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=121" />
+  <link rel="stylesheet" href="style.css?v=122" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -192,6 +192,21 @@
         <span class="page-title" id="pageTitle">Panel</span>
         <div class="current-date" id="currentDate"></div>
         <span class="role-badge" id="roleBadge"></span>
+        <div class="lang-selector" id="accentSelector">
+          <button class="lang-btn accent-btn" onclick="toggleAccentDropdown()" title="Renk Seçimi / Color" aria-label="Renk Seçimi / Color">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2.5a10 10 0 000 19c1.1 0 2-.9 2-2 0-.5-.2-1-.6-1.4-.4-.4-.6-.9-.6-1.4 0-1.1.9-2 2-2h2.3A5.3 5.3 0 0022 9.4C21.4 5.4 17.2 2.5 12 2.5z"/><circle cx="7.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+            <span class="accent-current-dot" id="accentCurrentDot" aria-hidden="true"></span>
+          </button>
+          <div class="lang-dropdown" id="accentDropdown">
+            <button class="lang-option accent-opt" data-accent="blue" onclick="setAccent('blue')"><span class="accent-swatch" style="background:#6366f1"></span> Mavi</button>
+            <button class="lang-option accent-opt" data-accent="turquoise" onclick="setAccent('turquoise')"><span class="accent-swatch" style="background:#14b8a6"></span> Turkuaz</button>
+            <button class="lang-option accent-opt" data-accent="cyan" onclick="setAccent('cyan')"><span class="accent-swatch" style="background:#22d3ee"></span> Camgöbeği</button>
+            <button class="lang-option accent-opt" data-accent="green" onclick="setAccent('green')"><span class="accent-swatch" style="background:#10b981"></span> Yeşil</button>
+            <button class="lang-option accent-opt" data-accent="purple" onclick="setAccent('purple')"><span class="accent-swatch" style="background:#0ea5e9"></span> Gök Mavi</button>
+            <button class="lang-option accent-opt" data-accent="orange" onclick="setAccent('orange')"><span class="accent-swatch" style="background:#f59e0b"></span> Turuncu</button>
+            <button class="lang-option accent-opt" data-accent="rose" onclick="setAccent('rose')"><span class="accent-swatch" style="background:#f43f5e"></span> Gül Kırmızısı</button>
+          </div>
+        </div>
         <div class="lang-selector" id="langSelector">
           <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown()" title="Dil Seçimi / Language">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
@@ -2686,7 +2701,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
-  <script src="app.js?v=121"></script>
+  <script src="app.js?v=122"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
   </button>

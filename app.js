@@ -236,7 +236,7 @@ function redrawActiveCharts() {
 function loadAccent() {
   const saved = localStorage.getItem('atik_kontrol_accent') || 'blue';
   document.documentElement.setAttribute('data-accent', saved);
-  document.querySelectorAll('.accent-dot').forEach(b => {
+  document.querySelectorAll('.accent-dot, .accent-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.accent === saved);
   });
 }
@@ -244,10 +244,17 @@ function loadAccent() {
 function setAccent(name) {
   document.documentElement.setAttribute('data-accent', name);
   localStorage.setItem('atik_kontrol_accent', name);
-  document.querySelectorAll('.accent-dot').forEach(b => {
+  document.querySelectorAll('.accent-dot, .accent-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.accent === name);
   });
+  var add = document.getElementById('accentDropdown');
+  if (add) add.classList.remove('open');
   redrawActiveCharts();
+}
+
+function toggleAccentDropdown() {
+  var dd = document.getElementById('accentDropdown');
+  if (dd) dd.classList.toggle('open');
 }
 
 // ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
@@ -17984,6 +17991,11 @@ document.addEventListener('click', function(e) {
   var dd = document.getElementById('langDropdown');
   if (sel && dd && !sel.contains(e.target)) {
     dd.classList.remove('open');
+  }
+  var asel = document.getElementById('accentSelector');
+  var add = document.getElementById('accentDropdown');
+  if (asel && add && !asel.contains(e.target)) {
+    add.classList.remove('open');
   }
 });
 

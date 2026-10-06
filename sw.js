@@ -6,8 +6,8 @@
    guncelleyen sekilde tutar.
    ============================================= */
 
-const CACHE = 'atik-kontrol-v128';
-const VER = '121';
+const CACHE = 'atik-kontrol-v129';
+const VER = '122';
 
 /* index.html dogrudan istenir; style.css ve app.js
    ?v=VER ile istenir, onbellege de AYNI surumle yazilir

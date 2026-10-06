@@ -552,6 +552,10 @@ select.login-field {
   --accent: #22d3ee;
   --gradient-main: linear-gradient(135deg, #0891b2, #22d3ee);
 }
+[data-accent="turquoise"] {
+  --accent: #14b8a6;
+  --gradient-main: linear-gradient(135deg, #0d9488, #2dd4bf);
+}
 [data-accent="blue"] {
   --accent: #6366f1;
   --gradient-main: linear-gradient(135deg, #4f46e5, #6366f1);
@@ -4387,6 +4391,26 @@ input.production-input:focus {
   font-size: 1rem;
   line-height: 1;
 }
+
+/* ---- ACCENT (RENK) SEÇİCİ ---- */
+.accent-btn { padding: 0.4rem 0.55rem; }
+.accent-current-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid rgba(255,255,255,0.45);
+  box-shadow: 0 0 6px rgba(0,0,0,0.25);
+  transition: background 0.2s ease;
+}
+.accent-swatch {
+  width: 15px; height: 15px; border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(148,163,184,0.45);
+  transition: transform 0.15s ease;
+}
+.accent-opt:hover .accent-swatch { transform: scale(1.15); }
+.accent-opt.active .accent-swatch { border-color: var(--text-primary); }
+[data-theme="dark"] .accent-swatch { border-color: rgba(255,255,255,0.3); }
+[data-theme="dark"] .accent-opt.active .accent-swatch { border-color: #f8fafc; }
 
 /* ---- RTL SUPPORT ---- */
 [dir="rtl"] .sidebar { right: 0; left: auto; }
