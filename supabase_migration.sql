@@ -24,8 +24,8 @@ ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
 --    (rol izin kutucuklarının ve harcama oranlarının tüm cihazlara senkronu için)
 DROP POLICY IF EXISTS "anon_role_permissions" ON config;
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key IN ('role_permissions', 'harcama_oranlari'))
-  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari'));
+  USING (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'))
+  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
 
 -- 4) KALİBRASYONA TABİ CİHAZLAR tablosu + erişim politikası
 --    durum değerleri: calisir, arizali, bakim, hurda

@@ -12,19 +12,22 @@
 .login-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(135deg, #eef3fa 0%, #f4f7fb 45%, #e8eef8 100%);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
   z-index: 999999;
   transition: opacity 0.5s ease;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
 }
+/* Dekoratif daireler position:fixed ile taşınır; aksi halde overlay'in
+   kaydırma alanına girip (hem X hem Y) görünmez kaydırma çubuğu üretirler. */
 .login-overlay::before {
-  content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%;
+  content: ''; position: fixed; width: 520px; height: 520px; border-radius: 50%;
   background: radial-gradient(circle, rgba(23,105,224,0.10), transparent 65%);
   top: -180px; left: -140px; pointer-events: none;
 }
 .login-overlay::after {
-  content: ''; position: absolute; width: 480px; height: 480px; border-radius: 50%;
+  content: ''; position: fixed; width: 480px; height: 480px; border-radius: 50%;
   background: radial-gradient(circle, rgba(0,184,230,0.10), transparent 65%);
   bottom: -160px; right: -120px; pointer-events: none;
 }
@@ -34,14 +37,15 @@
 .login-shell {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  width: min(960px, 96vw);
-  min-height: 580px;
+  width: min(960px, 100%);
+  min-height: min(580px, calc(100vh - 40px));
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 24px 70px rgba(11,42,91,0.18), 0 4px 16px rgba(11,42,91,0.06);
   animation: loginCardIn 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   z-index: 1;
+  margin: auto; /* flex içinde ortalar; içerik ekrandan yüksekse üste erişilebilir kalır */
 }
 @keyframes loginCardIn {
   from { opacity: 0; transform: translateY(26px) scale(0.98); }
@@ -409,7 +413,7 @@ select.login-field {
 .login-forgot-ok { margin-top: 0; }
 
 @media (max-width: 1100px) {
-  .login-shell { width: min(920px, 96vw); min-height: 540px; }
+  .login-shell { width: min(920px, 100%); min-height: min(540px, calc(100vh - 40px)); }
   .login-brand { padding: 2.2rem 2rem 1.6rem; }
   .login-form-panel { padding: 2.2rem 2.2rem 1.4rem; }
   .login-logo-img { max-width: 250px; }
@@ -420,7 +424,7 @@ select.login-field {
 @media (max-width: 900px) {
   .login-shell {
     grid-template-columns: 1fr;
-    width: min(480px, 96vw);
+    width: min(480px, 100%);
     min-height: 0;
   }
   .login-brand { padding: 1.9rem 1.8rem 1.3rem; border-right: none; }
@@ -559,8 +563,8 @@ html[data-accent="turquoise"] {
   --gradient-main: linear-gradient(135deg, #0d9488, #2dd4bf);
 }
 html[data-accent="blue"] {
-  --accent: #6366f1;
-  --gradient-main: linear-gradient(135deg, #4f46e5, #6366f1);
+  --accent: #4f46e5;
+  --gradient-main: linear-gradient(135deg, #4338ca, #4f46e5);
 }
 html[data-accent="green"] {
   --accent: #10b981;
@@ -578,7 +582,7 @@ html[data-accent="rose"] {
   --accent: #f43f5e;
   --gradient-main: linear-gradient(135deg, #e11d48, #f43f5e);
 }
-:root { --accent: #6366f1; }
+:root { --accent: #4f46e5; }
 
 [data-theme="dark"] {
   --bg-primary: #0a0f1e;
@@ -598,7 +602,7 @@ html[data-accent="rose"] {
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
-  --gradient-main: linear-gradient(135deg, #22d3ee, #6366f1);
+  --gradient-main: linear-gradient(135deg, #22d3ee, #4f46e5);
   --gradient-card: linear-gradient(145deg, #131d35, #0f1629);
 
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
@@ -931,6 +935,7 @@ body {
 }
 
 /* ---- ROLE BADGE / VIEWER MODE ---- */
+/* Tum roller tek renk: ust barda her rol net gorunur */
 .role-badge {
   display: inline-flex;
   align-items: center;
@@ -941,16 +946,9 @@ body {
   margin-right: 0.25rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-}
-[data-role="admin"] .role-badge {
-  background: rgba(34,211,238,0.12);
-  color: var(--accent-cyan);
-  border: 1px solid rgba(34,211,238,0.2);
-}
-[data-role="viewer"] .role-badge {
-  background: rgba(251,191,36,0.12);
-  color: #fbbf24;
-  border: 1px solid rgba(251,191,36,0.2);
+  background: rgba(255,255,255,0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.24);
 }
 [data-role="viewer"] .btn-primary:not(.btn-always),
 [data-role="viewer"] .btn-secondary,
@@ -1302,7 +1300,9 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 #content-yag.active,
 #content-ambalaj.active,
 #content-harcama.active {
-  height: calc(100vh - 100px);
+  /* Tek kaydırıcı: sekme, ana alanın içerik kutusuna tam sığar (100vh-102px);
+     böylece hem .main-content hem sekme birlikte kaydırma üretemez. */
+  height: 100%;
   overflow-y: auto;
   padding-right: 6px;
 }
@@ -3294,15 +3294,6 @@ input.production-input:focus {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .today-summary-body { gap: 0.4rem; }
   .today-summary-body .ts-item { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
-  #content-dashboard.active,
-  #content-records.active,
-  #content-charts.active,
-  #content-yillik.active,
-  #content-report.active,
-  #content-menu.active,
-  #content-haccp.active,
-  #content-yag.active,
-  #content-ambalaj.active { height: calc(100vh - 120px); }
 }
 
 /* ---- FILTER BAR ---- */
@@ -3375,15 +3366,6 @@ input.production-input:focus {
   .menu-table th:not(:first-child) { min-width: 90px; }
   .menu-table td:first-child { font-size: 0.7rem; width: 70px; }
   .menu-table input, .menu-table textarea { font-size: 0.75rem; padding: 0.3rem 0.35rem; }
-  #content-menu.active,
-  #content-dashboard.active,
-  #content-records.active,
-  #content-charts.active,
-  #content-yillik.active,
-  #content-report.active,
-  #content-haccp.active,
-  #content-yag.active,
-  #content-ambalaj.active { height: calc(100vh - 100px); }
   .filter-bar { gap: 0.35rem 0.5rem; }
   .filter-bar input[type="date"] { flex: 1 1 38%; min-width: 0; }
   .filter-bar select { flex: 1 1 100%; }

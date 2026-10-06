@@ -36,6 +36,73 @@ try {
   }
 } catch (_) {}
 
+// ─── SÜRÜM / BUILD — TEK KAYNAK ───────────────────────────────────────────────
+// Öncelik: Supabase config tablosu (app_version / app_build) > yerel override
+// (localStorage) > config.js. Bütün arayüz etiketleri ve service worker
+// bu değerden beslenir; tek yerden değiştirince her yer güncellenir.
+const APP_VER_SUPA_KEY = 'app_version';
+const APP_BUILD_SUPA_KEY = 'app_build';
+const LS_APP_VERSION = 'atik_kontrol_version';
+const LS_APP_BUILD = 'atik_kontrol_build';
+
+function applyLocalVersionOverride() {
+  try {
+    if (typeof APP_CONFIG === 'undefined') return;
+    var vv = localStorage.getItem(LS_APP_VERSION);
+    var vb = parseInt(localStorage.getItem(LS_APP_BUILD) || '0', 10);
+    if (vv) APP_CONFIG.version = vv;
+    if (vb > (parseInt(APP_CONFIG.build, 10) || 0)) APP_CONFIG.build = vb;
+  } catch (_) {}
+}
+applyLocalVersionOverride();
+
+function applyVersionLabels() {
+  try {
+    if (typeof APP_CONFIG === 'undefined' || !APP_CONFIG.version) return;
+    var v = 'v' + APP_CONFIG.version;
+    var sidebar = document.getElementById('appVersionLabel');
+    if (sidebar) sidebar.textContent = v;
+    var login = document.querySelector('.login-inst-version');
+    if (login) login.textContent = 'Versiyon: ' + v;
+    var manual = document.getElementById('manualVersion');
+    if (manual) manual.textContent = v;
+  } catch (_) {}
+}
+
+function registerServiceWorker(build) {
+  if (!('serviceWorker' in navigator)) return;
+  var b = parseInt(build, 10) || 1;
+  navigator.serviceWorker.register('sw.js?b=' + b).catch(function () {});
+}
+
+async function fetchRemoteVersion() {
+  if (!supabaseClient) return null;
+  try {
+    var data = await Promise.race([
+      supabaseClient.from('config').select('key,value')
+        .in('key', [APP_VER_SUPA_KEY, APP_BUILD_SUPA_KEY])
+        .then(function (r) { return r && !r.error ? r.data : null; }),
+      new Promise(function (res) { setTimeout(function () { res(null); }, 3000); })
+    ]);
+    if (!data || !data.length) return null;
+    var out = {};
+    data.forEach(function (row) { out[row.key] = row.value; });
+    return out;
+  } catch (_) { return null; }
+}
+
+async function resolveAppVersion() {
+  var localBuild = parseInt(typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.build : 0, 10) || 1;
+  var remote = await fetchRemoteVersion();
+  if (remote) {
+    var rb = parseInt(remote.build, 10) || 0;
+    if (rb > localBuild) APP_CONFIG.build = rb;
+    if (rb >= localBuild && remote.version) APP_CONFIG.version = remote.version;
+  }
+  applyVersionLabels();
+  return parseInt(APP_CONFIG.build, 10) || 1;
+}
+
 // ─── SUPABASE AUTH STATE ──────────────────────────────────────────────────────
 let supabaseSession = null;
 
@@ -754,6 +821,7 @@ function openAdminPanel() {
   var authMode = isUsingSupabaseAuth() ? 'Supabase Auth' : 'Legacy (SHA-256)';
   document.getElementById('apAuthMode').textContent = authMode;
   document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
+  apRenderVersion();
   document.getElementById('adminPanelModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   apLoadLogs();
@@ -774,6 +842,7 @@ async function apReAuth() {
         apRenderUserList();
         apRenderRolePermissions();
         apRenderInactivityTimeout();
+        apRenderVersion();
         return;
       }
     } catch (_) {}
@@ -794,12 +863,75 @@ async function apReAuth() {
     apRenderUserList();
     apRenderRolePermissions();
     apRenderInactivityTimeout();
+    apRenderVersion();
   } else {
     errorEl.textContent = 'Admin şifresi yanlış!';
     errorEl.style.display = 'block';
     document.getElementById('apReAuthPw').value = '';
     document.getElementById('apReAuthPw').focus();
   }
+}
+
+// ─── SÜRÜM YÖNETİMİ (Admin Paneli) ───────────────────────────────────────────
+function apRenderVersion() {
+  var vi = document.getElementById('apVersionInput');
+  var bi = document.getElementById('apBuildInput');
+  if (vi) vi.value = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) ? APP_CONFIG.version : '';
+  if (bi) bi.value = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.build) ? APP_CONFIG.build : 1;
+}
+
+function apBumpBuild() {
+  var bi = document.getElementById('apBuildInput');
+  if (bi) bi.value = (parseInt(bi.value, 10) || 0) + 1;
+}
+
+async function apPublishVersion() {
+  if (getRole() !== ROLE_ADMIN) {
+    showToast('Bu işlem için admin yetkisi gerekli.', 'error');
+    return;
+  }
+  var vi = document.getElementById('apVersionInput');
+  var bi = document.getElementById('apBuildInput');
+  var ver = ((vi && vi.value) || '').trim().replace(/^v/i, '');
+  var build = parseInt(bi && bi.value, 10);
+  if (!ver || !build || build < 1) {
+    showToast('Sürüm (ör: 1.4.1) ve build no geçerli değil.', 'error');
+    return;
+  }
+
+  // 1) Yerel: etiketler + SW anında güncellenir
+  if (typeof APP_CONFIG !== 'undefined') {
+    APP_CONFIG.version = ver;
+    APP_CONFIG.build = build;
+  }
+  try {
+    localStorage.setItem(LS_APP_VERSION, ver);
+    localStorage.setItem(LS_APP_BUILD, String(build));
+  } catch (_) {}
+  applyVersionLabels();
+  registerServiceWorker(build);
+
+  // 2) Uzak: Supabase config tablosu → diğer tüm cihazlar çeker
+  if (!supabaseClient) {
+    showToast('Sürüm bu cihazda güncellendi (Supabase bağlantısı yok).', 'info');
+    apRenderVersion();
+    return;
+  }
+  try {
+    var now = new Date().toISOString();
+    var { error } = await supabaseClient.from('config').upsert([
+      { key: APP_VER_SUPA_KEY, value: ver, last_modified: now },
+      { key: APP_BUILD_SUPA_KEY, value: String(build), last_modified: now }
+    ], { onConflict: 'key' });
+    if (error) throw error;
+    showToast('Sürüm yayınlandı: v' + ver + ' (build ' + build + '). Tüm cihazlar bir sonraki açılışta güncellenir.', 'success');
+    logIslem('surum_yayinla', 'Sürüm yayınlandı: v' + ver + ' (build ' + build + ')');
+  } catch (e) {
+    showToast('Sürüm bu cihazda güncellendi, ancak Supabase\'e yazılamadı' +
+      (e && e.message ? ' (' + e.message + ')' : '') +
+      '. Diğer cihazlar için config tablosu policy güncellenmeli: supabase_version.sql', 'error');
+  }
+  apRenderVersion();
 }
 
 function closeAdminPanel() {
@@ -1573,10 +1705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   setCurrentDate();
-  if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) {
-    var vLabel = document.getElementById('appVersionLabel');
-    if (vLabel) vLabel.textContent = 'v' + APP_CONFIG.version;
-  }
+  applyVersionLabels();
   renderAll();
   drawAllCharts();
   await restoreActiveTab();

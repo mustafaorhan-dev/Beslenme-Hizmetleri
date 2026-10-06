@@ -167,8 +167,8 @@ ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 -- Böylece yönetim panelindeki rol izin kutucukları ve harcama oranları tüm cihazlara senkronize
 -- olur, diğer config satırları (örn. legacy user hash'leri) korunur.
 CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key IN ('role_permissions', 'harcama_oranlari'))
-  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari'));
+  USING (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'))
+  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
 
 -- Varsayılan config değerleri (Service Role ile çalıştırılmalı)
 -- Aşağıdaki INSERT'ler service_role ile çalıştırılmalıdır, anon ile çalışmaz.

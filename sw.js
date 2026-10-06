@@ -1,23 +1,21 @@
 /* =============================================
    ATIK KONTROL - SERVICE WORKER
-   Ag Yuklemeler: ag varsa her zaman agdan, yoksa
-   onbellekten. Yeni surum CACHE/VER ile hemen gecerli
-   olur; skipWaiting + clients.claim acik sekmeleri de
-   guncelleyen sekilde tutar.
+   Build no, kayit URL'inden okunur (sw.js?b=NNN);
+   config.js'teki APP_CONFIG.build degistiginde tarayici
+   yeni SW kurar ve onbellek tazelenir.
+   Ag varsa her zaman agdan (no-cache), yoksa onbellekten.
    ============================================= */
 
-const CACHE = 'atik-kontrol-v131';
-const VER = '124';
+const BUILD = new URL(self.location.href).searchParams.get('b') || '1';
+const CACHE = 'atik-kontrol-b' + BUILD;
 
-/* index.html dogrudan istenir; style.css ve app.js
-   ?v=VER ile istenir, onbellege de AYNI surumle yazilir
-   (fetch handler e.request'i birebir eslestirir, bu yuzden
-   surumlu istek onbellekte birebir bulunmalidir).
-   logo.gif surumsuz istenir, bu yuzden surumsuz yazilir. */
+/* index.html, style.css ve app.js surumsuz istenir (tek surum kaynagi
+   config.js oldugundan ?v= kullanilmaz). logo.gif surumsuz istenir.
+   Hepsi no-cache ile onbellege yazilir; cevrimdisiyken guncel kopya calisir. */
 const URLS = [
   'index.html',
-  'style.css?v=' + VER,
-  'app.js?v=' + VER,
+  'style.css',
+  'app.js',
   'manifest.json',
   'config.js',
   'logo.gif'
@@ -26,7 +24,13 @@ const URLS = [
 self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(URLS))
+    caches.open(CACHE).then(c => Promise.all(
+      URLS.map(u =>
+        fetch(u, { cache: 'no-cache' })
+          .then(r => { if (r && r.ok) return c.put(u, r); })
+          .catch(() => {})
+      )
+    ))
   );
 });
 
@@ -40,12 +44,14 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Network-first: cevrimiciyken her zaman guncel dosyalar alinir,
-  // cevrimdisiyse onbellekteki kopya kullanilir.
+  // Network-first: cevrimiciyken her zaman guncel dosyalar alinir
+  // (ayni kaynak isteklerde HTTP onbellek atlanir), cevrimdisiyse
+  // onbellekteki kopya kullanilir.
+  const sameOrigin = new URL(e.request.url).origin === self.location.origin;
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       try {
-        const network = await fetch(e.request);
+        const network = await fetch(e.request, sameOrigin ? { cache: 'no-cache' } : undefined);
         try { if (network && (network.ok || network.type === 'opaque')) cache.put(e.request, network.clone()); } catch (_) {}
         return network;
       } catch (_) {
