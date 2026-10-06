@@ -1531,6 +1531,7 @@ function applyRolePermissions() {
       }
     }
   }
+  updateNavIndicator();
 }
 
 function populateLoginUsers() {
@@ -1662,15 +1663,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     filteredRecords = [...records];
   }
 
-  if (supabaseClient) {
-    await syncRolePermissionsFromSupabase().catch(function(){});
-    await syncHarcamaOranlariFromSupabase().catch(function(){});
-    await syncUnitPricesFromSupabase().catch(function(){});
-  }
+  // İkincil senkronizasyonlar (rol izinleri, fiyatlar, yağ/ambalaj/kalibrasyon,
+  // yemekler, HACCP) sayfa AÇILIMINI BEKLETMEZ — aşağıda arka planda çalışır.
 
-  // Yag ve ambalaj her sayfada Supabase'ten çekilir
-  if (supabaseClient) {
+  setCurrentDate();
+  applyVersionLabels();
+  renderAll();
+  if (isTabActive('charts')) drawAllCharts();
+  await restoreActiveTab();
+  updateNavIndicator();
+  menuOnayBildirim();
+
+  // Arka plan senkronu: arayüz açıldıktan sonra devam eder, bitince görünümler tazelenir
+  (async function bgSync() {
+    if (!supabaseClient) return;
     try {
+      await syncRolePermissionsFromSupabase().catch(function(){});
+      await syncHarcamaOranlariFromSupabase().catch(function(){});
+      await syncUnitPricesFromSupabase().catch(function(){});
       await syncYagFromSupabase();
       if (yagRecords.length > 0) {
         try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
@@ -1687,29 +1697,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { localStorage.removeItem(KALIBRASYON_STORAGE_KEY); } catch (_) {}
       }
       await syncDishesFromSupabase();
+      if (!yemeklerCache.length) await syncDishesFromSupabase();
+      await syncHaccpFromSupabase();
+      if (haccpRecords.length > 0) {
+        try { sessionStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
+        try { localStorage.removeItem(HACCP_STORAGE_KEY); } catch (_) {}
+      }
+      applyRolePermissions();
+      renderAll();
+      if (isTabActive('menu')) renderMenu();
     } catch (_) {}
-  }
-
-  // YemeklerCache boşsa yine de dene
-  if (!yemeklerCache.length && supabaseClient) {
-    await syncDishesFromSupabase();
-  }
-
-  // HACCP (soğuk depo sıcaklık) verileri her sayfa yüklenişinde Supabase'ten çekilir
-  if (supabaseClient) {
-    await syncHaccpFromSupabase();
-    if (haccpRecords.length > 0) {
-      try { sessionStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
-      try { localStorage.removeItem(HACCP_STORAGE_KEY); } catch (_) {}
-    }
-  }
-
-  setCurrentDate();
-  applyVersionLabels();
-  renderAll();
-  drawAllCharts();
-  await restoreActiveTab();
-  menuOnayBildirim();
+  })();
 
   // Güvenlik: 10 sn sonra loading overlay'i zorla kapat
   var forceHideTimer = setTimeout(function() {
@@ -5586,11 +5584,29 @@ async function restoreActiveTab() {
   }
 }
 
+// ─── ANİMASYONLU TAB GÖSTERGESİ (kayan hap) ──────────────────────────────────
+function updateNavIndicator() {
+  var nav = document.querySelector('.sidebar-nav');
+  var ind = document.getElementById('navIndicator');
+  if (!nav || !ind) return;
+  var act = nav.querySelector('.tab-btn.active');
+  if (!act || act.offsetParent === null) { ind.style.opacity = '0'; return; }
+  ind.style.height = act.offsetHeight + 'px';
+  ind.style.transform = 'translateY(' + act.offsetTop + 'px)';
+  ind.style.opacity = '1';
+}
+window.addEventListener('resize', function() {
+  clearTimeout(window._navIndTimer);
+  window._navIndTimer = setTimeout(updateNavIndicator, 120);
+});
+
 async function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.getElementById('content-' + name).classList.add('active');
+  updateNavIndicator();
+  if (name === 'dashboard') renderAll();
   if (name === 'charts') drawAllCharts();
   if (name === 'yillik') renderYearlyCharts();
   if (name === 'harcama') renderHarcamaMenu();
@@ -5625,11 +5641,13 @@ function toggleSidebar() {
   if (window.innerWidth < 600) {
     document.getElementById('sidebarOverlay').classList.toggle('show');
   }
+  updateNavIndicator();
 }
 function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.body.classList.remove('sidebar-open');
   document.getElementById('sidebarOverlay').classList.remove('show');
+  updateNavIndicator();
 }
 // ─── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id = null) {
@@ -6284,25 +6302,34 @@ function handleFullBackupImport(e) {
 }
 
 // ─── RENDER ────────────────────────────────────────────────────────────────────
+function isTabActive(name) {
+  var el = document.getElementById('content-' + name);
+  return !!(el && el.classList.contains('active'));
+}
+
+// Performans: yalnızca GÖRÜNÜR sekmenin render'ı yapılır. Diğer sekmeler
+// switchTab ile açılırken zaten yeniden çiziliyor; her kayıt işlemünde tüm
+// sekmlerin (gizli tablolar dahil) yeniden çizilmesi büyük gecikme kaynağıydı.
 function renderAll() {
-  renderKPIs();
-  renderWeeklySummary();
-  renderDailySummary();
-  renderDataInfo();
-  renderLastRecordsTable();
-  renderRecordsTable();
-  renderReport();
-  renderSparklines();
-  renderWeeklyComparison();
-  renderMonthlyComparison();
-  renderYearlyComparison();
-  var yillikContent = document.getElementById('content-yillik');
-  if (yillikContent && yillikContent.classList.contains('active')) renderYearlyCharts();
-  renderAnomalies();
-  renderHaccp();
-  renderYagTable();
-  renderAmbalajTable();
-  renderKalibrasyon();
+  if (isTabActive('dashboard')) {
+    renderKPIs();
+    renderWeeklySummary();
+    renderDailySummary();
+    renderDataInfo();
+    renderLastRecordsTable();
+    renderSparklines();
+    renderWeeklyComparison();
+    renderMonthlyComparison();
+    renderYearlyComparison();
+    renderAnomalies();
+  }
+  if (isTabActive('records')) renderRecordsTable();
+  if (isTabActive('report')) renderReport();
+  if (isTabActive('haccp')) renderHaccp();
+  if (isTabActive('yag')) renderYagTable();
+  if (isTabActive('ambalaj')) renderAmbalajTable();
+  if (isTabActive('kalibrasyon')) renderKalibrasyon();
+  if (isTabActive('yillik')) renderYearlyCharts();
 }
 
 // ─── DAILY DETAIL PANEL ─────────────────────────────────────────────────────

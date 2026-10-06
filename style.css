@@ -312,7 +312,10 @@ select.login-field {
   text-decoration: none; transition: color 0.2s;
 }
 .login-forgot:hover { color: #00B8E6; text-decoration: underline; }
-.login-submit {
+/* .login-overlay eki şart: .btn (daha aşağıda) tek klasör seçicisini eziyordu;
+   padding/font bu yüzden hiç uygulanmıyordu. Yükseklik = .login-field (17px
+   padding + 1px border) ile aynı olacak şekilde 18px dikey padding. */
+.login-overlay .login-submit {
   width: 100%;
   display: inline-flex;
   align-items: center;
@@ -325,8 +328,8 @@ select.login-field {
   font-weight: 800; letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #ffffff;
-  background: linear-gradient(135deg, #1769E0 0%, #00B8E6 100%);
-  box-shadow: 0 8px 22px rgba(23,105,224,0.32);
+  background: #0D47A1;
+  box-shadow: 0 8px 22px rgba(13,71,161,0.35);
   transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
   border: none; cursor: pointer; font-family: var(--font);
 }
@@ -338,14 +341,14 @@ select.login-field {
 .login-submit:hover .login-submit-arrow { transform: translateX(3px); }
 .login-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0,184,230,0.42);
-  filter: brightness(1.05);
+  box-shadow: 0 12px 28px rgba(13,71,161,0.45);
+  filter: brightness(1.12);
 }
 .login-submit:active {
   transform: translateY(0) scale(0.98);
 }
 .login-submit:focus {
-  outline: 2px solid rgba(23,105,224,0.5); outline-offset: 2px;
+  outline: 2px solid rgba(13,71,161,0.55); outline-offset: 2px;
 }
 .login-error {
   color: #e11d48; font-size: 0.82rem; margin: 0; text-align: center;
@@ -444,7 +447,7 @@ select.login-field {
     .login-form { margin-top: 1.6rem; }
     .login-form-options { flex-wrap: wrap; gap: 0.5rem; }
     .login-label { font-size: 0.68rem; }
-    .login-submit { padding: 14px 20px; font-size: 0.92rem; }
+    .login-overlay .login-submit { padding: 16px 20px; font-size: 0.92rem; }
     .login-field { padding: 15px 16px; }
     .login-logo-img { max-width: 160px; }
     .login-title { font-size: 0.98rem; }
@@ -671,7 +674,7 @@ html[data-accent="rose"] {
   background: rgba(255,255,255,0.04);
 }
 [data-theme="dark"] .sidebar-nav .tab-btn.active {
-  background: rgba(255,255,255,0.06);
+  background: transparent;
   color: #22d3ee;
 }
 [data-theme="dark"] .btn-secondary {
@@ -809,7 +812,6 @@ body {
   color: var(--text-primary);
   height: 100%;
   overflow: hidden;
-  background-attachment: fixed;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -1121,14 +1123,38 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 .logo-small svg { width: 46px; height: 24px; }
 
 .sidebar-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   padding: 0 0.5rem;
 }
 
+/* Kayan "hap" gösterge: aktif sekmenin arkasında yumuşakça kayar */
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    color-mix(in srgb, var(--accent) 25%, transparent));
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 28%, transparent);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s ease;
+  will-change: transform, height;
+}
+
 .sidebar-nav .tab-btn,
 .sidebar-actions .tab-btn {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.7rem;
@@ -1165,7 +1191,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 .sidebar-nav .tab-btn.active {
   color: var(--accent-cyan);
-  background: rgba(99,102,241,0.1);
+  background: transparent;
   border-bottom: none;
 }
 
@@ -1215,9 +1241,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 }
 .sidebar-nav .tab-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--accent) 58%, transparent),
-    color-mix(in srgb, var(--accent) 28%, transparent));
+  background: transparent;
 }
 .sidebar-nav .tab-btn.active svg {
   stroke: currentColor;
@@ -1286,7 +1310,7 @@ body[data-role]:not([data-role="admin"]) .field-harcama { display: none !importa
 
 
 .tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+.tab-content.active { display: block; animation: fadeIn 0.18s ease; }
 
 /* Tüm sekmeler için scrollbar */
 #content-dashboard.active,
