@@ -50,36 +50,13 @@
   <!-- LOGIN OVERLAY -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-shell">
-      <aside class="login-brand">
-        <div class="login-brand-glow login-brand-glow--tl" aria-hidden="true"></div>
-        <div class="login-brand-glow login-brand-glow--br" aria-hidden="true"></div>
-        <div class="login-brand-grid" aria-hidden="true"></div>
-        <div class="login-brand-wave login-brand-wave--top" aria-hidden="true"></div>
-        <div class="login-brand-wave login-brand-wave--bottom" aria-hidden="true"></div>
-
-        <div class="login-brand-head">
-          <h2 class="login-title">KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<span class="login-sub">NUTRITION SERVICES MANAGEMENT SYSTEM (NSMS)</span></h2>
-        </div>
-
-        <div class="login-cutlery" aria-hidden="true">
-          <div class="login-emblem">
-            <img src="logo.gif" alt="Logo" class="login-logo-img" />
-          </div>
-          <div class="login-dot-grid"></div>
-        </div>
-
-        <ul class="login-features">
-          <li><span class="login-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="loginFeature1">Menü Planlaması, Günlük Üretim, Tüketim ve Atık Takibi</span></li>
-          <li><span class="login-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="2 13 9 7 13 11 22 4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="2 20 22 20" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="loginFeature2">Detaylı Raporlama</span></li>
-          <li><span class="login-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><line x1="12" y1="12" x2="12" y2="3" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="12" x2="19.36" y2="7.64" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span data-i18n="loginFeature3">Canlı Panel ve Grafikler</span></li>
-        </ul>
-      </aside>
       <section class="login-form-panel">
         <div class="login-form-head">
-          <p class="login-form-sub" data-i18n="loginFormSub">Giriş Yapınız</p>
+          <div class="login-logo-wrap">
+            <img src="logo.png" alt="Logo" class="login-logo-img-sm" />
+          </div>
         </div>
         <form class="login-form" onsubmit="event.preventDefault();doLogin()">
-          <label class="login-label" for="loginUsername" data-i18n="loginUsername">Kullanıcı</label>
           <div class="login-field-wrap">
             <span class="login-field-icon login-icon-user">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -91,7 +68,6 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
             </span>
           </div>
-          <label class="login-label" for="loginPassword" data-i18n="loginPassword">Şifre</label>
           <div class="login-field-wrap">
             <span class="login-field-icon login-icon-lock">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -101,9 +77,6 @@
               <svg class="pw-eye pw-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="pw-eye pw-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
-          </div>
-          <div class="login-form-options">
-            <a href="javascript:void(0)" class="login-forgot" onclick="showForgotPw()" data-i18n="loginForgot">Şifremi Unuttum?</a>
           </div>
           <button type="submit" class="btn login-submit">
             <span class="login-submit-arrow" aria-hidden="true">
@@ -115,15 +88,12 @@
         </form>
         <div class="login-inst-footer">
           <div class="login-inst-text">© 2026 Kırşehir Ahi Evran Üniversitesi Sağlık Kültür ve Spor Daire Başkanlığı</div>
-          <span class="login-inst-version">Versiyon: v1.4.0</span>
+          <div class="login-inst-text">NUTRITION SERVICES MANAGEMENT SYSTEM</div>
+          <span class="login-inst-version">Versiyon: v1.5.0</span>
         </div>
         <div class="login-bottom">
-          <div class="login-links">
-            <a href="javascript:void(0)" onclick="openManualModal()" data-i18n="sidebarManual">Kullanım Kılavuzu</a>
-          </div>
-          <div class="login-secure">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-            <span data-i18n="loginSecure">Güvenli Bağlantı</span>
+          <div class="login-forgot-wrap">
+            <a href="javascript:void(0)" class="login-forgot" onclick="showForgotPw()" data-i18n="loginForgot">Şifremi Unuttum?</a>
           </div>
         </div>
       </section>
@@ -155,9 +125,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span data-i18n="menuLabel">Menü</span>
         </button>
-        <div class="header-logo">
-          <span>Nutrition Services Management System</span>
-        </div>
+      </div>
+      <div class="header-logo">
+        <span>Nutrition Services Management System</span>
       </div>
       <div class="header-right">
         <div class="conn-status" id="connStatus" title="Bağlantı durumu">
@@ -246,6 +216,14 @@
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-size="16" font-weight="700" fill="#14b8a6" font-family="Inter,sans-serif">₺</text></svg>
           <span data-i18n="sidebarSpending">Harcama</span>
         </button>
+        <button class="tab-btn" id="tab-malitablo" onclick="switchTab('malitablo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          <span data-i18n="sidebarMaliTablo">Mali Tablolar</span>
+        </button>
+        <button class="tab-btn" id="tab-yillikplan" onclick="switchTab('yillikplan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><path d="M9 14l2 2 4-4"/></svg>
+          <span data-i18n="sidebarYillikPlan">Yıllık İhtiyaç Planı</span>
+        </button>
         <button class="tab-btn" id="tab-birimfiyat" onclick="switchTab('birimfiyat')">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span data-i18n="sidebarUnitPrice">Ürün ve Fiyatlar</span>
@@ -274,7 +252,7 @@
           <span data-i18n="sidebarManual">Kullanım Kılavuzu</span>
         </button>
       </div>
-      <div class="sidebar-version" id="appVersionLabel" title="Uygulama Sürümü">v1.1.0</div>
+      <div class="sidebar-version" id="appVersionLabel" title="Uygulama Sürümü">v1.5.0</div>
     </aside>
 
     <main class="main-content">
@@ -776,11 +754,9 @@
                 <tbody id="weeklyTotalTbody"></tbody>
               </table>
             </div>
-          </div>
         </div>
-        <div id="menuMaliTablo" style="margin-top:1.5rem;display:none"></div>
-        <div id="yillikMaliyetSection" style="margin-top:1.5rem;display:none"></div>
       </div>
+    </div>
     </div>
 
     <!-- ===== HACCP TAB ===== -->
@@ -1596,6 +1572,34 @@
 
     <div class="tab-content" id="content-birimfiyat"></div>
 
+    <div class="tab-content" id="content-malitablo">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="sidebarMaliTablo">Mali Tablolar</h2>
+        </div>
+        <div class="menu-date-nav">
+          <button class="btn btn-ghost btn-sm" onclick="shiftMaliWeek(-1)" data-i18n="btnPrev">◀ Önceki</button>
+          <span id="maliWeekLabel">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="shiftMaliWeek(1)" data-i18n="btnNext">Sonraki ▶</button>
+        </div>
+        <div id="menuMaliTablo" style="margin-top:1.5rem;display:none"></div>
+        <div id="yillikMaliyetSection" style="margin-top:1.5rem;display:none"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="content-yillikplan">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="sidebarYillikPlan">Yıllık İhtiyaç Planı</h2>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input type="number" id="yillikPlanYilSec" class="yillik-yil-sec" style="width:92px;text-align:center" min="1970" max="9999" step="1" onchange="yillikPlanYilDegistir(this.value)" />
+          </div>
+        </div>
+        <div id="yillikPlanHaftaTablo" style="margin-top:1rem"></div>
+        <div id="yillikPlanIhtiyacTablo" style="margin-top:1.5rem"></div>
+      </div>
+    </div>
+
   </main>
 
     </div><!-- /.app-layout -->
@@ -1769,7 +1773,7 @@
               </label>
               <input type="number" id="fPersonel" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" class="person-input" />
             </div>
-          </div>
+        </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeModal()" data-i18n="btnCancel">İptal</button>
@@ -1996,7 +2000,6 @@
               <label for="yfNot" data-i18n="formNote">Not</label>
               <input type="text" id="yfNot" placeholder="İsteğe bağlı" style="width:100%" />
             </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeYagModal()" data-i18n="btnCancel">İptal</button>
@@ -2004,6 +2007,7 @@
         </div>
       </form>
     </div>
+  </div>
   </div>
 
   <!-- ===== AMBALAJ MODAL ===== -->
@@ -2045,7 +2049,6 @@
               <label for="afNot">Not</label>
               <input type="text" id="afNot" placeholder="İsteğe bağlı" style="width:100%" />
             </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeAmbalajModal()" data-i18n="btnCancel">İptal</button>
@@ -2053,6 +2056,7 @@
         </div>
       </form>
     </div>
+  </div>
   </div>
 
   <!-- ===== KALİBRASYON MODAL ===== -->
@@ -2112,7 +2116,6 @@
               <label for="kfNot">Not</label>
               <input type="text" id="kfNot" placeholder="İsteğe bağlı" style="width:100%" />
             </div>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeKalibrasyonModal()" data-i18n="btnCancel">İptal</button>
@@ -2120,6 +2123,7 @@
         </div>
       </form>
     </div>
+  </div>
   </div>
 
   <!-- ADMIN PANEL MODAL -->
@@ -2259,7 +2263,7 @@
               Sürümü Yayınla
             </button>
           </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem">Yerel sürüm kaynağı: <code>config.js</code> → <code>APP_CONFIG.version</code> / <code>APP_CONFIG.build</code></div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.6"><strong>Sürüm:</strong> giriş ekranı, yan menü ve kılavuzda görünen etiket (ör. <code>1.4.1</code>). <strong>Build No:</strong> önbellek/güncelleme sayacı — her yayında otomatik +1 artar; cihazlar yeni sürümü ancak build no mevcut değerden büyükse alır. Yerel kaynak: <code>config.js</code> → <code>APP_CONFIG.version</code> / <code>APP_CONFIG.build</code></div>
         </div>
 
         <!-- Log Kayıtları -->
@@ -2336,7 +2340,7 @@
       </div>
       <div class="manual-body">
         <div class="manual-hero">
-          <div class="manual-hero-badge" id="manualVersion">v1.3.0</div>
+          <div class="manual-hero-badge" id="manualVersion">v1.5.0</div>
           <h3>KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<br>Beslenme Hizmetleri Yönetim Sistemi</h3>
           <p data-i18n="manualSubtitle">Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi</p>
         </div>
@@ -2356,12 +2360,14 @@
             <a href="#man-grafik">10. Grafikler</a>
             <a href="#man-yillik">11. Yıllık Karşılaştırma</a>
             <a href="#man-harcama"> 12. Harcama</a>
-            <a href="#man-birimfiyat"> 13. Birim Fiyatlar ve Maliyet Hesabı</a>
-            <a href="#man-dil"> 14. Çok Dilli Destek (10 Dil)</a>
-            <a href="#man-yedek"> 15. Veri Yedekleme ve Senkronizasyon</a>
-            <a href="#man-sistem"> 16. Tema ve Görünüm</a>
-            <a href="#man-yonetim"> 17. Yönetim, İzinler ve Log Kayıtları</a>
-            <a href="#man-ipucu"> 18. İpuçları</a>
+            <a href="#man-malitablo"> 13. Mali Tablolar</a>
+            <a href="#man-yillikplan"> 14. Yıllık İhtiyaç Planı</a>
+            <a href="#man-birimfiyat"> 15. Birim Fiyatlar ve Maliyet Hesabı</a>
+            <a href="#man-dil"> 16. Çok Dilli Destek (9 Dil)</a>
+            <a href="#man-yedek"> 17. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem"> 18. Tema ve Görünüm</a>
+            <a href="#man-yonetim"> 19. Yönetim, İzinler ve Log Kayıtları</a>
+            <a href="#man-ipucu"> 20. İpuçları</a>
           </div>
         </div>
 
@@ -2515,13 +2521,37 @@
             <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
             <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafikleri filtrelenir.</li>
             <li><strong>Öğrenci Harcama Tutarı</strong> grafiği öğrenci sayısından, <strong>Personel Harcama Tutarı</strong> grafiği personel sayısından ayrı ayrı hesaplanır.</li>
-            <li>En üstteki kartlar: Toplam Öğrenci/Personel Harcama, Ortalama Aylık Harcama, Toplam Öğrenci/Personel ve En Yüksek Ay bilgisini gösterir.</li>
+            <li>En üstteki <strong>4 kart</strong>: <strong>Toplam Öğrenci Harcama</strong>, <strong>Toplam Personel Harcama</strong>, <strong>Toplam Yemek Harcama</strong> ve bu üçünün toplamı olan <strong>Genel Toplam Harcama</strong> tutarını gösterir.</li>
             <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
           </ul>
         </div>
 
+        <div class="manual-section" id="man-malitablo">
+          <h3>13. Mali Tablolar</h3>
+          <p>Haftalık menünün <strong>para karşılığını</strong> gösteren bölümdür. Menü sekmesinde yer alan maliyet tabloları bu sekmeye taşınmıştır.</p>
+          <ul>
+            <li><strong>Hafta gezinme:</strong> Üstteki <strong>◀ ▶</strong> butonları ve hafta etiketiyle haftalar arasında geçiş yapılır.</li>
+            <li><strong>Haftalık Mali Tablo:</strong> Seçili haftanın her günü için o günün yemeklerinin tarif malzemeleri, kişi sayısıyla çarpılarak <strong>birim fiyatlarla</strong> hesaplanır; günün toplam tutarı görünür.</li>
+            <li><strong>Yıllık Maliyet kartı:</strong> Seçili haftanın takvim yılına göre <strong>yıllık toplam</strong>, aylık ve günlük ortalama, kişi başı maliyet ve toplam kişi-gün ile aylık dağılım çubukları gösterilir. <strong>Yıl seçici</strong> yalnızca menü verisi olan yılları listeler; <strong>"Bu Hafta"</strong> butonu güncel haftaya döner.</li>
+            <li>Yalnızca <strong>birim fiyatı girilmiş</strong> malzemeler tutara katılır; fiyatı olmayan kalemler miktar olarak görünür ama toplama eklenmez.</li>
+            <li>Hesaplar <strong>günün takvim yılına</strong> göre yapılır (2027 menüsü 2027 fiyatını kullanır).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yillikplan">
+          <h3>14. Yıllık İhtiyaç Planı</h3>
+          <p>Yılı bütün olarak planlamanızı sağlar: 52 haftanın durumunu gösterir ve o yılın <strong>toplam malzeme ihtiyacını</strong> çıkarır.</p>
+          <ul>
+            <li><strong>Yıl seçici:</strong> Sağ üstteki kutuya istediğiniz yılı yazıp <strong>Enter</strong>'a basın (ör. 2026, 2027, 2030...). Yıl <strong>sınırsızdır</strong>; henüz menü girilmemiş gelecek yıllar da seçilebilir.</li>
+            <li><strong>Hafta planı tablosu:</strong> Yılın 52 haftası; her satırda <strong>Hafta №</strong>, <strong>Tarih aralığı</strong>, <strong>Menülü Gün (x/5)</strong> ve <strong>Durum</strong> görünür. Satırdaki <strong>"Menü Gir / Görüntüle"</strong> butonu o haftayı <strong>Menü sekmesinde</strong> açar.</li>
+            <li><strong>Toplam Yıllık İhtiyaç Listesi:</strong> Yıl içindeki tüm menülerdeki malzemeler kategori kategori toplanır; her kalemin <strong>yıllık toplam miktarı</strong> ve (fiyatı girilmişse) <strong>tutarı</strong> ile en altta <strong>genel toplam maliyet</strong> gösterilir.</li>
+            <li><strong>Menüler Menü sekmesinde</strong> hafta hafta girilir; bu sekme yalnızca planı ve toplamı gösterir (salt görüntü). Menü girildikçe ihtiyaç listesi otomatik güncellenir.</li>
+            <li>Seçili yıl için menü yoksa listede "menü verisi bulunamadı" yazar; menü girdikçe dolar.</li>
+          </ul>
+        </div>
+
         <div class="manual-section" id="man-birimfiyat">
-          <h3>13. Birim Fiyatlar ve Maliyet Hesabı</h3>
+          <h3>15. Birim Fiyatlar ve Maliyet Hesabı</h3>
           <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
           <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
           <ul>
@@ -2561,7 +2591,7 @@
         </div>
 
         <div class="manual-section" id="man-dil">
-          <h3>14. Çok Dilli Destek (9 Dil)</h3>
+          <h3>16. Çok Dilli Destek (9 Dil)</h3>
           <p>Sistem 9 dilde tam destek sağlar: <strong>Türkçe (TR)</strong>, <strong>İngilizce (EN)</strong>, <strong>Azerice (AZ)</strong>, <strong>Rusça (RU)</strong>, <strong>Almanca (DE)</strong>, <strong>Fransızca (FR)</strong>, <strong>İspanyolca (ES)</strong>, <strong>Portekizce (PT)</strong> ve <strong>Özbekçe (UZ)</strong>.</p>
           <ul>
             <li>Sayfanın sağ üstündeki <strong>globe (🌍) butonu</strong> ile dil seçilir. Seçilen dil tüm sayfalarda anında geçerli olur.</li>
@@ -2573,7 +2603,7 @@
         </div>
 
         <div class="manual-section" id="man-yedek">
-          <h3>15. Veri Yedekleme ve Senkronizasyon</h3>
+          <h3>17. Veri Yedekleme ve Senkronizasyon</h3>
           <ul>
             <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
             <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
@@ -2583,7 +2613,7 @@
         </div>
 
         <div class="manual-section" id="man-sistem">
-          <h3>16. Tema ve Görünüm</h3>
+          <h3>18. Tema ve Görünüm</h3>
           <ul>
             <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
             <li>Tema tercihi otomatik olarak hatırlanır.</li>
@@ -2592,7 +2622,7 @@
         </div>
 
         <div class="manual-section" id="man-yonetim">
-          <h3>17. Yönetim, İzinler ve Log Kayıtları</h3>
+          <h3>19. Yönetim, İzinler ve Log Kayıtları</h3>
           <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
           <ul>
             <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
@@ -2608,7 +2638,7 @@
         </div>
 
         <div class="manual-section" id="man-ipucu">
-          <h3>18. İpuçları</h3>
+          <h3>20. İpuçları</h3>
           <ul>
             <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
             <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
@@ -2627,6 +2657,25 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="config.js"></script>
+  <script>
+    // Sürüm etiketlerini İLK BOYAMADAN ÖNCE, bilinen en yeni değerle yaz.
+    // Böylece açılışta "v1.4.0 → v1.5.0" titremesi olmaz; app.js ve uzak
+    // (Supabase) çekmesi beklenmeden doğru değer görünür.
+    (function () {
+      try {
+        if (typeof APP_CONFIG === 'undefined') return;
+        var vv = null;
+        try { vv = localStorage.getItem('atik_kontrol_version'); } catch (_) {}
+        var v = 'v' + (vv || APP_CONFIG.version || '');
+        var login = document.querySelector('.login-inst-version');
+        if (login) login.textContent = 'Versiyon: ' + v;
+        var sidebar = document.getElementById('appVersionLabel');
+        if (sidebar) sidebar.textContent = v;
+        var manual = document.getElementById('manualVersion');
+        if (manual) manual.textContent = v;
+      } catch (_) {}
+    })();
+  </script>
   <script src="app.js"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="18 15 12 9 6 15"/></svg>
@@ -2637,7 +2686,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const reg = b => navigator.serviceWorker.register('sw.js?b=' + (parseInt(b, 10) || 1)).catch(() => {});
-        reg(window.APP_CONFIG && APP_CONFIG.build);
+        reg(typeof APP_CONFIG !== 'undefined' && APP_CONFIG.build);
         if (typeof resolveAppVersion === 'function') {
           resolveAppVersion().then(reg).catch(() => {});
         }

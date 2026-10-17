@@ -10,7 +10,7 @@ const BUILD = new URL(self.location.href).searchParams.get('b') || '1';
 const CACHE = 'atik-kontrol-b' + BUILD;
 
 /* index.html, style.css ve app.js surumsuz istenir (tek surum kaynagi
-   config.js oldugundan ?v= kullanilmaz). logo.gif surumsuz istenir.
+   config.js oldugundan ?v= kullanilmaz). logo.png surumsuz istenir.
    Hepsi no-cache ile onbellege yazilir; cevrimdisiyken guncel kopya calisir. */
 const URLS = [
   'index.html',
@@ -18,7 +18,7 @@ const URLS = [
   'app.js',
   'manifest.json',
   'config.js',
-  'logo.gif'
+  'logo.png'
 ];
 
 self.addEventListener('install', e => {

@@ -50,7 +50,9 @@ function applyLocalVersionOverride() {
     if (typeof APP_CONFIG === 'undefined') return;
     var vv = localStorage.getItem(LS_APP_VERSION);
     var vb = parseInt(localStorage.getItem(LS_APP_BUILD) || '0', 10);
-    if (vv) APP_CONFIG.version = vv;
+    // localStorage sürümü yalnızca config.js sürümünden yeni/eşitse uygulanır;
+    // böylece eski bir localStorage değeri daha yeni config.js sürümünü ezemez.
+    if (vv && (typeof cmpVersion !== 'function' || cmpVersion(vv, APP_CONFIG.version) >= 0)) APP_CONFIG.version = vv;
     if (vb > (parseInt(APP_CONFIG.build, 10) || 0)) APP_CONFIG.build = vb;
   } catch (_) {}
 }
@@ -87,18 +89,32 @@ async function fetchRemoteVersion() {
     if (!data || !data.length) return null;
     var out = {};
     data.forEach(function (row) { out[row.key] = row.value; });
-    return out;
+    // Supabase satır anahtarları 'app_version'/'app_build'; çağıranlar ise
+    // remote.version / remote.build bekliyor — burada normalize edilir.
+    return { version: out[APP_VER_SUPA_KEY], build: out[APP_BUILD_SUPA_KEY] };
   } catch (_) { return null; }
 }
 
 async function resolveAppVersion() {
-  var localBuild = parseInt(typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.build : 0, 10) || 1;
+  var curVer = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) ? APP_CONFIG.version : '0';
+  var curBuild = parseInt(typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.build : 0, 10) || 0;
+  var bestVer = curVer, bestBuild = curBuild;
   var remote = await fetchRemoteVersion();
   if (remote) {
+    // Sürüm: EN YENİ (semver) kazanır. Böylece Supabase'teki eski bir değer,
+    // config.js veya localStorage'daki daha yeni sürümü geriye çeviremez.
+    if (remote.version && cmpVersion(remote.version, bestVer) > 0) bestVer = remote.version;
+    // Build: en yüksek değer kazanır (service worker önbelleği tazelensin diye).
     var rb = parseInt(remote.build, 10) || 0;
-    if (rb > localBuild) APP_CONFIG.build = rb;
-    if (rb >= localBuild && remote.version) APP_CONFIG.version = remote.version;
+    if (rb > bestBuild) bestBuild = rb;
   }
+  APP_CONFIG.version = bestVer;
+  APP_CONFIG.build = bestBuild;
+  // Çözülen en yeni değeri sakla: sonraki açılışta tutarlı kalır.
+  try {
+    localStorage.setItem(LS_APP_VERSION, bestVer);
+    localStorage.setItem(LS_APP_BUILD, String(bestBuild));
+  } catch (_) {}
   applyVersionLabels();
   return parseInt(APP_CONFIG.build, 10) || 1;
 }
@@ -407,7 +423,7 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, yillik: true, harcama: false, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, yillik: true, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false },
     canEditMenu: true,
     canSaveMenu: true,
     canSeeProduction: true,
@@ -431,7 +447,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -455,7 +471,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, yillik: false, harcama: false, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, yillik: false, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -479,7 +495,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -503,7 +519,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -527,7 +543,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
     canEditMenu: false,
     canSaveMenu: false,
     canSeeProduction: true,
@@ -886,6 +902,18 @@ function apBumpBuild() {
   if (bi) bi.value = (parseInt(bi.value, 10) || 0) + 1;
 }
 
+// "1.4.0" gibi sürümleri sayısal parça parça kıyaslar (a<b: -1, a>b: 1, eşit: 0)
+function cmpVersion(a, b) {
+  var pa = String(a == null ? '' : a).split('.').map(function (n) { return parseInt(n, 10) || 0; });
+  var pb = String(b == null ? '' : b).split('.').map(function (n) { return parseInt(n, 10) || 0; });
+  var len = Math.max(pa.length, pb.length);
+  for (var i = 0; i < len; i++) {
+    var x = pa[i] || 0, y = pb[i] || 0;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
 async function apPublishVersion() {
   if (getRole() !== ROLE_ADMIN) {
     showToast('Bu işlem için admin yetkisi gerekli.', 'error');
@@ -899,6 +927,18 @@ async function apPublishVersion() {
     showToast('Sürüm (ör: 1.4.1) ve build no geçerli değil.', 'error');
     return;
   }
+  // Mevcut sürümden daha eski bir sürüm yayınlanmasını engelle (yanlışlıkla
+  // "1.1.0" gibi düşük değer girilip etiketin geri gitmesini önler).
+  if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version && cmpVersion(ver, APP_CONFIG.version) < 0) {
+    showToast('Yeni sürüm mevcut sürümden eski olamaz (mevcut: v' + APP_CONFIG.version + ').', 'error');
+    apRenderVersion();
+    return;
+  }
+  // Build no, mevcut değerden küçük/eşitse otomatik artır. Aksi halde
+  // resolveAppVersion uzak sürümü uygulamaz ve diğer cihazlar yeni sürümü çekmez.
+  var curBuild = parseInt(typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.build : 0, 10) || 0;
+  if (build <= curBuild) build = curBuild + 1;
+  if (bi) bi.value = build;
 
   // 1) Yerel: etiketler + SW anında güncellenir
   if (typeof APP_CONFIG !== 'undefined') {
@@ -1014,7 +1054,7 @@ async function saveAdminSettings() {
     var perm = rolePermissions[role];
     if (!perm) return;
     var prefix = 'apRole_' + role + '_';
-    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts', 'yillik', 'harcama', 'birimfiyat'];
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts', 'yillik', 'harcama', 'malitablo', 'yillikplan', 'birimfiyat'];
     tabs.forEach(function(tab) {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
@@ -1060,7 +1100,7 @@ function apRenderRolePermissions() {
     canMenuOnayla: 'Menüyü onaylayabilir',
     canMenuReddet: 'Menüyü reddedebilir'
   };
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', birimfiyat: 'Ürün ve Fiyatlar' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -1703,6 +1743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       applyRolePermissions();
       renderAll();
       if (isTabActive('menu')) renderMenu();
+      if (isTabActive('malitablo')) renderMaliTabloTab();
     } catch (_) {}
   })();
 
@@ -5543,11 +5584,13 @@ async function switchTab(name) {
   }
   closeSidebar();
   if (name === 'menu') await renderMenu();
+  if (name === 'malitablo') await renderMaliTabloTab();
+  if (name === 'yillikplan') await renderYillikPlan();
   if (name === 'haccp') { loadHaccpData(); dataloggerDurumYenile(); }
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
-  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
+  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), malitablo: t('sidebarMaliTablo'), yillikplan: t('sidebarYillikPlan'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
   document.getElementById('pageTitle').textContent = labels[name] || name;
     localStorage.setItem('atik_kontrol_active_tab', name);
     applyTranslations();
@@ -7057,7 +7100,7 @@ function renderProduction(_weekKey, _weekData, days) {
     }
     return false;
   });
-  if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); renderMaliTablo(days); return; }
+  if (!hasAny) { section.style.display = 'none'; renderWeeklyTotal([], days); return; }
   section.style.display = 'block';
 
   const wrapper = section.querySelector('.table-wrapper');
@@ -7136,7 +7179,6 @@ function renderProduction(_weekKey, _weekData, days) {
     }
   });
   renderWeeklyTotal(allDishes, days);
-  renderMaliTablo(days);
 }
 
 function renderWeeklyTotal(dishEntries, days) {
@@ -7568,12 +7610,227 @@ function renderMaliTablo(days) {
 
   html += '</div></div>';
   container.innerHTML = html;
-  renderYillikMaliyet();
 }
 
 function scrollToYillikMaliyet() {
   var el = document.getElementById('yillikMaliyetSection');
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== MALİ TABLAR SEKMESİ =====
+// Haftalık mali kart + yıllık maliyet bölümü, kendi sekmesinde bağımsız render edilir.
+async function renderMaliTabloTab() {
+  // Yemek/birimfiyat cache'leri bgSync ile arka planda yükleniyor olabilir.
+  // Sekme ilk açıldığında hazır değilse burada yükle ve bekle.
+  if (supabaseClient) {
+    if (!yemeklerCache.length) await syncDishesFromSupabase();
+    if (!unitPricesCache.length) await syncUnitPricesFromSupabase();
+  }
+  var monday = getWeekStartDate(menuWeekOffset);
+  var friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+  var weekKey = formatDateStr(monday) + '-' + formatDateStr(friday);
+  var labelEl = document.getElementById('maliWeekLabel');
+  if (labelEl) labelEl.textContent = formatDateStrTR(monday) + ' - ' + formatDateStrTR(friday);
+
+  var allData = await fetchMenuData();
+  var weekData = allData[weekKey] || {};
+  var days = getGUNLER().map(function(gun, i) {
+    var tarih = new Date(monday);
+    tarih.setDate(monday.getDate() + i);
+    var key = formatDateStr(tarih);
+    var dd = weekData[key] || { yemekler: ['','','','',''], kisi: 0, notlar: [] };
+    return { gun: gun, key: key, tarih: tarih, data: dd };
+  });
+  renderMaliTablo(days);      // haftalık mali kart (yoksa gizler)
+  renderYillikMaliyet();      // yıllık bölüm her zaman çalışır
+}
+
+function shiftMaliWeek(delta) {
+  menuWeekOffset += delta;
+  renderMaliTabloTab();
+}
+
+// Yıl/ay gezinme tetikleyicileri: hangi sekme açıysa onu tazeler.
+function refreshMaliOrMenu() {
+  var active = document.querySelector('.tab-btn.active');
+  if (active && active.id === 'tab-malitablo') renderMaliTabloTab();
+  else renderMenu();
+}
+
+// ===== YILLIK İHTİYAÇ PLANI SEKMESİ =====
+// Menüleri Menü sekmesinde girilir; burada 52 haftalık plan görüntülenir
+// ve tüm yılın toplam ihtiyacı (pirinç kg, mercimek kg...) hesaplanır.
+let yillikPlanSeciliYil = null;
+
+function yillikPlanHaftalari(yil) {
+  var haftalar = [];
+  var t = new Date(yil, 0, 1);
+  var pzt = new Date(t);
+  pzt.setDate(t.getDate() - ((t.getDay() + 6) % 7));
+  while (pzt.getFullYear() < yil) pzt.setDate(pzt.getDate() + 7);
+  while (pzt.getFullYear() === yil) {
+    haftalar.push(new Date(pzt));
+    pzt.setDate(pzt.getDate() + 7);
+  }
+  return haftalar;
+}
+
+function yillikIhtiyacTopla(yil) {
+  var agg = {};
+  var normBirim = normBirimGlobal;
+  Object.keys(menuAllDataCache).forEach(function(wk) {
+    var weekData = menuAllDataCache[wk] || {};
+    Object.keys(weekData).forEach(function(dayKey) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return;
+      if (parseInt(dayKey.slice(0, 4), 10) !== yil) return;
+      var dd = weekData[dayKey];
+      if (!dd || !dd.yemekler) return;
+      var kisi = dd.kisi || 0;
+      for (var ci = 0; ci < 5; ci++) {
+        var dishName = parseDishAdi(dd.yemekler[ci] || '');
+        if (!dishName) continue;
+        var dish = findDishByName(dishName);
+        if (!dish || !dish.tarif) continue;
+        dish.tarif.forEach(function(ing) {
+          var miktarKisi = ing.miktar_kisi || ing.miktar || 0;
+          var birim = normBirim(ing.birim);
+          var key = (ing.malzeme || '').trim().toLowerCase() + '|' + birim;
+          if (!agg[key]) agg[key] = { ad: (ing.malzeme || '').trim(), birim: birim, total: 0, miktarKisi: miktarKisi };
+          agg[key].total += miktarKisi * kisi;
+        });
+      }
+    });
+  });
+  return agg;
+}
+
+async function renderYillikPlan() {
+  if (supabaseClient) {
+    if (!yemeklerCache.length) await syncDishesFromSupabase();
+    if (!unitPricesCache.length) await syncUnitPricesFromSupabase();
+  }
+  await fetchMenuData();
+  var yil = yillikPlanSeciliYil || aktifHaftaYili();
+  yillikPlanSeciliYil = yil;
+
+  var sec = document.getElementById('yillikPlanYilSec');
+  if (sec) sec.value = yil;
+
+  renderYillikPlanHaftalar(yil);
+  renderYillikPlanIhtiyac(yil);
+}
+
+function yillikPlanYilDegistir(yil) {
+  var n = parseInt(yil, 10);
+  var sec = document.getElementById('yillikPlanYilSec');
+  if (!n || n < 1970 || n > 9999) {
+    if (sec) sec.value = yillikPlanSeciliYil || aktifHaftaYili();
+    return;
+  }
+  yillikPlanSeciliYil = n;
+  renderYillikPlan();
+}
+
+function yillikPlanGit(weekKey) {
+  var pzt = weekKeyPazartesi(weekKey);
+  if (pzt) menuWeekOffset = haftaOffsetFor(pzt);
+  switchTab('menu');
+}
+
+function renderYillikPlanHaftalar(yil) {
+  var container = document.getElementById('yillikPlanHaftaTablo');
+  if (!container) return;
+  var haftalar = yillikPlanHaftalari(yil);
+  if (!haftalar.length) { container.innerHTML = '<div class="yillik-bos">Veri yok.</div>'; return; }
+  var dolu = 0;
+  var rows = haftalar.map(function(pzt, i) {
+    var cuma = new Date(pzt); cuma.setDate(pzt.getDate() + 4);
+    var weekKey = formatDateStr(pzt) + '-' + formatDateStr(cuma);
+    var weekData = menuAllDataCache[weekKey] || {};
+    var gunSayisi = Object.keys(weekData).filter(function(k) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(k) && (weekData[k].yemekler || []).some(function(y) { return (y || '').trim(); });
+    }).length;
+    var meta = getMenuDurumMeta(weekData);
+    var doluMu = gunSayisi > 0;
+    if (doluMu) dolu++;
+    var tarih = formatDateStrTR(pzt) + ' – ' + formatDateStrTR(cuma);
+    var durumTxt = doluMu ? menuDurumLabel(meta.durum) : '—';
+    return '<tr>' +
+      '<td><strong>' + (i + 1) + '</strong></td>' +
+      '<td>' + tarih + '</td>' +
+      '<td style="text-align:center">' + (doluMu ? gunSayisi + ' / 5' : '—') + '</td>' +
+      '<td style="text-align:center">' + escapeHtml(durumTxt) + '</td>' +
+      '<td style="text-align:center"><button class="btn btn-ghost btn-sm" onclick="yillikPlanGit(\'' + weekKey + '\')">' + (doluMu ? 'Görüntüle' : 'Menü Gir') + '</button></td>' +
+      '</tr>';
+  }).join('');
+  container.innerHTML =
+    '<div class="table-wrapper"><table class="data-table"><thead><tr>' +
+    '<th style="width:50px">Hafta</th><th>Tarih Aralığı</th><th style="text-align:center">Menülü Gün</th><th style="text-align:center">Durum</th><th style="text-align:center">İşlem</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div style="margin-top:0.6rem;font-size:0.82rem;opacity:0.75">' + yil + ' yılı: ' + haftalar.length + ' haftanın ' + dolu + "'i menülü.</div>";
+}
+
+function renderYillikPlanIhtiyac(yil) {
+  var container = document.getElementById('yillikPlanIhtiyacTablo');
+  if (!container) return;
+  var fmtTotal = function(total, birim) {
+    if (total <= 0) return '—';
+    if (birim === 'gr') return total >= 1000 ? (Math.round(total / 10) / 100) + ' kg' : Math.round(total) + ' gr';
+    if (birim === 'ml') return total >= 1000 ? (Math.round(total / 10) / 100) + ' lt' : Math.round(total) + ' ml';
+    if (birim === 'lt' || birim === 'litre') return (Math.round(total * 100) / 100) + ' lt';
+    return Math.round(total) + ' ' + birim;
+  };
+
+  var agg = yillikIhtiyacTopla(yil);
+  var entries = Object.keys(agg).map(function(k) { return agg[k]; }).filter(function(e) { return e.total > 0; });
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="weekly-total-card"><div class="weekly-total-header">Toplam Yıllık İhtiyaç Listesi (' + yil + ')</div>' +
+      '<div class="weekly-total-body"><div class="yillik-bos">' + yil + ' yılı için menü verisi bulunamadı.</div></div></div>';
+    return;
+  }
+
+  var kategoriler = {};
+  var sira = {};
+  MENU_KATEGORI_SIRASI.forEach(function(k, i) { sira[k] = i; });
+  entries.forEach(function(e) {
+    var kat = menuGetKategori(e.ad);
+    if (!kategoriler[kat]) kategoriler[kat] = [];
+    kategoriler[kat].push(e);
+  });
+  var katSirali = Object.keys(kategoriler).sort(function(a, b) {
+    return (sira[a] !== undefined ? sira[a] : 99) - (sira[b] !== undefined ? sira[b] : 99);
+  });
+
+  var idx = 0;
+  var satirlar = '';
+  var genelMaliyet = 0;
+  katSirali.forEach(function(kat) {
+    var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
+    satirlar += '<tr style="background:' + renk.bg + '"><td colspan="4" style="font-weight:800;color:' + renk.renk + '">' + renk.icon + ' ' + escapeHtml(kat) + '</td></tr>';
+    kategoriler[kat].forEach(function(e) {
+      idx++;
+      var birimAd = normBirimGlobal(e.birim);
+      var hesap = (birimAd === 'adet') ? Math.ceil(e.total) : e.total;
+      var tutar = birimFiyatTutar(e.ad, birimAd, hesap);
+      if (tutar > 0) genelMaliyet += Math.round(tutar * 100) / 100;
+      satirlar += '<tr>' +
+        '<td>' + idx + '</td>' +
+        '<td>' + escapeHtml(e.ad) + '</td>' +
+        '<td style="text-align:right;font-weight:700">' + fmtTotal(e.total, e.birim) + '</td>' +
+        '<td style="text-align:right">' + (tutar > 0 ? formatTRY(tutar) : '—') + '</td>' +
+        '</tr>';
+    });
+  });
+
+  container.innerHTML = '<div class="weekly-total-card">' +
+    '<div class="weekly-total-header">Toplam Yıllık İhtiyaç Listesi (' + yil + ')' +
+    (genelMaliyet > 0 ? '<span style="margin-left:auto;font-weight:700;font-size:0.9rem;color:var(--accent-cyan)">Toplam Maliyet: ' + formatTRY(genelMaliyet) + '</span>' : '') +
+    '</div>' +
+    '<div class="table-wrapper"><table class="data-table"><thead><tr>' +
+    '<th style="width:44px">#</th><th>Malzeme</th><th style="text-align:right">Yıllık Toplam</th><th style="text-align:right">Tutar</th>' +
+    '</tr></thead><tbody>' + satirlar + '</tbody></table></div></div>';
 }
 
 // ===== YILLIK MALİYET =====
@@ -7642,7 +7899,7 @@ function yillikDegistir(yil) {
   _yillikCache = null;
   var offset = yildaEnYakinHaftaOffset(yil);
   if (offset !== null) menuWeekOffset = offset;
-  renderMenu();
+  refreshMaliOrMenu();
 }
 
 function yillikAyGit(ay) {
@@ -7659,12 +7916,12 @@ function yillikAyGit(ay) {
     menuWeekOffset = haftaOffsetFor(ilk);
   }
   yillikSeciliYil = yil;
-  renderMenu();
+  refreshMaliOrMenu();
 }
 
 function yillikBuYilDon() {
   menuWeekOffset = 0;
-  renderMenu();
+  refreshMaliOrMenu();
 }
 
 function renderYillikMaliyet() {
@@ -10346,10 +10603,11 @@ function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
     return HC_MONTHS_TR[Number(parts[0]) - 1] + ' ' + parts[1];
   };
   const fmtTL = v => v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+  const genelToplam = totalOgrenciHarcama + totalPersonelHarcama + totalYemekHarcama;
   el.innerHTML = `
     <div class="kpi-card">
       <div class="kpi-icon kpi-cyan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       </div>
       <div class="kpi-body">
         <span class="kpi-label">Toplam Öğrenci Harcama</span>
@@ -10358,7 +10616,7 @@ function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
     </div>
     <div class="kpi-card">
       <div class="kpi-icon kpi-blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       </div>
       <div class="kpi-body">
         <span class="kpi-label">Toplam Personel Harcama</span>
@@ -10367,60 +10625,6 @@ function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
     </div>
     <div class="kpi-card">
       <div class="kpi-icon kpi-green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Ort. Aylık Öğr. Harcama</span>
-        <span class="kpi-value" id="hcAvg">${fmtTL(avgMonthlyO)}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-orange">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Ort. Aylık Pers. Harcama</span>
-        <span class="kpi-value" id="hcPersonelAvg">${fmtTL(avgMonthlyP)}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Toplam Öğrenci</span>
-        <span class="kpi-value" id="hcOgrenci">${totalOgrenci.toLocaleString('tr-TR')}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Toplam Personel</span>
-        <span class="kpi-value" id="hcPersonel">${totalPersonel.toLocaleString('tr-TR')}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-orange">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">En Yüksek Öğr. Ay</span>
-        <span class="kpi-value" id="hcMaxMonth" style="font-size:1.25rem">${monthLabel(maxKeyO)}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-purple">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">En Yüksek Pers. Ay</span>
-        <span class="kpi-value" id="hcPersonelMaxMonth" style="font-size:1.25rem">${monthLabel(maxKeyP)}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-cyan">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>
       </div>
       <div class="kpi-body">
@@ -10429,30 +10633,12 @@ function renderHarcamaMenuKpis(oran, persOran, yemekOran) {
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon kpi-green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Ort. Aylık Yemek Harcama</span>
-        <span class="kpi-value" id="hcYemekAvg">${fmtTL(avgMonthlyY)}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon kpi-blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="kpi-body">
-        <span class="kpi-label">Toplam Üretilen Yemek</span>
-        <span class="kpi-value" id="hcYemekAdet">${totalYemek.toLocaleString('tr-TR')}</span>
-      </div>
-    </div>
-    <div class="kpi-card">
       <div class="kpi-icon kpi-orange">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
       </div>
       <div class="kpi-body">
-        <span class="kpi-label">En Yüksek Yemek Ay</span>
-        <span class="kpi-value" id="hcYemekMaxMonth" style="font-size:1.25rem">${monthLabel(maxYKey)}</span>
+        <span class="kpi-label">Genel Toplam Harcama</span>
+        <span class="kpi-value" id="hcGenelTotal">${fmtTL(genelToplam)}</span>
       </div>
     </div>
   `;
@@ -14084,6 +14270,8 @@ var I18N = {
     sidebarYearly: "Yıllık Karşılaştırma",
     sidebarSpending: "Harcama",
     sidebarUnitPrice: "Ürün ve Fiyatlar",
+    sidebarMaliTablo: "Mali Tablolar",
+    sidebarYillikPlan: "Yıllık İhtiyaç Planı",
     sidebarDownload: "Tümünü İndir",
     sidebarBackup: "Supabase'e Yedekle",
     sidebarRestore: "Supabase'ten Çek",
@@ -14490,6 +14678,8 @@ var I18N = {
     sidebarYearly: "Yearly Comparison",
     sidebarSpending: "Spending",
     sidebarUnitPrice: "Unit Prices",
+    sidebarMaliTablo: "Financial Tables",
+    sidebarYillikPlan: "Annual Needs Plan",
     sidebarDownload: "Download All",
     sidebarBackup: "Backup to Supabase",
     sidebarRestore: "Restore from Supabase",
@@ -14896,6 +15086,8 @@ var I18N = {
     sidebarYearly: "İllik Müqayisə",
     sidebarSpending: "Xərclər",
     sidebarUnitPrice: "Vahid Qiymətlər",
+    sidebarMaliTablo: "Mali Cədvəllər",
+    sidebarYillikPlan: "İllik Tələbat Planı",
     sidebarDownload: "Hamısını Yüklə",
     sidebarBackup: "Supabase-ə Yedeklə",
     sidebarRestore: "Supabase-dən Çək",
@@ -15288,6 +15480,8 @@ var I18N = {
     sidebarYearly: "Годовое сравнение",
     sidebarSpending: "Расходы",
     sidebarUnitPrice: "Единичные цены",
+    sidebarMaliTablo: "Финансовые таблицы",
+    sidebarYillikPlan: "Годовой план потребностей",
     sidebarDownload: "Скачать всё",
     sidebarBackup: "Резервное копирование",
     sidebarRestore: "Восстановить из Supabase",
@@ -15680,6 +15874,8 @@ var I18N = {
     sidebarYearly: "Jahresvergleich",
     sidebarSpending: "Ausgaben",
     sidebarUnitPrice: "Stückpreise",
+    sidebarMaliTablo: "Finanztabellen",
+    sidebarYillikPlan: "Jahresbedarfsplan",
     sidebarDownload: "Alle herunterladen",
     sidebarBackup: "Bei Supabase sichern",
     sidebarRestore: "Von Supabase wiederherstellen",
@@ -16072,6 +16268,8 @@ var I18N = {
     sidebarYearly: "Comparaison annuelle",
     sidebarSpending: "Dépenses",
     sidebarUnitPrice: "Prix unitaires",
+    sidebarMaliTablo: "Tableaux financiers",
+    sidebarYillikPlan: "Plan annuel des besoins",
     sidebarDownload: "Tout télécharger",
     sidebarBackup: "Sauvegarder sur Supabase",
     sidebarRestore: "Restaurer depuis Supabase",
@@ -16464,6 +16662,8 @@ var I18N = {
     sidebarYearly: "Comparación anual",
     sidebarSpending: "Gastos",
     sidebarUnitPrice: "Precios unitarios",
+    sidebarMaliTablo: "Tablas financieras",
+    sidebarYillikPlan: "Plan anual de necesidades",
     sidebarDownload: "Descargar todo",
     sidebarBackup: "Copia de seguridad en Supabase",
     sidebarRestore: "Restaurar desde Supabase",
@@ -16856,6 +17056,8 @@ var I18N = {
     sidebarYearly: "Comparação anual",
     sidebarSpending: "Despesas",
     sidebarUnitPrice: "Preços unitários",
+    sidebarMaliTablo: "Tabelas financeiras",
+    sidebarYillikPlan: "Plano anual de necessidades",
     sidebarDownload: "Baixar tudo",
     sidebarBackup: "Backup no Supabase",
     sidebarRestore: "Restaurar do Supabase",
@@ -17248,6 +17450,8 @@ var I18N = {
     sidebarYearly: "Yillik taqqoslash",
     sidebarSpending: "Xarajatlar",
     sidebarUnitPrice: "Birlik narxlari",
+    sidebarMaliTablo: "Moliyaviy jadvallar",
+    sidebarYillikPlan: "Yillik ehtiyoj rejasi",
     sidebarDownload: "Hammasini yuklab olish",
     sidebarBackup: "Supabase ga zaxiralash",
     sidebarRestore: "Supabase dan tiklash",
@@ -17669,6 +17873,8 @@ function applyTranslations() {
     'tab-charts': dict.sidebarCharts,
     'tab-yillik': dict.sidebarYearly,
     'tab-harcama': dict.sidebarSpending,
+    'tab-malitablo': dict.sidebarMaliTablo,
+    'tab-yillikplan': dict.sidebarYillikPlan,
     'tab-birimfiyat': dict.sidebarUnitPrice,
   };
 
