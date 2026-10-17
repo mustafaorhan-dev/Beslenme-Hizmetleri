@@ -202,6 +202,7 @@ function applyLoginState(role, displayName, isSupabaseAuth) {
   document.getElementById('roleBadge').textContent = displayName;
   renderAdminPanelBtn();
   applyRolePermissions();
+  try { syncSidebarWidth(); } catch (_) {}
   if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
 }
 
@@ -1429,10 +1430,6 @@ function applyViewerRestrictions() {
   });
   var actionBtn = document.querySelector('.sidebar-nav .tab-btn[onclick*="openModal"]');
   if (actionBtn) actionBtn.style.display = perm.canAddRecord ? '' : 'none';
-  var syncBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllToSupabase"]');
-  if (syncBtn) syncBtn.style.display = perm.canSync ? '' : 'none';
-  var pullBtn = document.querySelector('.sidebar-actions .tab-btn[onclick*="syncAllFromSupabase"]');
-  if (pullBtn) pullBtn.style.display = perm.canSync ? '' : 'none';
   // Sekme içindeki tüm "Supabase'e Kaydet / Supabase'ten Çek" butonları da canSync'e bağlı
   if (!perm.canSync) {
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
@@ -3706,84 +3703,6 @@ function getMenuUrl() {
   return SUPABASE_URL;
 }
 
-async function syncAllToSupabase() { if (!requireAdmin()) return;
-  if (!confirm('Tüm yerel veriler Supabase bulutuna yedeklensin mi?')) return;
-  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
-  var toastMsg = [];
-  try {
-    if (records.length > 0) {
-      var { count: rCount } = await supabaseClient.from('records').upsert(records, { onConflict: 'id' }).select('count');
-      toastMsg.push('Kayıtlar: ' + (rCount || records.length));
-    }
-    if (haccpRecords.length > 0) {
-      await supabaseClient.from('haccp_records').upsert(haccpRecords.map(haccpRecordToDB), { onConflict: 'id' });
-      var depoAdlari = loadHaccpDepoAdlari();
-      if (depoAdlari.length > 0) {
-        await supabaseClient.from('haccp_depo_adlari').upsert(depoAdlari.map(function(a) { return { ad: a }; }), { onConflict: 'ad' });
-      }
-      toastMsg.push('HACCP: ' + haccpRecords.length);
-    }
-    if (yagRecords.length > 0) {
-      await supabaseClient.from('yag_records').upsert(yagRecords.map(yagRecordToDB), { onConflict: 'id' });
-      toastMsg.push('Yağ: ' + yagRecords.length);
-    }
-    if (ambalajRecords.length > 0) {
-      await supabaseClient.from('ambalaj_records').upsert(ambalajRecords.map(ambalajRecordToDB), { onConflict: 'id' });
-      toastMsg.push('Ambalaj: ' + ambalajRecords.length);
-    }
-    if (kalibrasyonCihazlari.length > 0) {
-      await supabaseClient.from('kalibrasyon_cihazlari').upsert(kalibrasyonCihazlari.map(kalibrasyonRecordToDB), { onConflict: 'id' });
-      toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
-    }
-    await syncHarcamaOranlariToSupabase();
-    showToast('Supabase\'e yedeklendi: ' + (toastMsg.join(', ') || 'güncel veri yok'), 'success');
-  } catch (err) {
-    showToast('Supabase hatası: ' + err.message, 'error');
-  }
-}
-
-async function syncAllFromSupabase() { if (!requireAdmin()) return;
-  if (!confirm('Supabase\'ten alınan veriler mevcut yerel verilerin üzerine yazsın mı?')) return;
-  if (!supabaseClient) { showToast('Supabase bağlantısı yok.', 'error'); return; }
-  var toastMsg = [];
-  try {
-    var { data: rData } = await supabaseClient.from('records').select('*').order('tarih', { ascending: false });
-    if (rData && rData.length > 0) {
-      records = rData.map(function(r) { return {
-        id: Number(r.id) || Date.now() + Math.random(),
-        tarih: normalizeDate(r.tarih),
-        yemek: Number(r.yemek) || 0,
-        fire: Number(r.fire) || 0,
-        turnike: Number(r.turnike) || 0,
-        personel: Number(r.personel) || 0,
-        toplam: Number(r.toplam) || 0,
-        porsiyon: Number(r.porsiyon) || 0,
-        atik: Number(r.atik) || 0,
-        ogrenci: Number(r.ogrenci) || 0,
-        harcama_tutari: Number(r.harcama_tutari) || 0,
-        yemek_adi: r.yemek_adi || ''
-      }; });
-      records.sort(function(a, b) { return new Date(b.tarih) - new Date(a.tarih); });
-      saveData();
-      filteredRecords = [...records];
-      renderAll();
-      drawAllCharts();
-      toastMsg.push('Kayıtlar: ' + records.length);
-    }
-    var hPulled = await syncHaccpFromSupabase();
-    if (hPulled) toastMsg.push('HACCP: ' + haccpRecords.length);
-    await syncYagFromSupabase();
-    await syncAmbalajFromSupabase();
-    var kPulled = await syncKalibrasyonFromSupabase();
-    if (kPulled) toastMsg.push('Kalibrasyon: ' + kalibrasyonCihazlari.length);
-    var hOranPulled = await syncHarcamaOranlariFromSupabase();
-    if (hOranPulled) toastMsg.push('Harcama Oranları');
-    showToast('Supabase\'ten alındı: ' + (toastMsg.join(', ') || 'veri yok'), 'success');
-  } catch (err) {
-    showToast('Supabase hatası: ' + err.message, 'error');
-  }
-}
-
 // ─── PREDICTION ──────────────────────────────────────────────────────────────
 function getLast7AvgWaste() {
   const last7 = records.slice(0, Math.min(7, records.length));
@@ -5067,7 +4986,7 @@ function renderHaccpSicaklikGrafik() {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+        legend: { labels: { boxWidth: 12, font: { size: 9 } } },
         tooltip: {
           callbacks: {
             label: function(ctx) {
@@ -5077,7 +4996,7 @@ function renderHaccpSicaklikGrafik() {
         }
       },
       scales: {
-        y: { ticks: { callback: function(v) { return v + '°C'; }, font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.12)' } },
+        y: { ticks: { callback: function(v) { return v + '°C'; }, font: { size: 9 } }, grid: { color: 'rgba(148,163,184,0.12)' } },
         x: { ticks: { maxTicksLimit: 12, font: { size: 9 }, maxRotation: 60, minRotation: 0 }, grid: { display: false } }
       }
     }
@@ -5381,7 +5300,7 @@ function exportDashboardPDF() {
   const printWin = window.open('', '_blank', 'width=1100,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   const content = document.getElementById('content-dashboard');
-  const kpiHtml = '<div class="kpi-grid">' + [...content.querySelectorAll('.kpi-hero .kpi-card, #kpiGrid > .kpi-card')].map(c => c.outerHTML).join('') + '</div>';
+  const kpiHtml = '<div class="kpi-grid">' + [...content.querySelectorAll('#kpiGrid > .kpi-card')].map(c => c.outerHTML).join('') + '</div>';
   const weeklyHtml = content.querySelector('.weekly-summary') ? content.querySelector('.weekly-summary').outerHTML : '';
   const cardsHtml = [...content.querySelectorAll(':scope > .section-card')].map(c => c.outerHTML).join('');
   printWin.document.write(`<!DOCTYPE html><html><head>
@@ -5649,6 +5568,24 @@ function closeSidebar() {
   document.getElementById('sidebarOverlay').classList.remove('show');
   updateNavIndicator();
 }
+// Masaustunde sol menu daima acik: icerigin sol boslugunu menunun gercek
+// genisligine esitler (dile gore uzun menu yazilari varsa da dogru kalir).
+function syncSidebarWidth() {
+  var w = 60;
+  var sb = document.querySelector('.sidebar');
+  if (sb) {
+    var m = Math.round(sb.getBoundingClientRect().width);
+    if (m > 60) w = m;
+  }
+  document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+  var hd = document.querySelector('.header');
+  if (hd) {
+    var h = Math.round(hd.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+}
+window.addEventListener('resize', syncSidebarWidth);
+window.addEventListener('load', syncSidebarWidth);
 // ─── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id = null) {
   if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
@@ -6750,6 +6687,8 @@ function renderMonthlyComparison() {
     + '</div>'
     + items.map(function(it) {
     var diff = it.val - it.prev;
+    var pct = it.prev ? (diff / it.prev) * 100 : 0;
+    var good = it.lower ? diff < 0 : diff > 0;
     var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
     var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
     var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
@@ -6811,9 +6750,9 @@ function renderYearlyComparison() {
 
   grid.innerHTML = '<div class="comparison-header-row">'
     + '<span class="comparison-label">' + t('compDataType') + '</span>'
-    + '<span class="comparison-old">' + t('compLastYear') + '</span>'
+    + '<span class="comparison-old">' + t('compLastMonth') + '</span>'
     + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">' + t('compThisYear') + '</span>'
+    + '<span class="comparison-new">' + t('compThisMonth') + '</span>'
     + '<span class="comparison-diff">' + t('compDiff') + '</span>'
     + '</div>'
     + items.map(function(it) {
@@ -8929,7 +8868,7 @@ const yearlyPctPointLabelPlugin = {
     var ctx = chart.ctx;
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     var fallback = isDark ? '#e2e8f0' : '#334155';
-    var size = opts.fontSize || 12;
+    var size = opts.fontSize || 10;
     ctx.save();
     ctx.font = '700 ' + size + 'px Inter, sans-serif';
     ctx.textAlign = 'center';
@@ -9030,19 +8969,19 @@ function renderYearlyCharts() {
     var cUp = isDark ? '#4ade80' : '#16a34a';
     var cDn = isDark ? '#f87171' : '#dc2626';
     if (!hasPrev) {
-      center = { arrow: '', arrowColor: textColor, text: curTxt, color: textColor, fontSize: 13 };
+      center = { arrow: '', arrowColor: textColor, text: curTxt, color: textColor, fontSize: 11 };
     } else if (prevTotal > 0) {
       var ch = (thisTotal - prevTotal) / prevTotal * 100;
       var up = ch >= 0;
       var abs = Math.abs(ch);
       if (abs < 0.5) {
-        center = { arrow: '', arrowColor: textColor, text: '%0', color: textColor, fontSize: 14 };
+        center = { arrow: '', arrowColor: textColor, text: '%0', color: textColor, fontSize: 12 };
       } else {
         var txt = (abs >= 10 ? Math.round(abs) : (Math.round(abs * 10) / 10)).toString().replace('.', ',') + '%';
-        center = { arrow: up ? '▲' : '▼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: 14 };
+        center = { arrow: up ? '▲' : '▼', arrowColor: up ? cUp : cDn, text: txt, color: up ? cUp : cDn, fontSize: 12 };
       }
     } else if (thisTotal > 0) {
-      center = { arrow: '●', arrowColor: cUp, text: 'Yeni', color: cUp, fontSize: 14 };
+      center = { arrow: '●', arrowColor: cUp, text: 'Yeni', color: cUp, fontSize: 12 };
     }
     var legendEl = document.getElementById('donutLegend' + canvasId.replace('canvasDonut', ''));
     if (legendEl) {
@@ -9075,7 +9014,7 @@ function renderYearlyCharts() {
         animation: { duration: 700, easing: 'easeOutCubic' },
         plugins: {
           legend: { display: false },
-          donutLabels: { enabled: true, values: hasPrev ? [curTxt, prevTxt] : [curTxt], colors: ['#000000'], fontSize: 13, center: center },
+          donutLabels: { enabled: true, values: hasPrev ? [curTxt, prevTxt] : [curTxt], colors: ['#000000'], fontSize: 11, center: center },
           tooltip: {
             backgroundColor: '#000000', titleColor: '#ffffff', bodyColor: '#ffffff',
             borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, padding: 8, cornerRadius: 8,
@@ -9168,7 +9107,7 @@ function renderYearlyCharts() {
         animation: { duration: 900, easing: 'easeOutCubic' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+          legend: { labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
           tooltip: {
             backgroundColor: '#000000',
             titleColor: '#ffffff',
@@ -9187,12 +9126,12 @@ function renderYearlyCharts() {
         },
         scales: {
           x: {
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { display: false }
           },
           y: {
             beginAtZero: true,
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { color: colors.grid }
           }
         },
@@ -9342,11 +9281,11 @@ function renderYearlyCharts() {
             }
           },
           yearlyPctZeroLine: { color: colors.text, grid: colors.grid },
-          yearlyPctPointLabels: { fontSize: 14, renkPos: up, renkNeg: down },
+          yearlyPctPointLabels: { fontSize: 12, renkPos: up, renkNeg: down },
         },
         scales: {
           x: {
-            ticks: { color: colors.text, font: { size: 11, family: 'Inter' }, maxRotation: 0, autoSkip: false },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' }, maxRotation: 0, autoSkip: false },
             grid: { display: false }
           },
           y: {
@@ -9354,7 +9293,7 @@ function renderYearlyCharts() {
             max: bound,
             ticks: {
               color: colors.text,
-              font: { size: 11, family: 'Inter' },
+              font: { size: 10, family: 'Inter' },
               maxTicksLimit: 5,
               callback: function(v) { return (v > 0 ? '+' : '') + v + '%'; }
             },
@@ -9459,7 +9398,7 @@ function renderYearlyCharts() {
         animation: { duration: 900, easing: 'easeOutCubic' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+          legend: { labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
           valueLabels: true,
           hedefCizgisi: { deger: hedef },
           tooltip: {
@@ -9477,13 +9416,13 @@ function renderYearlyCharts() {
           }
         },
         scales: {
-          x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' } }, grid: { display: false } },
+          x: { ticks: { color: colors.text, font: { size: 10, family: 'Inter' } }, grid: { display: false } },
           y: {
             beginAtZero: true,
             suggestedMax: suggestedMax,
             ticks: {
               color: colors.text,
-              font: { size: 12, family: 'Inter' },
+              font: { size: 10, family: 'Inter' },
               callback: function(v) { return v + '%'; }
             },
             grid: { color: colors.grid }
@@ -9763,7 +9702,7 @@ const donutLabelsPlugin = {
       var x = arc.x + Math.cos(mid) * radius;
       var y = arc.y + Math.sin(mid) * radius;
       var numLen = value.replace(/\s+\S+$/, '').length;
-      var fs = numLen <= 6 ? (opts.fontSize || 10) : Math.max(8, (opts.fontSize || 10) - 2);
+      var fs = numLen <= 6 ? (opts.fontSize || 9) : Math.max(7, (opts.fontSize || 9) - 2);
       ctx.font = 'bold ' + fs + 'px Inter, sans-serif';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
@@ -9776,7 +9715,7 @@ const donutLabelsPlugin = {
     if (ctr && ctr.text) {
       var cArc = meta.data[0];
       if (cArc && cArc.x !== undefined) {
-        ctx.font = '11px Inter, sans-serif';
+        ctx.font = '10px Inter, sans-serif';
         ctx.fillStyle = ctr.arrowColor || '#334155';
         ctx.fillText(ctr.arrow || '', cArc.x, cArc.y - 6);
         ctx.font = 'bold ' + (ctr.fontSize || 10) + 'px Inter, sans-serif';
@@ -9825,7 +9764,7 @@ const chartValueLabelPlugin = {
           ctx.textBaseline = 'bottom';
           labelY = bar.y - 7;
         }
-        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.font = 'bold 9px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(display, labelX, labelY);
       });
@@ -9876,7 +9815,7 @@ const hedefCizgisiPlugin = {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = renk;
-    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.font = 'bold 9px Inter, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     ctx.fillText('Hedef %' + String(o.deger).replace('.', ','), area.right - 4, yPos - 3);
@@ -10059,7 +9998,7 @@ function drawAllCharts() {
         animation: { duration: 900, easing: 'easeOutCubic' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+          legend: { labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
           tooltip: {
             backgroundColor: colors.tooltipBg,
             titleColor: '#ffffff',
@@ -10081,7 +10020,7 @@ function drawAllCharts() {
         scales: {
           x: {
             ticks: {
-              color: colors.text, font: { size: 12, family: 'Inter' },
+              color: colors.text, font: { size: 10, family: 'Inter' },
               maxRotation: labels.length > 20 ? 90 : 45,
               autoSkip: true,
               maxTicksLimit: Math.min(labels.length, 15),
@@ -10091,7 +10030,7 @@ function drawAllCharts() {
           },
           y: {
             beginAtZero: true,
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { color: colors.grid }
           }
         },
@@ -10604,7 +10543,7 @@ function renderHarcamaMenuChart(oran) {
       devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       animation: { duration: 600, easing: 'easeOutCubic' },
       plugins: {
-        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
         tooltip: {
           backgroundColor: '#000000',
           titleColor: '#ffffff',
@@ -10620,11 +10559,11 @@ function renderHarcamaMenuChart(oran) {
         valueLabels: true,
       },
       scales: {
-        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+        x: { ticks: { color: colors.text, font: { size: 10, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
           y: {
             beginAtZero: true,
             suggestedMax: suggestedMax,
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { color: colors.grid }
           }
       }
@@ -10714,7 +10653,7 @@ function renderHarcamaMenuPersonelChart(persOran) {
       devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       animation: { duration: 600, easing: 'easeOutCubic' },
       plugins: {
-        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
         tooltip: {
           backgroundColor: '#000000',
           titleColor: '#ffffff',
@@ -10730,11 +10669,11 @@ function renderHarcamaMenuPersonelChart(persOran) {
         valueLabels: true,
       },
       scales: {
-        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+        x: { ticks: { color: colors.text, font: { size: 10, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
           y: {
             beginAtZero: true,
             suggestedMax: suggestedMax,
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { color: colors.grid }
           }
       }
@@ -10824,7 +10763,7 @@ function renderHarcamaMenuYemekChart(yemekOran) {
       devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       animation: { duration: 600, easing: 'easeOutCubic' },
       plugins: {
-        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 13, family: 'Inter', weight: '500' } } },
+        legend: { display: hcSelectedMonth === null, labels: { color: colors.text, font: { size: 11, family: 'Inter', weight: '500' } } },
         tooltip: {
           backgroundColor: '#000000',
           titleColor: '#ffffff',
@@ -10840,11 +10779,11 @@ function renderHarcamaMenuYemekChart(yemekOran) {
         valueLabels: true,
       },
       scales: {
-        x: { ticks: { color: colors.text, font: { size: 12, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
+        x: { ticks: { color: colors.text, font: { size: 10, family: 'Inter' }, maxRotation: 45 }, grid: { display: false } },
           y: {
             beginAtZero: true,
             suggestedMax: suggestedMax,
-            ticks: { color: colors.text, font: { size: 12, family: 'Inter' } },
+            ticks: { color: colors.text, font: { size: 10, family: 'Inter' } },
             grid: { color: colors.grid }
           }
       }
@@ -12453,7 +12392,7 @@ function drawYagChart(list) {
       plugins: {
         legend: {
           display: datasets.length > 1,
-          labels: { color: textColor, font: { size: 11 } }
+          labels: { color: textColor, font: { size: 9 } }
         },
         valueLabels: true,
         valueLabelsPosition: 'inside',
@@ -12470,12 +12409,12 @@ function drawYagChart(list) {
       },
       scales: {
         x: {
-          ticks: { color: textColor, font: { size: 10 }, autoSkip: false },
+          ticks: { color: textColor, font: { size: 9 }, autoSkip: false },
           grid: { display: false }
         },
         y: {
           beginAtZero: true,
-          ticks: { color: textColor, font: { size: 10 } },
+          ticks: { color: textColor, font: { size: 9 } },
           grid: { color: gridColor }
         }
       },
@@ -12547,7 +12486,7 @@ function drawYagTurChart(list) {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: textColor, font: { size: 11 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+          labels: { color: textColor, font: { size: 9 }, boxWidth: 12, boxHeight: 12, padding: 12 }
         },
         tooltip: {
           backgroundColor: '#000',
@@ -13061,7 +13000,7 @@ function drawAmbalajChart(list) {
       plugins: {
         legend: {
           display: datasets.length > 1,
-          labels: { color: textColor, font: { size: 11 } }
+          labels: { color: textColor, font: { size: 9 } }
         },
         valueLabels: !hasPrev,
         valueLabelsPosition: 'above',
@@ -13081,12 +13020,12 @@ function drawAmbalajChart(list) {
       },
       scales: {
         x: {
-          ticks: { color: textColor, font: { size: 10 }, autoSkip: false },
+          ticks: { color: textColor, font: { size: 9 }, autoSkip: false },
           grid: { display: false }
         },
         y: {
           beginAtZero: true,
-          ticks: { color: textColor, font: { size: 10 } },
+          ticks: { color: textColor, font: { size: 9 } },
           grid: { color: gridColor }
         }
       },
@@ -13158,7 +13097,7 @@ function drawAmbalajTurChart(list) {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: textColor, font: { size: 11 }, boxWidth: 12, boxHeight: 12, padding: 12 }
+          labels: { color: textColor, font: { size: 9 }, boxWidth: 12, boxHeight: 12, padding: 12 }
         },
         tooltip: {
           backgroundColor: '#000',
@@ -15703,398 +15642,6 @@ var I18N = {
     recipePerPerson: "Рецепт (на человека)",
     devices: "шт.",
   },
-  ar: {
-    loginSub: "نظام إدارة خدمات التغذية",
-    loginFormSub: "تسجيل الدخول",
-    loginUsername: "اسم المستخدم",
-    loginSelectUser: "اختر المستخدم",
-    loginPassword: "كلمة المرور",
-    loginBtn: "تسجيل الدخول",
-    loginHint: "يمكنك الحصول على كلمة المرور من المسؤول",
-    loginFeature1: "تخطيط القائمة والإنتاج اليومي والاستهلاك والنفايات",
-    loginFeature2: "تقارير مفصلة",
-    loginFeature3: "لوحة مباشرة ورسوم بيانية",
-    loginForgot: "نسيت كلمة المرور؟",
-    loginForgotTitle: "نسيت كلمة المرور",
-    loginForgotText: "لإعادة تعيين كلمة المرور، يرجى التواصل مع مسؤول النظام.",
-    loginForgotOk: "إغلاق",
-    loginSecure: "اتصال آمن",
-    menuLabel: "القائمة",
-    headerSubtitle: "نظام إدارة خدمات التغذية",
-    btnLogout: "تسجيل الخروج",
-    btnPrev: "السابق",
-    btnNext: "التالي",
-    loading: "جارٍ التحميل...",
-    loadingText: "مزامنة البيانات...",
-    loadingSub: "التحقق من اتصال Supabase",
-    loadingSkip: "انقر للتخطي",
-    versionLabel: "إصدار التطبيق",
-    sidebarPanel: "لوحة التحكم",
-    sidebarMenu: "القائمة الأسبوعية",
-    sidebarRecords: "السجلات",
-    sidebarReport: "التقرير",
-    sidebarHaccp: "سلامة الغذاء",
-    sidebarCalibration: "المعايرة",
-    sidebarOil: "النفايات الزيتية",
-    sidebarPackaging: "نفايات التغليف",
-    sidebarCharts: "الرسوم البيانية",
-    sidebarYearly: "المقارنة السنوية",
-    sidebarSpending: "المصروفات",
-    sidebarUnitPrice: "الأسعاروحدة",
-    sidebarDownload: "تنزيل الكل",
-    sidebarBackup: "النسخ الاحتياطي إلى Supabase",
-    sidebarRestore: "الاستعادة من Supabase",
-    sidebarAdmin: "الإدارة",
-    sidebarLogs: "سجلات النشاط",
-    sidebarTheme: "المظهر",
-    sidebarManual: "دليل المستخدم",
-    dashboardPrintPdf: "طباعة PDF",
-    kpiTotalRecords: "إجمالي أيام الإنتاج",
-    kpiWeekProduction: "إنتاج هذا الأسبوع",
-    kpiMenuVariety: "إجمالي أنواع القائمة",
-    kpiHaccpAlarm: "تنبيه درجة حرارة التخزين البارد",
-    kpiCalibrationAlarm: "تنبيه المعايرة",
-    kpiBrand: "نظام مراقبة النفايات",
-    kpiBrandSub: "سلامة الأغذية وتتبع النفايات",
-    kpiAvgWaste: "متوسط النفايات (كغ)",
-    kpiTotalPasses: "إجمالي عبور البوابة الدوّارة",
-    kpiTotalWaste: "إجمالي النفايات (كغ)",
-    kpiWasteRate: "نسبة النفايات",
-    weeklyPrevBtn: "الأسبوع السابق",
-    weeklySummary: "ملخص أسبوعي",
-    weeklyNextBtn: "الأسبوع التالي",
-    weeklyBadge: "هذا الأسبوع",
-    dailyPrevBtn: "اليوم السابق",
-    dailySummary: "تفاصيل يومية",
-    dailyNextBtn: "اليوم التالي",
-    weeklyCompTitle: "مقارنة أسبوعية",
-    monthlyCompTitle: "مقارنة شهرية",
-    monthlyBadge: "هذا الشهر",
-    yearlyBadge: "هذا العام",
-    anomalyTitle: "اكتشاف الشذوذ",
-    anomalyBadge: "أيام النفايات غير الطبيعية",
-    lastRecordsTitle: "آخر السجلات",
-    dashboardGoToRecords: "الذهاب إلى السجلات",
-    emptyDashboard: "لا توجد سجلات بعد...",
-    formulaTitle: "صيغة حساب النفايات",
-    recordsEntryBtn: "إدخال الإنتاج والاستهلاك",
-    recordsImportBtn: "استيراد",
-    recordsPrintPdf: "PDF",
-    recordsCsvBtn: "تنزيل CSV",
-    recordsDeleteBtn: "حذف المحدد",
-    emptyRecords: "لم يتم العثور على سجلات.",
-    thDate: "التاريخ",
-    thProducedPerson: "الوجبات المُنتجة (شخص)",
-    thWaste10: "نفايات 10%",
-    thBeneficiary: "المستفيدون من خدمة الطعام",
-    thPortionGr: "الحصة (غ)",
-    thWasteKg: "النفايات (كغ)",
-    thWastedPortion: "المُهملة (حصة)",
-    thFoodType: "نوع الطعام",
-    thAction: "الإجراء",
-    thAcademicStaff: "الكاديميون والإداريون عبر البوابة الدوّارة",
-    thStudentCount: "الطلاب عبر البوابة الدوّارة",
-    thBeneficiaryTotal: "إجمالي مستفيدي خدمة الطعام",
-    sksStaff: "موظفو خدمة الطعام (SKS)",
-    summaryReport: "تقرير ملخص",
-    reportPdfBtn: "فتح PDF",
-    allRecordsPrint: "جميع السجلات (عرض الطباعة)",
-    rTotalRecords: "إجمالي عدد السجلات",
-    rTotalMeals: "إجمالي الوجبات المُنتجة",
-    rTotalWaste10: "إجمالي نفايات 10%",
-    rTotalAfterWaste: "إجمالي الوجبات بعد نفايات 10%",
-    rTotalTurnstile: "إجمالي عبور البوابة الدوّارة",
-    rTotalBeneficiary: "إجمالي مستفيدي خدمة الطعام",
-    rTotalStaff: "إجمالي موظفي SKS المستفيدون",
-    rPortionSize: "حجم الحصة (غ)",
-    rTotalPortion: "إجمالي الحصص (غ)",
-    rWastedPortion: "الحصص المُهملة",
-    rMaxWeeklyBeneficiary: "أقصى عدد مستفيدين أسبوعياً",
-    rTotalWasteKg: "إجمالي كمية النفايات (كغ)",
-    rAvgWasteKg: "متوسط كمية النفايات (كغ)",
-    rTotalStudents: "إجمالي عدد الطلاب",
-    rMaxWaste: "أقصى نفايات (كغ)",
-    rMinWaste: "أدنى نفايات (كغ)",
-    rWasteTrend: "اتجاه النفايات (آخر 7 أيام)",
-    rBeneficiaryTrend: "اتجاه المستفيدين (آخر 7 أيام)",
-    wasteByFoodTitle: "تحليل النفايات حسب نوع الطعام",
-    wasteByFoodEmpty: "لم يتم العثور على سجلات تحتوي على بيانات نوع الطعام.",
-    wasteByFoodRecords: "عدد السجلات",
-    wasteByFoodRate: "نسبة النفايات",
-    wasteByFoodPerPerson: "النفايات للشخص (كغ)",
-    wsProducedMeal: "الوجبات المنتجة (فرد)",
-    wsTotalPasses: "إجمالي العبور",
-    wsTurnstile: "البوابة الدوّارة",
-    wsStaffSKS: "موظفو التغذية",
-    wsWasteAmount: "كمية النفايات",
-    wsWastedPortion: "النفايات",
-    wsStudents: "طلاب التغذية",
-    wsNoRecordsYet: "لا توجد سجلات بعد",
-    wsNoRecordThisWeek: "لا سجلات هذا الأسبوع",
-    wsNoRecordToday: "لا سجل",
-    wsTodayDetail: "تفاصيل اليوم",
-    wsDailyDetail: "التفاصيل اليومية",
-    wsWaste: "هدر",
-    wsPortion: "وجبة",
-    wsProduced: "إنتاج",
-    wsTurnstileCount: "عبور البوابة",
-    wsStaffCount: "الموظفون",
-    menuTitle: "قائمة الطعام الأسبوعية",
-    menuStatusBadge: "الحالة",
-    menuSaveBtn: "حفظ",
-    menuSendBtn: "إرسال للموافقة",
-    menuApproveBtn: "موافقة",
-    menuRejectBtn: "رفض",
-    menuWithdrawBtn: "سحب الموافقة",
-    menuClearBtn: "مسح الجدول",
-    menuPrintBtn: "طباعة",
-    menuFoodListBtn: "قائمة الطعام",
-    menuFoodListUploadBtn: "تحميل CSV",
-    menuFoodListCsvBtn: "تنزيل CSV",
-    menuWarningPrefix: "قائمة غير معتمدة:",
-    menuWarningText: "لم تتم الموافقة على قائمة هذا الأسبوع من قِبَل مهندس الأغذية بعد.",
-    menuHintText: "اكتب أسماء الوجبات...",
-    productNeedsTitle: "قائمة احتياجات المنتجات",
-    weeklyNeedsTitle: "القائمة الأسبوعية الإجمالية للاحتياجات",
-    foodListTitle: "قائمة الطعام",
-    modalRejectMenu: "رفض القائمة",
-    modalRejectDesc: "سبب الرفض مطلوب.",
-    menuRejectConfirm: "رفض",
-    haccpTitle: "إدارة سلامة الأغذية",
-    haccpCsvBtn: "تنزيل CSV",
-    haccpColdStorage: "سجلات درجة حرارة التخزين البارد",
-    haccpNewBtn: "سجل جديد",
-    haccpDepotBtn: "أسماء المستودعات",
-    haccpDepoQrNote: "يمكنك تعديل أسماء المستودعات وإنشاء رموز QR لكل مستودع باستخدام زر QR.",
-    haccpModalTitle: "سجل جديد",
-    filterDepot: "تصفية المستودع:",
-    filterAll: "الكل",
-    filterDateRange: "نطاق التاريخ:",
-    emptyHaccp: "لم يتم إدخال سجلات درجة الحرارة بعد.",
-    btnDeleteSelectedHaccp: "حذف المحدد",
-    btnPdf: "PDF",
-    depoNamesTitle: "أسماء المستودعات",
-    oilNewBtn: "سجل جديد",
-    oilListBtn: "قائمة",
-    oilFilterTitle: "تصفية النفايات الزيتية",
-    filterOilType: "نوع الزيت:",
-    btnReset: "إعادة تعيين",
-    oilSummaryTitle: "ملخص النفايات الزيتية",
-    oilChartTitle: "الرسوم البيانية للنفايات الزيتية",
-    oilChartSubtitle: "كمية النفايات الزيتية الشهرية (لتر)",
-    oilChartEmpty: "ستظهر الروم البيانية عند إدخال سجلات النفايات الزيتية",
-    oilChartNote: "المجاميع الشهرية للنفايات الزيتية حسب التاريخ ونوع الزيت والسنة",
-    oilRecordsTitle: "سجلات النفايات الزيتية",
-    oilModalTitle: "سجل النفايات الزيتية",
-    emptyOil: "لم يتم إدخال سجلات النفايات الزيتية بعد.",
-    ambalajNewBtn: "سجل جديد",
-    ambalajListBtn: "قائمة",
-    packagingFilterTitle: "تصفية نفايات التغليف",
-    filterWasteType: "نوع النفايات:",
-    packagingSummaryTitle: "ملخص نفايات التغليف",
-    packagingChartTitle: "الرسوم البيانية لنفايات التغليف",
-    packagingChartSubtitle: "كمية نفايات التغليف الشهرية (كغ)",
-    packagingChartEmpty: "ستظهر الرسوم البيانية عند إدخال سجلات نفايات التغليف",
-    packagingChartNote: "المجاميع الشهرية لنفايات التغليف حسب التاريخ ونوع النفايات والسنة (كغ)",
-    packagingRecordsTitle: "سجلات نفايات التغليف",
-    packagingModalTitle: "سجل نفايات التغليف",
-    emptyPackaging: "لم يتم إدخال سجلات نفايات التغليف بعد.",
-    kalibrasyonNewBtn: "جهاز جديد",
-    kalibrasyonListBtn: "قائمة",
-    kalibrasyonCsvBtn: "تنزيل CSV",
-    calibrationSummary: "ملخص المعايرة",
-    calibrationDevices: "الأجهزة الخاضعة للمعايرة",
-    calibrationModalTitle: "جهاز للمعايرة",
-    filterStatus: "الحالة:",
-    filterDepartment: "القسم:",
-    btnWordExport: "تصدير إلى Word",
-    btnPrint: "طباعة PDF",
-    chartProdWaste: "مقارنة الإنتاج والعبور والنفايات",
-    chartEmpty: "ستظهر الرسوم البيانية عند إدخال البيانات",
-    chartProdWasteNote: "مقارنة شهرية بين الإنتاج وعبور البوابة الدوّارة والحصص المُهملة",
-    chartStudentCount: "عدد الطلاب المستفيدين من خدمات التغذية",
-    yearTotal: "المجموع السنوي",
-    chartStudentNote: "المجموع الشهري لعبور الطلاب اليومي",
-    chartStaffTotal: "الكاديميون والإداريون + موظفو SKS",
-    chartStaffNote: "مجموع الكاديميين والإداريين (البوابة الدوّارة - الطلاب) وموظفي خدمة الطعام SKS",
-    chartMonthlyProd: "الإنتاج الشهري للوجبات",
-    chartMonthlyProdNote: "المجموع الشهري لعدد الوجبات المُنتجة يومياً",
-    chartMonthlyTurnstile: "عدد عبور البوابة الدوّارة الشهري",
-    chartTurnstileNote: "مجموع الطلاب + الموظفون + العابرون من الخارج",
-    chartMonthlyWaste: "كمية النفايات الشهرية (كغ)",
-    chartMonthlyWasteNote: "المجموع الشهري للنفايات اليومية (كغ)",
-    chartMonthlyWastePortion: "كمية النفايات الشهرية (حصص)",
-    chartWastePortionNote: "المجموع الشهري للحصص المُهملة يومياً",
-    chartDiff: "الفرق بين الإنتاج والعبور",
-    chartDiffNote: "الفرق بين عدد الوجبات المُنتجة وعبور البوابة الدوّارة",
-    chartWasteRatio: "نسبة النفايات من الوجبات المُنتجة",
-    yearAverage: "المتوسط السنوي",
-    chartWasteRatioNote: "نسبة الوجبات المُنتجة التي تتحول إلى نفايات",
-    chartWastePerPerson: "النفايات لكل شخص (كغ/شخص)",
-    chartWastePerPersonNote: "متوسط النفايات لكل شخص يدخل المطعم",
-    chartMonthlyTemp: "متوسط درجات حرارة المستودعات الشهرية (°C)",
-    chartTempEmpty: "ستظهر الرسوم البيانية عند إدخال سجلات درجات الحرارة",
-    chartTempNote: "متوسط درجة الحرارة الشهرية لكل مستودع",
-    yearlyPdfBtn: "طباعة PDF",
-    yearlyTotalProd: "مقارنة الإجمالي السنوي للإنتاج",
-    yearlyTotalProdNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (حصص)",
-    yearlyTotalBen: "إجمالي مستفيدي خدمة الطعام",
-    yearlyTotalBenNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (إجمالي الأشخاص)",
-    yearlyStudentComp: "مقارنة الطلاب المستفيدين من خدمة الطعام",
-    yearlyStudentNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (الطلاب)",
-    yearlyWasteComp: "مقارنة النفايات (كغ)",
-    yearlyWasteNote: "المجموع السنوي - السنة الأولى vs السنة الثانية (كغ)",
-    yearlyMonthlyProd: "مقارنة الإنتاج الشهري",
-    yearlyPctLineTitle: "التغير الشهري بالنسبة المئوية",
-    yearlyPctNoPrev: "اختر السنة الثانية للمقارنة",
-    yearlyMonthlyProdNote: "السنة الأولى vs السنة الثانية - الوجبات المُنتجة (حصص)",
-    yearlyMonthlyTurnstile: "مقارنة عبور البوابة الدوّارة الشهري",
-    yearlyMonthlyTurnstileNote: "السنة الأولى vs السنة الثانية - عدد عبور البوابة الدوّارة",
-    yearlyMonthlyStudent: "مقارنة عبور الطلاب الشهري",
-    yearlyMonthlyStudentNote: "السنة الأولى vs السنة الثانية - عدد عبور الطلاب",
-    yearlyMonthlyWaste: "مقارنة النفايات الشهرية (كغ)",
-    yearlyMonthlyWasteNote: "السنة الأولى vs السنة الثانية - كمية النفايات (كغ)",
-    yearlyWasteListTitle: "قائمة النفايات السنوية",
-    spendingRatesTitle: "معدلات الإنفاق لكل شخص (الطلاب والموظفون والوجبات)",
-    spendingStudentRate: "مبلغ إنفاق كل طالب (TL)",
-    btnSaveStudentRate: "حفظ مبلغ الطلاب",
-    spendingStaffRate: "مبلغ إنفاق كل موظف (TL)",
-    btnSaveStaffRate: "حفظ مبلغ الموظفين",
-    spendingMealRate: "مبلغ إنفاق كل وجبة (TL)",
-    btnSaveMealRate: "حفظ مبلغ الوجبات",
-    spendingDesc: "إنفاق الطلاب = عدد الطلاب × مبلغ إنفاق كل طالب",
-    spendingStudentTitle: "مبلغ إنفاق الطلاب (TL)",
-    spendingChartEmpty: "ستظهر الرسوم البيانية عند إدخال السجلات",
-    spendingStudentNote: "إنفاق الطلاب (TL) = عدد الطلاب × مبلغ إنفاق كل طالب",
-    spendingStaffTitle: "مبلغ إنفاق الموظفين (TL)",
-    spendingStaffNote: "إنفاق الموظفين (TL) = عدد الموظفين × مبلغ إنفاق كل موظف",
-    spendingMealTitle: "مبلغ إنفاق الوجبات (TL)",
-    spendingMealNote: "إنفاق الوجبات (TL) = الوجبات المُنتجة × مبلغ إنفاق كل وجبة",
-    spendingTableTitle: "جدول حساب الإنفاق",
-    syncTitle: "مزامنة Supabase",
-    syncCloseBtn: "إغلاق",
-    modalNewRecord: "إضافة سجل جديد",
-    formDate: "التاريخ",
-    formProducedCount: "عدد الوجبات المُنتجة",
-    formTurnstileCount: "عدد عبور البوابة الدوّارة",
-    formStudentCount: "عدد الطلاب المستفيدين",
-    formFoodType: "نوع الطعام",
-    formAutoCalc: "حسابات تلقائية",
-    badgeAutomatic: "تلقائي",
-    badgeFixed: "ثابت",
-    badgeAutoEditable: "تلقائي + قابل للتعديل",
-    btnCancel: "إلغاء",
-    entryFormSubmit: "حفظ",
-    formReceiptNo: "رقم الإيصال",
-    formOilType: "نوع الزيت",
-    formAmountLt: "الكمية (لتر)",
-    formNote: "ملاحظة",
-    formWasteType: "نوع النفايات",
-    formAmount: "الكمية",
-    formDeviceName: "اسم الجهاز",
-    formBrandModel: "العلامة التجارية-الطراز",
-    formSerialNo: "الرقم التسلسلي",
-    formStatus: "الحالة",
-    formVerification: "التحقق",
-    formLastCalibration: "آخر معايرة",
-    formNextCalibration: "المعايرة التالية",
-    formLocation: "الموقع/القسم",
-    formResponsible: "الشخص المسؤول",
-    btnSave: "حفظ",
-    btnAdd: "إضافة",
-    btnClose: "إغلاق",
-    qrTitle: "رمز QR",
-    qrHint: "اطبع رمز QR لتثبيته على أبواب المستودعات.",
-    adminTitle: "لوحة الإدارة",
-    adminReAuthText: "يرجى إدخال كلمة مرور المسؤول للوصول إلى لوحة الإدارة.",
-    adminPassword: "كلمة مرور المسؤول",
-    btnVerify: "تحقق",
-    adminSessionRole: "دور الجلسة",
-    adminLastLogin: "آخر دخول",
-    adminAuthMethod: "طريقة المصادقة",
-    adminStorage: "مخزن كلمات المرور",
-    adminDataSource: "مصدر البيانات",
-    adminUserMgmt: "إدارة المستخدمين",
-    adminUserMgmtDesc: "إضافة أو تعديل أو حذف المستخدمين.",
-    adminAddUser: "إضافة مستخدم جديد",
-    adminUsername: "اسم المستخدم",
-    adminDisplayName: "الاسم الظاهر",
-    adminPasswordLabel: "كلمة المرور",
-    adminRole: "الدور",
-    adminAddUserBtn: "إضافة مستخدم",
-    adminRolePerms: "إعدادات الأذونات حسب الأدوار",
-    adminRolePermsDesc: "تحديد التبويبات التي يمكن لكل دور عرضها.",
-    adminSecurity: "أمان الجلسة",
-    adminSecurityDesc: "ستُغلق الجلسة إذا لم يتم تنفيذ أي نشاط خلال المدة المحددة.",
-    adminInactivityTimeout: "مهلة عدم النشاط",
-    adminLogsTitle: "سجلات النشاط",
-    adminLogsDesc: "تسجيل دخول/خروج المستخدمين وعمليات السجلات",
-    btnRefresh: "تحديث",
-    adminSaveBtn: "حفظ الإعدادات",
-    adminFooterNote: "تُخزّن كلمات المرور بشكل دائم على الخادم.",
-    adminCloseBtn: "إغلاق",
-    logFilterDelete: "حذف",
-    logFilterAddUser: "إضافة مستخدم",
-    logFilterDeleteUser: "حذف مستخدم",
-    adminRefreshBtn: "تحديث",
-    manualTitle: "دليل المستخدم",
-    manualSubtitle: "نظام التحكم في إنتاج واستهلاك ونفايات المطعم",
-    compDataType: "نوع البيانات",
-    compLastWeek: "الأسبوع الماضي",
-    compThisWeek: "هذا الأسبوع",
-    compLastMonth: "الشهر الماضي",
-    compThisMonth: "هذا الشهر",
-    compLastYear: "العام الماضي",
-    compThisYear: "هذا العام",
-    compDiff: "الفرق",
-    compTotalWaste: "إجمالي النفايات (كغ)",
-    compTotalProduction: "إجمالي الإنتاج",
-    compTurnstilePasses: "عبور البوابة",
-    compStudentCount: "عدد الطلاب",
-    compWastePerPerson: "النفايات للفرد (غرام)",
-    monthlyCompDesc: "مقارنة هذا الشهر مع الشهر الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
-    yearlyCompDesc: "مقارنة هذا العام (من بداية السنة حتى الآن) مع نفس الفترة من العام الماضي. ↑ زيادة، ↓ انخفاض.انخفاض النفايات والنفايات للفرد (↓) جيد.",
-    monthNames: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
-    haccpColDate: "التاريخ",
-    haccpColTime: "الوقت",
-    haccpColDepot: "اسم المستودع",
-    haccpColTemp: "درجة الحرارة (°م)",
-    haccpColHumidity: "الرطوبة (%)",
-    haccpColNote: "ملاحظة",
-    haccpColAction: "إجراء",
-    dayNames: ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
-    menuVariety: "نوع",
-    menuVariety1: "النوع الأول",
-    menuVariety2: "النوع الثاني",
-    menuVariety3: "النوع الثالث",
-    menuVariety4: "النوع الرابع",
-    menuVariety5: "النوع الخامس",
-    menuPersonCount: "عدد الأشخاص",
-    stockDeductionList: "قائمة خصم المخزون",
-    perPersonCost: "التكلفة لكل فرد",
-    total: "المجموع",
-    inVarieties: "أنواع",
-    person: "فرد",
-    weeklyGrandTotal: "المجموع الأسبوعي",
-    dailyAverage: "المتوسط اليومي",
-    avgPerPerson: "المتوسط للفرد",
-    totalPersonDays: "إجمالي الأشخاص/أيام",
-    colDay: "اليوم",
-    colDate: "التاريخ",
-    colPerson: "الأشخاص",
-    dailyMaterialCost: "تكلفة المواد اليومية",
-    perPerson: "للفرد",
-    ingredients: "المكونات",
-    perPersonGram: "(غرام للفرد)",
-    colIngredient: "المكون",
-    colPerPerson: "/فرد",
-    colUnit: "الوحدة",
-    addIngredient: "+ إضافة مكون",
-    foodName: "اسم الطبق",
-    allergen: "الallingيرجين",
-    recipePerPerson: "الوصفة (للفرد)",
-    devices: "أجهزة",
-  },
   de: {
     loginSub: "ERNAHRUNGSDIENST-VERWALTUNGSSYSTEM",
     loginFormSub: "Anmelden",
@@ -18058,7 +17605,7 @@ var I18N = {
 };
 
 var currentLang = localStorage.getItem('bhys_lang') || 'tr';
-var langLabels = { tr:'TR', en:'EN', az:'AZ', ru:'RU', ar:'AR', de:'DE', fr:'FR', es:'ES', pt:'PT', uz:'UZ' };
+var langLabels = { tr:'TR', en:'EN', az:'AZ', ru:'RU', de:'DE', fr:'FR', es:'ES', pt:'PT', uz:'UZ' };
 
 function toggleLangDropdown() {
   var dd = document.getElementById('langDropdown');
@@ -18066,15 +17613,11 @@ function toggleLangDropdown() {
 }
 
 function setLanguage(lang) {
-  if (!I18N[lang]) return;
+  if (!I18N[lang]) lang = 'tr';
   currentLang = lang;
   localStorage.setItem('bhys_lang', lang);
   document.documentElement.setAttribute('lang', lang);
-  if (lang === 'ar') {
-    document.documentElement.setAttribute('dir', 'rtl');
-  } else {
-    document.documentElement.removeAttribute('dir');
-  }
+  document.documentElement.removeAttribute('dir');
   var opts = document.querySelectorAll('.lang-option');
   opts.forEach(function(o) {
     o.classList.toggle('active', o.getAttribute('data-lang') === lang);
@@ -18140,6 +17683,8 @@ function applyTranslations() {
   document.title = currentLang === 'tr'
     ? 'Kırşehir Ahi Evran Üniversitesi - BHYS'
     : 'Kırşehir Ahi Evran University - NSMS';
+
+  try { syncSidebarWidth(); } catch (_) {}
 }
 
 document.addEventListener('click', function(e) {
