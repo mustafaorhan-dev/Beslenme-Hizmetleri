@@ -445,7 +445,6 @@ select.login-field {
   }
 }
 
-
 /* Loading Overlay */
 .loading-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -1364,7 +1363,6 @@ td > .btn-icon + .btn-icon { margin-left: 0.35rem; }
 .main-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
 .main-content::-webkit-scrollbar-thumb { background: var(--sidebar-bg); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; min-height: 40px; }
 .main-content::-webkit-scrollbar-thumb:hover { background: var(--sidebar-bg); border: 1px solid transparent; background-clip: content-box; }
-
 
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.18s ease; }
@@ -3481,52 +3479,6 @@ input.production-input:focus {
 .meal-picker-item:hover { background: rgba(99,102,241,0.08) !important; }
 #mealPickerOverlay input:focus { outline: 2px solid var(--accent-cyan); outline-offset: -1px; }
 
-@media (max-width: 600px) {
-  .header .menu-toggle { display: inline-flex !important; align-items: center; }
-  .sidebar {
-    width: 280px;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    height: 100dvh;
-    max-height: 100dvh;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  }
-  .sidebar.open { width: 280px; transform: translateX(0); }
-  .header .menu-toggle { display: inline-flex !important; }
-  .sidebar-header { display: none; }
-  .sidebar-nav .tab-btn span,
-  .sidebar-actions .tab-btn span { display: inline; }
-  .sidebar:not(.open) .sidebar-nav .tab-btn span,
-  .sidebar:not(.open) .sidebar-actions .tab-btn span { display: none; }
-  .sidebar-nav .tab-btn,
-  .sidebar-actions .tab-btn { justify-content: flex-start; padding: 0.8rem 0.75rem; }
-  .app-layout { margin-left: 0; }
-  .header-right .current-date { display: none; }
-  .header-logo span { font-size: 0.8rem; }
-  .header-logo svg { width: 28px; height: 28px; }
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .comparison-item { gap: 0.6rem; padding: 0.55rem 0.75rem; }
-  .comparison-header-row { gap: 0.6rem; padding-left: 0.75rem; padding-right: 0.75rem; }
-  .comparison-header-row .comparison-label,
-  .comparison-label { width: 100px; flex-basis: 100px; font-size: 0.75rem; }
-  .comparison-header-row .comparison-old,
-  .comparison-header-row .comparison-new,
-  .comparison-old, .comparison-new { width: 80px; font-size: 0.75rem; }
-  .comparison-header-row .comparison-diff,
-  .comparison-diff { width: 100px; font-size: 0.75rem; }
-  .prod-day { border-radius: 10px; }
-  .prod-day-body { padding: 0.6rem 0.8rem; }
-  .prod-cesit-row { gap: 0.8rem; }
-  .prod-cesit-col { padding: 0.4rem 0.5rem; }
-  .prod-cesit { font-size: 0.78rem; }
-  .prod-ing { font-size: 0.75rem; line-height: 1.6; }
-  .prod-name { font-size: 0.75rem; }
-  .prod-qty { font-size: 0.75rem; }
-  .menu-date-nav { font-size: 0.8rem; gap: 0.4rem; padding: 0.3rem; }
-  .menu-date-nav .btn-ghost { padding: 0.25rem 0.5rem; font-size: 0.72rem; }
-}
 
 body.sidebar-open-mobile {
   overflow: hidden;
@@ -3607,6 +3559,38 @@ body.sidebar-open-mobile {
 .header .menu-toggle { display: none !important; }
 .sidebar-overlay { display: none !important; }
 .app-layout { margin-left: var(--sidebar-w); }
+
+/* ---- MOBIL: yan menu kayan cekmece (drawer) olarak ---- */
+@media (max-width: 600px) {
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    height: 100dvh;
+    max-height: 100dvh;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  .sidebar.open {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+  }
+  .sidebar:not(.open) .sidebar-nav .tab-btn span,
+  .sidebar:not(.open) .sidebar-actions .tab-btn span { display: none; }
+  .sidebar:not(.open) .sidebar-nav .tab-btn,
+  .sidebar:not(.open) .sidebar-actions .tab-btn { justify-content: center; padding: 0.8rem 0; }
+  .sidebar-header { display: none; }
+  .header .menu-toggle { display: inline-flex !important; align-items: center; }
+  .sidebar-overlay { display: none !important; }
+  .sidebar-overlay.show { display: block !important; }
+  .app-layout { margin-left: 0; }
+}
 
 /* ---- PRINT ---- */
 @media print {
@@ -4421,7 +4405,6 @@ body.sidebar-open-mobile {
 }
 
 
-
 /* ---- YUKARI CIK BUTONU ---- */
 #scrollTopBtn {
   position: fixed;
@@ -4572,7 +4555,6 @@ body.sidebar-open-mobile {
 .accent-opt.active .accent-swatch { border-color: var(--text-primary); }
 [data-theme="dark"] .accent-swatch { border-color: rgba(255,255,255,0.3); }
 [data-theme="dark"] .accent-opt.active .accent-swatch { border-color: #f8fafc; }
-
 
 .mz-autocomplete {
   position: absolute;
