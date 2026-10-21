@@ -21,7 +21,7 @@ const APP_CONFIG = {
   // Değiştirmeniz veya admin panelinden "Sürümü Yayınla" demeniz yeterli;
   // giriş ekranı, yan menü, kılavuz ve service worker bu değerden güncellenir.
   version: '1.5.0',   // görünen sürüm (v1.5.0)
-  build: 135,          // önbellek/güncelleme no (her yayında +1)
+  build: 137,          // önbellek/güncelleme no (her yayında +1)
   // LEGACY kullanıcılar - Supabase Auth'a geçildiğinde boşaltılabilir
   users: [
     { username: 'admin', passwordHash: 'e4b4617b9d7c3c1bed904600c772cf9ae83896aaff83a9cf9c04fa46fc11f126', role: 'admin', displayName: 'Admin' },

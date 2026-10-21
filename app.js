@@ -374,6 +374,8 @@ let yillikYearFilter = String(new Date().getFullYear());
 let yillikPrevYearFilter = String(new Date().getFullYear() - 1);
 let reportYearFilter = 0;
 let recordsYearFilter = 0;
+const REPORT_PAGE_SIZE = 100;
+let reportPage = 0;
 function getAvailableYears() {
   const years = new Set();
   const now = new Date().getFullYear();
@@ -2656,8 +2658,8 @@ function renderBirimFiyatlar() {
                 '<td style="text-align:center">' + p.yil + '</td>' +
                 (bfPerms ?
                   '<td style="text-align:center;white-space:nowrap">' +
-                    '<button class="btn-icon btn-sm" onclick="bfDuzenle(\'' + escapeHtml(p.id) + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 012 2h14a2 2 0 012-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
-                    '<button class="btn-icon btn-sm" onclick="bfSil(\'' + escapeHtml(p.id) + '\')" title="Sil" style="color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
+                    '<button class="btn-icon btn-sm btn-edit" onclick="bfDuzenle(\'' + escapeHtml(p.id) + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 012 2h14a2 2 0 012-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+                    '<button class="btn-icon btn-sm btn-delete" onclick="bfSil(\'' + escapeHtml(p.id) + '\')" title="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
                   '</td>' : '');
             }).join('')}
           </tbody>
@@ -3751,51 +3753,6 @@ function getLast7AvgWaste() {
   return last7.reduce((s, r) => s + r.atik, 0) / last7.length;
 }
 
-// ─── SPARKLINES ──────────────────────────────────────────────────────────────
-function drawSparkline(canvasId, data, color) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas || data.length < 2) return;
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.offsetWidth || 120;
-  const h = canvas.offsetHeight || 40;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const pad = 2;
-  const cW = w - pad * 2;
-  const cH = h - pad * 2;
-  const maxVal = Math.max(...data, 1);
-  const minVal = Math.min(...data, 0);
-  const range = maxVal - minVal || 1;
-  const xStep = cW / (data.length - 1);
-  ctx.beginPath();
-  data.forEach((v, i) => {
-    const x = pad + i * xStep;
-    const y = pad + cH - ((v - minVal) / range) * cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-  ctx.fillStyle = color + '20';
-  ctx.lineTo(pad + (data.length - 1) * xStep, pad + cH);
-  ctx.lineTo(pad, pad + cH);
-  ctx.closePath();
-  ctx.fill();
-}
-function renderSparklines() {
-  if (records.length < 2) return;
-  const sorted = [...records].sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
-  const atikData = sorted.map(r => r.atik);
-  const gecisData = sorted.map(r => r.turnike || 0);
-  drawSparkline('sparklineAtik', atikData, '#f97316');
-  drawSparkline('sparklineGecis', gecisData, '#22c55e');
-}
-
 // ─── WASTE DETAIL ────────────────────────────────────────────────────────────
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
 function triggerPrint(win, ms) {
@@ -3812,6 +3769,40 @@ function triggerPrint(win, ms) {
   }
 }
 
+// Yazdırma/YPDF çıktısında rapor tablosu TÜM kayıtları içermeli (sayfalama ekranda sadece görsel)
+// escapeTemplate: HTML içeriği template literal'a güvenli gömmek için
+function escapeTemplate(s) {
+  return String(s).replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+}
+
+// Rapor bölümünün tüm section-card HTML'ini, kayıt tablosuna TÜM kayıtlar yazılmış halde döndürür
+function buildFullPrintCards() {
+  const cards = [...document.querySelectorAll('#content-report > .section-card')].map(c => c.outerHTML).join('');
+  const allRows = getReportData().map(r => buildReportRow(r)).join('');
+  const marker = '<tbody id="reportTbody">';
+  const i = cards.indexOf(marker);
+  if (i === -1) return escapeTemplate(cards);
+  const j = cards.indexOf('</tbody>', i);
+  if (j === -1) return escapeTemplate(cards);
+  return escapeTemplate(cards.slice(0, i) + marker + allRows + cards.slice(j));
+}
+
+// Tarayıcıdan Ctrl+P ile yazdırıldığında da TÜM kayıtlar basılsın (ekranda sayfalama var)
+let reportPrintBackup = null;
+window.addEventListener('beforeprint', function () {
+  const tb = document.getElementById('reportTbody');
+  if (!tb || reportPrintBackup !== null) return;
+  reportPrintBackup = tb.innerHTML;
+  tb.innerHTML = getReportData().map(r => buildReportRow(r)).join('');
+});
+window.addEventListener('afterprint', function () {
+  const tb = document.getElementById('reportTbody');
+  if (tb && reportPrintBackup !== null) {
+    tb.innerHTML = reportPrintBackup;
+    reportPrintBackup = null;
+  }
+});
+
 function exportPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) {
@@ -3823,7 +3814,7 @@ function exportPDF() {
   setTimeout(() => {
     const printWin = window.open('', '_blank', 'width=1100,height=800');
     if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
-    const cards = [...document.querySelectorAll('#content-report > .section-card')].map(c => c.outerHTML).join('');
+    const cards = buildFullPrintCards();
     printWin.document.write(`<!DOCTYPE html><html><head>
       <meta charset="UTF-8"><title>Atık Kontrol Raporu</title>
       <style>
@@ -3844,7 +3835,7 @@ function exportPDF() {
         .trend-up { color: #ef4444; font-weight: 700; }
         .trend-down { color: #10b981; font-weight: 700; }
         .trend-flat { color: #64748b; font-weight: 700; }
-        .badge, .btn, .toolbar, .year-btn { display: none; }
+        .badge, .btn, .toolbar, .year-btn, .pagination { display: none; }
       .note-input { width: 100%; padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.7rem; resize: vertical; min-height: 24px; font-family: inherit; }
       .footer { text-align: center; font-size: 0.75rem; color: #999; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.5rem; }
       ${harcamaHiddenCss()}
@@ -4222,10 +4213,10 @@ function renderHaccpSicaklik() {
       : '<td></td>';
     var actionCell = canEdit
       ? '<td>' +
-        '<button class="btn-icon" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon btn-edit" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="deleteHaccpRecord(\'sicaklik\',' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<button class="btn-icon btn-delete" onclick="deleteHaccpRecord(\'sicaklik\',' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
         '</button>' +
         '</td>'
@@ -4876,7 +4867,7 @@ function caCihazListesiCiz() {
           'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' + sec + '</select></td>' +
         '<td style="text-align:center"><input type="checkbox" ' + (c.aktif !== false ? 'checked' : '') +
           ' onchange="caCihazGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer"></td>' +
-        '<td><button class="btn-icon" onclick="caCihazSil(' + i + ')" title="Sil" style="color:var(--danger)">' +
+        '<td><button class="btn-icon btn-delete" onclick="caCihazSil(' + i + ')" title="Sil">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>' +
         '</button></td>' +
       '</tr>';
@@ -5179,7 +5170,6 @@ function exportChartsWord() {
     if (!root) return;
     const cards = [];
     root.querySelectorAll('canvas[id^="canvas"]').forEach(function(canvas) {
-      if (canvas.classList.contains('kpi-sparkline')) return;
       if (canvas.style.display === 'none') return;
       const chart = window.Chart && Chart.getChart ? Chart.getChart(canvas) : null;
       if (!chart) return;
@@ -5558,6 +5548,10 @@ function updateNavIndicator() {
 window.addEventListener('resize', function() {
   clearTimeout(window._navIndTimer);
   window._navIndTimer = setTimeout(updateNavIndicator, 120);
+  if (window.innerWidth >= 600) {
+    document.getElementById('sidebarOverlay').classList.remove('show');
+    document.body.classList.remove('sidebar-open-mobile');
+  }
 });
 
 async function switchTab(name) {
@@ -5602,13 +5596,17 @@ function toggleSidebar() {
   document.body.classList.toggle('sidebar-open');
   if (window.innerWidth < 600) {
     document.getElementById('sidebarOverlay').classList.toggle('show');
+    document.body.classList.toggle('sidebar-open-mobile');
   }
   updateNavIndicator();
 }
 function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.body.classList.remove('sidebar-open');
-  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.classList.remove('sidebar-open-mobile');
+  if (window.innerWidth < 600) {
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  }
   updateNavIndicator();
 }
 // Masaustunde sol menu daima acik: icerigin sol boslugunu menunun gercek
@@ -6297,7 +6295,6 @@ function renderAll() {
     renderDailySummary();
     renderDataInfo();
     renderLastRecordsTable();
-    renderSparklines();
     renderWeeklyComparison();
     renderMonthlyComparison();
     renderYearlyComparison();
@@ -6982,7 +6979,7 @@ function buildRow(r, showActions) {
   const actions = canMutate ? `
     <td>
       <div style="display:flex;gap:0.4rem">
-        <button class="btn btn-icon" onclick="openModal(${r.id})" title="Düzenle">
+        <button class="btn btn-icon btn-edit" onclick="openModal(${r.id})" title="Düzenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">
@@ -8230,10 +8227,10 @@ function renderYemekListesi() {
       <td class="yl-alerjen" title="${escapeHtml(y.alerjen || '')}">${escapeHtml(y.alerjen || '')}</td>
       <td style="text-align:center;white-space:nowrap">${(y.tarif && y.tarif.length) ? `<span title="${y.tarif.length} malzeme" style="cursor:help;font-size:0.75rem;color:var(--accent-cyan)">${y.tarif.length} ürün</span>` : `<span style="font-size:0.7rem;color:var(--text-muted)">—</span>`}</td>
       <td class="yl-islem">
-        <button class="btn-icon btn-sm" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
+        <button class="btn-icon btn-sm btn-edit" onclick="editYemek('${escapeHtml(y.id)}')" title="Düzenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <button class="btn-icon btn-sm" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">
+        <button class="btn-icon btn-sm btn-delete" onclick="deleteYemek('${escapeHtml(y.id)}')" title="Sil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         </button>
       </td>
@@ -8280,7 +8277,7 @@ function renderYemekForm(ad, kalori, alerjen) {
           <option value="ml" ${t.birim==='ml'?'selected':''}>ml</option>
         </select>
       </td>
-      <td style="width:30px"><button class="btn-icon btn-sm" onclick="yfTarifSil(${i})" style="color:var(--danger)">✕</button></td>
+      <td style="width:30px"><button class="btn-icon btn-sm btn-delete" onclick="yfTarifSil(${i})" title="Sil">✕</button></td>
     </tr>
   `).join('');
 
@@ -8794,6 +8791,7 @@ function renderReportYearFilter() {
 
 function setReportYear(v) {
   reportYearFilter = Number(v) || 0;
+  reportPage = 0;
   renderReport();
 }
 
@@ -8809,6 +8807,8 @@ function renderReport() {
       document.getElementById(id).textContent = '—';
     });
     document.getElementById('reportTbody').innerHTML = '';
+    const reportPaginationEl = document.getElementById('reportPagination');
+    if (reportPaginationEl) reportPaginationEl.innerHTML = '';
     const avgPorItem = document.getElementById('rAvgPorsiyonItem');
     if (avgPorItem) avgPorItem.style.display = '';
     renderWasteByFoodType(data);
@@ -8907,9 +8907,38 @@ function renderReport() {
   }
 
   const reportTbody = document.getElementById('reportTbody');
-  reportTbody.innerHTML = data.map(r => buildReportRow(r)).join('');
+  const reportTotalPages = Math.max(1, Math.ceil(data.length / REPORT_PAGE_SIZE));
+  if (reportPage > reportTotalPages - 1) reportPage = reportTotalPages - 1;
+  if (reportPage < 0) reportPage = 0;
+  const reportStart = reportPage * REPORT_PAGE_SIZE;
+  reportTbody.innerHTML = data.slice(reportStart, reportStart + REPORT_PAGE_SIZE).map(r => buildReportRow(r)).join('');
+  renderReportPagination(reportTotalPages, data.length);
 
   renderWasteByFoodType(data);
+}
+
+function renderReportPagination(totalPages, totalCount) {
+  const pagination = document.getElementById('reportPagination');
+  if (!pagination) return;
+  if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+  const first = reportPage === 0;
+  const last = reportPage >= totalPages - 1;
+  pagination.innerHTML =
+    '<button class="btn btn-ghost btn-sm" onclick="reportGoToPage(0)"' + (first ? ' disabled' : '') + '>&laquo;</button>' +
+    '<button class="btn btn-ghost btn-sm" onclick="reportGoToPage(' + (reportPage - 1) + ')"' + (first ? ' disabled' : '') + '>&lsaquo;</button>' +
+    '<span class="page-info">' + (reportPage + 1) + ' / ' + totalPages + '</span>' +
+    '<button class="btn btn-ghost btn-sm" onclick="reportGoToPage(' + (reportPage + 1) + ')"' + (last ? ' disabled' : '') + '>&rsaquo;</button>' +
+    '<button class="btn btn-ghost btn-sm" onclick="reportGoToPage(' + (totalPages - 1) + ')"' + (last ? ' disabled' : '') + '>&raquo;</button>' +
+    '<span class="page-total">' + totalCount + ' kayıt</span>';
+}
+
+function reportGoToPage(p) {
+  const totalPages = Math.max(1, Math.ceil(getReportData().length / REPORT_PAGE_SIZE));
+  if (p < 0 || p >= totalPages || p === reportPage) return;
+  reportPage = p;
+  renderReport();
+  const el = document.getElementById('reportPagination');
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
 }
 
 function renderWasteByFoodType(list) {
@@ -12351,10 +12380,10 @@ function renderYagTable() {
     const dateStr = displayDate(r.tarih);
     var actionCell = canEditYag
       ? '<td>' +
-        '<button class="btn-icon" onclick="editYagRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon btn-edit" onclick="editYagRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="deleteYagRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<button class="btn-icon btn-delete" onclick="deleteYagRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
         '</button>' +
         '</td>'
@@ -12372,12 +12401,15 @@ function renderYagTable() {
   const pagination = document.getElementById('yagPagination');
   if (pagination) {
     if (totalPages > 1) {
+      var yFirst = yagPage === 0;
+      var yLast = yagPage >= totalPages - 1;
       pagination.innerHTML =
-        '<button class="btn-icon" data-yag-page="' + (yagPage - 1) + '"' + (yagPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
-        Array.from({length: totalPages}, function(_, i) {
-          return '<button class="btn-icon" data-yag-page="' + i + '"' + (i === yagPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
-        }).join('') +
-        '<button class="btn-icon" data-yag-page="' + (yagPage + 1) + '"' + (yagPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+        '<button class="btn btn-ghost btn-sm" data-yag-page="0"' + (yFirst ? ' disabled' : '') + '>&laquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-yag-page="' + (yagPage - 1) + '"' + (yFirst ? ' disabled' : '') + '>&lsaquo;</button>' +
+        '<span class="page-info">' + (yagPage + 1) + ' / ' + totalPages + '</span>' +
+        '<button class="btn btn-ghost btn-sm" data-yag-page="' + (yagPage + 1) + '"' + (yLast ? ' disabled' : '') + '>&rsaquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-yag-page="' + (totalPages - 1) + '"' + (yLast ? ' disabled' : '') + '>&raquo;</button>' +
+        '<span class="page-total">' + filtered.length + ' kayıt</span>';
     } else {
       pagination.innerHTML = '';
     }
@@ -12740,7 +12772,7 @@ function loadAmbalajData() {
 }
 
 document.addEventListener('click', function(e) {
-  var btn = e.target.closest('#ambalajPagination .btn-icon');
+  var btn = e.target.closest('#ambalajPagination button');
   if (btn && btn.hasAttribute('data-ambalaj-page') && !btn.disabled) {
     var page = parseInt(btn.getAttribute('data-ambalaj-page'));
     if (!isNaN(page) && page >= 0) {
@@ -12748,7 +12780,7 @@ document.addEventListener('click', function(e) {
       renderAmbalajTable();
     }
   }
-  btn = e.target.closest('#yagPagination .btn-icon');
+  btn = e.target.closest('#yagPagination button');
   if (btn && btn.hasAttribute('data-yag-page') && !btn.disabled) {
     var page = parseInt(btn.getAttribute('data-yag-page'));
     if (!isNaN(page) && page >= 0) {
@@ -12756,7 +12788,7 @@ document.addEventListener('click', function(e) {
       renderYagTable();
     }
   }
-  btn = e.target.closest('#kalibrasyonPagination .btn-icon');
+  btn = e.target.closest('#kalibrasyonPagination button');
   if (btn && btn.hasAttribute('data-kalibrasyon-page') && !btn.disabled) {
     var page = parseInt(btn.getAttribute('data-kalibrasyon-page'));
     if (!isNaN(page) && page >= 0) {
@@ -12947,10 +12979,10 @@ function renderAmbalajTable() {
     const dateStr = displayDate(r.tarih);
     var actionCell = canEditAmbalaj
       ? '<td>' +
-        '<button class="btn-icon" onclick="editAmbalajRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon btn-edit" onclick="editAmbalajRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="deleteAmbalajRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<button class="btn-icon btn-delete" onclick="deleteAmbalajRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
         '</button>' +
         '</td>'
@@ -12967,12 +12999,15 @@ function renderAmbalajTable() {
   const pagination = document.getElementById('ambalajPagination');
   if (pagination) {
     if (totalPages > 1) {
+      var aFirst = ambalajPage === 0;
+      var aLast = ambalajPage >= totalPages - 1;
       pagination.innerHTML =
-        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage - 1) + '"' + (ambalajPage === 0 ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
-        Array.from({length: totalPages}, function(_, i) {
-          return '<button class="btn-icon" data-ambalaj-page="' + i + '"' + (i === ambalajPage ? ' style="font-weight:700;color:var(--primary)"' : '') + '>' + (i + 1) + '</button>';
-        }).join('') +
-        '<button class="btn-icon" data-ambalaj-page="' + (ambalajPage + 1) + '"' + (ambalajPage >= totalPages - 1 ? ' disabled style="opacity:0.4"' : '') + '>›</button>';
+        '<button class="btn btn-ghost btn-sm" data-ambalaj-page="0"' + (aFirst ? ' disabled' : '') + '>&laquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-ambalaj-page="' + (ambalajPage - 1) + '"' + (aFirst ? ' disabled' : '') + '>&lsaquo;</button>' +
+        '<span class="page-info">' + (ambalajPage + 1) + ' / ' + totalPages + '</span>' +
+        '<button class="btn btn-ghost btn-sm" data-ambalaj-page="' + (ambalajPage + 1) + '"' + (aLast ? ' disabled' : '') + '>&rsaquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-ambalaj-page="' + (totalPages - 1) + '"' + (aLast ? ' disabled' : '') + '>&raquo;</button>' +
+        '<span class="page-total">' + filtered.length + ' kayıt</span>';
     } else {
       pagination.innerHTML = '';
     }
@@ -13981,10 +14016,10 @@ function renderKalibrasyon() {
     var kalB = getKalibrasyonDurumBilgi(r);
     var actionCell = canEditK
       ? '<td>' +
-        '<button class="btn-icon" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
+        '<button class="btn-icon btn-edit" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
         '</button>' +
-        '<button class="btn-icon" onclick="deleteKalibrasyonRecord(' + r.id + ')" title="Sil" style="color:var(--danger)">' +
+        '<button class="btn-icon btn-delete" onclick="deleteKalibrasyonRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
         '</button>' +
         '</td>'
@@ -14010,12 +14045,12 @@ function renderKalibrasyon() {
       var fp = kalibrasyonPage === 0;
       var lp = kalibrasyonPage >= totalPages - 1;
       pagination.innerHTML =
-        '<button class="btn-icon" data-kalibrasyon-page="0"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>«</button>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (fp ? ' disabled style="opacity:0.4"' : '') + '>‹</button>' +
-        '<span style="font-weight:600;margin:0 4px">' + (kalibrasyonPage + 1) + ' / ' + totalPages + '</span>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>›</button>' +
-        '<button class="btn-icon" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled style="opacity:0.4"' : '') + '>»</button>' +
-        '<span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">' + filtered.length + ' cihaz</span>';
+        '<button class="btn btn-ghost btn-sm" data-kalibrasyon-page="0"' + (fp ? ' disabled' : '') + '>&laquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-kalibrasyon-page="' + (kalibrasyonPage - 1) + '"' + (fp ? ' disabled' : '') + '>&lsaquo;</button>' +
+        '<span class="page-info">' + (kalibrasyonPage + 1) + ' / ' + totalPages + '</span>' +
+        '<button class="btn btn-ghost btn-sm" data-kalibrasyon-page="' + (kalibrasyonPage + 1) + '"' + (lp ? ' disabled' : '') + '>&rsaquo;</button>' +
+        '<button class="btn btn-ghost btn-sm" data-kalibrasyon-page="' + (totalPages - 1) + '"' + (lp ? ' disabled' : '') + '>&raquo;</button>' +
+        '<span class="page-total">' + filtered.length + ' cihaz</span>';
     } else {
       pagination.innerHTML = '';
     }

@@ -259,14 +259,6 @@
 
     <!-- ===== DASHBOARD TAB ===== -->
     <div class="tab-content active" id="content-dashboard">
-      <div class="toolbar" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-        <div style="flex:1"></div>
-        <div class="toolbar-actions">
-          <button class="btn btn-outline btn-icon" onclick="exportDashboardPDF()" title="Panoyu PDF olarak yazdır" aria-label="Panoyu PDF olarak yazdır" data-i18n-title="dashboardPrintPdf" data-i18n-aria-label="dashboardPrintPdf">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          </button>
-        </div>
-      </div>
       <div class="kpi-grid" id="kpiGrid">
         <div class="kpi-card" id="kpi-toplam-kayit">
           <div class="kpi-icon kpi-blue">
@@ -295,7 +287,6 @@
             <span class="kpi-label" data-i18n="kpiAvgWaste">Ort. Atık (kg)</span>
             <span class="kpi-value" id="kpiAvgAtik">0.00</span>
             <span class="kpi-trend" id="trendAvgAtik"></span>
-            <canvas class="kpi-sparkline" id="sparklineAtik"></canvas>
           </div>
         </div>
         <div class="kpi-card" id="kpi-toplam-gecis">
@@ -305,7 +296,6 @@
           <div class="kpi-body">
             <span class="kpi-label" data-i18n="kpiTotalPasses">Turnikeden Toplam Geçiş Rakamı</span>
             <span class="kpi-value" id="kpiLastGecis">0</span>
-            <canvas class="kpi-sparkline" id="sparklineGecis"></canvas>
           </div>
         </div>
         <div class="kpi-card" id="kpi-menu-cesit">
@@ -674,6 +664,7 @@
             <tbody id="reportTbody"></tbody>
           </table>
         </div>
+        <div id="reportPagination" class="pagination"></div>
       </div>
     </div>
 
@@ -957,7 +948,7 @@
             </thead>
             <tbody id="yagTbody"></tbody>
           </table>
-          <div id="yagPagination" class="pagination" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.85rem"></div>
+          <div id="yagPagination" class="pagination"></div>
         </div>
       </div>
     </div>
@@ -1052,7 +1043,7 @@
             </thead>
             <tbody id="ambalajTbody"></tbody>
           </table>
-          <div id="ambalajPagination" class="pagination" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.85rem"></div>
+          <div id="ambalajPagination" class="pagination"></div>
         </div>
       </div>
     </div>
@@ -1130,7 +1121,7 @@
             </thead>
             <tbody id="kalibrasyonTbody"></tbody>
           </table>
-          <div id="kalibrasyonPagination" class="pagination" style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.85rem"></div>
+          <div id="kalibrasyonPagination" class="pagination"></div>
         </div>
       </div>
     </div>
