@@ -858,7 +858,9 @@ body {
   font-size: 0.8rem;
   transition: all var(--transition);
 }
-.header .menu-toggle { display: none; }
+@media (min-width: 601px) {
+  .header .menu-toggle { display: none; }
+}
 .menu-toggle:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
 .menu-toggle svg { width: 22px; height: 22px; display: block; }
 
@@ -3480,6 +3482,7 @@ input.production-input:focus {
 #mealPickerOverlay input:focus { outline: 2px solid var(--accent-cyan); outline-offset: -1px; }
 
 @media (max-width: 600px) {
+  .header .menu-toggle { display: inline-flex !important; align-items: center; }
   .sidebar {
     width: 280px;
     transform: translateX(-100%);
@@ -3491,8 +3494,8 @@ input.production-input:focus {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   .sidebar.open { width: 280px; transform: translateX(0); }
+  .header .menu-toggle { display: inline-flex !important; }
   .sidebar-header { display: none; }
-  .header .menu-toggle { display: flex; }
   .sidebar-nav .tab-btn span,
   .sidebar-actions .tab-btn span { display: inline; }
   .sidebar:not(.open) .sidebar-nav .tab-btn span,
