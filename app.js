@@ -1491,9 +1491,9 @@ function applyViewerRestrictions() {
     });
     document.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
   }
-  if (!perm.canAddRecord) {
-    document.querySelectorAll('.btn-primary[onclick*="openModal"]').forEach(function(el) { el.style.display = 'none'; });
-  }
+if (!perm.canAddRecord) {
+document.querySelectorAll('#recordsEntryBtn, .btn-primary[onclick*="openModal"]').forEach(function(el) { el.style.display = 'none'; });
+}
   if (!perm.canAddHaccp) {
     document.querySelectorAll('.btn-primary[onclick*="openHaccpModal"]').forEach(function(el) { el.style.display = 'none'; });
   }
@@ -7050,6 +7050,45 @@ var MENU_KATEGORI_RENKLERI = {
   'Diğer': { bg: '#f1f5f9', border: '#94a3b8', icon: '📦', renk: '#475569' }
 };
 
+// ---- KATEGORI DAGILIMI ORTAK BILESENI ---------------------------------------
+// Mali Tablo ve Yillik Maliyet ekranlarinda ayni tasarimi kullanir.
+// Cubuk uzunlugu en buyuk kategoriye gore olceklenir (okunabilirlik),
+// yuzde sutunu gercek toplam payini gosterir.
+function kategoriDagilimiHtml(agg, toplam, opts) {
+  opts = opts || {};
+  var baslik = opts.baslik || 'Kategori Dağılımı';
+  var toplamEtiket = opts.toplamEtiket || 'Toplam';
+  var list = [];
+  if (agg) {
+    MENU_KATEGORI_SIRASI.forEach(function(k) { if (agg[k] > 0) list.push({ ad: k, tutar: agg[k] }); });
+    Object.keys(agg).forEach(function(k) {
+      if (agg[k] > 0 && MENU_KATEGORI_SIRASI.indexOf(k) === -1) list.push({ ad: k, tutar: agg[k] });
+    });
+  }
+  if (!list.length) return '';
+  list.sort(function(a, b) { return b.tutar - a.tutar; });
+  var maxTutar = list[0].tutar || 1;
+  var html = '<div class="katdag">';
+  html += '<div class="katdag-head"><span class="katdag-title">' + escapeHtml(baslik) + '</span>' +
+    '<span class="katdag-total">' + escapeHtml(toplamEtiket) + ' <strong>' + formatTRY(toplam) + '</strong></span></div>';
+  html += '<div class="katdag-list">';
+  list.forEach(function(item) {
+    var renk = MENU_KATEGORI_RENKLERI[item.ad] || MENU_KATEGORI_RENKLERI['Diğer'];
+    var pct = toplam > 0 ? Math.round(item.tutar / toplam * 100) : 0;
+    var gen = Math.max(3, Math.round(item.tutar / maxTutar * 100));
+    var ipucu = item.ad + ' — ' + formatTRY(item.tutar) + ' (toplamın %' + pct + ')';
+    html += '<div class="katdag-row" title="' + escapeHtml(ipucu) + '">' +
+      '<span class="katdag-icon" style="background:' + renk.bg + ';border-color:' + (renk.border || renk.bg) + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
+      '<span class="katdag-name">' + escapeHtml(item.ad) + '</span>' +
+      '<span class="katdag-track" role="img" aria-label="' + escapeHtml(ipucu) + '"><span class="katdag-bar" style="width:' + gen + '%;background:linear-gradient(90deg,' + renk.renk + '55,' + renk.renk + ')"></span></span>' +
+      '<span class="katdag-value">' + formatTRY(item.tutar) + '</span>' +
+      '<span class="katdag-pct">%' + pct + '</span>' +
+      '</div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
 function menuGetKategori(malzemeAdi) {
   var ad = malzemeAdi.toLowerCase().trim()
     .replace(/[ıI]/g, 'ı').replace(/İ/g, 'i')
@@ -7577,25 +7616,7 @@ function renderMaliTablo(days) {
     '<td class="mali-tutar-alt"><strong>' + ortBasi + '</strong></td></tr></tfoot></table></div>';
 
   // Kategori dağılımı
-  var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return katAgg[k] && katAgg[k] > 0; });
-  if (katSirali.length) {
-    html += '<div class="mali-kat-baslik">Kategori Dağılımı</div>';
-    html += '<div class="mali-kat-liste">';
-    katSirali.forEach(function(kat) {
-      var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
-      var tutar = katAgg[kat];
-      var pctRaw = genelToplam > 0 ? Math.round(tutar / genelToplam * 100) : 0;
-      var yuzde = Math.max(2, Math.min(100, pctRaw));
-      html += '<div class="mali-kat-row">' +
-        '<span class="mali-kat-icon" style="background:' + renk.bg + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
-        '<span class="mali-kat-ad" style="color:' + renk.renk + '">' + escapeHtml(kat) + '</span>' +
-        '<div class="mali-kat-bar-wrap"><div class="mali-kat-bar" style="width:' + yuzde + '%;background:linear-gradient(90deg,' + renk.renk + '99,' + renk.renk + ')"></div></div>' +
-        '<span class="mali-kat-tutar">' + formatTRY(tutar) + '</span>' +
-        '<span class="mali-kat-yuzde">%' + pctRaw + '</span>' +
-        '</div>';
-    });
-    html += '</div>';
-  }
+  html += kategoriDagilimiHtml(katAgg, genelToplam);
 
   // Yıllık özet satırı (HAFTALIK TOPLAM'un altında)
   html += '<div class="mali-yillik-satir" id="maliYillikSatir">' +
@@ -7992,24 +8013,7 @@ function renderYillikMaliyet() {
   html += '</div>';
 
   // Kategori dağılımı
-  var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return r.katAgg[k] && r.katAgg[k] > 0; });
-  if (katSirali.length) {
-    html += '<div class="yillik-kat-baslik">Kategori Dağılımı</div><div class="yillik-kat-liste">';
-    katSirali.forEach(function(kat) {
-      var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
-      var tutar = r.katAgg[kat];
-      var pctRaw = r.toplam > 0 ? Math.round(tutar / r.toplam * 100) : 0;
-      var gen = Math.max(2, Math.min(100, pctRaw));
-      html += '<div class="yillik-kat-row">' +
-        '<span class="yillik-kat-icon" style="background:' + renk.bg + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
-        '<span class="yillik-kat-ad" style="color:' + renk.renk + '">' + escapeHtml(kat) + '</span>' +
-        '<div class="yillik-kat-bar-wrap"><div class="yillik-kat-bar" style="width:' + gen + '%;background:linear-gradient(90deg,' + renk.renk + '99,' + renk.renk + ')"></div></div>' +
-        '<span class="yillik-kat-tutar">' + formatTRY(tutar) + '</span>' +
-        '<span class="yillik-kat-yuzde">%' + pctRaw + '</span>' +
-        '</div>';
-    });
-    html += '</div>';
-  }
+  html += kategoriDagilimiHtml(r.katAgg, r.toplam);
 
   // Kapsam bilgisi
   html += '<div class="yillik-kapsam">' +
@@ -13637,13 +13641,15 @@ function buildExportHTML() {
     '.mtb-tutar{text-align:right;font-weight:600}' +
     '.mtb-toplam{background:#eef2ff;font-weight:700}' +
     '.mtb-toplam td{border-top:2px solid #6366f1}' +
-    '.mtb-kat-baslik{font-size:11px;font-weight:700;margin:8px 0 4px;color:#1e293b}' +
-    '.mtb-kat-row{display:flex;align-items:center;gap:6px;font-size:9px;padding:2px 0;border-bottom:1px solid #f0f0f0;page-break-inside:avoid;break-inside:avoid}' +
-    '.mtb-kat-ad{width:130px;color:#333;font-weight:600}' +
-    '.mtb-kat-bar-wrap{flex:1;background:#f1f0f6;height:8px;border-radius:4px;overflow:hidden}' +
-    '.mtb-kat-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px}' +
-    '.mtb-kat-tutar{width:90px;text-align:right;font-weight:600}' +
-    '.mtb-kat-yuzde{width:40px;text-align:right;color:#888}' +
+    '.mtb-kat-baslik{font-size:11px;font-weight:700;margin:8px 0 4px;color:#1e293b;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #ddd;padding-bottom:3px}' +
+    '.mtb-kat-liste{display:flex;flex-direction:column}' +
+    '.mtb-kat-row{display:flex;align-items:center;gap:6px;font-size:9px;padding:2.5px 0;border-bottom:1px solid #f0f0f0;page-break-inside:avoid;break-inside:avoid}' +
+    '.mtb-kat-icon{width:15px;height:15px;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;font-size:9px;line-height:1}' +
+    '.mtb-kat-ad{width:130px;color:#333;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.mtb-kat-bar-wrap{flex:1;background:#f1f0f6;height:7px;border-radius:4px;overflow:hidden;border:1px solid #e2e4ec}' +
+    '.mtb-kat-bar{height:100%;border-radius:4px}' +
+    '.mtb-kat-tutar{width:90px;text-align:right;font-weight:700;color:#333;font-variant-numeric:tabular-nums}' +
+    '.mtb-kat-yuzde{width:40px;text-align:right;color:#888;font-weight:600}' +
     '.fot{text-align:center;font-size:8px;color:#aaa;margin-top:8px;padding-top:3px;border-top:1px solid #ddd}' +
     '</style>';
 
@@ -13721,12 +13727,23 @@ function buildExportHTML() {
 
     var katSirali = MENU_KATEGORI_SIRASI.filter(function(k) { return katAgg[k] && katAgg[k] > 0; });
     if (katSirali.length) {
+      katSirali.sort(function(a, b) { return katAgg[b] - katAgg[a]; });
+      var katMax = katAgg[katSirali[0]] || 1;
       maliHtml += '<div class="mtb-kat-baslik">Kategori Dağılımı</div>';
+      maliHtml += '<div class="mtb-kat-liste">';
       katSirali.forEach(function(kat) {
+        var renk = MENU_KATEGORI_RENKLERI[kat] || MENU_KATEGORI_RENKLERI['Diğer'];
         var tutar = katAgg[kat];
         var pct = genelToplam > 0 ? Math.round(tutar / genelToplam * 100) : 0;
-        maliHtml += '<div class="mtb-kat-row"><span class="mtb-kat-ad">' + escapeHtml(kat) + '</span><div class="mtb-kat-bar-wrap"><div class="mtb-kat-bar" style="width:' + Math.max(2, Math.min(100, pct)) + '%"></div></div><span class="mtb-kat-tutar">' + formatTRY(tutar) + '</span><span class="mtb-kat-yuzde">%' + pct + '</span></div>';
+        var gen = Math.max(3, Math.round(tutar / katMax * 100));
+        maliHtml += '<div class="mtb-kat-row">' +
+          '<span class="mtb-kat-icon" style="background:' + renk.bg + ';color:' + renk.renk + '">' + renk.icon + '</span>' +
+          '<span class="mtb-kat-ad">' + escapeHtml(kat) + '</span>' +
+          '<div class="mtb-kat-bar-wrap"><div class="mtb-kat-bar" style="width:' + gen + '%;background:linear-gradient(90deg,' + renk.renk + '55,' + renk.renk + ')"></div></div>' +
+          '<span class="mtb-kat-tutar">' + formatTRY(tutar) + '</span>' +
+          '<span class="mtb-kat-yuzde">%' + pct + '</span></div>';
       });
+      maliHtml += '</div>';
     }
 
     html += maliHtml;
