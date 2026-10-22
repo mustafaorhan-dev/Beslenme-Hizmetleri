@@ -59,14 +59,9 @@
         <form class="login-form" onsubmit="event.preventDefault();doLogin()">
           <div class="login-field-wrap">
             <span class="login-field-icon login-icon-user">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             </span>
-            <select id="loginUsername" class="login-field has-icon" aria-label="Kullanıcı seçin">
-              <option value="" data-i18n="loginSelectUser">Kullanıcı Seçin</option>
-            </select>
-            <span class="login-field-chevron">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
-            </span>
+            <input type="email" id="loginEmail" class="login-field has-icon" placeholder="E-posta adresiniz" autocomplete="username" autocapitalize="none" spellcheck="false" aria-label="E-posta" />
           </div>
           <div class="login-field-wrap">
             <span class="login-field-icon login-icon-lock">
@@ -91,21 +86,7 @@
           <div class="login-inst-text">NUTRITION SERVICES MANAGEMENT SYSTEM</div>
           <span class="login-inst-version">Versiyon: v1.5.0</span>
         </div>
-        <div class="login-bottom">
-          <div class="login-forgot-wrap">
-            <a href="javascript:void(0)" class="login-forgot" onclick="showForgotPw()" data-i18n="loginForgot">Şifremi Unuttum?</a>
-          </div>
-        </div>
       </section>
-    </div>
-  </div>
-
-  <div class="login-forgot-modal" id="loginForgotModal" onclick="if(event.target===this)hideForgotPw()">
-    <div class="login-forgot-card">
-      <button type="button" class="login-forgot-close" aria-label="Kapat" onclick="hideForgotPw()">✕</button>
-      <h4 data-i18n="loginForgotTitle">Şifremi Unuttum</h4>
-      <p data-i18n="loginForgotText">Şifre talebi için lütfen mustafa.orhan@ahievran.edu.tr adresine e-posta gönderin.</p>
-      <button type="button" class="btn login-submit login-forgot-ok" onclick="hideForgotPw()" data-i18n="loginForgotOk">Kapat</button>
     </div>
   </div>
 
@@ -154,12 +135,46 @@
             <button class="lang-option" data-lang="uz" onclick="setLanguage('uz')"><span class="lang-flag">&#127482;&#127462;</span> O'zbek</button>
           </div>
         </div>
+        <button class="btn-logout" onclick="openChangePw()" title="Şifremi Değiştir" aria-label="Şifremi Değiştir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </button>
         <button class="btn-logout" onclick="doLogout()" title="Çıkış">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
     </div>
   </header>
+
+  <!-- ŞİFRE DEĞİŞTİR MODALI -->
+  <div class="modal-overlay" id="changePwModal" onclick="if(event.target===this)closeChangePw()">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <h2>Şifremi Değiştir</h2>
+        <button class="modal-close" onclick="closeChangePw()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <div style="margin-bottom:0.6rem">
+          <label for="cpCurrent" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Şifre</label>
+          <input type="password" id="cpCurrent" autocomplete="current-password" placeholder="Mevcut şifreniz" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div style="margin-bottom:0.6rem">
+          <label for="cpNew" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Yeni Şifre</label>
+          <input type="password" id="cpNew" autocomplete="new-password" placeholder="En az 6 karakter" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div style="margin-bottom:0.6rem">
+          <label for="cpNew2" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Yeni Şifre (tekrar)</label>
+          <input type="password" id="cpNew2" autocomplete="new-password" placeholder="Yeni şifreyi tekrar girin" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div id="cpError" style="display:none;color:var(--danger,#ef4444);font-size:0.8rem;margin-top:0.35rem"></div>
+        <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.85rem">
+          <button class="btn btn-ghost btn-sm" onclick="closeChangePw()">İptal</button>
+          <button class="btn btn-primary btn-sm" onclick="changePassword()">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- SIDEBAR -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -238,7 +253,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           <span data-i18n="sidebarAdmin">Yönetim</span>
         </button>
-        <button class="tab-btn" id="logPanelBtn" onclick="openLogPanel()" style="display:none">
+        <button class="tab-btn" id="logPanelBtn" onclick="switchTab('logs')" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span data-i18n="sidebarLogs">Log Kayıtları</span>
         </button>
@@ -247,7 +262,7 @@
           <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
           <span data-i18n="sidebarTheme">Tema</span>
         </button>
-        <button class="tab-btn" onclick="openManualModal()">
+        <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
           <span data-i18n="sidebarManual">Kullanım Kılavuzu</span>
         </button>
@@ -455,7 +470,7 @@
                 <th>Tarih</th>
                 <th>Üretilen Yemek</th>
                 <th>%10 Fire</th>
-                <th style="color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem">Yemek Hiz. Yararlanan<br>Personel ve Öğrenci</th>
+                <th style="color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem">Yemek Hiz. Yararlanan</th>
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Atık Porsiyon Adedi</th>
@@ -526,7 +541,7 @@
                 <th data-field="tarih" onclick="toggleSort('tarih')" style="cursor:pointer" data-i18n="thDate">Tarih</th>
                 <th data-field="yemek" onclick="toggleSort('yemek')" style="cursor:pointer" data-i18n="thProducedPerson">Üretilen Yemek (Kişi)</th>
                 <th data-field="fire" onclick="toggleSort('fire')" style="cursor:pointer" data-i18n="thWaste10">%10 Fire</th>
-                <th data-field="turnike" onclick="toggleSort('turnike')" style="cursor:pointer;color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem" data-i18n="thBeneficiary">Yemek Hiz. Yararlanan<br>Personel ve Öğrenci</th>
+                <th data-field="turnike" onclick="toggleSort('turnike')" style="cursor:pointer;color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem" data-i18n="thBeneficiary">Yemek Hiz. Yararlanan</th>
                 <th data-field="porsiyon" onclick="toggleSort('porsiyon')" style="cursor:pointer" data-i18n="thPortionGr">Porsiyon (gr)</th>
                 <th data-field="atik" onclick="toggleSort('atik')" style="cursor:pointer" data-i18n="thWasteKg">Atık (kg)</th>
                 <th style="cursor:pointer;color:var(--accent-orange)" data-i18n="thWastedPortion">Çöpe Giden (pors.)</th>
@@ -652,10 +667,10 @@
                 <th>Üretilen Yemek</th>
                 <th>%10 Fire</th>
                 <th style="color:#22c55e">Turnike Geçişi</th>
-                <th data-i18n="thAcademicStaff">Turnikeden Geçen<br>Akademik ve İdari Personel</th>
-                <th data-i18n="thStudentCount">Turnikeden Geçen<br>Öğrenci Sayısı</th>
-                <th data-i18n="sksStaff">SKS Yemek Hizmeti Personeli<br>(Turnikeden Geçmeden Yemekten Yararlanan)</th>
-                <th data-i18n="thBeneficiaryTotal" style="color:#22c55e">Yemek Hiz. Yararlanan<br>Toplam Kişi</th>
+                <th data-i18n="thAcademicStaff">Turnikeden Geçen Akademik ve İdari Personel</th>
+                <th data-i18n="thStudentCount">Turnikeden Geçen Öğrenci Sayısı</th>
+                <th data-i18n="sksStaff">SKS Yemek Hizmeti Personeli (Turnikeden Geçmeden Yemekten Yararlanan)</th>
+                <th data-i18n="thBeneficiaryTotal" style="color:#22c55e">Yemek Hiz. Yararlanan Toplam Kişi</th>
                 <th>Porsiyon (gr)</th>
                 <th>Atık (kg)</th>
                 <th>Atık Porsiyon Adedi</th>
@@ -778,7 +793,7 @@
       </div>
 
       <!-- Depo Sıcaklık -->
-      <div class="section-card">
+      <div class="section-card" id="haccpSicaklikCard">
         <div class="section-header">
           <h2 data-i18n="haccpColdStorage">Soğuk Depo Sıcaklık Kayıtları</h2>
           <div style="display:flex;gap:0.5rem">
@@ -1591,6 +1606,522 @@
       </div>
     </div>
 
+    <!-- ===== YÖNETİM PANELİ TAB ===== -->
+    <div class="tab-content" id="content-admin">
+      <div class="section-card">
+        <div class="section-header" style="flex-wrap:wrap;gap:0.75rem">
+          <h2 data-i18n="adminTitle">Yönetim Paneli</h2>
+          <div class="ap-subtabs">
+            <button class="ap-subtab active" data-aptab="users" onclick="apSwitchTab('users')">Kullanıcılar</button>
+            <button class="ap-subtab" data-aptab="roles" onclick="apSwitchTab('roles')">Roller ve İzinler</button>
+            <button class="ap-subtab" data-aptab="system" onclick="apSwitchTab('system')">Oturum ve Sürüm</button>
+          </div>
+        </div>
+
+        <div id="apError" style="display:none;color:#ef4444;font-size:0.85rem;margin:0.5rem 0"></div>
+        <div id="apSuccess" style="display:none;color:#22c55e;font-size:0.85rem;margin:0.5rem 0"></div>
+
+        <!-- KULLANICILAR -->
+        <div class="ap-tab-content active" id="ap-tab-users">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Kullanıcılar</h3>
+              <span id="apUserCount" style="font-size:0.75rem;color:var(--text-muted)"></span>
+            </div>
+            <div class="ap-card-body" id="apUserList"></div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Yeni Kullanıcı Ekle</h3>
+            </div>
+            <div class="ap-card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+                <div>
+                  <label for="apNewDisplayName" class="ap-field-label" data-i18n="adminDisplayName">Adı Soyadı</label>
+                  <input type="text" id="apNewDisplayName" class="ap-field" placeholder="ör: Fatma Mine ORHAN" />
+                </div>
+                <div>
+                  <label for="apNewEmail" class="ap-field-label">E-posta</label>
+                  <input type="email" id="apNewEmail" class="ap-field" placeholder="ör: ad.soyad@ahievran.edu.tr" autocomplete="off" spellcheck="false" />
+                </div>
+              </div>
+              <div style="margin-top:0.6rem">
+                <label for="apNewRole" class="ap-field-label" data-i18n="adminRole">Rol</label>
+                <select id="apNewRole" class="ap-field" onchange="apRenderNewUserPerms()">
+                  <option value="diyetisyen" selected>Diyetisyen</option>
+                  <option value="admin">Admin</option>
+                  <option value="depo">Depo Sorumlusu</option>
+                  <option value="asci">Aşçı</option>
+                  <option value="gida_muhendisi">Gıda Mühendisi</option>
+                  <option value="temizlikci">Temizlikçi</option>
+                  <option value="sadece_gorme">Sadece Görme</option>
+                </select>
+              </div>
+              <div class="ap-note">
+                Şifre burada belirlenmez. Kişiyi önce <strong>Supabase &gt; Authentication &gt; Users</strong> bölümünde aynı e-posta ve şifre ile oluşturun. Kullanıcı giriş yaptıktan sonra sağ üstteki anahtar simgesinden kendi şifresini değiştirebilir.
+              </div>
+              <div id="apNewUserPerms"></div>
+              <button class="btn btn-primary" onclick="apAddUser()" style="margin-top:0.85rem" data-i18n="adminAddUserBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+                Kullanıcı Ekle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLLER VE İZİNLER -->
+        <div class="ap-tab-content" id="ap-tab-roles">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title" data-i18n="adminRolePerms">Rol Bazlı İzin Ayarları</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.85rem" data-i18n="adminRolePermsDesc">Her rol için hangi sekmeleri görebileceğini ve ne yapabileceğini ayarlayın.</p>
+              <div id="apRolePermissions"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTURUM VE SÜRÜM -->
+        <div class="ap-tab-content" id="ap-tab-system">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Oturum Bilgileri</h3>
+            </div>
+            <div class="ap-card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.75rem">
+                <div>
+                  <div class="ap-field-label" data-i18n="adminSessionRole">Oturum Rolü</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apSessionRole">Yönetici</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminLastLogin">Son Giriş</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apLastLogin">-</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminAuthMethod">Auth Yöntemi</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apAuthMode">Supabase Auth</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminStorage">Şifre Deposu</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--success)" id="apStorageInfo">Bulut + Yerel</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminDataSource">Veri Kaynağı</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apDataSource">Supabase + Yerel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title" data-i18n="adminSecurity">Oturum Güvenliği</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.75rem" data-i18n="adminSecurityDesc">Belirtilen süre boyunca hiçbir işlem yapılmazsa oturum otomatik olarak kapanır.</p>
+              <label for="apInactivityTimeout" class="ap-field-label" data-i18n="adminInactivityTimeout">Hareketsizlik Kapanma Süresi</label>
+              <select id="apInactivityTimeout" class="ap-field" style="max-width:320px">
+                <option value="120000">2 dakika</option>
+                <option value="300000">5 dakika (varsayılan)</option>
+                <option value="600000">10 dakika</option>
+                <option value="900000">15 dakika</option>
+                <option value="1800000">30 dakika</option>
+                <option value="0">Kapalı (oturum kapanmaz)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Sürüm Güncelleme</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.85rem;line-height:1.6">Sürüm tek yerden yönetilir: giriş ekranı, yan menü ve kılavuzdaki versiyon yazısı ile önbellek (service worker) bu değerden güncellenir. <strong>"Sürümü Yayınla"</strong> dediğinizde değer Supabase'e yazılır ve bağlı olan <strong>tüm cihazlar</strong> bir sonraki açılışta otomatik güncellenir.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.75rem">
+                <div>
+                  <label for="apVersionInput" class="ap-field-label">Sürüm (görünen)</label>
+                  <input type="text" id="apVersionInput" class="ap-field" placeholder="ör: 1.4.1" />
+                </div>
+                <div>
+                  <label for="apBuildInput" class="ap-field-label">Build No (güncelleme no)</label>
+                  <input type="number" id="apBuildInput" class="ap-field" min="1" />
+                </div>
+              </div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-outline btn-sm" onclick="apBumpBuild()" title="Build numarasını 1 artırır">Build +1</button>
+                <button class="btn btn-primary btn-sm" onclick="apPublishVersion()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
+                  Sürümü Yayınla
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:1rem 1.25rem;border-top:1px solid var(--border)">
+          <button class="btn btn-primary" onclick="saveAdminSettings()" style="min-width:180px" data-i18n="adminSaveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+            Ayarları Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ===== LOG KAYITLARI TAB ===== -->
+    <div class="tab-content" id="content-logs">
+      <div class="section-card">
+        <div class="section-header" style="flex-wrap:wrap;gap:0.75rem">
+          <h2>İşlem Log Kayıtları</h2>
+          <button class="btn btn-ghost btn-sm" onclick="apLoadLogs()" data-i18n="btnRefresh">Yenile</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <select id="logFilterIslem" onchange="apLoadLogs(true)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text)">
+          <option value="">Tüm İşlemler</option>
+          <option value="login">Giriş</option>
+          <option value="logout">Çıkış</option>
+          <option value="yeni_kayit">Yeni Kayıt</option>
+          <option value="kayit_duzenle">Düzenleme</option>
+          <option value="kayit_sil" data-i18n="logFilterDelete">Silme</option>
+          <option value="kullanici_ekle" data-i18n="logFilterAddUser">Kullanıcı Ekle</option>
+          <option value="kullanici_duzenle">Kullanıcı Düzenle</option>
+          <option value="kullanici_sil" data-i18n="logFilterDeleteUser">Kullanıcı Sil</option>
+        </select>
+        <input type="text" id="logFilterKullanici" placeholder="Kullanıcı ara..." oninput="apLoadLogs(true)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text);width:140px" />
+        </div>
+        <div id="apLogList" style="overflow-x:auto;font-size:0.8rem"></div>
+      </div>
+    </div>
+
+    <!-- ===== KULLANIM KILAVUZU TAB ===== -->
+    <div class="tab-content" id="content-manual">
+      <div class="section-card" style="padding:0">
+        <div class="section-header" style="margin:0;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+          <h2 data-i18n="manualTitle">Kullanım Kılavuzu</h2>
+          <button class="btn btn-primary btn-sm" onclick="exportManualPDF()" title="Kılavuzu PDF olarak yazdır/kaydet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF İndir
+          </button>
+        </div>
+        <div class="manual-body">
+        <div class="manual-hero">
+          <div class="manual-hero-badge" id="manualVersion">v1.5.0</div>
+          <h3>KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<br>Beslenme Hizmetleri Yönetim Sistemi</h3>
+          <p data-i18n="manualSubtitle">Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi</p>
+        </div>
+
+        <div class="manual-toc">
+          <strong>İçindekiler</strong>
+          <div class="manual-toc-links">
+            <a href="#man-giris">1. Giriş ve Roller</a>
+            <a href="#man-panel">2. Panel</a>
+            <a href="#man-menu">3. Haftalık Menü</a>
+            <a href="#man-kayit">4. Kayıtlar</a>
+            <a href="#man-rapor">5. Rapor</a>
+            <a href="#man-gida">6. Gıda Güvenliği (HACCP)</a>
+            <a href="#man-yag">7. Atık Yağ</a>
+            <a href="#man-ambalaj">8. Ambalaj Atıkları</a>
+            <a href="#man-kalibrasyon">9. Kalibrasyona Tabi Cihazlar</a>
+            <a href="#man-grafik">10. Grafikler</a>
+            <a href="#man-yillik">11. Yıllık Karşılaştırma</a>
+            <a href="#man-harcama">12. Harcama</a>
+            <a href="#man-malitablo">13. Mali Tablolar</a>
+            <a href="#man-yillikplan">14. Yıllık İhtiyaç Planı</a>
+            <a href="#man-birimfiyat">15. Birim Fiyatlar ve Maliyet Hesabı</a>
+            <a href="#man-dil">16. Çok Dilli Destek (9 Dil)</a>
+            <a href="#man-yedek">17. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem">18. Tema ve Görünüm</a>
+            <a href="#man-yonetim">19. Yönetim, İzinler ve Log Kayıtları</a>
+            <a href="#man-ipucu">20. İpuçları</a>
+          </div>
+        </div>
+
+        <div class="manual-section" id="man-giris">
+          <h3>1. Giriş ve Roller</h3>
+          <p>Sistem, yemekhane üretim süreçlerinin dijital ortamda takip edilmesini sağlar. Her kullanıcı rolü, yalnızca kendi yetkisindeki bölümleri görür ve kullanır:</p>
+          <ul>
+            <li><strong>Admin:</strong> Tüm bölümler + Yönetim (kullanıcı ekleme/silme) ve Log Kayıtları.</li>
+            <li><strong>Diyetisyen:</strong> Haftalık menü oluşturma, onaylama ve raporlar.</li>
+            <li><strong>Depo Sorumlusu:</strong> Gıda güvenliği kontrolleri ve depo sıcaklık takibi.</li>
+            <li><strong>Aşçı:</strong> Üretim/tüketim/atık kayıtları girişi.</li>
+            <li><strong>Gıda Mühendisi:</strong> Gıda güvenliği ve kalite takibi.</li>
+          </ul>
+        <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir.</p>
+        <p><strong>Oturum kalıcıdır:</strong> Giriş yaptığınızda oturumunuz tarayıcı belleğine kaydedilir. Sekmeyi kapatıp yeniden açtığınızda veya tarayıcıyı tamamen kapattığınızda tekrar şifre girmenize gerek kalmaz.</p>
+        <p><strong>Hareketsizlik kilidi (varsayılan 5 dakika):</strong> Belirtilen süre boyunca işlem yapılmazsa giriş ekranı açılır ve şifre istenir. <strong>Bu kilit oturumu silmez</strong>, yalnızca giriş ekranını kapatmanız yeterlidir. Sayfayı yenilediğinizde de şifre istenir; ancak tarayıcıyı kapatıp açtığınızda oturumunuz kendiliğinden geri gelir. Süreyi <em>Yönetim &rsaquo; Hareketsizlik Kapanma Süresi</em> ayarından değiştirebilirsiniz.</p>
+        <p><strong>Çıkış yapmak</strong> için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın. Çıkış yaptığınızda oturum kalıcı olarak silinir ve bir sonraki açılışta şifre yeniden gerekir. Ortak kullanılan bilgisayarlarda çıkış yapmayı unutmayın.</p>
+        </div>
+
+        <div class="manual-section" id="man-panel">
+          <h3>2. Panel</h3>
+          <p>Açılış ekranıdır. Sistemin genel durumunu özet kartlar halinde gösterir:</p>
+          <ul>
+            <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
+            <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
+            <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
+            <li><strong>Logo:</strong> Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı arasında, kart olmadan yalnızca uygulama logosu görünür.</li>
+            <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
+            <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
+            <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
+          </ul>
+          <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz.</p>
+          <p><strong>Karşılaştırma Bölümü:</strong> Panelde <strong>Haftalık</strong>, <strong>Aylık</strong> ve <strong>Yıllık</strong> karşılaştırma kartları bulunur. Her biri belirli bir dönem ile bir önceki dönemi karşılaştırır; <strong>↑ artış</strong>, <strong>↓ azalış</strong> yön göstergeleriyle değişimi gösterir. Atık ve kişi başı atıkta düşüş (↓) iyi bir sonuçtur. Veri türü, dönem adı ve fark sütunları dillé desteklidir.</p>
+        </div>
+
+        <div class="manual-section" id="man-menu">
+          <h3>3. Haftalık Menü</h3>
+          <ul>
+            <li>Haftanın her günü için <strong>Pazartesi'den Cuma'ya</strong> yemek listesi oluşturulur. Gün isimleri, çeşit adları (1. Çeşit...5. Çeşit) ve "Kişi Sayısı" satırı seçilen dile göre çevrilir.</li>
+            <li>Yemek adını yazmaya başlayınca otomatik tamamlama önerileri çıkar; listeden seçebilirsiniz.</li>
+            <li>Menü <strong>Diyetisyen</strong> tarafından hazırlanıp <em>Onaya Gönder</em> ile gönderilir; onaylanmadan kayıt aşamasına geçilmez.</li>
+            <li>Onay bekleyen menüler "Reddet" butonu ile diyetisyene geri gönderilebilir; gerekçe yazılması zorunludur.</li>
+            <li>Kaydedilen menü daha sonra <strong>Düzenle</strong> butonuyla değiştirilebilir.</li>
+            <li><strong>Üretim Görünümü:</strong> Onaylı menü, her gün için kişi sayısıyla birlikte malzeme miktarlarını gösterir. Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> yer alır: her malzemenin toplam miktarı ve (birim fiyat girilmişse) para tutarı yazar; listenin başında günün <strong>Toplam</strong> maliyeti görünür. Dillé desteklidir.</li>
+            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; haftalık toplam tüketim ve maliyet hesaplanır. Tüm başlıklar seçilen dile göre çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-kayit">
+          <h3>4. Kayıtlar</h3>
+          <ul>
+            <li>Tüm üretim, tüketim ve atık kayıtlarının listelendiği bölümdür.</li>
+            <li>Her kayıt <strong>Üretilen Yemek</strong>, <strong>%10 Fire</strong>, <strong>Turnike Geçişi</strong>, <strong>SKS Yemek Hiz. Personeli</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + personel) ve <strong>Atık</strong> bilgilerini içerir; Toplam değeri otomatik hesaplanır.</li>
+            <li>Üstteki arama kutusu ve tarih filtresiyle kayıtları daraltabilirsiniz.</li>
+            <li>Her kayıt için <strong>Düzenle</strong> (kalem) ve <strong>Sil</strong> (çöp kutusu) butonları bulunur.</li>
+            <li>Sayfalama alttadır: <strong>« ‹ 1/2 › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; "N kayıt" bilgisi toplam kayıt sayısını gösterir.</li>
+            <li>Her tablo için <strong>Excel/CSV</strong> dışa aktarma butonları mevcuttur.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-rapor">
+          <h3>5. Rapor</h3>
+          <ul>
+            <li>Belirli bir tarih aralığında üretim, tüketim ve atık miktarlarını gösterir.</li>
+            <li>Rapor, <strong>günlük</strong> ve <strong>aylık</strong> bazda derlenir.</li>
+            <li>Üstteki özet kartları: <strong>Toplam Turnike Geçişi</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + SKS personeli), <strong>SKS Yemek Hiz. Personeli</strong>, <strong>En Yüksek Haftalık Yararlanan Kişi</strong> ve <strong>Yemek Hiz. Yararlanan Trendi (son 7 gün)</strong>.</li>
+            <li>Üstteki butonlarla raporu <strong>yazdırabilir</strong> veya <strong>Excel</strong> olarak dışa aktarabilirsiniz.</li>
+            <li>Rapor sonuçları otomatik olarak <strong>atık oranı</strong> hesaplar ve çeşit kırılımını gösterir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-gida">
+          <h3>6. Gıda Güvenliği (HACCP)</h3>
+          <ul>
+            <li>HACCP kontrol noktalarının (soğuk oda, derin dondurucu, üretim alanı vb.) sıcaklık takibini sağlar.</li>
+            <li><strong>Yeni Kontrol</strong> butonu ile tarih, alan, sıcaklık ve kontrol eden bilgisi girilir.</li>
+            <li>Limit dışı değerler otomatik olarak kırmızı ile işaretlenir ve uyarı verilir.</li>
+            <li>Kontroller ayrıca <strong>Depo Sıcaklıkları</strong> sekmesinde kaydedilebilir.</li>
+            <li>Tablo başlıkları (Tarih, Saat, Depo Adı, Sıcaklık, Nem, Not, İşlem) seçilen dile göre çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yag">
+          <h3>7. Atık Yağ</h3>
+          <ul>
+            <li>Bitkisel atık yağ toplama ve tahliye kayıtlarının tutulduğu bölümdür.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, yağ türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ambalaj">
+          <h3>8. Ambalaj Atıkları</h3>
+          <ul>
+            <li>Plastik, kağıt, cam ve metal ambalaj atıklarının kayıtlarının tutulduğu bölümdür.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, atık türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-kalibrasyon">
+          <h3>9. Kalibrasyona Tabi Cihazlar</h3>
+          <ul>
+            <li>Gıda güvenliği denetimlerinde kullanılan ölçüm cihazlarının (dijital termometre, baskül, fırın termometresi vb.) kalibrasyon takibi yapılır.</li>
+            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, <strong>Durum</strong> (Çalışır Durumda / Arızalı / Bakım Yapılacak / Hurdaya Ayrılacak), doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm, sorumlu kişi ve isteğe bağlı <strong>Not</strong> (açıklama) bilgisi girilir.</li>
+            <li>Tablo iki rozet gösterir: <strong>Cihaz Durumu</strong> (elle seçilir) ve <strong>Kalibrasyon</strong> (tarihlere göre otomatik hesaplanır: <strong>Geçerli</strong> yeşil, <strong>Yaklaşıyor</strong> sarı - sonraki kalibrasyona 30 günden az, <strong>Süresi Doldu</strong> kırmızı, <strong>Yapılmadı</strong> kırmızı). Girdiğiniz <strong>Not</strong> bilgisi listenin <strong>Not</strong> sütununda gösterilir.</li>
+            <li>Liste <strong>cihaz adına göre alfabetik</strong> sıralanır; üstteki <strong>Durum</strong> filtresi ve <strong>Bölüm</strong> arama kutusu ile kayıtlar daraltılabilir.</li>
+            <li>Sayfalama alttadır: <strong>« ‹ 1/N › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; liste uzunsa kaydırma çubuğuyla aşağı inilebilir.</li>
+            <li>Üstteki özet kartları cihaz durumunu (çalışır/arızalı/bakım/hurda) ve kalibrasyon durumunu (<strong>Kalibrasyonu Geçerli</strong>, <strong>Kalibrasyonu Yaklaşan (30 Gün)</strong>, <strong>Farklı Bölüm</strong>) ayrı ayrı özetler. Paneldeki <strong>Kalibrasyon Alarmı</strong> süresi dolan ve yapılmayan cihazları sayar.</li>
+            <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır (Not bilgisi dahil).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-grafik">
+          <h3>10. Grafikler</h3>
+          <ul>
+            <li>Üretim, tüketim, atık ve harcama grafikleri burada toplanır.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
+            <li><strong>"Tümü | Ocak | Şubat ... Aralık"</strong> butonları ile görünüm tek aya veya tüm yıla göre ayarlanır.</li>
+            <li>Çubukların üzerindeki sayılar değeri gösterir; uzun grafiklerde yatay kaydırma çubuğu kullanılır.</li>
+            <li><strong>"Word'e Aktar"</strong> butonu ile grafikler Word belgesine aktarılabilir.; <strong>"PDF Yazdır"</strong> ile yazdırılabilir.</li>
+            <li>Seçili dile göre grafik etiketleri ve başlıklar otomatik çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yillik">
+        <h3>11. Yıllık Karşılaştırma</h3>
+        <p>Bu sekme, <strong>1. yıl</strong> ile <strong>2. yılı</strong> yan yana karşılaştırır ve yıllık değişimi gösterir.</p>
+        <ul>
+          <li><strong>Yıl seçicileri:</strong> Üstte <strong>"1. Yıl"</strong> ve <strong>"2. Yıl"</strong> açılır kutuları vardır; aynı yıl her ikisinde birden seçilemez. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. 2. yıl boş bırakılırsa yalnızca 1. yıl verileri gösterilir.</li>
+          <li>Herhangi bir <strong>çubuğa tıklamak</strong>, o ayın kayıtlarını açan <em>Kayıtlar</em> ekranında gösterir.</li>
+          <li><strong>Yıllık toplam halka grafikleri:</strong> Toplam Üretim, Toplam Turnike Geçişi, Öğrenci (1. yıl ve 2. yıl) ve Atık (kg).</li>
+          <li><strong>Aylık karşılaştırma çubuk grafikleri:</strong> Üretim, Turnike Geçişi, Öğrenci, Atık (kg) ve Atık Verimliliği (%).</li>
+          <li><strong>Aylık Yüzde Değişim çizgileri:</strong> Üretim, Turnike, Öğrenci ve Atık kartlarının altında yer alır; 1. yıla göre 2. yıldaki aylık yüzde değişimi gösterir. <strong>%0</strong> referans kesikli çizgisi "değişim yok" satırını belirtir; fare ile üzerine gelindiğinde mutlak değişim değeri de görülür. Verimlilik kartında bu çizgi bulunmaz.</li>
+          <li><strong>Atık Verimliliği:</strong> <em>Atık porsiyon ÷ üretilen porsiyon × 100</em> olarak hesaplanır. <strong>Hedef</strong> kutusundan hedef değer (varsayılan %5) girilir ve grafikte kırmızı kesikli çizgi olarak gösterilir.</li>
+          <li><strong>Yıllık Atık Listesi</strong> tablosunda her yemek türü için 1. yıl üretim ve atık, 2. yıl seçiliyse 2. yıl üretim ve atık ile <em>Fark (kg)</em> sütunları yer alır; en altta toplam satırı bulunur.</li>
+          <li><strong>"Yemek Türü Eksikleri"</strong> butonu, yemek türü boş bırakılmış kayıtları yıla göre listeler; tek tek veya <em>"Tümünü Doldur"</em> ile topluca doldurulabilir. Bu tablo doldurulduğunda yıllık atık listesi ve verim grafiği daha doğru sonuç verir.</li>
+          <li><strong>"PDF Yazdır"</strong> butonu ile tüm yıllık karşılaştırma yazdırılabilir.</li>
+          <li>Seçili dile göre tüm başlıklar, etiketler ve boş durumlar otomatik çevrilir.</li>
+        </ul>
+        </div>
+
+        <div class="manual-section" id="man-harcama">
+          <h3>12. Harcama</h3>
+          <ul>
+            <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
+            <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafikleri filtrelenir.</li>
+            <li><strong>Öğrenci Harcama Tutarı</strong> grafiği öğrenci sayısından, <strong>Personel Harcama Tutarı</strong> grafiği personel sayısından ayrı ayrı hesaplanır.</li>
+            <li>En üstteki <strong>4 kart</strong>: <strong>Toplam Öğrenci Harcama</strong>, <strong>Toplam Personel Harcama</strong>, <strong>Toplam Yemek Harcama</strong> ve bu üçünün toplamı olan <strong>Genel Toplam Harcama</strong> tutarını gösterir.</li>
+            <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-malitablo">
+          <h3>13. Mali Tablolar</h3>
+          <p>Haftalık menünün <strong>para karşılığını</strong> gösteren bölümdür. Menü sekmesinde yer alan maliyet tabloları bu sekmeye taşınmıştır.</p>
+          <ul>
+            <li><strong>Hafta gezinme:</strong> Üstteki <strong>◀ ▶</strong> butonları ve hafta etiketiyle haftalar arasında geçiş yapılır.</li>
+            <li><strong>Haftalık Mali Tablo:</strong> Seçili haftanın her günü için o günün yemeklerinin tarif malzemeleri, kişi sayısıyla çarpılarak <strong>birim fiyatlarla</strong> hesaplanır; günün toplam tutarı görünür.</li>
+            <li><strong>Yıllık Maliyet kartı:</strong> Seçili haftanın takvim yılına göre <strong>yıllık toplam</strong>, aylık ve günlük ortalama, kişi başı maliyet ve toplam kişi-gün ile aylık dağılım çubukları gösterilir. <strong>Yıl seçici</strong> yalnızca menü verisi olan yılları listeler; <strong>"Bu Hafta"</strong> butonu güncel haftaya döner.</li>
+            <li>Yalnızca <strong>birim fiyatı girilmiş</strong> malzemeler tutara katılır; fiyatı olmayan kalemler miktar olarak görünür ama toplama eklenmez.</li>
+            <li>Hesaplar <strong>günün takvim yılına</strong> göre yapılır (2027 menüsü 2027 fiyatını kullanır).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yillikplan">
+          <h3>14. Yıllık İhtiyaç Planı</h3>
+          <p>Yılı bütün olarak planlamanızı sağlar: 52 haftanın durumunu gösterir ve o yılın <strong>toplam malzeme ihtiyacını</strong> çıkarır.</p>
+          <ul>
+            <li><strong>Yıl seçici:</strong> Sağ üstteki kutuya istediğiniz yılı yazıp <strong>Enter</strong>'a basın (ör. 2026, 2027, 2030...). Yıl <strong>sınırsızdır</strong>; henüz menü girilmemiş gelecek yıllar da seçilebilir.</li>
+            <li><strong>Hafta planı tablosu:</strong> Yılın 52 haftası; her satırda <strong>Hafta №</strong>, <strong>Tarih aralığı</strong>, <strong>Menülü Gün (x/5)</strong> ve <strong>Durum</strong> görünür. Satırdaki <strong>"Menü Gir / Görüntüle"</strong> butonu o haftayı <strong>Menü sekmesinde</strong> açar.</li>
+            <li><strong>Toplam Yıllık İhtiyaç Listesi:</strong> Yıl içindeki tüm menülerdeki malzemeler kategori kategori toplanır; her kalemin <strong>yıllık toplam miktarı</strong> ve (fiyatı girilmişse) <strong>tutarı</strong> ile en altta <strong>genel toplam maliyet</strong> gösterilir.</li>
+            <li><strong>Menüler Menü sekmesinde</strong> hafta hafta girilir; bu sekme yalnızca planı ve toplamı gösterir (salt görüntü). Menü girildikçe ihtiyaç listesi otomatik güncellenir.</li>
+            <li>Seçili yıl için menü yoksa listede "menü verisi bulunamadı" yazar; menü girdikçe dolar.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-birimfiyat">
+          <h3>15. Birim Fiyatlar ve Maliyet Hesabı</h3>
+          <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
+          <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
+          <ul>
+            <li><strong>Ürün Adı:</strong> Tarifteki malzeme adıyla <em>birebir aynı</em> yazılmalıdır (örn. tarifte "Ayçiçek Yağı" yazıyorsa fiyatta da "Ayçiçek Yağı" yazmalı). Ad eşleşmezse fiyat hesaba katılmaz.</li>
+            <li><strong>Birim:</strong> Fiyatı hangi pakette/büyüklükte aldığınızı gösterir: KG, KOLİ, LİTRE, ADET veya TENEKE.</li>
+            <li><strong>Birim Fiyat (₺):</strong> O birim için ödediğiniz para.</li>
+            <li><strong>1 Birim = X (alt birim) / Çarpan:</strong> Paketin alt birim karşılığı. Sistem bunu kullanarak tarifteki gr/ml/lt miktarını otomatik çevirir.</li>
+          </ul>
+          <p><strong>Birimler ve Anlamları:</strong></p>
+          <ul>
+            <li><strong>KG:</strong> Kilogram başı fiyat. Tarifte <em>gr</em> kullanılıyorsa otomatik dönüşür (1 kg = 1000 gr).</li>
+            <li><strong>LİTRE:</strong> Litre başı fiyat. Tarifte <em>ml</em> kullanılıyorsa otomatik dönüşür (1 lt = 1000 ml).</li>
+            <li><strong>ADET:</strong> Tane başı fiyat (yumurta, ekmek, limon gibi). Tarifteki adetle doğrudan çarpılır; dönüşüm gerekmez, çarpan boş kalır.</li>
+            <li><strong>TENEKE:</strong> Sıvı yağ gibi ürünlerin teneke ambalajı. Varsayılan <strong>18 litredir</strong>; farklı boy ise çarpan alanına gerçek litre değerini yazın (örn. 5'lik teneke için 5).</li>
+            <li><strong>KOLİ:</strong> Kolide satılan ürünler. Kaydederken <em>Koli içeriği</em> seçilir:
+              <ul>
+                <li><em>KG (ağırlık):</em> Kolinin ağırlığı. Varsayılan <strong>10 kg</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
+                <li><em>ADET (parça):</em> Kolide kaç adet var. Çarpan alanına adet sayısını yazın (örn. yumurta: 30).</li>
+              </ul>
+            </li>
+          </ul>
+          <p><strong>Örnek Girişler:</strong></p>
+          <ul>
+            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>ADET (parça)</em>, Fiyat: <em>195</em>, Çarpan: <em>30</em>. Bu kayıt adet fiyatı 6,50 ₺ olarak kullanılır; tarifte 30 adet yumurta 195,00 ₺, 40 adet 260,00 ₺ eder.</li>
+            <li><strong>Yumurta – adet fiyatı 6,50 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em>, Çarpan: boş. Yalnızca adetle fiyatlandırılan ürünlerde kullanın.</li>
+            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>KG (ağırlık)</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Ayçiçek Yağı – 18 lt teneke 1.950 ₺:</strong> Birim: <em>TENEKE</em>, Fiyat: <em>1950</em>, Çarpan: <em>18</em>. Tarifte ml/lt kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Pirinç – kilosu 42 ₺:</strong> Birim: <em>KG</em>, Fiyat: <em>42</em>, Çarpan: boş.</li>
+          </ul>
+          <p><strong>Fiyatlar Nerede Görünür?</strong></p>
+          <ul>
+            <li><strong>Haftalık Menü → Üretim görünümü:</strong> Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> açılır (örn. <em>1. Yeşil Mercimek — 2,3 kg — 148,35 ₺</em>). Miktarın yanında o kalemin tutarı, listenin başında günün <strong>Toplam</strong> tutarı görünür. Dillé desteklidir.</li>
+            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; her kategorinin toplamı ve haftanın <strong>Genel Toplam Maliyeti</strong> gösterilir. Tüm başlıklar seçilen dile göre çevrilir.</li>
+            <li>Fiyatı girilmemiş malzemeler listede fiyat olmadan yalnızca miktar olarak görünür ve toplama katılmaz.</li>
+          </ul>
+          <p><strong>Hesap Kuralları:</strong> Her malzemenin tutarı <em>miktar × birim fiyat</em> ile bulunur, kuruş bazında iki haneye yuvarlanır ve toplanır. Böylece ekranda gördüğünüz kalem fiyatlarını elle topladığınızda günün toplamıyla birebir aynı çıkar. "Adet" birimli malzemelerde kırık hesap olmaması için miktar üst tam sayıya yuvarlanır (örn. 40,2 yumurta → 41). Tüm bu değerler seçilen dile göre çevrilir.</p>
+        </div>
+
+        <div class="manual-section" id="man-dil">
+          <h3>16. Çok Dilli Destek (9 Dil)</h3>
+          <p>Sistem 9 dilde tam destek sağlar: <strong>Türkçe (TR)</strong>, <strong>İngilizce (EN)</strong>, <strong>Azerice (AZ)</strong>, <strong>Rusça (RU)</strong>, <strong>Almanca (DE)</strong>, <strong>Fransızca (FR)</strong>, <strong>İspanyolca (ES)</strong>, <strong>Portekizce (PT)</strong> ve <strong>Özbekçe (UZ)</strong>.</p>
+          <ul>
+            <li>Sayfanın sağ üstündeki <strong>globe (🌍) butonu</strong> ile dil seçilir. Seçilen dil tüm sayfalarda anında geçerli olur.</li>
+            <li>Dil tercihi otomatik olarak hatırlanır; bir sonraki açılışta aynı dil yüklenir.</li>
+            <li>Tüm menü başlıkları, tablolar, grafik etiketleri, rapor başlıkları, form etiketleri ve karşılaştırma bölümleri seçilen dile göre çevrilir.</li>
+            <li>Üniversite adı (<em>Kırşehir Ahi Evran Üniversitesi</em>) ve NSMS/FMG/Supabase kısaltmaları tüm dillerde aynı kalır.</li>
+          </ul>
+          <p><strong>Desteklenen Bölümler:</strong> Panel (özet kartlar, karşılaştırma), Haftalık Menü (gün isimleri, çeşitler, stok düşüm listesi), Kayıtlar, Rapor, Gıda Güvenliği tabloları, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler (etiketler), Harcama, Birim Fiyatlar, Yönetim ve Log Kayıtları.</p>
+        </div>
+
+        <div class="manual-section" id="man-yedek">
+          <h3>17. Veri Yedekleme ve Senkronizasyon</h3>
+          <ul>
+            <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
+            <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
+            <li><strong>Yedek Yükle:</strong> Daha önce indirilen JSON yedeğini geri yükler.</li>
+            <li>Düzenli olarak <strong>Tam Yedek (Veri)</strong> almanız önerilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-sistem">
+          <h3>18. Tema ve Görünüm</h3>
+          <ul>
+            <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
+            <li>Tema tercihi otomatik olarak hatırlanır.</li>
+            <li>Mobil ve tablette sol menü, üstteki menü ikonu ile açılıp kapatılır.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yonetim">
+          <h3>19. Yönetim, İzinler ve Log Kayıtları</h3>
+          <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
+          <ul>
+            <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
+            <li><strong>Rol Bazlı İzin Ayarları:</strong> Her rol için iki grup tik alanı vardır:
+              <ul>
+                <li><em>Görünen Sekmeler:</em> Panel, Menü, Kayıtlar, Rapor, Gıda Güvenliği, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler, Yıllık, Harcama ve Birim Fiyatlar sekmelerinin o role görünür olup olmayacağı buradan tiklenir. Tikli olmayan sekme o rolün ekranında hiç gösterilmez.</li>
+                <li><em>İzinler:</em> Menü düzenleyebilir, kayıt ekleyebilir, dışa aktarabilir, birim fiyat listesini düzenleyebilir, menüyü onaylayabilir/reddedebilir gibi yetkiler.</li>
+              </ul>
+              Roller için "Sıfırla" varsayılana döndürür; özel roller silinebilir ve yenisi eklenebilir. Değişiklikler "Ayarları Kaydet" ile buluta gönderilir ve tüm cihazlara otomatik yansır.</li>
+            <li><strong>Oturum Güvenliği:</strong> "Hareketsizlik Kapanma Süresi" seçilir: 2 / 5 / 10 / 15 / 30 dakika veya Kapalı. Belirtilen süre boyunca ekranda hiçbir işlem yapılmazsa oturum otomatik kapanır ve giriş ekranı gelir. Bu ayarı yalnızca Admin değiştirebilir; seçim tüm cihazlarda geçerli olur. Fare/klavye hareketi olduğunda süre sayacı kendiliğinden yenilenir.</li>
+            <li><strong>Log Kayıtları:</strong> Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi; işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ipucu">
+          <h3>20. İpuçları</h3>
+          <ul>
+            <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
+            <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
+            <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
+            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem maliyeti <strong>günün takvim yılına</strong> göre hesaplar: 2026 menüsü 2026 fiyatını, 2027 menüsü 2027 fiyatını kullanır. Yıl bölünmüş haftalarda (ör. 28.12.2026–01.01.2027) her gün kendi yılının fiyatıyla değerlendirilir. İlgili yılın fiyatı girilmemişse tutar o kalem için hesaplanmaz ve “birim fiyat tanımlı değil” uyarısı çıkar; diğer yıllara sessizce geçilmez.</li>
+            <li>Tarif malzeme adları ile birim fiyat ürün adlarını aynı şekilde yazın; en güvenlisi tariften kopyalayıp fiyata yapıştırmaktır.</li>
+            <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
+            <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
+          </ul>
+        </div>
+      </div>
+      </div>
+    </div>
+
   </main>
 
     </div><!-- /.app-layout -->
@@ -2115,533 +2646,6 @@
       </form>
     </div>
   </div>
-  </div>
-
-  <!-- ADMIN PANEL MODAL -->
-  <div class="modal-overlay" id="adminPanelModal" onclick="if(event.target===this)closeAdminPanel()">
-    <div class="modal" style="max-width:750px">
-      <div class="modal-header">
-        <h2 data-i18n="adminTitle">Yönetim Paneli</h2>
-        <button class="modal-close" onclick="closeAdminPanel()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="padding:1rem;max-height:70vh;overflow-y:auto">
-        <!-- Admin Şifre Doğrulama (ilk açılış) -->
-        <div id="apReAuthContainer">
-          <p data-i18n="adminReAuthText" style="font-size:0.85rem;color:var(--text-muted);margin:0 0 1rem">Admin paneline erişmek için lütfen admin şifrenizi girin.</p>
-          <div style="margin-bottom:0.75rem">
-            <label for="apReAuthPw" style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem" data-i18n="adminPassword">Admin Şifresi</label>
-            <div style="display:flex;gap:0.5rem">
-              <input type="password" id="apReAuthPw" placeholder="Admin şifrenizi girin" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem" onkeydown="if(event.key==='Enter')apReAuth()" />
-              <button class="btn btn-primary" onclick="apReAuth()" style="white-space:nowrap" data-i18n="btnVerify">Doğrula</button>
-            </div>
-          </div>
-          <div id="apReAuthError" style="color:#ef4444;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
-        </div>
-        <!-- Panel İçeriği (doğrulama sonrası) -->
-        <div id="apPanelBody" style="display:none">
-        <!-- Oturum Bilgileri -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;padding:0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
-          <div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem" data-i18n="adminSessionRole">Oturum Rolü</div>
-            <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apSessionRole">Yönetici</div>
-          </div>
-          <div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem" data-i18n="adminLastLogin">Son Giriş</div>
-            <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apLastLogin">-</div>
-          </div>
-          <div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem" data-i18n="adminAuthMethod">Auth Yöntemi</div>
-            <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apAuthMode">Supabase Auth</div>
-          </div>
-          <div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem" data-i18n="adminStorage">Şifre Deposu</div>
-            <div style="font-size:0.9rem;font-weight:600;color:var(--success)" id="apStorageInfo">Bulut + Yerel</div>
-          </div>
-          <div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem" data-i18n="adminDataSource">Veri Kaynağı</div>
-            <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apDataSource">Supabase + Yerel</div>
-          </div>
-        </div>
-
-        <!-- Kullanıcı Yönetimi -->
-        <div style="margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.5rem;color:var(--text-primary)" data-i18n="adminUserMgmt">Kullanıcı Yönetimi</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem" data-i18n="adminUserMgmtDesc">Kullanıcıları ekleyin, düzenleyin veya silin. Değişiklikler config.js dosyasına kaydedilir.</p>
-          
-          <!-- Kullanıcı Listesi -->
-          <div id="apUserList" style="margin-bottom:1rem"></div>
-          
-          <!-- Yeni Kullanıcı Ekleme -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.75rem">
-            <div style="font-size:0.85rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem" data-i18n="adminAddUser">Yeni Kullanıcı Ekle</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
-              <div>
-                <label for="apNewUsername" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem" data-i18n="adminUsername">Kullanıcı Adı</label>
-                <input type="text" id="apNewUsername" placeholder="ör: diyetisyen" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
-              </div>
-              <div>
-                <label for="apNewDisplayName" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem" data-i18n="adminDisplayName">Görünen Ad</label>
-                <input type="text" id="apNewDisplayName" placeholder="ör: Diy. Elif Yılmaz" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
-              <div>
-                <label for="apNewPassword" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem" data-i18n="adminPasswordLabel">Şifre</label>
-                <input type="password" id="apNewPassword" placeholder="En az 3 karakter" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
-              </div>
-              <div>
-                <label for="apNewRole" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem" data-i18n="adminRole">Rol</label>
-                <select id="apNewRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">
-                  <option value="admin">Admin</option>
-                  <option value="diyetisyen">Diyetisyen</option>
-                  <option value="depo">Depo Sorumlusu</option>
-                  <option value="asci">Aşçı</option>
-                  <option value="gida_muhendisi">Gıda Mühendisi</option>
-                  <option value="temizlikci">Temizlikçi</option>
-                  <option value="sadece_gorme">Sadece Görme</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="apAddUser()" style="width:100%" data-i18n="adminAddUserBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
-              Kullanıcı Ekle
-            </button>
-          </div>
-        </div>
-
-        <!-- Rol Bazlı İzin Ayarları -->
-        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.25rem;color:var(--text-primary)" data-i18n="adminRolePerms">Rol Bazlı İzin Ayarları</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem" data-i18n="adminRolePermsDesc">Her rol için hangi sekmeleri görebileceğini ve ne yapabileceğini ayarlayın.</p>
-          <div id="apRolePermissions"></div>
-        </div>
-
-        <!-- Oturum Güvenliği -->
-        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.25rem;color:var(--text-primary)" data-i18n="adminSecurity">Oturum Güvenliği</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem" data-i18n="adminSecurityDesc">Belirtilen süre boyunca hiçbir işlem yapılmazsa oturum otomatik olarak kapanır.</p>
-          <label for="apInactivityTimeout" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem" data-i18n="adminInactivityTimeout">Hareketsizlik Kapanma Süresi</label>
-          <select id="apInactivityTimeout" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">
-            <option value="120000">2 dakika</option>
-            <option value="300000">5 dakika (varsayılan)</option>
-            <option value="600000">10 dakika</option>
-            <option value="900000">15 dakika</option>
-            <option value="1800000">30 dakika</option>
-            <option value="0">Kapalı (oturum kapanmaz)</option>
-          </select>
-        </div>
-
-        <!-- Sürüm Güncelleme (Tek Kaynak) -->
-        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
-          <h3 style="font-size:0.95rem;margin:0 0 0.25rem;color:var(--text-primary)">Sürüm Güncelleme</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;line-height:1.6">Sürüm tek yerden yönetilir: giriş ekranı, yan menü ve kılavuzdaki versiyon yazısı ile önbellek (service worker) bu değerden güncellenir. <strong>"Sürümü Yayınla"</strong> dediğinizde değer Supabase'e yazılır ve bağlı olan <strong>tüm cihazlar</strong> bir sonraki açılışta otomatik güncellenir.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem">
-            <div>
-              <label for="apVersionInput" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Sürüm (görünen)</label>
-              <input type="text" id="apVersionInput" placeholder="ör: 1.4.1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
-            </div>
-            <div>
-              <label for="apBuildInput" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Build No (güncelleme no)</label>
-              <input type="number" id="apBuildInput" min="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
-            </div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-outline btn-sm" onclick="apBumpBuild()" title="Build numarasını 1 artırır">Build +1</button>
-            <button class="btn btn-primary btn-sm" onclick="apPublishVersion()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
-              Sürümü Yayınla
-            </button>
-          </div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.6"><strong>Sürüm:</strong> giriş ekranı, yan menü ve kılavuzda görünen etiket (ör. <code>1.4.1</code>). <strong>Build No:</strong> önbellek/güncelleme sayacı — her yayında otomatik +1 artar; cihazlar yeni sürümü ancak build no mevcut değerden büyükse alır. Yerel kaynak: <code>config.js</code> → <code>APP_CONFIG.version</code> / <code>APP_CONFIG.build</code></div>
-        </div>
-
-        <!-- Log Kayıtları -->
-        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-bottom:1rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
-            <div>
-              <h3 style="font-size:0.95rem;margin:0;color:var(--text-primary)" data-i18n="adminLogsTitle">İşlem Log Kayıtları</h3>
-              <p style="font-size:0.8rem;color:var(--text-muted);margin:0.25rem 0 0" data-i18n="adminLogsDesc">Kullanıcı giriş/çıkış ve kayıt işlemleri</p>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="apLoadLogs()" data-i18n="btnRefresh">Yenile</button>
-          </div>
-          <div id="apLogList" style="max-height:300px;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:0.8rem"></div>
-        </div>
-
-        <!-- Hata ve Başarı Mesajları -->
-        <div id="apError" style="color:#ef4444;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
-        <div id="apSuccess" style="color:#22c55e;font-size:0.85rem;margin-bottom:0.5rem;display:none"></div>
-
-        <!-- Kaydet Butonu -->
-        <button class="btn btn-primary" onclick="saveAdminSettings()" style="width:180px;padding:12px;font-weight:700" data-i18n="adminSaveBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
-          Ayarları Kaydet
-        </button>
-      </div>
-      </div>
-      <div class="modal-footer">
-        <span style="font-size:0.75rem;color:var(--text-muted)" data-i18n="adminFooterNote">Şifreler sunucuda kalıcı olarak saklanır.</span>
-        <button class="btn btn-ghost" onclick="doLogout()" style="margin-left:auto;color:var(--danger)" data-i18n="btnLogout">Çıkış Yap</button>
-        <button class="btn btn-ghost" onclick="closeAdminPanel()" data-i18n="adminCloseBtn">Kapat</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOG PANEL MODAL -->
-  <div class="modal-overlay" id="logPanelModal" onclick="if(event.target===this)closeLogPanel()">
-    <div class="modal" style="max-width:800px;max-height:85vh;display:flex;flex-direction:column">
-      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid var(--border)">
-        <h3 style="margin:0;font-size:1rem;color:var(--text-primary)">İşlem Log Kayıtları</h3>
-        <button class="btn-icon" onclick="closeLogPanel()" style="font-size:1.2rem">✕</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border-bottom:1px solid var(--border);flex-wrap:wrap">
-        <select id="logFilterIslem" onchange="apLoadLogs()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text)">
-          <option value="">Tüm İşlemler</option>
-          <option value="login">Giriş</option>
-          <option value="logout">Çıkış</option>
-          <option value="yeni_kayit">Yeni Kayıt</option>
-          <option value="kayit_duzenle">Düzenleme</option>
-          <option value="kayit_sil" data-i18n="logFilterDelete">Silme</option>
-          <option value="kullanici_ekle" data-i18n="logFilterAddUser">Kullanıcı Ekle</option>
-          <option value="kullanici_duzenle">Kullanıcı Düzenle</option>
-          <option value="kullanici_sil" data-i18n="logFilterDeleteUser">Kullanıcı Sil</option>
-        </select>
-        <input type="text" id="logFilterKullanici" placeholder="Kullanıcı ara..." oninput="apLoadLogs()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text);width:140px" />
-        <button class="btn btn-ghost btn-sm" onclick="apLoadLogs()" style="margin-left:auto" data-i18n="adminRefreshBtn">↻ Yenile</button>
-      </div>
-      <div id="logPanelBody" style="flex:1;overflow-y:auto;padding:0.5rem 1rem"></div>
-    </div>
-  </div>
-
-  <!-- KULLANIM KILAVUZU MODAL -->
-  <div class="modal-overlay" id="manualModal" onclick="if(event.target===this)closeManualModal()">
-    <div class="modal" style="max-width:760px;max-height:88vh;display:flex;flex-direction:column">
-      <div class="modal-header">
-        <h2 data-i18n="manualTitle">Kullanım Kılavuzu</h2>
-        <div style="display:flex;align-items:center;gap:0.5rem">
-          <button class="btn btn-primary btn-sm" onclick="exportManualPDF()" title="Kılavuzu PDF olarak yazdır/kaydet">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            PDF İndir
-          </button>
-          <button class="modal-close" onclick="closeManualModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="manual-body">
-        <div class="manual-hero">
-          <div class="manual-hero-badge" id="manualVersion">v1.5.0</div>
-          <h3>KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<br>Beslenme Hizmetleri Yönetim Sistemi</h3>
-          <p data-i18n="manualSubtitle">Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi</p>
-        </div>
-
-        <div class="manual-toc">
-          <strong>İçindekiler</strong>
-          <div class="manual-toc-links">
-            <a href="#man-giris">1. Giriş ve Roller</a>
-            <a href="#man-panel">2. Panel</a>
-            <a href="#man-menu">3. Haftalık Menü</a>
-            <a href="#man-kayit">4. Kayıtlar</a>
-            <a href="#man-rapor">5. Rapor</a>
-            <a href="#man-gida">6. Gıda Güvenliği (HACCP)</a>
-            <a href="#man-yag">7. Atık Yağ</a>
-            <a href="#man-ambalaj">8. Ambalaj Atıkları</a>
-            <a href="#man-kalibrasyon">9. Kalibrasyona Tabi Cihazlar</a>
-            <a href="#man-grafik">10. Grafikler</a>
-            <a href="#man-yillik">11. Yıllık Karşılaştırma</a>
-            <a href="#man-harcama">12. Harcama</a>
-            <a href="#man-malitablo">13. Mali Tablolar</a>
-            <a href="#man-yillikplan">14. Yıllık İhtiyaç Planı</a>
-            <a href="#man-birimfiyat">15. Birim Fiyatlar ve Maliyet Hesabı</a>
-            <a href="#man-dil">16. Çok Dilli Destek (9 Dil)</a>
-            <a href="#man-yedek">17. Veri Yedekleme ve Senkronizasyon</a>
-            <a href="#man-sistem">18. Tema ve Görünüm</a>
-            <a href="#man-yonetim">19. Yönetim, İzinler ve Log Kayıtları</a>
-            <a href="#man-ipucu">20. İpuçları</a>
-          </div>
-        </div>
-
-        <div class="manual-section" id="man-giris">
-          <h3>1. Giriş ve Roller</h3>
-          <p>Sistem, yemekhane üretim süreçlerinin dijital ortamda takip edilmesini sağlar. Her kullanıcı rolü, yalnızca kendi yetkisindeki bölümleri görür ve kullanır:</p>
-          <ul>
-            <li><strong>Admin:</strong> Tüm bölümler + Yönetim (kullanıcı ekleme/silme) ve Log Kayıtları.</li>
-            <li><strong>Diyetisyen:</strong> Haftalık menü oluşturma, onaylama ve raporlar.</li>
-            <li><strong>Depo Sorumlusu:</strong> Gıda güvenliği kontrolleri ve depo sıcaklık takibi.</li>
-            <li><strong>Aşçı:</strong> Üretim/tüketim/atık kayıtları girişi.</li>
-            <li><strong>Gıda Mühendisi:</strong> Gıda güvenliği ve kalite takibi.</li>
-          </ul>
-        <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir.</p>
-        <p><strong>Oturum kalıcıdır:</strong> Giriş yaptığınızda oturumunuz tarayıcı belleğine kaydedilir. Sekmeyi kapatıp yeniden açtığınızda veya tarayıcıyı tamamen kapattığınızda tekrar şifre girmenize gerek kalmaz.</p>
-        <p><strong>Hareketsizlik kilidi (varsayılan 5 dakika):</strong> Belirtilen süre boyunca işlem yapılmazsa giriş ekranı açılır ve şifre istenir. <strong>Bu kilit oturumu silmez</strong>, yalnızca giriş ekranını kapatmanız yeterlidir. Sayfayı yenilediğinizde de şifre istenir; ancak tarayıcıyı kapatıp açtığınızda oturumunuz kendiliğinden geri gelir. Süreyi <em>Yönetim &rsaquo; Hareketsizlik Kapanma Süresi</em> ayarından değiştirebilirsiniz.</p>
-        <p><strong>Çıkış yapmak</strong> için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın. Çıkış yaptığınızda oturum kalıcı olarak silinir ve bir sonraki açılışta şifre yeniden gerekir. Ortak kullanılan bilgisayarlarda çıkış yapmayı unutmayın.</p>
-        </div>
-
-        <div class="manual-section" id="man-panel">
-          <h3>2. Panel</h3>
-          <p>Açılış ekranıdır. Sistemin genel durumunu özet kartlar halinde gösterir:</p>
-          <ul>
-            <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
-            <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
-            <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
-            <li><strong>Logo:</strong> Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı arasında, kart olmadan yalnızca uygulama logosu görünür.</li>
-            <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
-            <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
-            <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
-          </ul>
-          <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz.</p>
-          <p><strong>Karşılaştırma Bölümü:</strong> Panelde <strong>Haftalık</strong>, <strong>Aylık</strong> ve <strong>Yıllık</strong> karşılaştırma kartları bulunur. Her biri belirli bir dönem ile bir önceki dönemi karşılaştırır; <strong>↑ artış</strong>, <strong>↓ azalış</strong> yön göstergeleriyle değişimi gösterir. Atık ve kişi başı atıkta düşüş (↓) iyi bir sonuçtur. Veri türü, dönem adı ve fark sütunları dillé desteklidir.</p>
-        </div>
-
-        <div class="manual-section" id="man-menu">
-          <h3>3. Haftalık Menü</h3>
-          <ul>
-            <li>Haftanın her günü için <strong>Pazartesi'den Cuma'ya</strong> yemek listesi oluşturulur. Gün isimleri, çeşit adları (1. Çeşit...5. Çeşit) ve "Kişi Sayısı" satırı seçilen dile göre çevrilir.</li>
-            <li>Yemek adını yazmaya başlayınca otomatik tamamlama önerileri çıkar; listeden seçebilirsiniz.</li>
-            <li>Menü <strong>Diyetisyen</strong> tarafından hazırlanıp <em>Onaya Gönder</em> ile gönderilir; onaylanmadan kayıt aşamasına geçilmez.</li>
-            <li>Onay bekleyen menüler "Reddet" butonu ile diyetisyene geri gönderilebilir; gerekçe yazılması zorunludur.</li>
-            <li>Kaydedilen menü daha sonra <strong>Düzenle</strong> butonuyla değiştirilebilir.</li>
-            <li><strong>Üretim Görünümü:</strong> Onaylı menü, her gün için kişi sayısıyla birlikte malzeme miktarlarını gösterir. Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> yer alır: her malzemenin toplam miktarı ve (birim fiyat girilmişse) para tutarı yazar; listenin başında günün <strong>Toplam</strong> maliyeti görünür. Dillé desteklidir.</li>
-            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; haftalık toplam tüketim ve maliyet hesaplanır. Tüm başlıklar seçilen dile göre çevrilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-kayit">
-          <h3>4. Kayıtlar</h3>
-          <ul>
-            <li>Tüm üretim, tüketim ve atık kayıtlarının listelendiği bölümdür.</li>
-            <li>Her kayıt <strong>Üretilen Yemek</strong>, <strong>%10 Fire</strong>, <strong>Turnike Geçişi</strong>, <strong>SKS Yemek Hiz. Personeli</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + personel) ve <strong>Atık</strong> bilgilerini içerir; Toplam değeri otomatik hesaplanır.</li>
-            <li>Üstteki arama kutusu ve tarih filtresiyle kayıtları daraltabilirsiniz.</li>
-            <li>Her kayıt için <strong>Düzenle</strong> (kalem) ve <strong>Sil</strong> (çöp kutusu) butonları bulunur.</li>
-            <li>Sayfalama alttadır: <strong>« ‹ 1/2 › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; "N kayıt" bilgisi toplam kayıt sayısını gösterir.</li>
-            <li>Her tablo için <strong>Excel/CSV</strong> dışa aktarma butonları mevcuttur.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-rapor">
-          <h3>5. Rapor</h3>
-          <ul>
-            <li>Belirli bir tarih aralığında üretim, tüketim ve atık miktarlarını gösterir.</li>
-            <li>Rapor, <strong>günlük</strong> ve <strong>aylık</strong> bazda derlenir.</li>
-            <li>Üstteki özet kartları: <strong>Toplam Turnike Geçişi</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + SKS personeli), <strong>SKS Yemek Hiz. Personeli</strong>, <strong>En Yüksek Haftalık Yararlanan Kişi</strong> ve <strong>Yemek Hiz. Yararlanan Trendi (son 7 gün)</strong>.</li>
-            <li>Üstteki butonlarla raporu <strong>yazdırabilir</strong> veya <strong>Excel</strong> olarak dışa aktarabilirsiniz.</li>
-            <li>Rapor sonuçları otomatik olarak <strong>atık oranı</strong> hesaplar ve çeşit kırılımını gösterir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-gida">
-          <h3>6. Gıda Güvenliği (HACCP)</h3>
-          <ul>
-            <li>HACCP kontrol noktalarının (soğuk oda, derin dondurucu, üretim alanı vb.) sıcaklık takibini sağlar.</li>
-            <li><strong>Yeni Kontrol</strong> butonu ile tarih, alan, sıcaklık ve kontrol eden bilgisi girilir.</li>
-            <li>Limit dışı değerler otomatik olarak kırmızı ile işaretlenir ve uyarı verilir.</li>
-            <li>Kontroller ayrıca <strong>Depo Sıcaklıkları</strong> sekmesinde kaydedilebilir.</li>
-            <li>Tablo başlıkları (Tarih, Saat, Depo Adı, Sıcaklık, Nem, Not, İşlem) seçilen dile göre çevrilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-yag">
-          <h3>7. Atık Yağ</h3>
-          <ul>
-            <li>Bitkisel atık yağ toplama ve tahliye kayıtlarının tutulduğu bölümdür.</li>
-            <li><strong>Filtreler</strong> bölümünden tarih aralığı, yağ türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
-            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
-            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
-            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-ambalaj">
-          <h3>8. Ambalaj Atıkları</h3>
-          <ul>
-            <li>Plastik, kağıt, cam ve metal ambalaj atıklarının kayıtlarının tutulduğu bölümdür.</li>
-            <li><strong>Filtreler</strong> bölümünden tarih aralığı, atık türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
-            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
-            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
-            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-kalibrasyon">
-          <h3>9. Kalibrasyona Tabi Cihazlar</h3>
-          <ul>
-            <li>Gıda güvenliği denetimlerinde kullanılan ölçüm cihazlarının (dijital termometre, baskül, fırın termometresi vb.) kalibrasyon takibi yapılır.</li>
-            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, <strong>Durum</strong> (Çalışır Durumda / Arızalı / Bakım Yapılacak / Hurdaya Ayrılacak), doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm, sorumlu kişi ve isteğe bağlı <strong>Not</strong> (açıklama) bilgisi girilir.</li>
-            <li>Tablo iki rozet gösterir: <strong>Cihaz Durumu</strong> (elle seçilir) ve <strong>Kalibrasyon</strong> (tarihlere göre otomatik hesaplanır: <strong>Geçerli</strong> yeşil, <strong>Yaklaşıyor</strong> sarı - sonraki kalibrasyona 30 günden az, <strong>Süresi Doldu</strong> kırmızı, <strong>Yapılmadı</strong> kırmızı). Girdiğiniz <strong>Not</strong> bilgisi listenin <strong>Not</strong> sütununda gösterilir.</li>
-            <li>Liste <strong>cihaz adına göre alfabetik</strong> sıralanır; üstteki <strong>Durum</strong> filtresi ve <strong>Bölüm</strong> arama kutusu ile kayıtlar daraltılabilir.</li>
-            <li>Sayfalama alttadır: <strong>« ‹ 1/N › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; liste uzunsa kaydırma çubuğuyla aşağı inilebilir.</li>
-            <li>Üstteki özet kartları cihaz durumunu (çalışır/arızalı/bakım/hurda) ve kalibrasyon durumunu (<strong>Kalibrasyonu Geçerli</strong>, <strong>Kalibrasyonu Yaklaşan (30 Gün)</strong>, <strong>Farklı Bölüm</strong>) ayrı ayrı özetler. Paneldeki <strong>Kalibrasyon Alarmı</strong> süresi dolan ve yapılmayan cihazları sayar.</li>
-            <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır (Not bilgisi dahil).</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-grafik">
-          <h3>10. Grafikler</h3>
-          <ul>
-            <li>Üretim, tüketim, atık ve harcama grafikleri burada toplanır.</li>
-            <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
-            <li><strong>"Tümü | Ocak | Şubat ... Aralık"</strong> butonları ile görünüm tek aya veya tüm yıla göre ayarlanır.</li>
-            <li>Çubukların üzerindeki sayılar değeri gösterir; uzun grafiklerde yatay kaydırma çubuğu kullanılır.</li>
-            <li><strong>"Word'e Aktar"</strong> butonu ile grafikler Word belgesine aktarılabilir.; <strong>"PDF Yazdır"</strong> ile yazdırılabilir.</li>
-            <li>Seçili dile göre grafik etiketleri ve başlıklar otomatik çevrilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-yillik">
-        <h3>11. Yıllık Karşılaştırma</h3>
-        <p>Bu sekme, <strong>1. yıl</strong> ile <strong>2. yılı</strong> yan yana karşılaştırır ve yıllık değişimi gösterir.</p>
-        <ul>
-          <li><strong>Yıl seçicileri:</strong> Üstte <strong>"1. Yıl"</strong> ve <strong>"2. Yıl"</strong> açılır kutuları vardır; aynı yıl her ikisinde birden seçilemez. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. 2. yıl boş bırakılırsa yalnızca 1. yıl verileri gösterilir.</li>
-          <li>Herhangi bir <strong>çubuğa tıklamak</strong>, o ayın kayıtlarını açan <em>Kayıtlar</em> ekranında gösterir.</li>
-          <li><strong>Yıllık toplam halka grafikleri:</strong> Toplam Üretim, Toplam Turnike Geçişi, Öğrenci (1. yıl ve 2. yıl) ve Atık (kg).</li>
-          <li><strong>Aylık karşılaştırma çubuk grafikleri:</strong> Üretim, Turnike Geçişi, Öğrenci, Atık (kg) ve Atık Verimliliği (%).</li>
-          <li><strong>Aylık Yüzde Değişim çizgileri:</strong> Üretim, Turnike, Öğrenci ve Atık kartlarının altında yer alır; 1. yıla göre 2. yıldaki aylık yüzde değişimi gösterir. <strong>%0</strong> referans kesikli çizgisi "değişim yok" satırını belirtir; fare ile üzerine gelindiğinde mutlak değişim değeri de görülür. Verimlilik kartında bu çizgi bulunmaz.</li>
-          <li><strong>Atık Verimliliği:</strong> <em>Atık porsiyon ÷ üretilen porsiyon × 100</em> olarak hesaplanır. <strong>Hedef</strong> kutusundan hedef değer (varsayılan %5) girilir ve grafikte kırmızı kesikli çizgi olarak gösterilir.</li>
-          <li><strong>Yıllık Atık Listesi</strong> tablosunda her yemek türü için 1. yıl üretim ve atık, 2. yıl seçiliyse 2. yıl üretim ve atık ile <em>Fark (kg)</em> sütunları yer alır; en altta toplam satırı bulunur.</li>
-          <li><strong>"Yemek Türü Eksikleri"</strong> butonu, yemek türü boş bırakılmış kayıtları yıla göre listeler; tek tek veya <em>"Tümünü Doldur"</em> ile topluca doldurulabilir. Bu tablo doldurulduğunda yıllık atık listesi ve verim grafiği daha doğru sonuç verir.</li>
-          <li><strong>"PDF Yazdır"</strong> butonu ile tüm yıllık karşılaştırma yazdırılabilir.</li>
-          <li>Seçili dile göre tüm başlıklar, etiketler ve boş durumlar otomatik çevrilir.</li>
-        </ul>
-        </div>
-
-        <div class="manual-section" id="man-harcama">
-          <h3>12. Harcama</h3>
-          <ul>
-            <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
-            <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
-            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafikleri filtrelenir.</li>
-            <li><strong>Öğrenci Harcama Tutarı</strong> grafiği öğrenci sayısından, <strong>Personel Harcama Tutarı</strong> grafiği personel sayısından ayrı ayrı hesaplanır.</li>
-            <li>En üstteki <strong>4 kart</strong>: <strong>Toplam Öğrenci Harcama</strong>, <strong>Toplam Personel Harcama</strong>, <strong>Toplam Yemek Harcama</strong> ve bu üçünün toplamı olan <strong>Genel Toplam Harcama</strong> tutarını gösterir.</li>
-            <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-malitablo">
-          <h3>13. Mali Tablolar</h3>
-          <p>Haftalık menünün <strong>para karşılığını</strong> gösteren bölümdür. Menü sekmesinde yer alan maliyet tabloları bu sekmeye taşınmıştır.</p>
-          <ul>
-            <li><strong>Hafta gezinme:</strong> Üstteki <strong>◀ ▶</strong> butonları ve hafta etiketiyle haftalar arasında geçiş yapılır.</li>
-            <li><strong>Haftalık Mali Tablo:</strong> Seçili haftanın her günü için o günün yemeklerinin tarif malzemeleri, kişi sayısıyla çarpılarak <strong>birim fiyatlarla</strong> hesaplanır; günün toplam tutarı görünür.</li>
-            <li><strong>Yıllık Maliyet kartı:</strong> Seçili haftanın takvim yılına göre <strong>yıllık toplam</strong>, aylık ve günlük ortalama, kişi başı maliyet ve toplam kişi-gün ile aylık dağılım çubukları gösterilir. <strong>Yıl seçici</strong> yalnızca menü verisi olan yılları listeler; <strong>"Bu Hafta"</strong> butonu güncel haftaya döner.</li>
-            <li>Yalnızca <strong>birim fiyatı girilmiş</strong> malzemeler tutara katılır; fiyatı olmayan kalemler miktar olarak görünür ama toplama eklenmez.</li>
-            <li>Hesaplar <strong>günün takvim yılına</strong> göre yapılır (2027 menüsü 2027 fiyatını kullanır).</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-yillikplan">
-          <h3>14. Yıllık İhtiyaç Planı</h3>
-          <p>Yılı bütün olarak planlamanızı sağlar: 52 haftanın durumunu gösterir ve o yılın <strong>toplam malzeme ihtiyacını</strong> çıkarır.</p>
-          <ul>
-            <li><strong>Yıl seçici:</strong> Sağ üstteki kutuya istediğiniz yılı yazıp <strong>Enter</strong>'a basın (ör. 2026, 2027, 2030...). Yıl <strong>sınırsızdır</strong>; henüz menü girilmemiş gelecek yıllar da seçilebilir.</li>
-            <li><strong>Hafta planı tablosu:</strong> Yılın 52 haftası; her satırda <strong>Hafta №</strong>, <strong>Tarih aralığı</strong>, <strong>Menülü Gün (x/5)</strong> ve <strong>Durum</strong> görünür. Satırdaki <strong>"Menü Gir / Görüntüle"</strong> butonu o haftayı <strong>Menü sekmesinde</strong> açar.</li>
-            <li><strong>Toplam Yıllık İhtiyaç Listesi:</strong> Yıl içindeki tüm menülerdeki malzemeler kategori kategori toplanır; her kalemin <strong>yıllık toplam miktarı</strong> ve (fiyatı girilmişse) <strong>tutarı</strong> ile en altta <strong>genel toplam maliyet</strong> gösterilir.</li>
-            <li><strong>Menüler Menü sekmesinde</strong> hafta hafta girilir; bu sekme yalnızca planı ve toplamı gösterir (salt görüntü). Menü girildikçe ihtiyaç listesi otomatik güncellenir.</li>
-            <li>Seçili yıl için menü yoksa listede "menü verisi bulunamadı" yazar; menü girdikçe dolar.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-birimfiyat">
-          <h3>15. Birim Fiyatlar ve Maliyet Hesabı</h3>
-          <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
-          <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
-          <ul>
-            <li><strong>Ürün Adı:</strong> Tarifteki malzeme adıyla <em>birebir aynı</em> yazılmalıdır (örn. tarifte "Ayçiçek Yağı" yazıyorsa fiyatta da "Ayçiçek Yağı" yazmalı). Ad eşleşmezse fiyat hesaba katılmaz.</li>
-            <li><strong>Birim:</strong> Fiyatı hangi pakette/büyüklükte aldığınızı gösterir: KG, KOLİ, LİTRE, ADET veya TENEKE.</li>
-            <li><strong>Birim Fiyat (₺):</strong> O birim için ödediğiniz para.</li>
-            <li><strong>1 Birim = X (alt birim) / Çarpan:</strong> Paketin alt birim karşılığı. Sistem bunu kullanarak tarifteki gr/ml/lt miktarını otomatik çevirir.</li>
-          </ul>
-          <p><strong>Birimler ve Anlamları:</strong></p>
-          <ul>
-            <li><strong>KG:</strong> Kilogram başı fiyat. Tarifte <em>gr</em> kullanılıyorsa otomatik dönüşür (1 kg = 1000 gr).</li>
-            <li><strong>LİTRE:</strong> Litre başı fiyat. Tarifte <em>ml</em> kullanılıyorsa otomatik dönüşür (1 lt = 1000 ml).</li>
-            <li><strong>ADET:</strong> Tane başı fiyat (yumurta, ekmek, limon gibi). Tarifteki adetle doğrudan çarpılır; dönüşüm gerekmez, çarpan boş kalır.</li>
-            <li><strong>TENEKE:</strong> Sıvı yağ gibi ürünlerin teneke ambalajı. Varsayılan <strong>18 litredir</strong>; farklı boy ise çarpan alanına gerçek litre değerini yazın (örn. 5'lik teneke için 5).</li>
-            <li><strong>KOLİ:</strong> Kolide satılan ürünler. Kaydederken <em>Koli içeriği</em> seçilir:
-              <ul>
-                <li><em>KG (ağırlık):</em> Kolinin ağırlığı. Varsayılan <strong>10 kg</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
-                <li><em>ADET (parça):</em> Kolide kaç adet var. Çarpan alanına adet sayısını yazın (örn. yumurta: 30).</li>
-              </ul>
-            </li>
-          </ul>
-          <p><strong>Örnek Girişler:</strong></p>
-          <ul>
-            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>ADET (parça)</em>, Fiyat: <em>195</em>, Çarpan: <em>30</em>. Bu kayıt adet fiyatı 6,50 ₺ olarak kullanılır; tarifte 30 adet yumurta 195,00 ₺, 40 adet 260,00 ₺ eder.</li>
-            <li><strong>Yumurta – adet fiyatı 6,50 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em>, Çarpan: boş. Yalnızca adetle fiyatlandırılan ürünlerde kullanın.</li>
-            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>KG (ağırlık)</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
-            <li><strong>Ayçiçek Yağı – 18 lt teneke 1.950 ₺:</strong> Birim: <em>TENEKE</em>, Fiyat: <em>1950</em>, Çarpan: <em>18</em>. Tarifte ml/lt kullanılıyorsa otomatik çevrilir.</li>
-            <li><strong>Pirinç – kilosu 42 ₺:</strong> Birim: <em>KG</em>, Fiyat: <em>42</em>, Çarpan: boş.</li>
-          </ul>
-          <p><strong>Fiyatlar Nerede Görünür?</strong></p>
-          <ul>
-            <li><strong>Haftalık Menü → Üretim görünümü:</strong> Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> açılır (örn. <em>1. Yeşil Mercimek — 2,3 kg — 148,35 ₺</em>). Miktarın yanında o kalemin tutarı, listenin başında günün <strong>Toplam</strong> tutarı görünür. Dillé desteklidir.</li>
-            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; her kategorinin toplamı ve haftanın <strong>Genel Toplam Maliyeti</strong> gösterilir. Tüm başlıklar seçilen dile göre çevrilir.</li>
-            <li>Fiyatı girilmemiş malzemeler listede fiyat olmadan yalnızca miktar olarak görünür ve toplama katılmaz.</li>
-          </ul>
-          <p><strong>Hesap Kuralları:</strong> Her malzemenin tutarı <em>miktar × birim fiyat</em> ile bulunur, kuruş bazında iki haneye yuvarlanır ve toplanır. Böylece ekranda gördüğünüz kalem fiyatlarını elle topladığınızda günün toplamıyla birebir aynı çıkar. "Adet" birimli malzemelerde kırık hesap olmaması için miktar üst tam sayıya yuvarlanır (örn. 40,2 yumurta → 41). Tüm bu değerler seçilen dile göre çevrilir.</p>
-        </div>
-
-        <div class="manual-section" id="man-dil">
-          <h3>16. Çok Dilli Destek (9 Dil)</h3>
-          <p>Sistem 9 dilde tam destek sağlar: <strong>Türkçe (TR)</strong>, <strong>İngilizce (EN)</strong>, <strong>Azerice (AZ)</strong>, <strong>Rusça (RU)</strong>, <strong>Almanca (DE)</strong>, <strong>Fransızca (FR)</strong>, <strong>İspanyolca (ES)</strong>, <strong>Portekizce (PT)</strong> ve <strong>Özbekçe (UZ)</strong>.</p>
-          <ul>
-            <li>Sayfanın sağ üstündeki <strong>globe (🌍) butonu</strong> ile dil seçilir. Seçilen dil tüm sayfalarda anında geçerli olur.</li>
-            <li>Dil tercihi otomatik olarak hatırlanır; bir sonraki açılışta aynı dil yüklenir.</li>
-            <li>Tüm menü başlıkları, tablolar, grafik etiketleri, rapor başlıkları, form etiketleri ve karşılaştırma bölümleri seçilen dile göre çevrilir.</li>
-            <li>Üniversite adı (<em>Kırşehir Ahi Evran Üniversitesi</em>) ve NSMS/FMG/Supabase kısaltmaları tüm dillerde aynı kalır.</li>
-          </ul>
-          <p><strong>Desteklenen Bölümler:</strong> Panel (özet kartlar, karşılaştırma), Haftalık Menü (gün isimleri, çeşitler, stok düşüm listesi), Kayıtlar, Rapor, Gıda Güvenliği tabloları, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler (etiketler), Harcama, Birim Fiyatlar, Yönetim ve Log Kayıtları.</p>
-        </div>
-
-        <div class="manual-section" id="man-yedek">
-          <h3>17. Veri Yedekleme ve Senkronizasyon</h3>
-          <ul>
-            <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
-            <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
-            <li><strong>Yedek Yükle:</strong> Daha önce indirilen JSON yedeğini geri yükler.</li>
-            <li>Düzenli olarak <strong>Tam Yedek (Veri)</strong> almanız önerilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-sistem">
-          <h3>18. Tema ve Görünüm</h3>
-          <ul>
-            <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
-            <li>Tema tercihi otomatik olarak hatırlanır.</li>
-            <li>Mobil ve tablette sol menü, üstteki menü ikonu ile açılıp kapatılır.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-yonetim">
-          <h3>19. Yönetim, İzinler ve Log Kayıtları</h3>
-          <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
-          <ul>
-            <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
-            <li><strong>Rol Bazlı İzin Ayarları:</strong> Her rol için iki grup tik alanı vardır:
-              <ul>
-                <li><em>Görünen Sekmeler:</em> Panel, Menü, Kayıtlar, Rapor, Gıda Güvenliği, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler, Yıllık, Harcama ve Birim Fiyatlar sekmelerinin o role görünür olup olmayacağı buradan tiklenir. Tikli olmayan sekme o rolün ekranında hiç gösterilmez.</li>
-                <li><em>İzinler:</em> Menü düzenleyebilir, kayıt ekleyebilir, dışa aktarabilir, birim fiyat listesini düzenleyebilir, menüyü onaylayabilir/reddedebilir gibi yetkiler.</li>
-              </ul>
-              Roller için "Sıfırla" varsayılana döndürür; özel roller silinebilir ve yenisi eklenebilir. Değişiklikler "Ayarları Kaydet" ile buluta gönderilir ve tüm cihazlara otomatik yansır.</li>
-            <li><strong>Oturum Güvenliği:</strong> "Hareketsizlik Kapanma Süresi" seçilir: 2 / 5 / 10 / 15 / 30 dakika veya Kapalı. Belirtilen süre boyunca ekranda hiçbir işlem yapılmazsa oturum otomatik kapanır ve giriş ekranı gelir. Bu ayarı yalnızca Admin değiştirebilir; seçim tüm cihazlarda geçerli olur. Fare/klavye hareketi olduğunda süre sayacı kendiliğinden yenilenir.</li>
-            <li><strong>Log Kayıtları:</strong> Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi; işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
-          </ul>
-        </div>
-
-        <div class="manual-section" id="man-ipucu">
-          <h3>20. İpuçları</h3>
-          <ul>
-            <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
-            <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
-            <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
-            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem maliyeti <strong>günün takvim yılına</strong> göre hesaplar: 2026 menüsü 2026 fiyatını, 2027 menüsü 2027 fiyatını kullanır. Yıl bölünmüş haftalarda (ör. 28.12.2026–01.01.2027) her gün kendi yılının fiyatıyla değerlendirilir. İlgili yılın fiyatı girilmemişse tutar o kalem için hesaplanmaz ve “birim fiyat tanımlı değil” uyarısı çıkar; diğer yıllara sessizce geçilmez.</li>
-            <li>Tarif malzeme adları ile birim fiyat ürün adlarını aynı şekilde yazın; en güvenlisi tariften kopyalayıp fiyata yapıştırmaktır.</li>
-            <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
-            <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- TOAST -->

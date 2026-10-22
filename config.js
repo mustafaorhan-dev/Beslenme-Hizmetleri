@@ -20,8 +20,8 @@ const APP_CONFIG = {
   // ── SÜRÜM BİLGİSİ — TEK KAYNAK ──
   // Değiştirmeniz veya admin panelinden "Sürümü Yayınla" demeniz yeterli;
   // giriş ekranı, yan menü, kılavuz ve service worker bu değerden güncellenir.
-  version: '1.5.0',   // görünen sürüm (v1.5.0)
-  build: 137,          // önbellek/güncelleme no (her yayında +1)
+  version: '1.5.28',   // görünen sürüm (v1.5.28)
+  build: 165,          // önbellek/güncelleme no (her yayında +1)
   // LEGACY kullanıcılar - Supabase Auth'a geçildiğinde boşaltılabilir
   users: [
     { username: 'admin', passwordHash: 'e4b4617b9d7c3c1bed904600c772cf9ae83896aaff83a9cf9c04fa46fc11f126', role: 'admin', displayName: 'Admin' },
@@ -29,6 +29,11 @@ const APP_CONFIG = {
     { username: 'depo', passwordHash: 'fddc599a3afe6c68b8098f7ef3db02335f7e398e3c0bd34b663f04f424886aeb', role: 'depo', displayName: 'Depo Sorumlusu' },
     { username: 'ascı', passwordHash: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', role: 'asci', displayName: 'Aşçı' },
     { username: 'gida_muhendisi', passwordHash: '83e19a9ce479dc064bab4bd50134db14918cc967debd3ad223bb8993c523788d', role: 'gida_muhendisi', displayName: 'Gıda Mühendisi' }
+  ],
+  // Bu e-postalarla giriş yapan kişiler her zaman admin olur.
+  // İlk kurulumda kilitlenmeyi önler; admin panelinden sonra yönetilebilir.
+  bootstrapAdmins: [
+    'mustafa.orhan@ahievran.edu.tr'
   ],
   supabaseUrl: 'https://ydbeltktutcxfeosqmai.supabase.co',
   supabaseAnonKey: 'sb_publishable_tUj9gU4n1VKLgwJZw5FmDQ_9W1E2nmA'

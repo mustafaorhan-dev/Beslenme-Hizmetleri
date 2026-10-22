@@ -151,37 +151,180 @@ async function initSupabaseAuth() {
   }
 }
 
+function parseUserPerms(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  try {
+    var p = JSON.parse(raw);
+    return (p && typeof p === 'object') ? p : null;
+  } catch (_) { return null; }
+}
+
+function isBootstrapAdminEmail(email) {
+  var list = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.bootstrapAdmins) || [];
+  var e = (email || '').toLowerCase();
+  return list.some(function(a) { return String(a).toLowerCase() === e; });
+}
+
+function nameFromEmail(email) {
+  var prefix = (email || '').split('@')[0];
+  return prefix.split(/[._-]+/).filter(Boolean).map(function(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ') || email;
+}
+
+async function fetchAppUserByEmail(email) {
+  if (!supabaseClient || !email) return null;
+  var fields = [
+    'role, display_name, permissions, active',
+    'role, display_name, active',
+    'role, display_name, permissions',
+    'role, display_name'
+  ];
+  for (var i = 0; i < fields.length; i++) {
+    try {
+      var res = await supabaseClient.from('app_users')
+        .select(fields[i])
+        .eq('username', email)
+        .maybeSingle();
+      if (!res.error) return res.data || null;
+    } catch (_) {}
+  }
+  return null;
+}
+
+async function denyInactiveLogin(name) {
+  logIslem('login_red', (name || '') + ' pasif hesap nedeniyle reddedildi');
+  try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
+  handleSupabaseLogout();
+  var overlay = document.getElementById('loginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+  var err = document.getElementById('loginError');
+  if (err) {
+    err.textContent = 'Hesabınız pasife alınmış. Lütfen yöneticiye başvurun.';
+    err.style.display = 'block';
+  }
+  var pw = document.getElementById('loginPassword');
+  if (pw) pw.value = '';
+}
+
 async function handleSupabaseLogin(session) {
   if (!session || !session.user) return;
   var userId = session.user.id;
+  var email = (session.user.email || '').toLowerCase();
   try {
-    var { data, error } = await supabaseClient.from('user_roles')
-      .select('role, display_name')
-      .eq('auth_user_id', userId)
-      .single();
-    if (error || !data) {
-      // user_roles'da kayıt yoksa legacy kullanıcı listesinden bulup otomatik at
-      // (böylece Supabase'de "kullanıcı rolleri" boş kalmaz)
-      var email = session.user.email || '';
+    // 1) Asıl kaynak: yönetim panelindeki kişi kaydı (app_users)
+    var person = await fetchAppUserByEmail(email);
+
+    // 2) auth_user_id ile rol kaydı
+    var roleRow = null;
+    try {
+      var { data: rRow } = await supabaseClient.from('user_roles')
+        .select('role, display_name')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+      roleRow = rRow || null;
+    } catch (_) {}
+
+    var role, displayName, perms = null;
+    var bootstrapAdmin = isBootstrapAdminEmail(email);
+    if (person && person.active === false && !bootstrapAdmin) {
+      await denyInactiveLogin(person.display_name || email);
+      return;
+    }
+    if (bootstrapAdmin) {
+      // config.js'deki bootstrapAdmins listesi her zaman admin yetkisi verir.
+      role = 'admin';
+      displayName = (person && person.display_name) || (roleRow && roleRow.display_name) || nameFromEmail(email);
+      perms = null;
+    } else if (person) {
+      role = person.role || (roleRow ? roleRow.role : 'asci');
+      displayName = person.display_name || (roleRow ? roleRow.display_name : '') || email || 'Kullanıcı';
+      perms = parseUserPerms(person.permissions);
+    } else if (roleRow) {
+      role = roleRow.role || 'asci';
+      displayName = roleRow.display_name || email || 'Kullanıcı';
+    } else {
+      // 3) Yoksa legacy listeye bak (e-posta veya e-posta ön eki ile eşleşme)
       var username = email.split('@')[0].toLowerCase();
       var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
       var legacyUser = null;
       if (cfg.users && Array.isArray(cfg.users)) {
-        legacyUser = cfg.users.find(function(u) { return (u.username || '').toLowerCase() === username; }) || null;
+        legacyUser = cfg.users.find(function(u) {
+          var un = (u.username || '').toLowerCase();
+          return un === email || un === username;
+        }) || null;
       }
-      var role = legacyUser ? (legacyUser.role || 'asci') : 'asci';
-      var displayName = legacyUser ? (legacyUser.displayName || username) : (session.user.email || 'Kullanıcı');
+      role = legacyUser ? (legacyUser.role || 'asci') : 'asci';
+      displayName = legacyUser ? (legacyUser.displayName || username) : (email || 'Kullanıcı');
+    }
+
+    // Bootstrap admin: app_users kaydı yoksa oluştur, rolü admin yap.
+    if (bootstrapAdmin) {
       try {
-        await supabaseClient.from('user_roles').insert({ auth_user_id: userId, role: role, display_name: displayName });
+        await supabaseClient.from('app_users').upsert(
+          { username: email, password_hash: '', role: 'admin', display_name: displayName, active: true },
+          { onConflict: 'username' }
+        );
       } catch (_) {}
-      applyLoginState(role, displayName, true);
-      logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
+      try { await syncUsersFromSupabase(); } catch (_) {}
+    }
+
+    // user_roles tablosunu güncel tut (admin panelindeki rol değişikliği yansısın)
+    try {
+      await supabaseClient.from('user_roles').upsert(
+        { auth_user_id: userId, role: role, display_name: displayName },
+        { onConflict: 'auth_user_id' }
+      );
+    } catch (_) {}
+
+    applyLoginState(role, displayName, true, email, perms);
+    logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
+  } catch (_) {}
+}
+
+async function refreshCurrentUserPermissions() {
+  if (!supabaseClient) return;
+  var email = oturumGet('atik_kontrol_email');
+  if (!email) {
+    try {
+      var { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        email = (session.user.email || '').toLowerCase();
+        if (email) oturumSet('atik_kontrol_email', email);
+      }
+    } catch (_) {}
+  }
+  if (!email) return;
+
+  // Bootstrap admin: config.js listesindeki e-posta her zaman admin kalır.
+  if (isBootstrapAdminEmail(email)) {
+    var dn = oturumGet('atik_kontrol_display_name');
+    if (!dn || dn === 'Kullanıcı' || dn === 'Görüntüleme' || dn === 'Admin') {
+      dn = nameFromEmail(email);
+    }
+    try {
+      await supabaseClient.from('app_users').upsert(
+        { username: email, password_hash: '', role: 'admin', display_name: dn, active: true },
+        { onConflict: 'username' }
+      );
+    } catch (_) {}
+    oturumSet('atik_kontrol_role', 'admin');
+    oturumSet('atik_kontrol_display_name', dn);
+    setCurrentUserPermissions(null);
+    return;
+  }
+
+  try {
+    var data = await fetchAppUserByEmail(email);
+    if (!data) return;
+    if (data.active === false) {
+      await denyInactiveLogin(data.display_name || email);
       return;
     }
-    var role = data.role || 'asci';
-    var displayName = data.display_name || session.user.email || 'Kullanıcı';
-    applyLoginState(role, displayName, true);
-    logIslem('login', displayName + ' Supabase Auth ile giriş yaptı');
+    if (data.role) oturumSet('atik_kontrol_role', data.role);
+    if (data.display_name) oturumSet('atik_kontrol_display_name', data.display_name);
+    setCurrentUserPermissions(parseUserPerms(data.permissions));
   } catch (_) {}
 }
 
@@ -205,9 +348,11 @@ function oturumSil(k) {
   try { sessionStorage.removeItem(k); } catch (_) {}
 }
 
-function applyLoginState(role, displayName, isSupabaseAuth) {
+function applyLoginState(role, displayName, isSupabaseAuth, email, permissions) {
   oturumSet('atik_kontrol_role', role);
   oturumSet('atik_kontrol_display_name', displayName);
+  if (email) oturumSet('atik_kontrol_email', email);
+  setCurrentUserPermissions(permissions || null);
   if (isSupabaseAuth) oturumSet('atik_kontrol_supabase_auth', 'true');
   else oturumSil('atik_kontrol_supabase_auth');
   oturumSet('atik_kontrol_login_time', String(Date.now()));
@@ -226,6 +371,8 @@ function handleSupabaseLogout() {
   oturumSil('atik_kontrol_role');
   oturumSil('atik_kontrol_display_name');
   oturumSil('atik_kontrol_supabase_auth');
+  oturumSil('atik_kontrol_email');
+  oturumSil(USER_PERMISSIONS_KEY);
 }
 
 // ─── REMOTE PASSWORD HASH CACHE (legacy) ──────────────────────────────────────
@@ -241,14 +388,26 @@ async function syncUsersFromSupabase() {
   if (!supabaseClient) return false;
   try {
     var { data, error } = await supabaseClient.from('app_users')
-      .select('username, password_hash, role, display_name');
+      .select('username, password_hash, role, display_name, permissions, active');
+    if (error) {
+      // permissions/active kolonları yoksa (migration çalıştırılmadıysa) eski sorguya düş
+      var fallback = await supabaseClient.from('app_users')
+        .select('username, password_hash, role, display_name, active');
+      if (fallback.error) {
+        fallback = await supabaseClient.from('app_users')
+          .select('username, password_hash, role, display_name');
+      }
+      data = fallback.data; error = fallback.error;
+    }
     if (error || !data || data.length === 0) return false;
     var remoteUsers = data.map(function(r) {
       return {
         username: r.username,
         passwordHash: r.password_hash,
         role: r.role || 'asci',
-        displayName: r.display_name || r.username
+        displayName: r.display_name || r.username,
+        permissions: parseUserPerms(r.permissions),
+        active: r.active !== false
       };
     });
     var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
@@ -280,14 +439,41 @@ async function saveUsersToSupabase(users) {
     var rows = users.map(function(u) {
       return {
         username: u.username,
-        password_hash: u.passwordHash,
+        password_hash: u.passwordHash || '',
         role: u.role || 'asci',
-        display_name: u.displayName || u.username
+        display_name: u.displayName || u.username,
+        permissions: u.permissions ? JSON.stringify(u.permissions) : null,
+        active: u.active !== false
       };
     });
     var { error } = await supabaseClient.from('app_users').upsert(rows, { onConflict: 'username' });
-    if (error) return false;
+    if (error) {
+      // permissions kolonu yoksa alanı çıkarıp tekrar dene
+      var noPermRows = rows.map(function(r) {
+        var c = Object.assign({}, r);
+        delete c.permissions;
+        return c;
+      });
+      var retry = await supabaseClient.from('app_users').upsert(noPermRows, { onConflict: 'username' });
+      if (!retry.error) return true;
+      // active kolonu da yoksa onu da çıkar (en eski şema)
+      var legacyRows = noPermRows.map(function(r) {
+        var c = Object.assign({}, r);
+        delete c.active;
+        return c;
+      });
+      var retry2 = await supabaseClient.from('app_users').upsert(legacyRows, { onConflict: 'username' });
+      return !retry2.error;
+    }
     return true;
+  } catch (_) { return false; }
+}
+
+async function deleteUserFromSupabase(username) {
+  if (!supabaseClient) return false;
+  try {
+    var { error } = await supabaseClient.from('app_users').delete().eq('username', username);
+    return !error;
   } catch (_) { return false; }
 }
 
@@ -342,12 +528,13 @@ function toggleAccentDropdown() {
 }
 
 // ─── TOAST NOTIFICATION ───────────────────────────────────────────────────────
-function showToast(message, type) {
+function showToast(message, type, duration, extraClass) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
+  while (container.children.length >= 3) container.removeChild(container.firstChild);
   const toast = document.createElement('div');
-  toast.className = 'toast toast-' + (type || 'info');
-  const icons = { success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' };
+  toast.className = 'toast toast-' + (type || 'info') + (extraClass ? ' ' + extraClass : '');
+  const icons = { success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' };
   toast.innerHTML = (icons[type] || icons.info) + '<span>' + escapeHtml(message) + '</span>';
   container.appendChild(toast);
   requestAnimationFrame(() => { toast.classList.add('toast-visible'); });
@@ -355,7 +542,7 @@ function showToast(message, type) {
     toast.classList.remove('toast-visible');
     toast.classList.add('toast-hiding');
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-  }, 4000);
+  }, duration || 4000);
 }
 
 // ─── PAGINATION ────────────────────────────────────────────────────────────────
@@ -413,6 +600,7 @@ const ROLE_LABELS = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Soru
 
 const ROLE_PERMISSIONS_KEY = 'atik_kontrol_role_permissions';
 const ROLE_PERMISSIONS_SUPABASE_KEY = 'role_permissions';
+const USER_PERMISSIONS_KEY = 'atik_kontrol_user_permissions';
 let inactivityTimeoutMs = (function() {
   try {
     var v = parseInt(localStorage.getItem('atik_kontrol_inactivity_timeout'), 10);
@@ -572,9 +760,39 @@ const DEFAULT_ROLE_PERMISSIONS = {
 
 let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
 
+function getCurrentUserPermissions() {
+  try {
+    var raw = oturumGet(USER_PERMISSIONS_KEY);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch (_) {}
+  return null;
+}
+
+function setCurrentUserPermissions(perms) {
+  try {
+    if (perms && typeof perms === 'object') localStorage.setItem(USER_PERMISSIONS_KEY, JSON.stringify(perms));
+    else localStorage.removeItem(USER_PERMISSIONS_KEY);
+  } catch (_) {}
+}
+
+function mergePermissions(base, override) {
+  var b = base || {};
+  var o = override || {};
+  var merged = Object.assign({}, b, o);
+  merged.tabs = Object.assign({}, b.tabs || {}, o.tabs || {});
+  return merged;
+}
+
 function getRolePermissions(role) {
   if (role === ROLE_ADMIN) return null;
-  return rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
+  var base = rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
+  if (role === getRole()) {
+    var userPerms = getCurrentUserPermissions();
+    if (userPerms) return mergePermissions(base, userPerms);
+  }
+  return base;
 }
 
 function hasPerm(key) {
@@ -729,27 +947,59 @@ function requireAdmin() {
 }
 
 async function doLogin() {
-  const usernameSelect = document.getElementById('loginUsername');
+  const emailInput = document.getElementById('loginEmail');
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
-  const username = usernameSelect.value;
+  const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
   const password = input.value;
-  
-  if (!username) {
-    error.textContent = 'Lütfen kullanıcı seçin!';
+
+  error.style.display = 'none';
+
+  if (!email) {
+    error.textContent = 'Lütfen e-posta adresinizi girin!';
     error.style.display = 'block';
+    if (emailInput) emailInput.focus();
+    return;
+  }
+  if (email.indexOf('@') === -1) {
+    error.textContent = 'Geçerli bir e-posta adresi girin!';
+    error.style.display = 'block';
+    if (emailInput) emailInput.focus();
+    return;
+  }
+  if (!password) {
+    error.textContent = 'Lütfen şifrenizi girin!';
+    error.style.display = 'block';
+    input.focus();
     return;
   }
 
-  // 1. Önce legacy auth dene (yönetim panelinde değiştirilen şifre burada geçerli)
+  // 1. Supabase Auth (asıl yöntem)
+  if (supabaseClient) {
+    var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (!signInError && signInData && signInData.session) {
+      // Rol ve izinler handleSupabaseLogin() içinde uygulanır (onAuthStateChange).
+      try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
+      try { localStorage.setItem('atik_kontrol_last_email', email); } catch (_) {}
+      return;
+    }
+  }
+
+  // 2. Legacy yedek (e-posta = kullanıcı adı veya e-posta ön eki)
   const inputHash = await sha256(password);
-  
   let role = null;
   let displayName = '';
   const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  
+  const username = email.split('@')[0];
+
   if (cfg.users && Array.isArray(cfg.users)) {
-    const user = cfg.users.find(u => u.username === username && u.passwordHash === inputHash);
+    const user = cfg.users.find(u => {
+      const un = (u.username || '').toLowerCase();
+      return (un === email || un === username) && u.passwordHash === inputHash;
+    });
     if (user) {
       role = user.role;
       displayName = user.displayName;
@@ -757,43 +1007,17 @@ async function doLogin() {
   }
 
   if (role) {
-    oturumSet('atik_kontrol_role', role);
-    oturumSet('atik_kontrol_display_name', displayName);
-    oturumSil('atik_kontrol_supabase_auth');
-    if (role === ROLE_ADMIN) {
-      oturumSet('atik_kontrol_admin_hash_proof', inputHash);
-      oturumSet('atik_kontrol_login_time', String(Date.now()));
-    }
-    localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
-    try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.body.setAttribute('data-role', role);
-    document.getElementById('roleBadge').textContent = displayName;
-    renderAdminPanelBtn();
-    applyRolePermissions();
+    applyLoginState(role, displayName, false, email, null);
+    if (role === ROLE_ADMIN) oturumSet('atik_kontrol_admin_hash_proof', inputHash);
+    try { localStorage.setItem('atik_kontrol_last_email', email); } catch (_) {}
     if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
     logIslem('login', displayName + ' (legacy) sisteme giriş yaptı');
     return;
   }
 
-  // 2. Legacy yoksa/başarısızsa Supabase Auth ile dene (e-posta olarak @ekle)
-  if (supabaseClient) {
-    var email = username.indexOf('@') === -1 ? username + '@beslenme.local' : username;
-    var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-    if (!signInError && signInData && signInData.session) {
-      // Başarılı Supabase Auth - rol user_roles'dan (veya legacy fallback'ten) gelecek.
-      // applyLoginState() handleSupabaseLogin() içinde çağrılır.
-      try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
-      return;
-    }
-  }
-
   // 3. Her ikisi de başarısız
   window._loginAttempts = (window._loginAttempts || 0) + 1;
-  error.textContent = 'Hatalı kullanıcı adı veya şifre!';
+  error.textContent = 'Hatalı e-posta veya şifre!';
   error.style.display = 'block';
   input.value = '';
   input.focus();
@@ -816,79 +1040,49 @@ function openAdminPanel() {
     showToast('Bu işlem için admin yetkisi gerekli.', 'error');
     return;
   }
-  document.getElementById('apReAuthContainer').style.display = 'block';
-  document.getElementById('apPanelBody').style.display = 'none';
-  document.getElementById('apReAuthPw').value = '';
-  document.getElementById('apReAuthError').style.display = 'none';
-  document.getElementById('apReAuthError').textContent = '';
-  document.getElementById('apError').style.display = 'none';
-  document.getElementById('apError').textContent = '';
-  document.getElementById('apSuccess').style.display = 'none';
-  document.getElementById('apSuccess').textContent = '';
-  apRenderRolePermissions();
-  var roleLabel = getRole() === ROLE_ADMIN ? 'Yönetici' : 'Görüntüleme';
-  document.getElementById('apSessionRole').textContent = roleLabel;
-  var lastLogin = localStorage.getItem('atik_kontrol_last_login');
-  if (lastLogin) {
-    try {
-      var d = new Date(lastLogin);
-      document.getElementById('apLastLogin').textContent = d.toLocaleString('tr-TR');
-    } catch (_) { document.getElementById('apLastLogin').textContent = lastLogin; }
-  } else {
-    document.getElementById('apLastLogin').textContent = 'Bu oturum';
-  }
-  var authMode = isUsingSupabaseAuth() ? 'Supabase Auth' : 'Legacy (SHA-256)';
-  document.getElementById('apAuthMode').textContent = authMode;
-  document.getElementById('apStorageInfo').textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
-  apRenderVersion();
-  document.getElementById('adminPanelModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  apLoadLogs();
+  switchTab('admin');
+  apSwitchTab('users');
 }
 
-async function apReAuth() {
-  const pw = document.getElementById('apReAuthPw').value;
-  const errorEl = document.getElementById('apReAuthError');
-
-  // Supabase Auth ile giriş yapıldıysa session doğrulaması yap
-  if (isUsingSupabaseAuth() && supabaseClient) {
-    try {
-      var { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        document.getElementById('apReAuthContainer').style.display = 'none';
-        document.getElementById('apPanelBody').style.display = 'block';
-        errorEl.style.display = 'none';
-        apRenderUserList();
-        apRenderRolePermissions();
-        apRenderInactivityTimeout();
-        apRenderVersion();
-        return;
-      }
-    } catch (_) {}
-  }
-
-  // Legacy fallback: SHA-256 hash kontrolü
-  const hash = await sha256(pw);
-  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  var adminHash = '';
-  if (cfg.users && Array.isArray(cfg.users)) {
-    const adminUser = cfg.users.find(u => u.role === ROLE_ADMIN);
-    if (adminUser) adminHash = adminUser.passwordHash;
-  }
-  if (hash === adminHash) {
-    document.getElementById('apReAuthContainer').style.display = 'none';
-    document.getElementById('apPanelBody').style.display = 'block';
-    errorEl.style.display = 'none';
+function apSwitchTab(name) {
+  document.querySelectorAll('.ap-subtab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-aptab') === name);
+  });
+  document.querySelectorAll('.ap-tab-content').forEach(function(el) {
+    el.classList.toggle('active', el.id === 'ap-tab-' + name);
+  });
+  if (name === 'users') {
     apRenderUserList();
-    apRenderRolePermissions();
-    apRenderInactivityTimeout();
-    apRenderVersion();
-  } else {
-    errorEl.textContent = 'Admin şifresi yanlış!';
-    errorEl.style.display = 'block';
-    document.getElementById('apReAuthPw').value = '';
-    document.getElementById('apReAuthPw').focus();
+    apRenderNewUserPerms();
   }
+  if (name === 'roles') apRenderRolePermissions();
+  if (name === 'system') { apRenderInactivityTimeout(); apRenderVersion(); }
+}
+
+function apRenderAdminSummary() {
+  var errEl = document.getElementById('apError');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  var okEl = document.getElementById('apSuccess');
+  if (okEl) { okEl.style.display = 'none'; okEl.textContent = ''; }
+  var roleEl = document.getElementById('apSessionRole');
+  if (roleEl) roleEl.textContent = 'Yönetici';
+  var lastEl = document.getElementById('apLastLogin');
+  if (lastEl) {
+    var lastLogin = localStorage.getItem('atik_kontrol_last_login');
+    if (lastLogin) {
+      try { lastEl.textContent = new Date(lastLogin).toLocaleString('tr-TR'); }
+      catch (_) { lastEl.textContent = lastLogin; }
+    } else {
+      lastEl.textContent = 'Bu oturum';
+    }
+  }
+  var authEl = document.getElementById('apAuthMode');
+  if (authEl) authEl.textContent = isUsingSupabaseAuth() ? 'Supabase Auth' : 'Legacy (SHA-256)';
+  var storageEl = document.getElementById('apStorageInfo');
+  if (storageEl) storageEl.textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
+  var dsEl = document.getElementById('apDataSource');
+  if (dsEl) dsEl.textContent = supabaseClient ? 'Supabase + Yerel' : 'Yerel (tarayıcı)';
+  apRenderVersion();
 }
 
 // ─── SÜRÜM YÖNETİMİ (Admin Paneli) ───────────────────────────────────────────
@@ -978,8 +1172,7 @@ async function apPublishVersion() {
 }
 
 function closeAdminPanel() {
-  document.getElementById('adminPanelModal').classList.remove('open');
-  document.body.style.overflow = '';
+  switchTab('dashboard');
 }
 
 async function doLogout() {
@@ -996,9 +1189,11 @@ async function doLogout() {
   oturumSil('atik_kontrol_supabase_auth');
   oturumSil('atik_kontrol_admin_hash_proof');
   oturumSil('atik_kontrol_login_time');
+  oturumSil('atik_kontrol_email');
+  oturumSil(USER_PERMISSIONS_KEY);
   try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
   // Tüm veriyi temizle
-  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel', 'atik_kontrol_inactivity_timeout'];
+  var keysToKeep = ['atik_kontrol_theme', 'atik_kontrol_accent', 'haccp_depo_adlari', ROLE_PERMISSIONS_KEY, 'sb-' + SUPABASE_URL + '-auth-token', 'atik_kontrol_users', 'ogrenci_basi_harcama_orani', 'personel_basi_harcama_orani', 'uretilen_yemek_basi_harcama_orani', 'atik_kontrol_son_personel', 'atik_kontrol_inactivity_timeout', 'atik_kontrol_last_email'];
   var preserved = {};
   keysToKeep.forEach(function(k) {
     try { var v = localStorage.getItem(k); if (v) preserved[k] = v; } catch (_) {}
@@ -1210,67 +1405,192 @@ function loadUsersFromStorage() {
   } catch (_) {}
 }
 
+var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
+var USER_PERM_LABELS = {
+  canEditMenu: 'Menüyü düzenleyebilir',
+  canSaveMenu: 'Menüyü kaydedebilir',
+  canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
+  canAddRecord: 'Yeni kayıt ekleyebilir',
+  canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
+  canAddYag: 'Atık yağ kaydı ekleyebilir',
+  canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
+  canAddKalibrasyon: 'Kalibrasyon cihaz kaydı ekleyebilir',
+  canExport: 'Dışa aktarabilir',
+  canSync: 'Senkronizasyon yapabilir',
+  canSeeAdminPanel: 'Yönetim panelini görebilir',
+  canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
+  canEditDepo: 'Depo adlarını düzenleyebilir',
+  canEditHarcamaOran: 'Harcama oranını/tutarını değiştirebilir',
+  canEditBirimFiyat: 'Birim fiyat listesini düzenleyebilir',
+  canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
+  canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
+  canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
+  canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
+  canMenuOnayla: 'Menüyü onaylayabilir',
+  canMenuReddet: 'Menüyü reddedebilir'
+};
+
+function apPermDefaultsForRole(role) {
+  if (role === ROLE_ADMIN) {
+    var all = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.depo));
+    Object.keys(all.tabs).forEach(function(k) { all.tabs[k] = true; });
+    Object.keys(all).forEach(function(k) { if (k !== 'tabs') all[k] = true; });
+    return all;
+  }
+  return JSON.parse(JSON.stringify(rolePermissions[role] || DEFAULT_ROLE_PERMISSIONS.asci));
+}
+
+function renderUserPermCheckboxes(containerId, perms, prefix) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var tabs = (perms && perms.tabs) || {};
+  var html = '';
+  html += '<div class="ap-perm-group">';
+  html += '<div class="ap-perm-title">Görebileceği alanlar</div>';
+  html += '<div class="ap-perm-grid">';
+  Object.keys(USER_TAB_LABELS).forEach(function(tab) {
+    html += '<label>';
+    html += '<input type="checkbox" id="' + prefix + 'tab_' + tab + '"' + (tabs[tab] ? ' checked' : '') + ' /> ' + USER_TAB_LABELS[tab];
+    html += '</label>';
+  });
+  html += '</div></div>';
+  html += '<div class="ap-perm-group">';
+  html += '<div class="ap-perm-title">Yazabileceği / işlem yapabileceği alanlar</div>';
+  html += '<div class="ap-perm-grid">';
+  Object.keys(USER_PERM_LABELS).forEach(function(key) {
+    html += '<label>';
+    html += '<input type="checkbox" id="' + prefix + key + '"' + (perms && perms[key] ? ' checked' : '') + ' /> ' + USER_PERM_LABELS[key];
+    html += '</label>';
+  });
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function apCollectPerms(prefix) {
+  var perms = { tabs: {} };
+  Object.keys(USER_TAB_LABELS).forEach(function(tab) {
+    var el = document.getElementById(prefix + 'tab_' + tab);
+    perms.tabs[tab] = !!(el && el.checked);
+  });
+  Object.keys(USER_PERM_LABELS).forEach(function(key) {
+    var el = document.getElementById(prefix + key);
+    perms[key] = !!(el && el.checked);
+  });
+  return perms;
+}
+
+function apRenderNewUserPerms() {
+  var roleSel = document.getElementById('apNewRole');
+  var role = roleSel ? roleSel.value : 'diyetisyen';
+  renderUserPermCheckboxes('apNewUserPerms', apPermDefaultsForRole(role), 'apNew_');
+}
+
+function apRenderEditUserPerms() {
+  var roleSel = document.getElementById('apEditRole');
+  if (!roleSel) return;
+  renderUserPermCheckboxes('apEditUserPerms', apPermDefaultsForRole(roleSel.value), 'apEdit_');
+}
+
 function apRenderUserList() {
   var container = document.getElementById('apUserList');
   if (!container) return;
   var users = getUsers();
+  var countEl = document.getElementById('apUserCount');
+  if (countEl) countEl.textContent = users.length + ' kişi';
   if (users.length === 0) {
     container.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);margin:0">Kayıtlı kullanıcı yok.</p>';
     return;
   }
-  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
-  var roleColors = { admin: '#ef4444', diyetisyen: '#6366f1', depo: '#f59e0b', asci: '#22c55e' };
-  var html = '<div style="display:flex;flex-direction:column;gap:0.5rem">';
+  var roleColors = { admin: '#ef4444', diyetisyen: '#6366f1', depo: '#f59e0b', asci: '#22c55e', gida_muhendisi: '#0ea5e9', temizlikci: '#a855f7', sadece_gorme: '#64748b' };
+  var html = '';
   users.forEach(function(user, i) {
-    var roleLabel = roleLabels[user.role] || ROLE_LABELS[user.role] || user.role;
+    var active = user.active !== false;
+    var roleLabel = ROLE_LABELS[user.role] || user.role;
     var roleColor = roleColors[user.role] || '#888';
-    html += '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">';
-    html += '<div style="flex:1">';
-    html += '<div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)">' + escapeHtml(user.displayName) + '</div>';
-    html += '<div style="font-size:0.75rem;color:var(--text-muted)">@' + escapeHtml(user.username) + ' &middot; <span style="color:' + roleColor + ';font-weight:600">' + roleLabel + '</span></div>';
+    html += '<div class="ap-user-row' + (active ? '' : ' inactive') + '">';
+    html += '<div style="flex:1;min-width:190px">';
+    html += '<div class="ap-user-name">' + escapeHtml(user.displayName || user.username);
+    html += ' <span class="ap-badge" style="color:' + roleColor + '">' + escapeHtml(roleLabel) + '</span>';
+    if (!active) html += ' <span class="ap-badge ap-badge-off">Pasif</span>';
     html += '</div>';
-    html += '<button class="btn btn-ghost btn-sm" onclick="apEditUser(' + i + ')" title="Düzenle" style="padding:4px 8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>';
-    html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteUser(' + i + ')" title="Sil" style="padding:4px 8px;color:#ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
+    html += '<div class="ap-user-meta">' + escapeHtml(user.username) + (user.permissions ? ' &middot; <span style="color:var(--accent);font-weight:600">özel izin</span>' : '') + '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:0.35rem;flex-wrap:wrap">';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apEditUser(' + i + ')">Düzenle</button>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apToggleUserActive(' + i + ')" style="color:' + (active ? '#f59e0b' : '#22c55e') + '">' + (active ? 'Pasife Al' : 'Aktifleştir') + '</button>';
+    html += '<button class="btn btn-ghost btn-sm" onclick="apDeleteUser(' + i + ')" style="color:#ef4444">Sil</button>';
+    html += '</div>';
     html += '</div>';
   });
-  html += '</div>';
   container.innerHTML = html;
+}
+
+async function apToggleUserActive(index) {
+  if (getRole() !== ROLE_ADMIN) return;
+  var users = getUsers();
+  var user = users[index];
+  if (!user) return;
+  if (isBootstrapAdminEmail(user.username)) {
+    showToast('Bu hesap config.js içinde bootstrap admin; pasife alınamaz.', 'error');
+    return;
+  }
+  var makingPassive = user.active !== false;
+  if (makingPassive) {
+    if ((user.username || '').toLowerCase() === (oturumGet('atik_kontrol_email') || '').toLowerCase()) {
+      showToast('Kendi hesabınızı pasife alamazsınız.', 'error');
+      return;
+    }
+    var activeAdmins = users.filter(function(u) { return u.role === ROLE_ADMIN && u.active !== false; }).length;
+    if (user.role === ROLE_ADMIN && activeAdmins <= 1) {
+      showToast('Son aktif admin pasife alınamaz.', 'error');
+      return;
+    }
+  }
+  user.active = !makingPassive;
+  users[index] = user;
+  var remoteOk = await saveUsers(users);
+  apRenderUserList();
+  showToast((makingPassive ? 'Kullanıcı pasife alındı.' : 'Kullanıcı aktifleştirildi.') + (remoteOk ? '' : ' (sadece yerel)'), 'success');
+  logIslem('kullanici_durum', (user.displayName || user.username) + (makingPassive ? ' pasife alındı' : ' aktifleştirildi'));
 }
 
 async function apAddUser() {
   if (getRole() !== ROLE_ADMIN) return;
-  var username = document.getElementById('apNewUsername').value.trim().toLowerCase();
+  var email = (document.getElementById('apNewEmail').value || '').trim().toLowerCase();
   var displayName = document.getElementById('apNewDisplayName').value.trim();
-  var password = document.getElementById('apNewPassword').value;
   var role = document.getElementById('apNewRole').value;
   var errorEl = document.getElementById('apError');
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
-  if (!username) { errorEl.textContent = 'Kullanıcı adı gerekli.'; errorEl.style.display = 'block'; return; }
-  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
-  if (!password || password.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
-
-  var users = getUsers();
-  if (users.some(function(u) { return u.username === username; })) {
-    errorEl.textContent = 'Bu kullanıcı adı zaten var.';
+  if (!displayName) { errorEl.textContent = 'Adı soyadı gerekli.'; errorEl.style.display = 'block'; return; }
+  if (!email || email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+    errorEl.textContent = 'Geçerli bir e-posta adresi girin.';
     errorEl.style.display = 'block';
     return;
   }
 
-  var hash = await sha256(password);
-  users.push({ username: username, passwordHash: hash, role: role, displayName: displayName });
+  var users = getUsers();
+  if (users.some(function(u) { return (u.username || '').toLowerCase() === email; })) {
+    errorEl.textContent = 'Bu e-posta adresi zaten kayıtlı.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  var permissions = apCollectPerms('apNew_');
+  users.push({ username: email, passwordHash: '', role: role, displayName: displayName, permissions: permissions, active: true });
   var remoteOk = await saveUsers(users);
 
-  document.getElementById('apNewUsername').value = '';
+  document.getElementById('apNewEmail').value = '';
   document.getElementById('apNewDisplayName').value = '';
-  document.getElementById('apNewPassword').value = '';
+  apRenderNewUserPerms();
   apRenderUserList();
-  successEl.textContent = '"' + displayName + '" kullanıcısı eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)');
+  successEl.textContent = '"' + displayName + '" eklendi.' + (remoteOk ? ' (Supabase)' : ' (yerel)') +
+    ' Kişinin Supabase Authentication kaydı yoksa giriş yapamaz.';
   successEl.style.display = 'block';
   showToast('Kullanıcı eklendi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
-  logIslem('kullanici_ekle', displayName + ' (' + role + ') eklendi');
+  logIslem('kullanici_ekle', displayName + ' (' + email + ', ' + role + ') eklendi');
 }
 
 function apEditUser(index) {
@@ -1279,32 +1599,39 @@ function apEditUser(index) {
   var user = users[index];
   if (!user) return;
 
-  var roleLabels = { admin: 'Admin', diyetisyen: 'Diyetisyen', depo: 'Depo Sorumlusu', asci: 'Aşçı' };
-
   var container = document.getElementById('apUserList');
-  var html = '<div style="background:var(--bg-card);border:2px solid var(--accent);border-radius:8px;padding:0.75rem">';  html += '<div style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem">Kullanıcıyı Düzenle</div>';
-  html += '<input type="hidden" id="apEditIndex" value="' + index + '" />';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Kullanıcı Adı</label>';
-  html += '<input type="text" id="apEditUsername" value="' + escapeHtml(user.username) + '" readonly style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-muted);font-size:0.85rem" /></div>';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Görünen Ad</label>';
-  html += '<input type="text" id="apEditDisplayName" value="' + escapeHtml(user.displayName) + '" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
+  if (!container) return;
+  var perms = user.permissions || apPermDefaultsForRole(user.role);
+  var active = user.active !== false;
+  var html = '<div class="ap-edit-card">';
+  html += '<div class="ap-card-head">';
+  html += '<h3 class="ap-card-title">Kullanıcıyı Düzenle</h3>';
+  html += '<button class="btn btn-ghost btn-sm" onclick="apRenderUserList()">Kapat</button>';
   html += '</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Yeni Şifre (boş = değişmez)</label>';
-  html += '<input type="password" id="apEditPassword" placeholder="Yeni şifre (en az 3 karakter)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" /></div>';
-  html += '<div><label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.2rem">Rol</label>';
-  html += '<select id="apEditRole" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem">';
-  ['admin','diyetisyen','depo','asci','gida_muhendisi','temizlikci','sadece_gorme'].forEach(function(r) {
-    html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + (roleLabels[r] || ROLE_LABELS[r] || r) + '</option>';
+  html += '<div class="ap-card-body">';
+  html += '<input type="hidden" id="apEditIndex" value="' + index + '" />';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">';
+  html += '<div><label class="ap-field-label">E-posta</label>';
+  html += '<input type="text" id="apEditEmail" class="ap-field" value="' + escapeHtml(user.username) + '" readonly /></div>';
+  html += '<div><label class="ap-field-label">Adı Soyadı</label>';
+  html += '<input type="text" id="apEditDisplayName" class="ap-field" value="' + escapeHtml(user.displayName) + '" /></div>';
+  html += '</div>';
+  html += '<div style="margin-top:0.6rem;display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;align-items:end">';
+  html += '<div><label class="ap-field-label">Rol</label>';
+  html += '<select id="apEditRole" class="ap-field" onchange="apRenderEditUserPerms()">';
+  Object.keys(ROLE_LABELS).forEach(function(r) {
+    html += '<option value="' + r + '"' + (user.role === r ? ' selected' : '') + '>' + ROLE_LABELS[r] + '</option>';
   });
   html += '</select></div>';
+  html += '<div><span class="ap-badge ' + (active ? '' : 'ap-badge-off') + '">' + (active ? 'Aktif' : 'Pasif') + '</span></div>';
   html += '</div>';
-  html += '<div style="display:flex;gap:0.5rem">';
+  html += '<div id="apEditUserPerms"></div>';
+  html += '<div style="display:flex;gap:0.5rem;margin-top:0.75rem">';
   html += '<button class="btn btn-primary btn-sm" onclick="apSaveEditUser()">Kaydet</button>';
   html += '<button class="btn btn-ghost btn-sm" onclick="apRenderUserList()">İptal</button>';
-  html += '</div></div>';
+  html += '</div></div></div>';
   container.innerHTML = html;
+  renderUserPermCheckboxes('apEditUserPerms', perms, 'apEdit_');
 }
 
 async function apSaveEditUser() {
@@ -1316,20 +1643,16 @@ async function apSaveEditUser() {
 
   var displayName = document.getElementById('apEditDisplayName').value.trim();
   var role = document.getElementById('apEditRole').value;
-  var newPw = document.getElementById('apEditPassword').value;
   var errorEl = document.getElementById('apError');
   var successEl = document.getElementById('apSuccess');
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
-  if (!displayName) { errorEl.textContent = 'Görünen ad gerekli.'; errorEl.style.display = 'block'; return; }
-  if (newPw && newPw.length < 3) { errorEl.textContent = 'Şifre en az 3 karakter olmalı.'; errorEl.style.display = 'block'; return; }
+  if (!displayName) { errorEl.textContent = 'Adı soyadı gerekli.'; errorEl.style.display = 'block'; return; }
 
   user.displayName = displayName;
   user.role = role;
-  if (newPw && newPw.length >= 3) {
-    user.passwordHash = await sha256(newPw);
-  }
+  user.permissions = apCollectPerms('apEdit_');
   users[index] = user;
   var remoteOk = await saveUsers(users);
   apRenderUserList();
@@ -1344,18 +1667,32 @@ async function apDeleteUser(index) {
   var users = getUsers();
   var user = users[index];
   if (!user) return;
-  if (user.username === 'admin') { showToast('Admin kullanıcısı silinemez.', 'error'); return; }
-  if (!confirm('"' + user.displayName + '" kullanıcısını silmek istediğinize emin misiniz?')) return;
+  if (isBootstrapAdminEmail(user.username)) {
+    showToast('Bu hesap config.js içinde bootstrap admin; silinemez.', 'error');
+    return;
+  }
+  var adminCount = users.filter(function(u) { return u.role === ROLE_ADMIN; }).length;
+  if (user.role === ROLE_ADMIN && adminCount <= 1) { showToast('Son admin kullanıcısı silinemez.', 'error'); return; }
+  if (!confirm('"' + user.displayName + '" kullanıcısını silmek istediğinize emin misiniz?\n\nÖNEMLİ: Giriş yetkisini tamamen kaldırmak için Supabase > Authentication > Users bölümünden de silmelisiniz.')) return;
+  var deletedUsername = user.username;
   users.splice(index, 1);
   var remoteOk = await saveUsers(users);
+  if (remoteOk) {
+    await deleteUserFromSupabase(deletedUsername);
+  }
   apRenderUserList();
-  showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)'), 'success');
-  logIslem('kullanici_sil', user.displayName + ' silindi');
+  showToast('Kullanıcı silindi.' + (remoteOk ? '' : ' (sadece yerel)') + ' Supabase Authentication kaydını da silmeyi unutmayın.', 'success');
+  logIslem('kullanici_sil', user.displayName + ' (' + deletedUsername + ') silindi');
 }
 
-async function apLoadLogs() {
-  var container = document.getElementById('logPanelBody') || document.getElementById('apLogList');
+var LOG_PAGE_SIZE = 25;
+var apLogPage = 0;
+var apLogData = [];
+
+async function apLoadLogs(resetPage) {
+  var container = document.getElementById('apLogList');
   if (!container) return;
+  if (resetPage !== false) apLogPage = 0;
   if (!supabaseClient) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Supabase bağlı değil.</div>'; return; }
   container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Yükleniyor...</div>';
   try {
@@ -1369,61 +1706,88 @@ async function apLoadLogs() {
       var arama = filterKullanici.value.toLowerCase();
       data = data.filter(function(r) { return (r.kullanici || '').toLowerCase().indexOf(arama) !== -1; });
     }
-    if (!data || data.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>'; return; }
-    var islemRenk = { login: '#22c55e', logout: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_sil: '#ef4444' };
-    var islemEtiket = { login: 'Giriş', logout: 'Çıkış', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_sil: 'Kullanıcı Sil' };
-    var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
-    html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
-    data.forEach(function(r) {
-      var tarih = '';
-      try { tarih = new Date(r.tarih).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { tarih = r.tarih || ''; }
-      var renk = islemRenk[r.islem] || 'var(--text-muted)';
-      var etiket = islemEtiket[r.islem] || r.islem;
-      html += '<tr style="border-bottom:1px solid var(--border)">';
-      html += '<td style="padding:5px 8px;white-space:nowrap;color:var(--text-muted)">' + tarih + '</td>';
-      html += '<td style="padding:5px 8px;font-weight:600">' + escapeHtml(r.kullanici || '') + ' <span style="font-size:0.7rem;color:var(--text-muted)">(' + escapeHtml(r.rol || '') + ')</span></td>';
-      html += '<td style="padding:5px 8px"><span style="background:' + renk + '22;color:' + renk + ';padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.72rem">' + etiket + '</span></td>';
-      html += '<td style="padding:5px 8px;color:var(--text-muted)">' + escapeHtml(r.detay || '') + '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>';
+      return;
+    }
+    apLogData = data;
+    renderLogPage();
   } catch (_) {
     container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--danger)">Loglar yüklenemedi.</div>';
   }
 }
 
+function apLogsGoPage(p) {
+  var totalPages = Math.max(1, Math.ceil(apLogData.length / LOG_PAGE_SIZE));
+  if (p < 0) p = 0;
+  if (p > totalPages - 1) p = totalPages - 1;
+  apLogPage = p;
+  renderLogPage();
+}
+
+function renderLogPage() {
+  var container = document.getElementById('apLogList');
+  if (!container) return;
+  var totalPages = Math.max(1, Math.ceil(apLogData.length / LOG_PAGE_SIZE));
+  if (apLogPage > totalPages - 1) apLogPage = totalPages - 1;
+  if (apLogPage < 0) apLogPage = 0;
+  var start = apLogPage * LOG_PAGE_SIZE;
+  var pageRows = apLogData.slice(start, start + LOG_PAGE_SIZE);
+  var islemRenk = { login: '#22c55e', logout: '#ef4444', login_red: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_durum: '#f59e0b', kullanici_sil: '#ef4444' };
+  var islemEtiket = { login: 'Giriş', logout: 'Çıkış', login_red: 'Giriş Reddi', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_durum: 'Durum Değişti', kullanici_sil: 'Kullanıcı Sil' };
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
+  html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
+  pageRows.forEach(function(r) {
+    var tarih = '';
+    try { tarih = new Date(r.tarih).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { tarih = r.tarih || ''; }
+    var renk = islemRenk[r.islem] || 'var(--text-muted)';
+    var etiket = islemEtiket[r.islem] || r.islem;
+    html += '<tr style="border-bottom:1px solid var(--border)">';
+    html += '<td style="padding:5px 8px;white-space:nowrap;color:var(--text-muted)">' + tarih + '</td>';
+    html += '<td style="padding:5px 8px;font-weight:600">' + escapeHtml(r.kullanici || '') + ' <span style="font-size:0.7rem;color:var(--text-muted)">(' + escapeHtml(r.rol || '') + ')</span></td>';
+    html += '<td style="padding:5px 8px"><span style="background:' + renk + '22;color:' + renk + ';padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.72rem">' + etiket + '</span></td>';
+    html += '<td style="padding:5px 8px;color:var(--text-muted)">' + escapeHtml(r.detay || '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += buildLogPagination(totalPages);
+  container.innerHTML = html;
+}
+
+function buildLogPagination(totalPages) {
+  if (totalPages <= 1) {
+    return '<div class="pagination" style="padding:0.75rem 0 0"><span class="page-total">' + apLogData.length + ' kayıt</span></div>';
+  }
+  var h = '<div class="pagination" style="padding:0.75rem 0 0;flex-wrap:wrap">';
+  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(0)"' + (apLogPage === 0 ? ' disabled' : '') + '>&laquo;</button>';
+  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage - 1) + ')"' + (apLogPage === 0 ? ' disabled' : '') + '>Önceki</button>';
+  h += '<span class="page-info">' + (apLogPage + 1) + ' / ' + totalPages + '</span>';
+  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage + 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>Sonraki</button>';
+  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (totalPages - 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>&raquo;</button>';
+  h += '<span class="page-total">' + apLogData.length + ' kayıt</span>';
+  h += '</div>';
+  return h;
+}
+
 function openLogPanel() {
   if (getRole() !== ROLE_ADMIN) return;
-  document.getElementById('logPanelModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  apLoadLogs();
+  switchTab('logs');
 }
 
 function closeLogPanel() {
-  document.getElementById('logPanelModal').classList.remove('open');
-  document.body.style.overflow = '';
+  switchTab('dashboard');
 }
 
 function openManualModal() {
-  var el = document.getElementById('manualModal');
-  if (!el) return;
-  var vLabel = document.getElementById('manualVersion');
-  if (vLabel && typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) {
-    vLabel.textContent = 'v' + APP_CONFIG.version;
-  }
-  el.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  switchTab('manual');
 }
 
 function closeManualModal() {
-  var el = document.getElementById('manualModal');
-  if (el) el.classList.remove('open');
-  document.body.style.overflow = '';
+  switchTab('dashboard');
 }
 
 function exportManualPDF() {
-  var body = document.querySelector('#manualModal .manual-body');
+  var body = document.querySelector('#content-manual .manual-body');
   if (!body) { showToast('Kılavuz içeriği bulunamadı.', 'error'); return; }
   var printWin = window.open('', '_blank', 'width=900,height=800');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
@@ -1482,9 +1846,9 @@ function applyViewerRestrictions() {
     });
   }
   var adminBtn = document.getElementById('adminPanelBtn');
-  if (adminBtn) adminBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
+  if (adminBtn) adminBtn.style.display = 'none';
   var logBtn = document.getElementById('logPanelBtn');
-  if (logBtn) logBtn.style.display = perm.canSeeAdminPanel ? '' : 'none';
+  if (logBtn) logBtn.style.display = 'none';
   if (!perm.canEditMenu) {
     document.querySelectorAll('.menu-table textarea, .menu-table input, .note-input, .kisi-input').forEach(function(el) {
       el.readOnly = true; el.disabled = true; el.style.opacity = '0.7';
@@ -1574,18 +1938,7 @@ function applyRolePermissions() {
 }
 
 function populateLoginUsers() {
-  var select = document.getElementById('loginUsername');
-  if (!select) return;
-  var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  if (!cfg.users || !Array.isArray(cfg.users)) return;
-  // Mevcut seçenekleri temizle (ilk option hariç)
-  while (select.options.length > 1) select.remove(1);
-  cfg.users.forEach(function(user) {
-    var opt = document.createElement('option');
-    opt.value = user.username;
-    opt.textContent = user.displayName;
-    select.appendChild(opt);
-  });
+  // Giriş artık e-posta + şifre ile yapıldığı için kullanıcı listesi doldurulmaz.
 }
 
 function togglePwVisibility() {
@@ -1600,13 +1953,64 @@ function togglePwVisibility() {
 }
 
 function showForgotPw() {
-  var modal = document.getElementById('loginForgotModal');
-  if (modal) modal.classList.add('open');
+  // "Şifremi Unuttum" kaldırıldı. Unutan kullanıcı için yönetici Supabase'den
+  // yeni şifre belirler; giriş yapmış kullanıcı ise "Şifremi Değiştir" kullanır.
 }
 
-function hideForgotPw() {
-  var modal = document.getElementById('loginForgotModal');
+function hideForgotPw() {}
+
+function openChangePw() {
+  var modal = document.getElementById('changePwModal');
+  if (!modal) return;
+  ['cpCurrent', 'cpNew', 'cpNew2'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var err = document.getElementById('cpError');
+  if (err) { err.style.display = 'none'; err.textContent = ''; }
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { var el = document.getElementById('cpCurrent'); if (el) el.focus(); }, 50);
+}
+
+function closeChangePw() {
+  var modal = document.getElementById('changePwModal');
   if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function changePassword() {
+  var cur = (document.getElementById('cpCurrent').value || '');
+  var nw = (document.getElementById('cpNew').value || '');
+  var nw2 = (document.getElementById('cpNew2').value || '');
+  var err = document.getElementById('cpError');
+  function fail(msg) { err.textContent = msg; err.style.display = 'block'; }
+  err.style.display = 'none';
+
+  if (!cur) return fail('Mevcut şifrenizi girin.');
+  if (nw.length < 6) return fail('Yeni şifre en az 6 karakter olmalı.');
+  if (nw !== nw2) return fail('Yeni şifreler birbiriyle eşleşmiyor.');
+  if (nw === cur) return fail('Yeni şifre mevcut şifreyle aynı olamaz.');
+  if (!supabaseClient || !isUsingSupabaseAuth()) return fail('Şifre değiştirmek için Supabase oturumu gerekli.');
+
+  var email = oturumGet('atik_kontrol_email');
+  if (!email) {
+    try {
+      var { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) email = user.email;
+    } catch (_) {}
+  }
+  if (!email) return fail('Oturum e-postası bulunamadı.');
+
+  var { error: verifyErr } = await supabaseClient.auth.signInWithPassword({ email: email, password: cur });
+  if (verifyErr) return fail('Mevcut şifre hatalı.');
+
+  var { error: updateErr } = await supabaseClient.auth.updateUser({ password: nw });
+  if (updateErr) return fail(updateErr.message || 'Şifre güncellenemedi.');
+
+  closeChangePw();
+  showToast('Şifreniz güncellendi.', 'success');
+  logIslem('sifre_degistir', (oturumGet('atik_kontrol_display_name') || email) + ' şifresini değiştirdi');
 }
 
 function openSupport() {
@@ -1622,8 +2026,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadRolePermissions();
   loadUsersFromStorage();
   await syncUsersFromSupabase();
-  populateLoginUsers();
-  document.getElementById('loginPassword').focus();
+  var emailEl = document.getElementById('loginEmail');
+  if (emailEl && !emailEl.value) {
+    try { emailEl.value = localStorage.getItem('atik_kontrol_last_email') || ''; } catch (_) {}
+  }
+  if (emailEl && !emailEl.value) emailEl.focus();
+  else document.getElementById('loginPassword').focus();
 
   var existingRole = oturumGet('atik_kontrol_role');
   var isSupabaseAuth = isUsingSupabaseAuth();
@@ -1649,6 +2057,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     existingRole = oturumGet('atik_kontrol_role');
+    if (existingRole && isSupabaseAuth) {
+      await refreshCurrentUserPermissions();
+      existingRole = oturumGet('atik_kontrol_role');
+    }
     if (existingRole) {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.body.setAttribute('data-role', existingRole);
@@ -4226,7 +4638,7 @@ function renderHaccpSicaklik() {
       <td>${formatTarihTR(r.tarih)}</td>
       <td>${r.saat || '—'}</td>
       <td>${depoAd}</td>
-      <td class="${durum.cls}"><strong>${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</strong></td>
+      <td${durum.cls.indexOf('badge-ok') === -1 && durum.cls ? ' style="color:#ef4444;font-weight:600"' : ''}>${durum.cls.indexOf('badge-ok') === -1 && durum.cls ? '<span title="Limit dışı sıcaklık">⚠️ </span>' : ''}${r.sicaklik != null && !isNaN(r.sicaklik) ? Number(r.sicaklik).toLocaleString('tr-TR', {minimumFractionDigits:1,maximumFractionDigits:1}) : '—'}</td>
       <td>${r.nem != null && r.nem !== '' && !isNaN(r.nem) ? Number(r.nem).toLocaleString('tr-TR', {minimumFractionDigits:0,maximumFractionDigits:1}) : '—'}</td>
       <td>${r.not || '—'}</td>
       <td>${haccpKaynakRozeti(r.kaynak)}</td>
@@ -5555,10 +5967,17 @@ window.addEventListener('resize', function() {
 });
 
 async function switchTab(name) {
+  if (name === 'admin' && getRole() !== ROLE_ADMIN) name = 'dashboard';
+  if (name === 'logs' && getRole() !== ROLE_ADMIN) name = 'dashboard';
+  var tabBtn = document.getElementById('tab-' + name);
+  if (!tabBtn && name === 'admin') tabBtn = document.getElementById('adminPanelBtn');
+  if (!tabBtn && name === 'logs') tabBtn = document.getElementById('logPanelBtn');
+  var contentEl = document.getElementById('content-' + name);
+  if (!tabBtn || !contentEl) return;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  document.getElementById('content-' + name).classList.add('active');
+  tabBtn.classList.add('active');
+  contentEl.classList.add('active');
   updateNavIndicator();
   if (name === 'dashboard') renderAll();
   if (name === 'charts') drawAllCharts();
@@ -5584,7 +6003,19 @@ async function switchTab(name) {
   if (name === 'yag') { renderYagTable(); if (yagRecords.length === 0 && supabaseClient) refreshYagFromSupabase(); }
   if (name === 'ambalaj') { renderAmbalajTable(); if (ambalajRecords.length === 0 && supabaseClient) refreshAmbalajFromSupabase(); }
   if (name === 'kalibrasyon') { renderKalibrasyon(); if (kalibrasyonCihazlari.length === 0 && supabaseClient) refreshKalibrasyonFromSupabase(); }
-  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), malitablo: t('sidebarMaliTablo'), yillikplan: t('sidebarYillikPlan'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration') };
+  if (name === 'admin') {
+    apRenderAdminSummary();
+    apRenderUserList();
+    apRenderNewUserPerms();
+    apRenderRolePermissions();
+    apRenderInactivityTimeout();
+  }
+  if (name === 'logs') apLoadLogs();
+  if (name === 'manual') {
+    var mv = document.getElementById('manualVersion');
+    if (mv && typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) mv.textContent = 'v' + APP_CONFIG.version;
+  }
+  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), malitablo: t('sidebarMaliTablo'), yillikplan: t('sidebarYillikPlan'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration'), admin: 'Yönetim Paneli', logs: 'Log Kayıtları', manual: 'Kullanım Kılavuzu' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
     localStorage.setItem('atik_kontrol_active_tab', name);
     applyTranslations();
@@ -11569,7 +12000,13 @@ async function menuOnayBildirim() {
       return getMenuDurumMeta(allData[k]).durum === MENU_DURUMLAR.ONAY_BEKLIYOR;
     });
     if (bekleyen.length > 0) {
-      showToast(bekleyen.length + ' haftanın menüsü onay bekliyor.', 'info');
+      showToast(bekleyen.length + ' haftanın menüsü onay bekliyor.', 'info', 9000, 'toast-menu-onay');
+      var menuBadge = document.getElementById('menuDurumBadge');
+      if (menuBadge) {
+        menuBadge.textContent = bekleyen.length + ' haftanın menüsü onay bekliyor';
+        menuBadge.className = 'badge badge-warn';
+        menuBadge.style.display = '';
+      }
     }
   } catch (_) {}
 }
@@ -14369,7 +14806,7 @@ var I18N = {
     thDate: "Tarih",
     thProducedPerson: "Üretilen Yemek (Kişi)",
     thWaste10: "%10 Fire",
-    thBeneficiary: "Yemek Hiz. Yararlanan Personel ve Öğrenci",
+    thBeneficiary: "Yemek Hiz. Yararlanan",
     thPortionGr: "Porsiyon (gr)",
     thWasteKg: "Atık (kg)",
     thWastedPortion: "Çöpe Giden (pors.)",

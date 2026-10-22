@@ -244,8 +244,16 @@ CREATE TABLE IF NOT EXISTS app_users (
   -- NOT: role kolonunda CHECK kısıtı yoktur (özel roller + 'sadece_gorme' için).
   role TEXT NOT NULL DEFAULT 'asci',
   display_name TEXT NOT NULL DEFAULT '',
+  -- Kişiye özel izinler (JSON metni). Boşsa rolün varsayılan izinleri geçerlidir.
+  permissions TEXT,
+  -- false ise kullanıcı giriş yapamaz (yönetim panelinden pasife alınır).
+  active BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Mevcut tabloya permissions kolonunu ekle (geriye uyumlu)
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS permissions TEXT;
+ALTER TABLE app_users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE;
 
 ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 
