@@ -503,7 +503,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20V8l4 4V8l4 4V8l4 4V3l6 6v11"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
             Üretim Tüketim Gir
           </button>
-          <button class="btn btn-secondary btn-sm" onclick="triggerImport()" title="CSV veya JSON içe aktar" data-i18n="recordsImportBtn">
+          <button class="btn btn-secondary btn-sm" id="recordsImportBtn" onclick="triggerImport()" title="CSV veya JSON içe aktar" data-i18n="recordsImportBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             İçe Aktar
           </button>
@@ -784,7 +784,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             CSV İndir
           </button>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('haccpDosyaYukle').click()" title="Cihazdan gelen CSV/JSON dosyasını toplu yükle">
+          <button class="btn btn-outline btn-sm" id="haccpCsvUploadBtn" onclick="document.getElementById('haccpDosyaYukle').click()" title="Cihazdan gelen CSV/JSON dosyasını toplu yükle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             CSV Yükle
           </button>
@@ -2143,7 +2143,7 @@
             <option value="za">Z → A</option>
           </select>
           <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('yemekCSVUpload').click()" data-i18n="menuFoodListUploadBtn">CSV Yükle</button>
+          <button class="btn btn-ghost btn-sm" id="yemekCsvUploadBtn" onclick="document.getElementById('yemekCSVUpload').click()" data-i18n="menuFoodListUploadBtn">CSV Yükle</button>
           <button class="btn btn-ghost btn-sm" onclick="exportYemekCSV()" title="Yemek listesini CSV olarak indir" data-i18n="menuFoodListCsvBtn">CSV İndir</button>
           <button class="btn btn-ghost btn-sm" onclick="exportYemekListesiPDF()">Tüm Yemekler PDF</button>
           <input type="file" id="yemekCSVUpload" accept=".csv,.txt" style="display:none" onchange="importYemekCSV(event)" />

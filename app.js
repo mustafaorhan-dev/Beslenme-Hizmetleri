@@ -156,7 +156,11 @@ function parseUserPerms(raw) {
   if (typeof raw === 'object') return raw;
   try {
     var p = JSON.parse(raw);
-    return (p && typeof p === 'object') ? p : null;
+    if (p && typeof p === 'object') {
+      try { fillPermissionAliases(p, p); } catch (_) {}
+      return p;
+    }
+    return null;
   } catch (_) { return null; }
 }
 
@@ -758,6 +762,38 @@ const DEFAULT_ROLE_PERMISSIONS = {
   }
 };
 
+// Yeni izin anahtarlari eski izinlerden turetilir. Boylece mevcut rol/kullanici
+// kayitlari bozulmadan geriye uyumlu kalir. Ornek: canEditHaccp=true ise
+// canDeleteHaccp varsayilan olarak true olur; kullanici bunu ayrica kapatabilir.
+var PERM_ALIASES = {
+  canEditRecord: 'canAddRecord',
+  canDeleteRecord: 'canAddRecord',
+  canImportRecord: 'canAddRecord',
+  canDeleteHaccp: 'canEditHaccp',
+  canImportHaccp: 'canAddHaccp',
+  canDeleteYag: 'canEditYag',
+  canDeleteAmbalaj: 'canEditAmbalaj',
+  canDeleteKalibrasyon: 'canEditKalibrasyon',
+  canDeleteBirimFiyat: 'canEditBirimFiyat',
+  canImportBirimFiyat: 'canEditBirimFiyat',
+  canImportMenu: 'canEditMenu',
+  canDeleteDepo: 'canEditDepo'
+};
+
+function fillPermissionAliases(perm, source) {
+  if (!perm) return perm;
+  Object.keys(PERM_ALIASES).forEach(function(key) {
+    if (!source || typeof source[key] === 'undefined') {
+      perm[key] = !!perm[PERM_ALIASES[key]];
+    }
+  });
+  return perm;
+}
+
+Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
+  fillPermissionAliases(DEFAULT_ROLE_PERMISSIONS[role], null);
+});
+
 let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
 
 function getCurrentUserPermissions() {
@@ -790,7 +826,10 @@ function getRolePermissions(role) {
   var base = rolePermissions[role] || JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS.asci));
   if (role === getRole()) {
     var userPerms = getCurrentUserPermissions();
-    if (userPerms) return mergePermissions(base, userPerms);
+    if (userPerms) {
+      var merged = mergePermissions(base, userPerms);
+      return fillPermissionAliases(merged, userPerms);
+    }
   }
   return base;
 }
@@ -801,15 +840,26 @@ function hasPerm(key) {
   return !!(perm && perm[key]);
 }
 function canAddRecords() { return hasPerm('canAddRecord'); }
+function canEditRecords() { return hasPerm('canEditRecord'); }
+function canDeleteRecords() { return hasPerm('canDeleteRecord'); }
+function canImportRecords() { return hasPerm('canImportRecord'); }
 function canAddHaccpRecords() { return hasPerm('canAddHaccp'); }
 function canAddYagRecords() { return hasPerm('canAddYag'); }
 function canAddAmbalajRecords() { return hasPerm('canAddAmbalaj'); }
 function canAddKalibrasyonRecords() { return hasPerm('canAddKalibrasyon'); }
 function canEditHaccpRecords() { return hasPerm('canEditHaccp'); }
+function canDeleteHaccpRecords() { return hasPerm('canDeleteHaccp'); }
+function canImportHaccpRecords() { return hasPerm('canImportHaccp'); }
 function canEditYagRecords() { return hasPerm('canEditYag'); }
+function canDeleteYagRecords() { return hasPerm('canDeleteYag'); }
 function canEditAmbalajRecords() { return hasPerm('canEditAmbalaj'); }
+function canDeleteAmbalajRecords() { return hasPerm('canDeleteAmbalaj'); }
 function canEditKalibrasyonRecords() { return hasPerm('canEditKalibrasyon'); }
+function canDeleteKalibrasyonRecords() { return hasPerm('canDeleteKalibrasyon'); }
 function canEditMenuRecords() { return hasPerm('canEditMenu'); }
+function canImportMenuRecords() { return hasPerm('canImportMenu'); }
+function canDeleteBirimFiyat() { return hasPerm('canDeleteBirimFiyat'); }
+function canImportBirimFiyat() { return hasPerm('canImportBirimFiyat'); }
 
 function serializePermsPayload() {
   return JSON.stringify({ ver: 2, roles: rolePermissions, inactivity_timeout: inactivityTimeoutMs });
@@ -823,20 +873,29 @@ function parsePermsPayload(parsed) {
   return { roles: parsed, inactivityTimeout: null };
 }
 
+function applyPermsPayloadRoles(roles) {
+  if (!roles || typeof roles !== 'object') return false;
+  var keys = Object.keys(DEFAULT_ROLE_PERMISSIONS);
+  Object.keys(roles).forEach(function(role) {
+    if (keys.indexOf(role) === -1) keys.push(role);
+  });
+  keys.forEach(function(role) {
+    var def = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS.asci));
+    var savedRole = roles[role] || {};
+    var merged = Object.assign({}, def, savedRole);
+    merged.tabs = Object.assign({}, def.tabs || {}, savedRole.tabs || {});
+    fillPermissionAliases(merged, savedRole);
+    rolePermissions[role] = merged;
+  });
+  return true;
+}
+
 function loadRolePermissions() {
   try {
     var saved = localStorage.getItem(ROLE_PERMISSIONS_KEY);
     if (saved) {
       var payload = parsePermsPayload(JSON.parse(saved));
-      if (payload.roles && typeof payload.roles === 'object') {
-        Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-          var def = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
-          var savedRole = payload.roles[role] || {};
-          var merged = Object.assign({}, def, savedRole);
-          merged.tabs = Object.assign({}, def.tabs, savedRole.tabs || {});
-          rolePermissions[role] = merged;
-        });
-      }
+      applyPermsPayloadRoles(payload.roles);
       if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
     }
   } catch (_) {}
@@ -862,14 +921,7 @@ async function syncRolePermissionsFromSupabase() {
     var { data, error } = await supabaseClient.from('config').select('value').eq('key', ROLE_PERMISSIONS_SUPABASE_KEY).single();
     if (error || !data || !data.value) return false;
     var payload = parsePermsPayload(JSON.parse(data.value));
-    if (payload.roles && typeof payload.roles === 'object') {
-      Object.keys(DEFAULT_ROLE_PERMISSIONS).forEach(function(role) {
-        var def = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS[role]));
-        var savedRole = payload.roles[role] || {};
-        var merged = Object.assign({}, def, savedRole);
-        merged.tabs = Object.assign({}, def.tabs, savedRole.tabs || {});
-        rolePermissions[role] = merged;
-      });
+    if (applyPermsPayloadRoles(payload.roles)) {
       if (payload.inactivityTimeout !== null) inactivityTimeoutMs = payload.inactivityTimeout;
       saveRolePermissions();
       resetInactivityTimer();
@@ -1256,7 +1308,7 @@ async function saveAdminSettings() {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canAddRecord', 'canAddHaccp', 'canAddYag', 'canAddAmbalaj', 'canAddKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHaccp', 'canEditDepo', 'canEditHarcamaOran', 'canEditBirimFiyat', 'canEditYag', 'canEditAmbalaj', 'canEditKalibrasyon', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canImportMenu', 'canAddRecord', 'canEditRecord', 'canDeleteRecord', 'canImportRecord', 'canAddHaccp', 'canEditHaccp', 'canDeleteHaccp', 'canImportHaccp', 'canEditDepo', 'canDeleteDepo', 'canAddYag', 'canEditYag', 'canDeleteYag', 'canAddAmbalaj', 'canEditAmbalaj', 'canDeleteAmbalaj', 'canAddKalibrasyon', 'canEditKalibrasyon', 'canDeleteKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHarcamaOran', 'canEditBirimFiyat', 'canDeleteBirimFiyat', 'canImportBirimFiyat', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -1274,29 +1326,6 @@ function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
   var roles = Object.keys(rolePermissions);
-  var permLabels = {
-    canEditMenu: 'Menüdüzenleyebilir',
-    canSaveMenu: 'Menüyü kaydedebilir',
-    canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
-    canAddRecord: 'Yeni kayıt ekleyebilir (üretim/tüketim/atık ana kayıtlar)',
-    canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
-    canAddYag: 'Atık yağ kaydı ekleyebilir',
-    canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
-    canAddKalibrasyon: 'Kalibrasyona tabi cihaz kaydı ekleyebilir',
-    canExport: 'Dışa aktarabilir',
-    canSync: 'Senkronizasyon yapabilir',
-    canSeeAdminPanel: 'Yönetim panelini görebilir',
-    canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
-    canEditDepo: 'Depo adlarını düzenleyebilir',
-    canEditHarcamaOran: 'Harcama oranını/tutarını değiştirebilir',
-    canEditBirimFiyat: 'Birim fiyat listesini düzenleyebilir',
-    canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
-    canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
-    canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
-    canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
-    canMenuOnayla: 'Menüyü onaylayabilir',
-    canMenuReddet: 'Menüyü reddedebilir'
-  };
   var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
   var html = '';
   roles.forEach(function(role) {
@@ -1321,11 +1350,17 @@ function apRenderRolePermissions() {
       html += '</label>';
     });
     html += '</div>';
-    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">İzinler</div>';
-    Object.keys(permLabels).forEach(function(key) {
-      html += '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0;cursor:pointer;font-size:0.82rem">';
-      html += '<input type="checkbox" id="' + prefix + key + '"' + (perm[key] ? ' checked' : '') + ' /> ' + permLabels[key];
-      html += '</label>';
+    html += '<div style="font-size:0.8rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">İşlem Yetkileri</div>';
+    PERM_GROUPS.forEach(function(group) {
+      html += '<div class="ap-perm-group">';
+      html += '<div class="ap-perm-title">' + group.title + '</div>';
+      html += '<div class="ap-perm-grid">';
+      group.keys.forEach(function(item) {
+        html += '<label>';
+        html += '<input type="checkbox" id="' + prefix + item.key + '"' + (perm[item.key] ? ' checked' : '') + ' /> ' + item.label;
+        html += '</label>';
+      });
+      html += '</div></div>';
     });
     html += '</div>';
   });
@@ -1355,14 +1390,16 @@ function apResetRolePermissions(role) {
 
 function apDeleteRole(role) {
   if (getRole() !== ROLE_ADMIN) return;
-  if (CORE_ROLES.indexOf(role) !== -1) { showToast('Temel roller silinemez.', 'error'); return; }
-  if (!confirm('"' + (ROLE_LABELS[role] || role) + '" rolünü silmek istediğinize emin misiniz?')) return;
+  if (DEFAULT_ROLE_PERMISSIONS[role]) { showToast('Varsayılan roller silinemez.', 'error'); return; }
+  var label = ROLE_LABELS[role] || role;
+  if (!confirm('"' + label + '" rolünü silmek istediğinize emin misiniz?')) return;
   delete rolePermissions[role];
-  delete ROLE_LABELS[role];
+  if (ROLE_LABELS[role]) delete ROLE_LABELS[role];
   saveRolePermissions();
   syncRolePermissionsToSupabase();
   apRenderRolePermissions();
-  showToast((ROLE_LABELS[role] || role) + ' rolü silindi.', 'success');
+  apRenderNewUserPerms();
+  showToast(label + ' rolü silindi.', 'success');
 }
 
 function apAddRole() {
@@ -1406,29 +1443,61 @@ function loadUsersFromStorage() {
 }
 
 var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
-var USER_PERM_LABELS = {
-  canEditMenu: 'Menüyü düzenleyebilir',
-  canSaveMenu: 'Menüyü kaydedebilir',
-  canSeeProduction: 'Ürün ihtiyaç listesini görebilir',
-  canAddRecord: 'Yeni kayıt ekleyebilir',
-  canAddHaccp: 'Depo sıcaklık kaydı ekleyebilir',
-  canAddYag: 'Atık yağ kaydı ekleyebilir',
-  canAddAmbalaj: 'Ambalaj atığı kaydı ekleyebilir',
-  canAddKalibrasyon: 'Kalibrasyon cihaz kaydı ekleyebilir',
-  canExport: 'Dışa aktarabilir',
-  canSync: 'Senkronizasyon yapabilir',
-  canSeeAdminPanel: 'Yönetim panelini görebilir',
-  canEditHaccp: 'Depo sıcaklık kayıtlarını düzenleyebilir/silebilir',
-  canEditDepo: 'Depo adlarını düzenleyebilir',
-  canEditHarcamaOran: 'Harcama oranını/tutarını değiştirebilir',
-  canEditBirimFiyat: 'Birim fiyat listesini düzenleyebilir',
-  canEditYag: 'Atık yağ bilgilerini düzenleyebilir/silebilir',
-  canEditAmbalaj: 'Ambalaj atık kayıtlarını düzenleyebilir/silebilir',
-  canEditKalibrasyon: 'Kalibrasyon cihaz bilgilerini düzenleyebilir/silebilir',
-  canMenuOnayaGonder: 'Menüyü onaya gönderebilir',
-  canMenuOnayla: 'Menüyü onaylayabilir',
-  canMenuReddet: 'Menüyü reddedebilir'
-};
+var PERM_GROUPS = [
+  { title: 'Menü', keys: [
+    { key: 'canEditMenu', label: 'Menüyü düzenleyebilir' },
+    { key: 'canSaveMenu', label: 'Menüyü kaydedebilir' },
+    { key: 'canImportMenu', label: 'Yemek listesine CSV yükleyebilir' },
+    { key: 'canSeeProduction', label: 'Ürün ihtiyaç listesini görebilir' },
+    { key: 'canMenuOnayaGonder', label: 'Menüyü onaya gönderebilir' },
+    { key: 'canMenuOnayla', label: 'Menüyü onaylayabilir' },
+    { key: 'canMenuReddet', label: 'Menüyü reddedebilir' }
+  ]},
+  { title: 'Kayıtlar (Üretim / Tüketim / Atık)', keys: [
+    { key: 'canAddRecord', label: 'Yeni kayıt ekleyebilir' },
+    { key: 'canEditRecord', label: 'Kayıtları düzenleyebilir' },
+    { key: 'canDeleteRecord', label: 'Kayıtları silebilir' },
+    { key: 'canImportRecord', label: 'CSV / JSON içe aktarabilir' }
+  ]},
+  { title: 'Gıda Güvenliği (Soğuk Depo)', keys: [
+    { key: 'canAddHaccp', label: 'Sıcaklık kaydı ekleyebilir' },
+    { key: 'canEditHaccp', label: 'Sıcaklık kayıtlarını düzenleyebilir' },
+    { key: 'canDeleteHaccp', label: 'Sıcaklık kayıtlarını silebilir' },
+    { key: 'canImportHaccp', label: 'CSV / JSON yükleyebilir' },
+    { key: 'canEditDepo', label: 'Depo adlarını ekleyebilir / düzenleyebilir' },
+    { key: 'canDeleteDepo', label: 'Depo adlarını silebilir' }
+  ]},
+  { title: 'Atık Yağ', keys: [
+    { key: 'canAddYag', label: 'Atık yağ kaydı ekleyebilir' },
+    { key: 'canEditYag', label: 'Atık yağ kayıtlarını düzenleyebilir' },
+    { key: 'canDeleteYag', label: 'Atık yağ kayıtlarını silebilir' }
+  ]},
+  { title: 'Ambalaj Atıkları', keys: [
+    { key: 'canAddAmbalaj', label: 'Ambalaj atığı kaydı ekleyebilir' },
+    { key: 'canEditAmbalaj', label: 'Ambalaj atık kayıtlarını düzenleyebilir' },
+    { key: 'canDeleteAmbalaj', label: 'Ambalaj atık kayıtlarını silebilir' }
+  ]},
+  { title: 'Kalibrasyon', keys: [
+    { key: 'canAddKalibrasyon', label: 'Kalibrasyon cihaz kaydı ekleyebilir' },
+    { key: 'canEditKalibrasyon', label: 'Kalibrasyon cihaz bilgilerini düzenleyebilir' },
+    { key: 'canDeleteKalibrasyon', label: 'Kalibrasyon cihaz kayıtlarını silebilir' }
+  ]},
+  { title: 'Ürün ve Fiyatlar', keys: [
+    { key: 'canEditBirimFiyat', label: 'Birim fiyat listesini ekleyebilir / düzenleyebilir' },
+    { key: 'canDeleteBirimFiyat', label: 'Birim fiyat kayıtlarını silebilir' },
+    { key: 'canImportBirimFiyat', label: 'Birim fiyat CSV yükleyebilir' }
+  ]},
+  { title: 'Genel', keys: [
+    { key: 'canExport', label: 'Dışa aktarabilir (CSV / PDF)' },
+    { key: 'canSync', label: 'Supabase senkronizasyonu yapabilir' },
+    { key: 'canSeeAdminPanel', label: 'Yönetim panelini görebilir' },
+    { key: 'canEditHarcamaOran', label: 'Harcama oranını / tutarını değiştirebilir' }
+  ]}
+];
+var USER_PERM_LABELS = {};
+PERM_GROUPS.forEach(function(group) {
+  group.keys.forEach(function(item) { USER_PERM_LABELS[item.key] = item.label; });
+});
 
 function apPermDefaultsForRole(role) {
   if (role === ROLE_ADMIN) {
@@ -1454,15 +1523,18 @@ function renderUserPermCheckboxes(containerId, perms, prefix) {
     html += '</label>';
   });
   html += '</div></div>';
-  html += '<div class="ap-perm-group">';
-  html += '<div class="ap-perm-title">Yazabileceği / işlem yapabileceği alanlar</div>';
-  html += '<div class="ap-perm-grid">';
-  Object.keys(USER_PERM_LABELS).forEach(function(key) {
-    html += '<label>';
-    html += '<input type="checkbox" id="' + prefix + key + '"' + (perms && perms[key] ? ' checked' : '') + ' /> ' + USER_PERM_LABELS[key];
-    html += '</label>';
+  html += '<div class="ap-perm-title" style="margin-top:0.85rem">İşlem Yetkileri (ekle / düzenle / sil / içe aktar)</div>';
+  PERM_GROUPS.forEach(function(group) {
+    html += '<div class="ap-perm-group">';
+    html += '<div class="ap-perm-title">' + group.title + '</div>';
+    html += '<div class="ap-perm-grid">';
+    group.keys.forEach(function(item) {
+      html += '<label>';
+      html += '<input type="checkbox" id="' + prefix + item.key + '"' + (perms && perms[item.key] ? ' checked' : '') + ' /> ' + item.label;
+      html += '</label>';
+    });
+    html += '</div></div>';
   });
-  html += '</div></div>';
   container.innerHTML = html;
 }
 
@@ -1601,7 +1673,9 @@ function apEditUser(index) {
 
   var container = document.getElementById('apUserList');
   if (!container) return;
-  var perms = user.permissions || apPermDefaultsForRole(user.role);
+  var roleDefaults = apPermDefaultsForRole(user.role);
+  var perms = user.permissions ? mergePermissions(roleDefaults, user.permissions) : roleDefaults;
+  if (user.permissions) fillPermissionAliases(perms, user.permissions);
   var active = user.active !== false;
   var html = '<div class="ap-edit-card">';
   html += '<div class="ap-card-head">';
@@ -1706,11 +1780,7 @@ async function apLoadLogs(resetPage) {
       var arama = filterKullanici.value.toLowerCase();
       data = data.filter(function(r) { return (r.kullanici || '').toLowerCase().indexOf(arama) !== -1; });
     }
-    if (!data || data.length === 0) {
-      container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>';
-      return;
-    }
-    apLogData = data;
+    apLogData = data || [];
     renderLogPage();
   } catch (_) {
     container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--danger)">Loglar yüklenemedi.</div>';
@@ -1728,13 +1798,19 @@ function apLogsGoPage(p) {
 function renderLogPage() {
   var container = document.getElementById('apLogList');
   if (!container) return;
+  if (!apLogData || apLogData.length === 0) {
+    var empty = '<div style="padding:1rem;text-align:center;color:var(--text-muted)">Log kaydı bulunamadı.</div>';
+    empty += buildLogPagination(1);
+    container.innerHTML = empty;
+    return;
+  }
   var totalPages = Math.max(1, Math.ceil(apLogData.length / LOG_PAGE_SIZE));
   if (apLogPage > totalPages - 1) apLogPage = totalPages - 1;
   if (apLogPage < 0) apLogPage = 0;
   var start = apLogPage * LOG_PAGE_SIZE;
   var pageRows = apLogData.slice(start, start + LOG_PAGE_SIZE);
-  var islemRenk = { login: '#22c55e', logout: '#ef4444', login_red: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_durum: '#f59e0b', kullanici_sil: '#ef4444' };
-  var islemEtiket = { login: 'Giriş', logout: 'Çıkış', login_red: 'Giriş Reddi', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_durum: 'Durum Değişti', kullanici_sil: 'Kullanıcı Sil' };
+  var islemRenk = { login: '#22c55e', logout: '#ef4444', login_red: '#ef4444', yeni_kayit: '#3b82f6', kayit_duzenle: '#f59e0b', kayit_sil: '#ef4444', kullanici_ekle: '#3b82f6', kullanici_duzenle: '#f59e0b', kullanici_durum: '#f59e0b', kullanici_sil: '#ef4444', log_sil: '#ef4444' };
+  var islemEtiket = { login: 'Giriş', logout: 'Çıkış', login_red: 'Giriş Reddi', yeni_kayit: 'Yeni Kayıt', kayit_duzenle: 'Düzenleme', kayit_sil: 'Silme', kullanici_ekle: 'Kullanıcı Ekle', kullanici_duzenle: 'Kullanıcı Düzenle', kullanici_durum: 'Durum Değişti', kullanici_sil: 'Kullanıcı Sil', log_sil: 'Log Silme' };
   var html = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
   html += '<thead><tr style="background:var(--bg-card);position:sticky;top:0;z-index:1"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Tarih</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Kullanıcı</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">İşlem</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600">Detay</th></tr></thead><tbody>';
   pageRows.forEach(function(r) {
@@ -1755,18 +1831,42 @@ function renderLogPage() {
 }
 
 function buildLogPagination(totalPages) {
-  if (totalPages <= 1) {
-    return '<div class="pagination" style="padding:0.75rem 0 0"><span class="page-total">' + apLogData.length + ' kayıt</span></div>';
+  var h = '<div class="pagination" style="padding:0.75rem 0 0;flex-wrap:wrap;align-items:center;gap:0.4rem">';
+  if (totalPages > 1) {
+    h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(0)"' + (apLogPage === 0 ? ' disabled' : '') + '>&laquo;</button>';
+    h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage - 1) + ')"' + (apLogPage === 0 ? ' disabled' : '') + '>Önceki</button>';
+    h += '<span class="page-info">' + (apLogPage + 1) + ' / ' + totalPages + '</span>';
+    h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage + 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>Sonraki</button>';
+    h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (totalPages - 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>&raquo;</button>';
   }
-  var h = '<div class="pagination" style="padding:0.75rem 0 0;flex-wrap:wrap">';
-  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(0)"' + (apLogPage === 0 ? ' disabled' : '') + '>&laquo;</button>';
-  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage - 1) + ')"' + (apLogPage === 0 ? ' disabled' : '') + '>Önceki</button>';
-  h += '<span class="page-info">' + (apLogPage + 1) + ' / ' + totalPages + '</span>';
-  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (apLogPage + 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>Sonraki</button>';
-  h += '<button class="btn btn-ghost btn-sm" onclick="apLogsGoPage(' + (totalPages - 1) + ')"' + (apLogPage >= totalPages - 1 ? ' disabled' : '') + '>&raquo;</button>';
   h += '<span class="page-total">' + apLogData.length + ' kayıt</span>';
+  if (getRole() === ROLE_ADMIN && apLogData.length > 0) {
+    h += '<button class="btn btn-ghost btn-sm" onclick="apClearLogs()" style="color:var(--danger);margin-left:auto" title="Tüm log kayıtlarını sil">Tüm Logları Sil</button>';
+  }
   h += '</div>';
   return h;
+}
+
+async function apClearLogs() {
+  if (getRole() !== ROLE_ADMIN) return;
+  if (!supabaseClient) { showToast('Supabase bağlı değil.', 'error'); return; }
+  if (!confirm('Tüm log kayıtları silinecek. Bu işlem geri alınamaz.\n\nDevam etmek istiyor musunuz?')) return;
+  try {
+    // Daha geniş uyumluluk: RLS/trigerler nedeniyle neq(id, 0) çalışmayabilir
+    var { error } = await supabaseClient.from('user_logs').delete().neq('id', -1);
+    if (error) {
+      var { error: error2 } = await supabaseClient.from('user_logs').delete().gte('created_at', '1970-01-01');
+      if (error2) throw error2;
+    }
+    if (error) throw error;
+    apLogData = [];
+    apLogPage = 0;
+    renderLogPage();
+    showToast('Tüm log kayıtları silindi.', 'success');
+    try { logIslem('log_sil', 'Tüm log kayıtları silindi'); } catch (_) {}
+  } catch (e) {
+    showToast('Loglar silinemedi.', 'error');
+  }
 }
 
 function openLogPanel() {
@@ -1858,8 +1958,22 @@ function applyViewerRestrictions() {
 if (!perm.canAddRecord) {
 document.querySelectorAll('#recordsEntryBtn, .btn-primary[onclick*="openModal"]').forEach(function(el) { el.style.display = 'none'; });
 }
+  if (!perm.canImportRecord) {
+    var recImportBtn = document.getElementById('recordsImportBtn');
+    if (recImportBtn) recImportBtn.style.display = 'none';
+  }
+  if (!perm.canImportMenu) {
+    var menuImportBtn = document.getElementById('yemekCsvUploadBtn');
+    if (menuImportBtn) menuImportBtn.style.display = 'none';
+  }
   if (!perm.canAddHaccp) {
     document.querySelectorAll('.btn-primary[onclick*="openHaccpModal"]').forEach(function(el) { el.style.display = 'none'; });
+    var haccpCek = document.getElementById('haccpCekBtn');
+    if (haccpCek) haccpCek.style.display = 'none';
+  }
+  if (!perm.canImportHaccp) {
+    var haccpImportBtn = document.getElementById('haccpCsvUploadBtn');
+    if (haccpImportBtn) haccpImportBtn.style.display = 'none';
   }
   if (!perm.canAddYag) {
     document.querySelectorAll('.btn-primary[onclick*="openYagModal"]').forEach(function(el) { el.style.display = 'none'; });
@@ -1894,7 +2008,7 @@ document.querySelectorAll('#recordsEntryBtn, .btn-primary[onclick*="openModal"]'
     if (hcYemekOranBtn) hcYemekOranBtn.style.display = 'none';
   }
   if (!perm.canExport) {
-    var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF|KalibrasyonCSV)|print(Menu|Report|Qr|YagList|AmbalajList|KalibrasyonList)|triggerImport|importBackupInput|importFullBackup|haccpFileInput|yemekCSVUpload/;
+    var exRe = /export(Data|AllCSV|DataCSV|DataJSON|DataSettings|HaccpCSV|YemekCSV|YemekListesiPDF|PDF|DashboardPDF|RecordsPDF|ChartsPDF|KalibrasyonCSV)|print(Menu|Report|Qr|YagList|AmbalajList|KalibrasyonList)|importBackupInput|importFullBackup/;
     document.querySelectorAll('button[onclick]').forEach(function(btn) {
       var onclick = btn.getAttribute('onclick') || '';
       if (exRe.test(onclick)) btn.style.display = 'none';
@@ -2601,7 +2715,7 @@ function bfBulDuplike() {
 }
 
 async function bfTemizleDuplike(grup) {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var enIyi = grup.reduce(function(a, b) { return a.birim_fiyat > b.birim_fiyat ? a : b; });
   for (var i = 0; i < grup.length; i++) {
     if (grup[i].id !== enIyi.id) {
@@ -2613,7 +2727,7 @@ async function bfTemizleDuplike(grup) {
 }
 
 async function bfTumDuplariTemizle() {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var duplar = bfBulDuplike();
   if (duplar.length === 0) { showToast('Duplike kayıt bulunamadı.', 'info'); return; }
   for (var d = 0; d < duplar.length; d++) {
@@ -3007,6 +3121,8 @@ function renderBirimFiyatlar() {
   var toplamTutar = filtered.reduce(function(s, p) { return s + p.birim_fiyat; }, 0);
   var ortalama = filtered.length > 0 ? toplamTutar / filtered.length : 0;
   var bfPerms = canEditBirimFiyat();
+  var bfDeletePerm = canDeleteBirimFiyat();
+  var bfImportPerm = canImportBirimFiyat();
 
   container.innerHTML = `
     <div class="section-card">
@@ -3024,7 +3140,7 @@ function renderBirimFiyatlar() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Yazdır
           </button>
-          ${bfPerms ? '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bfCSVUpload\').click()">CSV Yükle</button>' : ''}
+          ${bfImportPerm ? '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bfCSVUpload\').click()">CSV Yükle</button>' : ''}
           <input type="file" id="bfCSVUpload" accept=".csv,.txt" style="display:none" onchange="bfImportCSV(event)" />
         </div>
       </div>
@@ -3034,7 +3150,7 @@ function renderBirimFiyatlar() {
         <div class="bf-kpi ortalama"><div class="bf-kpi-value">${formatTRY(ortalama)}</div><div class="bf-kpi-label">Ortalama Birim Fiyat</div></div>
         <div class="bf-kpi fiyat"><div class="bf-kpi-value">${birimFiyatSeciliYil}</div><div class="bf-kpi-label">Seçili Yıl</div></div>
       </div>
-      ${bfBulDuplike().length > 0 ? '<div style="padding:0.6rem 0.8rem;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.4);border-radius:8px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem"><span style="font-size:0.82rem;color:#ca8a04;font-weight:600">⚠️ ' + bfBulDuplike().length + ' üründe tekrar eden kayıt bulundu. Fiyat hesaplamalarında hata olabilir.</span>' + (bfPerms ? '<button class="btn btn-ghost btn-sm" style="color:#ca8a04;border:1px solid rgba(250,204,21,0.4)" onclick="bfTumDuplariTemizle()">Tek Tek Temizle</button>' : '') + '</div>' : ''}
+      ${bfBulDuplike().length > 0 ? '<div style="padding:0.6rem 0.8rem;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.4);border-radius:8px;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem"><span style="font-size:0.82rem;color:#ca8a04;font-weight:600">⚠️ ' + bfBulDuplike().length + ' üründe tekrar eden kayıt bulundu. Fiyat hesaplamalarında hata olabilir.</span>' + (bfDeletePerm ? '<button class="btn btn-ghost btn-sm" style="color:#ca8a04;border:1px solid rgba(250,204,21,0.4)" onclick="bfTumDuplariTemizle()">Tek Tek Temizle</button>' : '') + '</div>' : ''}
       <div id="bfFormContainer" style="display:none;margin-bottom:1rem"></div>
       <div class="table-wrapper">
         <table class="data-table" style="width:100%">
@@ -3046,7 +3162,7 @@ function renderBirimFiyatlar() {
               <th style="text-align:center;width:14%">1 Birim =</th>
               <th style="text-align:center;width:13%">Gerçek Fiyat</th>
               <th style="text-align:center;width:8%">Yıl</th>
-              ${bfPerms ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
+              ${(bfPerms || bfDeletePerm) ? '<th style="text-align:center;width:12%">İşlem</th>' : ''}
             </tr>
           </thead>
           <tbody>
@@ -3068,10 +3184,10 @@ function renderBirimFiyatlar() {
                 '<td style="text-align:center;font-size:0.8rem;color:var(--text-dim)">' + carpanGoster + '</td>' +
                 '<td style="text-align:center;font-size:0.82rem">' + kgHucelle + '</td>' +
                 '<td style="text-align:center">' + p.yil + '</td>' +
-                (bfPerms ?
+                ((bfPerms || bfDeletePerm) ?
                   '<td style="text-align:center;white-space:nowrap">' +
-                    '<button class="btn-icon btn-sm btn-edit" onclick="bfDuzenle(\'' + escapeHtml(p.id) + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 012 2h14a2 2 0 012-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
-                    '<button class="btn-icon btn-sm btn-delete" onclick="bfSil(\'' + escapeHtml(p.id) + '\')" title="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
+                    (bfPerms ? '<button class="btn-icon btn-sm btn-edit" onclick="bfDuzenle(\'' + escapeHtml(p.id) + '\')" title="Düzenle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' : '') +
+                    (bfDeletePerm ? '<button class="btn-icon btn-sm btn-delete" onclick="bfSil(\'' + escapeHtml(p.id) + '\')" title="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' : '') +
                   '</td>' : '');
             }).join('')}
           </tbody>
@@ -3364,7 +3480,7 @@ async function bfKaydet() {
 }
 
 async function bfSil(id) {
-  if (!canEditBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
   bfSonHata = null;
   var ok = await deleteUnitPrice(id);
@@ -3403,6 +3519,7 @@ function bfExportCSV() {
 }
 
 function bfImportCSV(event) {
+  if (!canImportBirimFiyat()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -3746,7 +3863,7 @@ function parseCsvSatir(line, delim) {
 }
 
 function importHaccpFile(event) {
-  if (!canAddHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canImportHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var file = event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -4358,7 +4475,7 @@ function addHaccpDepoAdi(name) {
 }
 
 function removeHaccpDepoAdi(name) {
-  if (!canEditDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteDepoAdlari()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const list = loadHaccpDepoAdlari().filter(n => n !== name);
   saveHaccpDepoAdlari(list);
   delete depoLimitleriCache[name];
@@ -4372,6 +4489,13 @@ function canEditDepoAdlari() {
   if (role === ROLE_ADMIN) return true;
   var perm = getRolePermissions(role);
   return !!(perm && perm.canEditDepo);
+}
+
+function canDeleteDepoAdlari() {
+  var role = getRole();
+  if (role === ROLE_ADMIN) return true;
+  var perm = getRolePermissions(role);
+  return !!(perm && perm.canDeleteDepo);
 }
 
 function showHaccpDepoYonetim() {
@@ -4404,12 +4528,15 @@ function renderHaccpDepoListesi() {
     var limits = depoLimitleriCache[n] || null;
     var minVal = limits && !isNaN(limits.min) ? limits.min : '';
     var maxVal = limits && !isNaN(limits.max) ? limits.max : '';
+    var silBtn = canDeleteDepoAdlari()
+      ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button>'
+      : '';
     return '<div data-depo="' + n.replace(/"/g, '&quot;') + '" style="padding:8px 0;border-bottom:1px solid var(--border)">' +
       '<div style="display:flex;justify-content:space-between;align-items:center">' +
       '<span style="font-weight:600;font-size:0.9rem">' + n + '</span>' +
       '<div style="display:flex;gap:4px">' +
       '<button class="btn btn-ghost btn-sm" onclick="showQrModal(\'' + n.replace(/'/g, "\\'") + '\')" title="QR Kod">QR</button>' +
-      '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeHaccpDepoAdi(\'' + n.replace(/'/g, "\\'") + '\')">Sil</button>' +
+      silBtn +
       '</div></div>' +
       '<div style="display:flex;gap:8px;align-items:center;margin-top:4px;font-size:0.78rem;color:var(--text-muted)">' +
       'Alt Limit: <input type="number" step="0.1" value="' + minVal + '" class="depo-limit-min" style="width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem" oninput="saveDepoLimitsFromRow(this)" placeholder="—"> °C' +
@@ -4602,11 +4729,13 @@ function renderHaccpSicaklik() {
   var start = haccpSicaklikPage * haccpSicaklikPageSize;
   var pageRecords = records.slice(start, start + haccpSicaklikPageSize);
   var canEdit = canEditHaccpRecords();
+  var canDelete = canDeleteHaccpRecords();
+  var canSelect = canDelete;
 
   // batch bar
   var batchBar = document.getElementById('haccpBatchBar');
   var batchCount = document.getElementById('haccpBatchCount');
-  if (canEdit && haccpSelectedIds.size > 0) {
+  if (canSelect && haccpSelectedIds.size > 0) {
     batchBar.style.display = 'flex';
     batchCount.textContent = haccpSelectedIds.size + ' seçili';
   } else {
@@ -4614,25 +4743,29 @@ function renderHaccpSicaklik() {
   }
 
   // header checkbox state
-  var allSelected = canEdit && pageRecords.every(function(r) { return haccpSelectedIds.has(r.id); });
+  var allSelected = canSelect && pageRecords.every(function(r) { return haccpSelectedIds.has(r.id); });
 
   tbody.innerHTML = pageRecords.map(r => {
     var checked = haccpSelectedIds.has(r.id) ? ' checked' : '';
     const depoAd = r.depoAd || ('Depo ' + r.depoNo);
     const durum = sicaklikDurum(r.sicaklik, depoAd);
-    var chkCell = canEdit
+    var chkCell = canSelect
       ? '<td><input type="checkbox" class="haccp-select-chk" data-id="' + r.id + '"' + checked + ' onchange="haccpToggleSelect(' + r.id + ')" style="cursor:pointer"></td>'
       : '<td></td>';
-    var actionCell = canEdit
-      ? '<td>' +
+    var actionCell = '<td>';
+    if (canEdit) {
+      actionCell +=
         '<button class="btn-icon btn-edit" onclick="editHaccpRecord(\'sicaklik\',' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-        '</button>' +
+        '</button>';
+    }
+    if (canDelete) {
+      actionCell +=
         '<button class="btn-icon btn-delete" onclick="deleteHaccpRecord(\'sicaklik\',' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
-        '</button>' +
-        '</td>'
-      : '<td></td>';
+        '</button>';
+    }
+    actionCell += '</td>';
     return `<tr>
       ${chkCell}
       <td>${formatTarihTR(r.tarih)}</td>
@@ -4648,7 +4781,7 @@ function renderHaccpSicaklik() {
 
   // update header checkbox
   var headerChk = document.getElementById('haccpSelectAllChk');
-  if (headerChk) { headerChk.checked = allSelected; headerChk.disabled = !canEdit; }
+  if (headerChk) { headerChk.checked = allSelected; headerChk.disabled = !canSelect; }
 
   if (nav) {
     nav.style.display = totalPages > 1 ? 'block' : 'none';
@@ -4708,14 +4841,14 @@ function haccpSicaklikPageNext() {
 }
 
 function haccpToggleSelect(id) {
-  if (!canEditHaccpRecords()) return;
+  if (!canDeleteHaccpRecords()) return;
   if (haccpSelectedIds.has(id)) haccpSelectedIds.delete(id);
   else haccpSelectedIds.add(id);
   renderHaccpSicaklik();
 }
 
 function haccpToggleSelectAll(checked) {
-  if (!canEditHaccpRecords()) return;
+  if (!canDeleteHaccpRecords()) return;
   var records = getHaccpRecords('sicaklik');
   var filterSelect = document.getElementById('haccpSicaklikDepoFilter');
   if (filterSelect && filterSelect.value) {
@@ -4736,7 +4869,7 @@ function haccpToggleSelectAll(checked) {
 }
 
 async function haccpDeleteSelected() {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (haccpSelectedIds.size === 0) { showToast('Seçili kayıt yok.', 'error'); return; }
   if (!confirm('Seçili ' + haccpSelectedIds.size + ' kaydı silmek istediğinize emin misiniz?')) return;
   var ids = [...haccpSelectedIds];
@@ -4854,7 +4987,7 @@ function editHaccpRecord(type, id) {
 }
 
 async function deleteHaccpRecord(type, id) {
-  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   if (supabaseClient) {
     try {
@@ -4929,7 +5062,7 @@ function renderHaccpDataloggerDurum() {
   var admin = getRole() === ROLE_ADMIN;
   if (ayarBtn) ayarBtn.style.display = admin ? '' : 'none';
   if (cekBtn) {
-    cekBtn.style.display = dataloggerDurum.configured ? '' : 'none';
+    cekBtn.style.display = (dataloggerDurum.configured && canAddHaccpRecords()) ? '' : 'none';
     var yazi = document.getElementById('haccpCekBtnText');
     if (yazi) yazi.textContent = 'Çek ve Kaydet';
   }
@@ -5258,13 +5391,14 @@ function caCihazListesiCiz() {
 
   var dolu = caCihazListesi.filter(function(c) { return (c.cihaz_kodu || '').trim() !== ''; }).length;
 
+  var canEditCihaz = canEditHaccpRecords();
   kap.innerHTML =
     '<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.35rem">' +
       dolu + ' / ' + caCihazListesi.length + ' cihaz tanımlı' +
       (dolu === 0 ? ' — seri numarası girilmemiş, otomatik kayıt yapmayacak.' : '') +
     '</div>' +
     '<div style="max-height:240px;overflow:auto"><table class="data-table" style="font-size:0.78rem">' +
-    '<thead><tr><th>Cihaz Seri No / IP</th><th>Depo</th><th style="width:56px">Aktif</th><th style="width:36px"></th></tr></thead><tbody>' +
+    '<thead><tr><th>Cihaz Seri No / IP</th><th>Depo</th><th style="width:56px">Aktif</th>' + (canEditCihaz ? '<th style="width:36px"></th>' : '') + '</tr></thead><tbody>' +
     caCihazListesi.map(function(c, i) {
       var sec = secenekler;
       if (c.depo_ad) {
@@ -5272,20 +5406,20 @@ function caCihazListesiCiz() {
                                  'value="' + kacisHtml(c.depo_ad) + '" selected');
       }
       return '<tr>' +
-        '<td><input type="text" value="' + kacisHtml(c.cihaz_kodu || '') + '" placeholder="Seri no" ' +
+        '<td>' + (canEditCihaz ? '<input type="text" value="' + kacisHtml(c.cihaz_kodu || '') + '" placeholder="Seri no" ' +
           'oninput="caCihazGuncelle(' + i + ',\'cihaz_kodu\',this.value)" ' +
-          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem"></td>' +
-        '<td><select onchange="caCihazGuncelle(' + i + ',\'depo_ad\',this.value)" ' +
-          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' + sec + '</select></td>' +
-        '<td style="text-align:center"><input type="checkbox" ' + (c.aktif !== false ? 'checked' : '') +
-          ' onchange="caCihazGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer"></td>' +
-        '<td><button class="btn-icon btn-delete" onclick="caCihazSil(' + i + ')" title="Sil">' +
+          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' : kacisHtml(c.cihaz_kodu || '—')) + '</td>' +
+        '<td>' + (canEditCihaz ? '<select onchange="caCihazGuncelle(' + i + ',\'depo_ad\',this.value)" ' +
+          'style="width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:0.78rem">' + sec + '</select>' : kacisHtml(c.depo_ad || '—')) + '</td>' +
+        '<td style="text-align:center">' + (canEditCihaz ? '<input type="checkbox" ' + (c.aktif !== false ? 'checked' : '') +
+          ' onchange="caCihazGuncelle(' + i + ',\'aktif\',this.checked)" style="cursor:pointer">' : (c.aktif !== false ? '✓' : '—')) + '</td>' +
+        (canEditCihaz ? '<td><button class="btn-icon btn-delete" onclick="caCihazSil(' + i + ')" title="Sil">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>' +
-        '</button></td>' +
+        '</button></td>' : '') +
       '</tr>';
     }).join('') +
     '</tbody></table></div>' +
-    '<button class="btn btn-ghost btn-sm" onclick="caCihazEkle()" style="margin-top:0.4rem">+ Cihaz Ekle</button>';
+    (canEditCihaz ? '<button class="btn btn-ghost btn-sm" onclick="caCihazEkle()" style="margin-top:0.4rem">+ Cihaz Ekle</button>' : '');
 }
 
 function caCihazGuncelle(i, alan, deger) {
@@ -5295,11 +5429,13 @@ function caCihazGuncelle(i, alan, deger) {
 }
 
 function caCihazEkle() {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   caCihazListesi.push({ cihaz_kodu: '', depo_ad: '', etiket: '', aktif: true });
   caCihazListesiCiz();
 }
 
 function caCihazSil(i) {
+  if (!canEditHaccpRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   caCihazListesi.splice(i, 1);
   caCihazListesiCiz();
 }
@@ -6060,7 +6196,11 @@ window.addEventListener('resize', syncSidebarWidth);
 window.addEventListener('load', syncSidebarWidth);
 // ─── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(id = null) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (id !== null) {
+    if (!canEditRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   editingId = id;
   formModified = false;
   const overlay = document.getElementById('modalOverlay');
@@ -6186,7 +6326,11 @@ function scheduleRender() {
 
 // ─── SAVE / UPDATE RECORD ──────────────────────────────────────────────────────
 function saveRecord(e) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (editingId !== null) {
+    if (!canEditRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  } else {
+    if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  }
   e.preventDefault();
 
   const fYemek = document.getElementById('fYemek');
@@ -6259,7 +6403,7 @@ function saveRecord(e) {
 
 // ─── DELETE ────────────────────────────────────────────────────────────────────
 async function deleteRecord(id) {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
   if (supabaseClient) {
     try {
@@ -6347,14 +6491,14 @@ function renderPagination() {
 
 // ─── BULK DELETE ───────────────────────────────────────────────────────────────
 function toggleSelect(id) {
-  if (!canAddRecords()) return;
+  if (!canDeleteRecords()) return;
   if (selectedIds.has(id)) selectedIds.delete(id);
   else selectedIds.add(id);
   renderRecordsTable();
 }
 
 function toggleSelectAll() {
-  if (!canAddRecords()) return;
+  if (!canDeleteRecords()) return;
   const page = getPaginatedRecords();
   const allSelected = page.every(r => selectedIds.has(r.id));
   if (allSelected) {
@@ -6369,7 +6513,7 @@ function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
   const count = document.getElementById('bulkCount');
   if (!bar || !count) return;
-  if (canAddRecords() && selectedIds.size > 0) {
+  if (canDeleteRecords() && selectedIds.size > 0) {
     bar.style.display = 'flex';
     count.textContent = selectedIds.size + ' seçili';
   } else {
@@ -6378,7 +6522,7 @@ function updateBulkBar() {
 }
 
 function deleteSelected() {
-  if (!canAddRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (selectedIds.size === 0) {
     showToast('Seçili kayıt yok.', 'error');
     return;
@@ -6463,10 +6607,12 @@ function parseTrNum(v) {
 }
 
 function triggerImport() {
+  if (!canImportRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   document.getElementById('importInput').click();
 }
 
 function handleImport(e) {
+  if (!canImportRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -7387,9 +7533,11 @@ function renderRecordsTable() {
   // Select-all checkbox durumu
   const selectAll = document.getElementById('selectAll');
   if (selectAll) {
-    const allSelected = page.every(r => selectedIds.has(r.id));
+    const canDelAll = canDeleteRecords();
+    const allSelected = canDelAll && page.every(r => selectedIds.has(r.id));
     selectAll.checked = allSelected;
-    selectAll.indeterminate = page.some(r => selectedIds.has(r.id)) && !allSelected;
+    selectAll.disabled = !canDelAll;
+    selectAll.indeterminate = canDelAll && page.some(r => selectedIds.has(r.id)) && !allSelected;
   }
 
   renderSortIndicators();
@@ -7399,25 +7547,26 @@ function renderRecordsTable() {
 
 function buildRow(r, showActions) {
   const dateStr = displayDate(r.tarih);
-  const canMutate = showActions && canAddRecords();
+  const canEditRec = showActions && canEditRecords();
+  const canDeleteRec = showActions && canDeleteRecords();
 
-  const checkbox = canMutate ? `
+  const checkbox = canDeleteRec ? `
     <td>
       <input type="checkbox" class="row-checkbox" ${selectedIds.has(r.id) ? 'checked' : ''}
         onchange="toggleSelect(${r.id})" />
     </td>` : (showActions ? '<td></td>' : '');
 
-  const actions = canMutate ? `
+  const actions = showActions ? `
     <td>
       <div style="display:flex;gap:0.4rem">
-        <button class="btn btn-icon btn-edit" onclick="openModal(${r.id})" title="Düzenle">
+        ${canEditRec ? `<button class="btn btn-icon btn-edit" onclick="openModal(${r.id})" title="Düzenle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">
+        </button>` : ''}
+        ${canDeleteRec ? `<button class="btn btn-danger" onclick="deleteRecord(${r.id})" title="Sil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        </button>
+        </button>` : ''}
       </div>
-    </td>` : (showActions ? '<td></td>' : '');
+    </td>` : '';
 
   const mealBadge = r.yemek_adi ? `<span class="meal-badge">${escapeHtml(r.yemek_adi)}</span>` : '';
 
@@ -8488,7 +8637,9 @@ function tarihFormatla2(str) {
   return parseInt(p[0], 10) + ' ' + ay;
 }
 
-function importYemekCSV(event) { if (!requireAdmin()) return;
+function importYemekCSV(event) {
+  if (!canImportMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!requireAdmin()) return;
   const file = event.target.files[0];
   if (!file) return;
   const inputEl = event.target;
@@ -12816,19 +12967,24 @@ function renderYagTable() {
   const start = yagPage * YAG_PAGE_SIZE;
   const pageItems = sorted.slice(start, start + YAG_PAGE_SIZE);
   var canEditYag = canEditYagRecords();
+  var canDeleteYag = canDeleteYagRecords();
 
   tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
-    var actionCell = canEditYag
-      ? '<td>' +
+    var actionCell = '<td>';
+    if (canEditYag) {
+      actionCell +=
         '<button class="btn-icon btn-edit" onclick="editYagRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-        '</button>' +
+        '</button>';
+    }
+    if (canDeleteYag) {
+      actionCell +=
         '<button class="btn-icon btn-delete" onclick="deleteYagRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
-        '</button>' +
-        '</td>'
-      : '<td></td>';
+        '</button>';
+    }
+    actionCell += '</td>';
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.makbuzNo || '—')}</td>
@@ -12933,7 +13089,7 @@ function saveYagRecord(e) {
 function editYagRecord(id) { openYagModal(id); }
 
 async function deleteYagRecord(id) {
-  if (!canEditYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteYagRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu atık yağ kaydını silmek istediğinize emin misiniz?')) return;
   yagRecords = yagRecords.filter(r => r.id !== id);
   saveYagData();
@@ -13415,19 +13571,24 @@ function renderAmbalajTable() {
   const pageItems = sorted.slice(start, start + AMBALAJ_PAGE_SIZE);
 
   var canEditAmbalaj = canEditAmbalajRecords();
+  var canDeleteAmbalaj = canDeleteAmbalajRecords();
 
   tbody.innerHTML = pageItems.map(r => {
     const dateStr = displayDate(r.tarih);
-    var actionCell = canEditAmbalaj
-      ? '<td>' +
+    var actionCell = '<td>';
+    if (canEditAmbalaj) {
+      actionCell +=
         '<button class="btn-icon btn-edit" onclick="editAmbalajRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-        '</button>' +
+        '</button>';
+    }
+    if (canDeleteAmbalaj) {
+      actionCell +=
         '<button class="btn-icon btn-delete" onclick="deleteAmbalajRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
-        '</button>' +
-        '</td>'
-      : '<td></td>';
+        '</button>';
+    }
+    actionCell += '</td>';
     return `<tr>
       <td>${dateStr}</td>
       <td>${escapeHtml(r.tur || '—')}</td>
@@ -13546,7 +13707,7 @@ function saveAmbalajRecord(e) {
 function editAmbalajRecord(id) { openAmbalajModal(id); }
 
 async function deleteAmbalajRecord(id) {
-  if (!canEditAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteAmbalajRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu ambalaj atığı kaydını silmek istediğinize emin misiniz?')) return;
   ambalajRecords = ambalajRecords.filter(r => r.id !== id);
   saveAmbalajData();
@@ -14464,20 +14625,25 @@ function renderKalibrasyon() {
   const start = kalibrasyonPage * KALIBRASYON_PAGE_SIZE;
   const pageItems = sorted.slice(start, start + KALIBRASYON_PAGE_SIZE);
   var canEditK = canEditKalibrasyonRecords();
+  var canDeleteK = canDeleteKalibrasyonRecords();
 
   tbody.innerHTML = pageItems.map(r => {
     var durumB = getCihazDurumBilgi(r);
     var kalB = getKalibrasyonDurumBilgi(r);
-    var actionCell = canEditK
-      ? '<td>' +
+    var actionCell = '<td>';
+    if (canEditK) {
+      actionCell +=
         '<button class="btn-icon btn-edit" onclick="editKalibrasyonRecord(' + r.id + ')" title="Düzenle">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-        '</button>' +
+        '</button>';
+    }
+    if (canDeleteK) {
+      actionCell +=
         '<button class="btn-icon btn-delete" onclick="deleteKalibrasyonRecord(' + r.id + ')" title="Sil">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
-        '</button>' +
-        '</td>'
-      : '<td></td>';
+        '</button>';
+    }
+    actionCell += '</td>';
     return `<tr>
       <td>${escapeHtml(r.cihazAdi || '—')}</td>
       <td>${escapeHtml(r.markaModel || '—')}</td>
@@ -14599,7 +14765,7 @@ function saveKalibrasyonRecord(e) {
 function editKalibrasyonRecord(id) { openKalibrasyonModal(id); }
 
 async function deleteKalibrasyonRecord(id) {
-  if (!canEditKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteKalibrasyonRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu cihaz kaydını silmek istediğinize emin misiniz?')) return;
   kalibrasyonCihazlari = kalibrasyonCihazlari.filter(r => r.id !== id);
   saveKalibrasyonData();
