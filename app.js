@@ -22,6 +22,30 @@ let hcTablePage = 0;         // Harcama tablosunda aktif sayfa
 // ─── TARAYICI KAPATILIP AÇILDIĞINDA OTURUMU KAPAT ────────────────────────────
 (function forceBrowserCloseSession() {
   try {
+    // Sayfa yenileme (F5 / Ctrl+F5) veya aynı sekmede yeniden yükleme ise
+    // oturumu koru; tarayıcı kapatılıp yeniden açıldığında (yeni oturum)
+    // temizle. window.name, sessionStorage'dan daha dayanıklıdır (sert
+    // yenilemede sessionStorage silinebiliyor).
+    var isReload = false;
+    try {
+      var _nav = performance.getEntriesByType('navigation')[0];
+      if (_nav && _nav.type === 'reload') isReload = true;
+      else if (performance.navigation && performance.navigation.type === 1) isReload = true;
+    } catch (_) {}
+    try {
+      if (window.name && window.name.indexOf('bhys_browser_session') !== -1) isReload = true;
+    } catch (_) {}
+    // Çerez (session cookie) varsa aynı tarayıcı oturumu demektir; sert
+    // yenilemede sessionStorage silinse bile oturumu koru.
+    try {
+      if (document.cookie.indexOf('bhys_session=1') !== -1) isReload = true;
+    } catch (_) {}
+    if (isReload) {
+      try { sessionStorage.setItem('bhys_fresh_browser_session', '1'); } catch (_) {}
+      try { window.name = 'bhys_browser_session'; } catch (_) {}
+      try { document.cookie = 'bhys_session=1; path=/; SameSite=Lax'; } catch (_) {}
+      return;
+    }
     var sessionFlag = 'bhys_fresh_browser_session';
     if (!sessionStorage.getItem(sessionFlag)) {
       // Tüm oturum verilerini temizle
@@ -51,6 +75,8 @@ let hcTablePage = 0;         // Harcama tablosunda aktif sayfa
         }
       }
       sessionStorage.setItem(sessionFlag, '1');
+      try { window.name = 'bhys_browser_session'; } catch (_) {}
+      try { document.cookie = 'bhys_session=1; path=/; SameSite=Lax'; } catch (_) {}
     }
   } catch (_) {}
 })();
@@ -64,9 +90,9 @@ try {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         autoRefreshToken: true,
-        persistSession: false,
+        persistSession: true,
         detectSessionInUrl: false,
-        storage: window.sessionStorage
+        storage: window.localStorage
       }
     });
   }
@@ -377,10 +403,28 @@ var BHYS_BROWSER_SESSION_KEY = 'bhys_browser_session_active';
 
 function markBrowserSession() {
   try { sessionStorage.setItem(BHYS_BROWSER_SESSION_KEY, '1'); } catch (_) {}
+  try { window.name = 'bhys_browser_session'; } catch (_) {}
+  try { document.cookie = 'bhys_session=1; path=/; SameSite=Lax'; } catch (_) {}
 }
 
 function isFreshBrowserSession() {
-  try { return !sessionStorage.getItem(BHYS_BROWSER_SESSION_KEY); } catch (_) { return true; }
+  try {
+    // Sayfa yenileme (F5 / Ctrl+F5) ise yeni oturum sayma; oturumu koru.
+    var isReload = false;
+    try {
+      var _nav = performance.getEntriesByType('navigation')[0];
+      if (_nav && _nav.type === 'reload') isReload = true;
+      else if (performance.navigation && performance.navigation.type === 1) isReload = true;
+    } catch (_) {}
+    try {
+      if (window.name && window.name.indexOf('bhys_browser_session') !== -1) isReload = true;
+    } catch (_) {}
+    try {
+      if (document.cookie.indexOf('bhys_session=1') !== -1) isReload = true;
+    } catch (_) {}
+    if (isReload) return false;
+    return !sessionStorage.getItem(BHYS_BROWSER_SESSION_KEY);
+  } catch (_) { return true; }
 }
 
 function forceClearAuthOnNewBrowser() {
@@ -425,20 +469,22 @@ function forceClearAuthOnNewBrowser() {
 }
 
 function oturumSet(k, v) {
-  try { sessionStorage.setItem(k, v); } catch (_) {}
-  try { localStorage.removeItem(k); } catch (_) {}
+  // Kalıcı depolama (localStorage): sert yenilemede (Ctrl+F5) sessionStorage
+  // silinebiliyor; tarayıcı kapanınca temizlik top IIFE + çerez ile yapılır.
+  try { localStorage.setItem(k, v); } catch (_) {}
+  try { sessionStorage.removeItem(k); } catch (_) {}
 }
 function oturumGet(k) {
   var v = null;
-  try { v = sessionStorage.getItem(k); } catch (_) {}
+  try { v = localStorage.getItem(k); } catch (_) {}
   if (v === null || v === undefined) {
-    try { v = localStorage.getItem(k); } catch (_) {}
+    try { v = sessionStorage.getItem(k); } catch (_) {}
   }
   return v;
 }
 function oturumSil(k) {
-  try { sessionStorage.removeItem(k); } catch (_) {}
   try { localStorage.removeItem(k); } catch (_) {}
+  try { sessionStorage.removeItem(k); } catch (_) {}
 }
 
 function applyLoginState(role, displayName, isSupabaseAuth, email, permissions) {
@@ -708,8 +754,11 @@ const CORE_ROLES = ['diyetisyen', 'depo', 'asci'];
 
 const DEFAULT_ROLE_PERMISSIONS = {
   diyetisyen: {
-    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, yillik: true, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: true, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: true, yillik: true, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false, yemeklistesi: true },
     canEditMenu: true,
+    canEditYemekListesi: true,
+    canDeleteYemekListesi: true,
+    canImportYemekListesi: true,
     canSaveMenu: true,
     canSeeProduction: true,
     canAddRecord: false,
@@ -732,8 +781,11 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   depo: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true, yemeklistesi: true },
     canEditMenu: false,
+    canEditYemekListesi: false,
+    canDeleteYemekListesi: false,
+    canImportYemekListesi: false,
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: true,
@@ -756,8 +808,11 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   asci: {
-    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, yillik: false, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false },
+    tabs: { dashboard: false, menu: true, records: false, report: false, haccp: false, kalibrasyon: false, yag: false, ambalaj: false, charts: false, yillik: false, harcama: false, malitablo: false, yillikplan: false, birimfiyat: false, yemeklistesi: false },
     canEditMenu: false,
+    canEditYemekListesi: false,
+    canDeleteYemekListesi: false,
+    canImportYemekListesi: false,
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
@@ -780,8 +835,11 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   gida_muhendisi: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true, yemeklistesi: true },
     canEditMenu: false,
+    canEditYemekListesi: false,
+    canDeleteYemekListesi: false,
+    canImportYemekListesi: false,
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
@@ -804,8 +862,11 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: true
   },
   temizlikci: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true, yemeklistesi: true },
     canEditMenu: false,
+    canEditYemekListesi: false,
+    canDeleteYemekListesi: false,
+    canImportYemekListesi: false,
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
@@ -828,8 +889,11 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canMenuReddet: false
   },
   sadece_gorme: {
-    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true },
+    tabs: { dashboard: true, menu: true, records: true, report: true, haccp: true, kalibrasyon: true, yag: true, ambalaj: true, charts: true, yillik: true, harcama: false, malitablo: true, yillikplan: true, birimfiyat: true, yemeklistesi: true },
     canEditMenu: false,
+    canEditYemekListesi: false,
+    canDeleteYemekListesi: false,
+    canImportYemekListesi: false,
     canSaveMenu: false,
     canSeeProduction: true,
     canAddRecord: false,
@@ -868,6 +932,9 @@ var PERM_ALIASES = {
   canDeleteBirimFiyat: 'canEditBirimFiyat',
   canImportBirimFiyat: 'canEditBirimFiyat',
   canImportMenu: 'canEditMenu',
+  canEditYemekListesi: 'canEditMenu',
+  canDeleteYemekListesi: 'canEditYemekListesi',
+  canImportYemekListesi: 'canEditYemekListesi',
   canDeleteDepo: 'canEditDepo'
 };
 
@@ -949,6 +1016,9 @@ function canEditKalibrasyonRecords() { return hasPerm('canEditKalibrasyon'); }
 function canDeleteKalibrasyonRecords() { return hasPerm('canDeleteKalibrasyon'); }
 function canEditMenuRecords() { return hasPerm('canEditMenu'); }
 function canImportMenuRecords() { return hasPerm('canImportMenu'); }
+function canEditYemekListesi() { return hasPerm('canEditYemekListesi'); }
+function canDeleteYemekListesi() { return hasPerm('canDeleteYemekListesi'); }
+function canImportYemekListesi() { return hasPerm('canImportYemekListesi'); }
 function canDeleteBirimFiyat() { return hasPerm('canDeleteBirimFiyat'); }
 function canImportBirimFiyat() { return hasPerm('canImportBirimFiyat'); }
 
@@ -1394,12 +1464,12 @@ async function saveAdminSettings() {
     var perm = rolePermissions[role];
     if (!perm) return;
     var prefix = 'apRole_' + role + '_';
-    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts', 'yillik', 'harcama', 'malitablo', 'yillikplan', 'birimfiyat'];
+    var tabs = ['dashboard', 'menu', 'records', 'report', 'haccp', 'kalibrasyon', 'yag', 'ambalaj', 'charts', 'yillik', 'harcama', 'malitablo', 'yillikplan', 'birimfiyat', 'yemeklistesi'];
     tabs.forEach(function(tab) {
       var cb = document.getElementById(prefix + 'tab_' + tab);
       if (cb) perm.tabs[tab] = cb.checked;
     });
-    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canImportMenu', 'canAddRecord', 'canEditRecord', 'canDeleteRecord', 'canImportRecord', 'canAddHaccp', 'canEditHaccp', 'canDeleteHaccp', 'canImportHaccp', 'canEditDepo', 'canDeleteDepo', 'canAddYag', 'canEditYag', 'canDeleteYag', 'canAddAmbalaj', 'canEditAmbalaj', 'canDeleteAmbalaj', 'canAddKalibrasyon', 'canEditKalibrasyon', 'canDeleteKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHarcamaOran', 'canEditBirimFiyat', 'canDeleteBirimFiyat', 'canImportBirimFiyat', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
+    var checks = ['canEditMenu', 'canSaveMenu', 'canSeeProduction', 'canImportMenu', 'canAddRecord', 'canEditRecord', 'canDeleteRecord', 'canImportRecord', 'canAddHaccp', 'canEditHaccp', 'canDeleteHaccp', 'canImportHaccp', 'canEditDepo', 'canDeleteDepo', 'canAddYag', 'canEditYag', 'canDeleteYag', 'canAddAmbalaj', 'canEditAmbalaj', 'canDeleteAmbalaj', 'canAddKalibrasyon', 'canEditKalibrasyon', 'canDeleteKalibrasyon', 'canExport', 'canSync', 'canSeeAdminPanel', 'canEditHarcamaOran', 'canEditBirimFiyat', 'canDeleteBirimFiyat', 'canImportBirimFiyat', 'canEditYemekListesi', 'canDeleteYemekListesi', 'canImportYemekListesi', 'canMenuOnayaGonder', 'canMenuOnayla', 'canMenuReddet'];
     checks.forEach(function(key) {
       var cb = document.getElementById(prefix + key);
       if (cb) perm[key] = cb.checked;
@@ -1417,7 +1487,7 @@ function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
   var roles = Object.keys(rolePermissions);
-  var tabLabels = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -1533,9 +1603,9 @@ function loadUsersFromStorage() {
   } catch (_) {}
 }
 
-var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar' };
+var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
 var PERM_GROUPS = [
-  { title: 'Menü', keys: [
+  { title: 'Haftalık Menü', keys: [
     { key: 'canEditMenu', label: 'Menüyü düzenleyebilir' },
     { key: 'canSaveMenu', label: 'Menüyü kaydedebilir' },
     { key: 'canImportMenu', label: 'Yemek listesine CSV yükleyebilir' },
@@ -1544,13 +1614,13 @@ var PERM_GROUPS = [
     { key: 'canMenuOnayla', label: 'Menüyü onaylayabilir' },
     { key: 'canMenuReddet', label: 'Menüyü reddedebilir' }
   ]},
-  { title: 'Kayıtlar (Üretim / Tüketim / Atık)', keys: [
+  { title: 'Kayıtlar', keys: [
     { key: 'canAddRecord', label: 'Yeni kayıt ekleyebilir' },
     { key: 'canEditRecord', label: 'Kayıtları düzenleyebilir' },
     { key: 'canDeleteRecord', label: 'Kayıtları silebilir' },
     { key: 'canImportRecord', label: 'CSV / JSON içe aktarabilir' }
   ]},
-  { title: 'Gıda Güvenliği (Soğuk Depo)', keys: [
+  { title: 'Gıda Güvenliği', keys: [
     { key: 'canAddHaccp', label: 'Sıcaklık kaydı ekleyebilir' },
     { key: 'canEditHaccp', label: 'Sıcaklık kayıtlarını düzenleyebilir' },
     { key: 'canDeleteHaccp', label: 'Sıcaklık kayıtlarını silebilir' },
@@ -1577,6 +1647,11 @@ var PERM_GROUPS = [
     { key: 'canEditBirimFiyat', label: 'Birim fiyat listesini ekleyebilir / düzenleyebilir' },
     { key: 'canDeleteBirimFiyat', label: 'Birim fiyat kayıtlarını silebilir' },
     { key: 'canImportBirimFiyat', label: 'Birim fiyat CSV yükleyebilir' }
+  ]},
+  { title: 'Yemek Listesi', keys: [
+    { key: 'canEditYemekListesi', label: 'Yemek listesini ekleyebilir / düzenleyebilir' },
+    { key: 'canDeleteYemekListesi', label: 'Yemek listesi kayıtlarını silebilir' },
+    { key: 'canImportYemekListesi', label: 'Yemek listesi CSV yükleyebilir' }
   ]},
   { title: 'Genel', keys: [
     { key: 'canExport', label: 'Dışa aktarabilir (CSV / PDF)' },
@@ -6211,6 +6286,7 @@ async function switchTab(name) {
   if (name === 'yillik') renderYearlyCharts();
   if (name === 'harcama') renderHarcamaMenu();
   if (name === 'birimfiyat') { renderBirimFiyatlar(); if (unitPricesCache.length === 0 && supabaseClient) syncUnitPricesFromSupabase().then(function() { renderBirimFiyatlar(); }); }
+  if (name === 'yemeklistesi') { if (yemeklerCache.length === 0 && supabaseClient) await syncDishesFromSupabase(); if (unitPricesCache.length === 0 && supabaseClient) await syncUnitPricesFromSupabase(); renderYemekListesi(); }
   if (name === 'report') renderReport();
   if (name === 'records') {
     if (filteredRecords.length === 0) {
@@ -6242,7 +6318,7 @@ async function switchTab(name) {
     var mv = document.getElementById('manualVersion');
     if (mv && typeof APP_CONFIG !== 'undefined' && APP_CONFIG.version) mv.textContent = 'v' + APP_CONFIG.version;
   }
-  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), malitablo: t('sidebarMaliTablo'), yillikplan: t('sidebarYillikPlan'), birimfiyat: t('sidebarUnitPrice'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration'), admin: 'Yönetim Paneli', logs: 'Log Kayıtları', manual: 'Kullanım Kılavuzu' };
+  const labels = { dashboard: t('sidebarPanel'), menu: t('sidebarMenu'), records: t('sidebarRecords'), charts: t('sidebarCharts'), yillik: t('sidebarYearly'), harcama: t('sidebarSpending'), malitablo: t('sidebarMaliTablo'), yillikplan: t('sidebarYillikPlan'), birimfiyat: t('sidebarUnitPrice'), yemeklistesi: t('sidebarYemekListesi'), report: t('sidebarReport'), haccp: t('sidebarHaccp'), yag: t('sidebarOil'), ambalaj: t('sidebarPackaging'), kalibrasyon: t('sidebarCalibration'), admin: 'Yönetim Paneli', logs: 'Log Kayıtları', manual: 'Kullanım Kılavuzu' };
   document.getElementById('pageTitle').textContent = labels[name] || name;
     localStorage.setItem('atik_kontrol_active_tab', name);
     applyTranslations();
@@ -8729,8 +8805,7 @@ function tarihFormatla2(str) {
 }
 
 function importYemekCSV(event) {
-  if (!canImportMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
-  if (!requireAdmin()) return;
+  if (!canImportYemekListesi()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const file = event.target.files[0];
   if (!file) return;
   const inputEl = event.target;
@@ -8860,7 +8935,7 @@ function saveYemekler(list) {
   // düşülür; onda ek olarak oturum geçerliliği kontrol edilir. Önceden sadece
   // requireAdmin vardı: canEditMenu yetkisi olan (admin olmayan) kullanıcı
   // değişiklik yapamıyordu.
-  if (!canEditMenuRecords() && !requireAdmin()) return;
+  if (!canEditYemekListesi() && !requireAdmin()) return;
   yemeklerCache = list;
   renderMenuCesidiKpi();
   syncDishesToSupabase().catch(() => {});
@@ -9079,7 +9154,7 @@ function yfTarifSil(idx) {
   renderYemekForm(ad, kalori, alerjen);
 }
 
-function saveYemekForm() { if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+function saveYemekForm() { if (!canEditYemekListesi()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   const ad = document.getElementById('yf_ad').value.trim();
   if (!ad) { showToast('Yemek adı zorunludur.', 'error'); return; }
   const kalori = document.getElementById('yf_kalori').value.trim();
@@ -9122,7 +9197,7 @@ function editYemek(id) {
 }
 
 async function deleteYemek(id) {
-  if (!canEditMenuRecords()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
+  if (!canDeleteYemekListesi()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (!confirm('Bu yemeği silmek istediğinize emin misiniz?')) return;
   // Yalnızca verilen id silinir; aynı adlı mükerrer kayıtlar etkilenmez.
   // ASIL HATA: saveYemekler -> syncDishesToSupabase sadece upsert yapar, dishes
@@ -9156,18 +9231,9 @@ async function deleteYemek(id) {
 }
 
 function openYemekModal() {
-  document.getElementById('yemekModal').classList.add('open');
-  document.getElementById('yemekSearchInput').value = '';
-  editingYemekId = null;
-  document.getElementById('yemekFormContainer').style.display = 'none';
-  renderYemekListesi();
-  // Background'da Supabase'ten taze veri çek (cache güncelle)
-  syncDishesFromSupabase().then(updated => { if (updated) renderYemekListesi(); });
-  if (supabaseClient) syncUnitPricesFromSupabase().catch(function(){});
+  switchTab('yemeklistesi');
 }
-function closeYemekModal() {
-  document.getElementById('yemekModal').classList.remove('open');
-}
+function closeYemekModal() {}
 
 function exportYemekListesiPDF() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
@@ -14991,7 +15057,7 @@ var I18N = {
     loginFeature3: "Canlı Panel ve Grafikler",
     loginForgot: "Şifremi Unuttum?",
     loginForgotTitle: "Şifremi Unuttum",
-    loginForgotText: "Şifre talebi için lütfen mustafa.orhan@ahievran.edu.tr adresine e-posta gönderin.",
+    loginForgotText: "Şifre talebi için lütfen mehmet.orhan@ahievran.edu.tr adresine e-posta gönderin.",
     loginForgotOk: "Kapat",
     loginSecure: "Güvenli Bağlantı",
     menuLabel: "Menü",
@@ -15016,6 +15082,7 @@ var I18N = {
     sidebarYearly: "Yıllık Karşılaştırma",
     sidebarSpending: "Harcama",
     sidebarUnitPrice: "Ürün ve Fiyatlar",
+    sidebarYemekListesi: "Yemek Listesi",
     sidebarMaliTablo: "Mali Tablolar",
     sidebarYillikPlan: "Yıllık İhtiyaç Planı",
     sidebarDownload: "Tümünü İndir",

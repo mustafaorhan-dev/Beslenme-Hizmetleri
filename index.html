@@ -243,6 +243,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           <span data-i18n="sidebarUnitPrice">Ürün ve Fiyatlar</span>
         </button>
+        <button class="tab-btn" id="tab-yemeklistesi" onclick="switchTab('yemeklistesi')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span data-i18n="sidebarYemekListesi">Yemek Listesi</span>
+        </button>
       </nav>
       <div class="sidebar-actions">
         <button class="tab-btn" onclick="exportEverything()" title="Tüm verileri tek seferde indir (kayıt CSV, HACCP CSV, yemek listesi CSV, kalibrasyon CSV, menü ve yedek JSON)">
@@ -717,10 +721,6 @@
             <button class="btn btn-ghost btn-sm btn-always" onclick="printMenu()" data-i18n="menuPrintBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
               Yazdır
-            </button>
-            <button class="btn btn-ghost btn-sm" onclick="openYemekModal()" data-i18n="menuFoodListBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Yemek Listesi
             </button>
           </div>
         </div>
@@ -1578,6 +1578,30 @@
 
     <div class="tab-content" id="content-birimfiyat"></div>
 
+    <div class="tab-content" id="content-yemeklistesi">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="foodListTitle">Yemek Listesi</h2>
+        </div>
+        <div style="padding:1rem">
+          <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+            <input type="text" id="yemekSearchInput" placeholder="Yemek adı ile ara..." style="flex:1;min-width:150px" oninput="renderYemekListesi()" />
+            <select id="yemekSortSelect" onchange="renderYemekListesi()" title="Sıralama" style="min-width:110px">
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
+            <button class="btn btn-ghost btn-sm" id="yemekCsvUploadBtn" onclick="document.getElementById('yemekCSVUpload').click()" data-i18n="menuFoodListUploadBtn">CSV Yükle</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportYemekCSV()" title="Yemek listesini CSV olarak indir" data-i18n="menuFoodListCsvBtn">CSV İndir</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportYemekListesiPDF()">Tüm Yemekler PDF</button>
+            <input type="file" id="yemekCSVUpload" accept=".csv,.txt" style="display:none" onchange="importYemekCSV(event)" />
+          </div>
+          <div id="yemekFormContainer" style="display:none;margin-bottom:1rem"></div>
+          <div id="yemekListesiContainer"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-content" id="content-malitablo">
       <div class="section-card">
         <div class="section-header">
@@ -1643,7 +1667,7 @@
                 </div>
                 <div>
                   <label for="apNewEmail" class="ap-field-label">E-posta</label>
-                  <input type="email" id="apNewEmail" class="ap-field" placeholder="ör: ad.soyad@ahievran.edu.tr" autocomplete="off" spellcheck="false" />
+                  <input type="email" id="apNewEmail" class="ap-field" placeholder="ör: mehmet.orhan@ahievran.edu.tr" autocomplete="off" spellcheck="false" />
                 </div>
               </div>
               <div style="margin-top:0.6rem">
@@ -2126,33 +2150,7 @@
 
     </div><!-- /.app-layout -->
 
-  <!-- ===== YEMEK LISTESI MODAL ===== -->
-  <div class="modal-overlay" id="yemekModal" onclick="if(event.target===this)closeYemekModal()">
-    <div class="modal sync-panel yemek-modal">
-      <div class="modal-header">
-        <h2 data-i18n="foodListTitle">Yemek Listesi</h2>
-        <button class="modal-close" onclick="closeYemekModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="padding:1rem">
-        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
-          <input type="text" id="yemekSearchInput" placeholder="Yemek adı ile ara..." style="flex:1;min-width:150px" oninput="renderYemekListesi()" />
-          <select id="yemekSortSelect" onchange="renderYemekListesi()" title="Sıralama" style="min-width:110px">
-            <option value="az">A → Z</option>
-            <option value="za">Z → A</option>
-          </select>
-          <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
-          <button class="btn btn-ghost btn-sm" id="yemekCsvUploadBtn" onclick="document.getElementById('yemekCSVUpload').click()" data-i18n="menuFoodListUploadBtn">CSV Yükle</button>
-          <button class="btn btn-ghost btn-sm" onclick="exportYemekCSV()" title="Yemek listesini CSV olarak indir" data-i18n="menuFoodListCsvBtn">CSV İndir</button>
-          <button class="btn btn-ghost btn-sm" onclick="exportYemekListesiPDF()">Tüm Yemekler PDF</button>
-          <input type="file" id="yemekCSVUpload" accept=".csv,.txt" style="display:none" onchange="importYemekCSV(event)" />
-        </div>
-        <div id="yemekFormContainer" style="display:none;margin-bottom:1rem"></div>
-        <div id="yemekListesiContainer"></div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- ===== MENÜ REDDET MODAL ===== -->
   <div class="modal-overlay" id="menuRedModal" onclick="if(event.target===this)this.classList.remove('open')">

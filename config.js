@@ -33,7 +33,7 @@ const APP_CONFIG = {
   // Bu e-postalarla giriş yapan kişiler her zaman admin olur.
   // İlk kurulumda kilitlenmeyi önler; admin panelinden sonra yönetilebilir.
   bootstrapAdmins: [
-    'mustafa.orhan@ahievran.edu.tr'
+    'mehmet.orhan@ahievran.edu.tr'
   ],
   supabaseUrl: 'https://ydbeltktutcxfeosqmai.supabase.co',
   supabaseAnonKey: 'sb_publishable_tUj9gU4n1VKLgwJZw5FmDQ_9W1E2nmA'
