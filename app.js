@@ -19,6 +19,42 @@ let hcSelectedYear = null;   // Harcama menüsünde seçili yıl (null => kayıt
 let hcSelectedMonth = null;  // Harcama menüsünde seçili ay (null => Tüm Yıl, 0-11 => belirli ay)
 let hcTablePage = 0;         // Harcama tablosunda aktif sayfa
 
+// ─── TARAYICI KAPATILIP AÇILDIĞINDA OTURUMU KAPAT ────────────────────────────
+(function forceBrowserCloseSession() {
+  try {
+    var sessionFlag = 'bhys_fresh_browser_session';
+    if (!sessionStorage.getItem(sessionFlag)) {
+      // Tüm oturum verilerini temizle
+      var clearKeys = [
+        'atik_kontrol_role', 'atik_kontrol_display_name', 'atik_kontrol_email',
+        'atik_kontrol_supabase_auth', 'atik_kontrol_admin_hash_proof',
+        'atik_kontrol_login_time', 'atik_kontrol_user_permissions',
+        'atik_kontrol_last_login', 'atik_kontrol_locked'
+      ];
+      for (var i = 0; i < clearKeys.length; i++) {
+        try { localStorage.removeItem(clearKeys[i]); } catch (_) {}
+        try { sessionStorage.removeItem(clearKeys[i]); } catch (_) {}
+      }
+      // Supabase tokenlarını temizle
+      var lsKeys = Object.keys(localStorage);
+      for (var j = 0; j < lsKeys.length; j++) {
+        var lk = lsKeys[j];
+        if (lk.indexOf('sb-') === 0 || lk === 'supabase.auth.token') {
+          try { localStorage.removeItem(lk); } catch (_) {}
+        }
+      }
+      var ssKeys = Object.keys(sessionStorage);
+      for (var s = 0; s < ssKeys.length; s++) {
+        var sk = ssKeys[s];
+        if (sk.indexOf('sb-') === 0 || sk === 'supabase.auth.token') {
+          try { sessionStorage.removeItem(sk); } catch (_) {}
+        }
+      }
+      sessionStorage.setItem(sessionFlag, '1');
+    }
+  } catch (_) {}
+})();
+
 // ─── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPABASE_URL = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseUrl : '';
 const SUPABASE_ANON_KEY = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.supabaseAnonKey : '';
@@ -28,9 +64,9 @@ try {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storage: window.localStorage
+        persistSession: false,
+        detectSessionInUrl: false,
+        storage: window.sessionStorage
       }
     });
   }
@@ -123,6 +159,8 @@ async function resolveAppVersion() {
 let supabaseSession = null;
 
 async function initSupabaseAuth() {
+  // Yeni tarayıcı oturumu açıldığında önce tüm auth bilgilerini temizle
+  forceClearAuthOnNewBrowser();
   if (!supabaseClient) return;
   // Get current session
   var { data: { session } } = await supabaseClient.auth.getSession();
@@ -333,26 +371,79 @@ async function refreshCurrentUserPermissions() {
 }
 
 // ─── OTURUM DEPOLAMA ───────────────────────────────────────────────────────────
-// Giriş ekranındaki "Beni Hatırla" kaldırıldı; oturum artık HER ZAMAN
-// kalıcıdır. Bu yüzden rol/ad/token bilgisi localStorage'a yazılır, sekme
-// kapatılsa da oturum korunur. (Supabase token zaten localStorage'da idi.)
-// Geriye dönük uyum: eski sürümden sessionStorage'da kalmış veri de okunur.
+// Tarayıcı tamamen kapatılıp açıldığında oturumun sona ermesi için sessionStorage kullanılır.
+// Yeni tarayıcı oturumu tespiti için işaretleyici kullanılır.
+var BHYS_BROWSER_SESSION_KEY = 'bhys_browser_session_active';
+
+function markBrowserSession() {
+  try { sessionStorage.setItem(BHYS_BROWSER_SESSION_KEY, '1'); } catch (_) {}
+}
+
+function isFreshBrowserSession() {
+  try { return !sessionStorage.getItem(BHYS_BROWSER_SESSION_KEY); } catch (_) { return true; }
+}
+
+function forceClearAuthOnNewBrowser() {
+  if (!isFreshBrowserSession()) return;
+  try {
+    if (supabaseClient && typeof supabaseClient.auth !== 'undefined') {
+      try { supabaseClient.auth.signOut({ scope: 'local' }); } catch (_) { try { supabaseClient.auth.signOut(); } catch (_) {} }
+    }
+  } catch (_) {}
+  // Supabase auth tokenlarını temizle (localStorage ve sessionStorage)
+  try {
+    var lsKeys = Object.keys(localStorage);
+    for (var i = 0; i < lsKeys.length; i++) {
+      var lk = lsKeys[i];
+      if (lk.indexOf('sb-') === 0 && lk.indexOf('auth-token') !== -1) {
+        localStorage.removeItem(lk);
+      }
+      if (lk === 'supabase.auth.token') localStorage.removeItem(lk);
+    }
+  } catch (_) {}
+  try {
+    var ssKeys = Object.keys(sessionStorage);
+    for (var s = 0; s < ssKeys.length; s++) {
+      var sk = ssKeys[s];
+      if (sk.indexOf('sb-') === 0 && sk.indexOf('auth-token') !== -1) {
+        sessionStorage.removeItem(sk);
+      }
+      if (sk === 'supabase.auth.token') sessionStorage.removeItem(sk);
+    }
+  } catch (_) {}
+  // Uygulama oturum anahtarlarını temizle
+  var authKeys = [
+    'atik_kontrol_role', 'atik_kontrol_display_name', 'atik_kontrol_email',
+    'atik_kontrol_supabase_auth', 'atik_kontrol_admin_hash_proof',
+    'atik_kontrol_login_time', USER_PERMISSIONS_KEY, 'atik_kontrol_last_login'
+  ];
+  for (var j = 0; j < authKeys.length; j++) {
+    try { localStorage.removeItem(authKeys[j]); sessionStorage.removeItem(authKeys[j]); } catch (_) {}
+  }
+  try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
+  markBrowserSession();
+}
+
 function oturumSet(k, v) {
-  try { localStorage.setItem(k, v); } catch (_) {}
-  try { sessionStorage.removeItem(k); } catch (_) {}
+  try { sessionStorage.setItem(k, v); } catch (_) {}
+  try { localStorage.removeItem(k); } catch (_) {}
 }
 function oturumGet(k) {
   var v = null;
-  try { v = localStorage.getItem(k); } catch (_) {}
-  if (v === null || v === undefined) { try { v = sessionStorage.getItem(k); } catch (_) {} }
+  try { v = sessionStorage.getItem(k); } catch (_) {}
+  if (v === null || v === undefined) {
+    try { v = localStorage.getItem(k); } catch (_) {}
+  }
   return v;
 }
 function oturumSil(k) {
-  try { localStorage.removeItem(k); } catch (_) {}
   try { sessionStorage.removeItem(k); } catch (_) {}
+  try { localStorage.removeItem(k); } catch (_) {}
 }
 
 function applyLoginState(role, displayName, isSupabaseAuth, email, permissions) {
+  // Yeni tarayıcı oturumu başlatıldığını işaretle
+  markBrowserSession();
   oturumSet('atik_kontrol_role', role);
   oturumSet('atik_kontrol_display_name', displayName);
   if (email) oturumSet('atik_kontrol_email', email);
@@ -361,7 +452,7 @@ function applyLoginState(role, displayName, isSupabaseAuth, email, permissions) 
   else oturumSil('atik_kontrol_supabase_auth');
   oturumSet('atik_kontrol_login_time', String(Date.now()));
   try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
-  localStorage.setItem('atik_kontrol_last_login', new Date().toISOString());
+  try { localStorage.setItem('atik_kontrol_last_login', new Date().toISOString()); } catch (_) {}
   document.getElementById('loginOverlay').classList.add('hidden');
   document.body.setAttribute('data-role', role);
   document.getElementById('roleBadge').textContent = displayName;
