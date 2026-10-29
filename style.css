@@ -671,9 +671,9 @@ html[data-accent="rose"] {
   box-shadow: 0 6px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 [data-theme="dark"] .data-table th {
-  background: rgba(99,102,241,0.08);
-  color: #94a3b8;
-  border-bottom: 2px solid rgba(99,102,241,0.25);
+  background: rgba(99,102,241,0.15);
+  color: #e2e8f0;
+  border-bottom: 2px solid rgba(99,102,241,0.35);
 }
 [data-theme="dark"] .data-table td {
   border-bottom: 1px solid rgba(99,102,241,0.25);
@@ -799,6 +799,10 @@ html[data-accent="rose"] {
 [data-theme="dark"] .weekly-total-header {
   background: linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.05) 100%);
   border-bottom-color: rgba(255,255,255,0.06);
+  color: #ffffff;
+}
+[data-theme="dark"] .weekly-total-header::before {
+  color: #ffffff;
 }
 [data-theme="dark"] .menu-table th {
   background: linear-gradient(180deg, rgba(34,211,238,0.10) 0%, transparent 100%);
@@ -1400,6 +1404,7 @@ td > .btn-icon + .btn-icon { margin-left: 0.35rem; }
   min-width: 0;
   padding: 1rem;
   overflow-y: auto;
+  overflow-anchor: none;
 }
 .main-content::-webkit-scrollbar { width: 10px; }
 .main-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 999px; margin: 4px 0; }
@@ -1816,6 +1821,7 @@ td > .btn-icon + .btn-icon { margin-left: 0.35rem; }
 .badge-ok { background: rgba(16,185,129,0.12); color: #10b981; border-color: rgba(16,185,129,0.2); }
 .badge-warn { background: rgba(245,158,11,0.12); color: #f59e0b; border-color: rgba(245,158,11,0.2); }
 .badge-err { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+.badge-info { background: rgba(59,130,246,0.12); color: #3b82f6; border-color: rgba(59,130,246,0.2); }
 /* HACCP sicaklik tablosu: 'Dusuk' ve 'Yuksek' durum rozetleri hafif kirmizi */
 #haccpSicaklikTable td .badge-warn,
 #haccpSicaklikTable td .badge-err {
@@ -4196,15 +4202,25 @@ body.sidebar-open-mobile {
   border-color: var(--accent-cyan);
 }
 
+/* Isı haritası mobilde yatay kaydırma */
+@media (max-width: 640px) {
+  .weekly-total-card div[style*="overflow-x:auto"] { -webkit-overflow-scrolling: touch; }
+}
+
 /* ---- YEMEK LİSTESİ TABLOSU (uzun adlar kırpılmaz) ---- */
 #yemekListesiContainer .data-table { table-layout: fixed; }
+/* Yemek listesinde başlıklar sabit/şeffaf olmasın */
+#yemekListesiContainer .data-table th {
+  position: static;
+  background: var(--bg-card);
+}
 #yemekListesiContainer th,
 #yemekListesiContainer td { padding-left: 0.6rem; padding-right: 0.6rem; }
 #yemekListesiContainer .yl-ad,
 #yemekListesiContainer .yl-alerjen {
   white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
+  text-overflow: ellipsis;
   word-break: break-word;
   overflow-wrap: anywhere;
   line-height: 1.35;
@@ -4510,8 +4526,8 @@ body.sidebar-open-mobile {
   position: fixed;
   bottom: 22px;
   right: 22px;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background: var(--btn-primary-grad);
