@@ -1490,7 +1490,7 @@ function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
   var roles = Object.keys(rolePermissions);
-  var tabLabels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
@@ -1606,7 +1606,7 @@ function loadUsersFromStorage() {
   } catch (_) {}
 }
 
-var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Mali Tablolar', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
+var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
 var PERM_GROUPS = [
   { title: 'Haftalık Menü', keys: [
     { key: 'canEditMenu', label: 'Menüyü düzenleyebilir' },
@@ -7632,7 +7632,7 @@ function renderWeeklyComparison() {
       var leafEl = document.getElementById('wkDonutLeaf');
       if (leafEl) {
         if (reduction >= 0) {
-          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><g class=\"wk-turbine\" opacity=\"0.6\"><path d=\"M20.15 22 L20.35 4.0 L20.65 4.0 L20.85 22 Z\" fill=\"url(#wkTurbineFade)\"/><circle cx=\"20.5\" cy=\"4\" r=\"0.65\" fill=\"#cbd5e1\"/><g class=\"wk-rotor\" stroke=\"#cbd5e1\" stroke-width=\"0.75\" stroke-linecap=\"round\"><path d=\"M20.5 4 L20.5 0.15\"/><path d=\"M20.5 4 L17.15 5.95\"/><path d=\"M20.5 4 L23.85 5.95\"/></g></g><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
         } else {
           leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
         }
@@ -7841,7 +7841,7 @@ function renderMonthlyComparison() {
       var leafEl = document.getElementById('moDonutLeaf');
       if (leafEl) {
         if (reduction >= 0) {
-          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><g class=\"wk-turbine\" opacity=\"0.6\"><path d=\"M20.15 22 L20.35 4.0 L20.65 4.0 L20.85 22 Z\" fill=\"url(#wkTurbineFade)\"/><circle cx=\"20.5\" cy=\"4\" r=\"0.65\" fill=\"#cbd5e1\"/><g class=\"wk-rotor\" stroke=\"#cbd5e1\" stroke-width=\"0.75\" stroke-linecap=\"round\"><path d=\"M20.5 4 L20.5 0.15\"/><path d=\"M20.5 4 L17.15 5.95\"/><path d=\"M20.5 4 L23.85 5.95\"/></g></g><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
         } else {
           leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
         }
@@ -8038,7 +8038,7 @@ function renderYearlyComparison() {
       var leafEl = document.getElementById('yrDonutLeaf');
       if (leafEl) {
         if (reduction >= 0) {
-          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><g class=\"wk-turbine\" opacity=\"0.6\"><path d=\"M20.15 22 L20.35 4.0 L20.65 4.0 L20.85 22 Z\" fill=\"url(#wkTurbineFade)\"/><circle cx=\"20.5\" cy=\"4\" r=\"0.65\" fill=\"#cbd5e1\"/><g class=\"wk-rotor\" stroke=\"#cbd5e1\" stroke-width=\"0.75\" stroke-linecap=\"round\"><path d=\"M20.5 4 L20.5 0.15\"/><path d=\"M20.5 4 L17.15 5.95\"/><path d=\"M20.5 4 L23.85 5.95\"/></g></g><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
         } else {
           leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
         }
@@ -8128,6 +8128,47 @@ function renderYearlyComparison() {
     }, 250);
   });
 })();
+
+function renderYemekTekrarBar() {
+  var pending = window._pendingYemekTekrarBar;
+  var canvas = document.getElementById('yemekTekrarBarCanvas');
+  if (!canvas || !pending || !pending.labels || !pending.labels.length) return;
+  if (window._yemekTekrarBarChart) { try { window._yemekTekrarBarChart.destroy(); } catch(_) {} }
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var tickColor = isDark ? '#e2e8f0' : '#475569';
+  var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  var ctx = canvas.getContext('2d');
+  window._yemekTekrarBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: pending.labels,
+      datasets: [{
+        label: 'Tekrar sayısı',
+        data: pending.data,
+        backgroundColor: pending.colors,
+        borderColor: '#3b82f6',
+        borderWidth: 1,
+        borderRadius: 6,
+        maxBarThickness: 40
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      animation: { duration: 700, easing: 'easeOutCubic' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: tickColor, precision: 0 }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { display: false } }
+      }
+    },
+    plugins: [makeValueLabelsPlugin()]
+  });
+}
 
 var anomalyPage = 0;
 var ANOMALY_PAGE_SIZE = 5;
@@ -8653,7 +8694,19 @@ let _dishLookupCache = null;
 let _dishLookupSig = '';
 
 function parseDishAdi(val) {
-  return (val || '').trim().split('\n')[0].replace(/ - \(.*/, '').trim();
+  return (val || '').trim().split('\n')[0]
+    .replace(/ - \(.*/, '')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+// Yemek adını eşleştirme için normalize eder (büyük/küçük harf ve boşluk farklarını yok sayar)
+function normDishKey(val) {
+  return (val || '').toLowerCase()
+    .replace(/ - \(.*/, '')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function getDishLookup() {
@@ -9278,81 +9331,28 @@ function renderYillikPlanIhtiyac(yil) {
 
   // İhale öncesi öncelikli ürünler (yatay çubuk)
   var topIhtiyac = entries.slice().sort(function(a, b) { return b.total - a.total; }).slice(0, 20);
-  var paretoHtml = '';
-  if (topIhtiyac.length) {
-    paretoHtml = '<div class="weekly-total-card" style="margin-top:1.5rem">' +
-      '<div class="weekly-total-header">İhale Öncesi Öncelikli Ürünler (Yıllık Miktar - İlk 20)</div>' +
-      '<div style="position:relative;height:420px;padding:1rem"><canvas id="yillikIhtiyacParetoCanvas"></canvas></div>' +
-      '</div>';
-  }
+  var paretoHtml = ''; // (pareto grafiği kaldırıldı)
 
   var tekrarParetoHtml = '';
 
-  // Yemek Tekrar Isı Haritası (haftalar x yemekler)
+  // Yemek Tekrar Grafiği (Dikey Çubuk)
   var heatmapHtml = '';
   if (tekrarListesi.length) {
-    var hHaftalar = yillikPlanHaftalari(yil);
-    var hDishler = tekrarListesi.slice(0, 20).map(function(e) { return e.ad; });
-    var hWeekKeys = hHaftalar.map(function(pzt) {
-      var cuma = new Date(pzt); cuma.setDate(pzt.getDate() + 4);
-      return formatDateStr(pzt) + '-' + formatDateStr(cuma);
+    var topDishes = tekrarListesi.slice(0, 15);
+    var barLabels = topDishes.map(function(e) { return e.ad; });
+    var barData = topDishes.map(function(e) { return e.count; });
+    var barColors = barData.map(function(v) {
+      if (v >= 4) return 'rgba(37,99,235,1)';
+      if (v >= 2) return 'rgba(37,99,235,0.6)';
+      return 'rgba(37,99,235,0.25)';
     });
-    var hMax = 0;
-    var hMat = {};
-    hDishler.forEach(function(d) { hMat[d] = {}; });
-    hWeekKeys.forEach(function(wk) {
-      var wd = menuAllDataCache[wk] || {};
-      Object.keys(wd).forEach(function(dayKey) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return;
-        if (parseInt(dayKey.slice(0,4),10) !== yil) return;
-        var dd = wd[dayKey];
-        if (!dd || !dd.yemekler) return;
-        for (var ci = 0; ci < 5; ci++) {
-          var dn = parseDishAdi(dd.yemekler[ci] || '');
-          if (!dn || hDishler.indexOf(dn) === -1) continue;
-          hMat[dn][wk] = (hMat[dn][wk] || 0) + 1;
-          if (hMat[dn][wk] > hMax) hMax = hMat[dn][wk];
-        }
-      });
-    });
-    var hAktifHaftalar = hWeekKeys.filter(function(wk) {
-      return hDishler.some(function(d) { return (hMat[d][wk] || 0) > 0; });
-    });
-    if (hMax === 0) hMax = 1;
-    var hHtml = '<div class="weekly-total-card" style="margin-top:1.5rem">';
-    hHtml += '<div class="weekly-total-header">Yemek Tekrar Isı Haritası (' + yil + ') <span style="margin-left:auto;font-size:0.78rem;opacity:0.8">' + hDishler.length + ' yemek · ' + hAktifHaftalar.length + ' hafta</span></div>';
-    hHtml += '<div style="overflow-x:auto;padding:0.5rem">';
-    hHtml += '<table style="border-collapse:collapse;font-size:0.7rem;min-width:100%">';
-    hHtml += '<thead><tr><th style="position:sticky;left:0;background:var(--bg-card);z-index:2;padding:2px 6px;text-align:left;min-width:140px;border:1px solid rgba(128,128,128,0.15);color:var(--text-primary)">Yemek</th>';
-    hAktifHaftalar.forEach(function(wk, wi) {
-      hHtml += '<th style="padding:2px 3px;text-align:center;min-width:18px;color:var(--text-primary);font-weight:600;border:1px solid rgba(128,128,128,0.15)" title="' + wk + '">' + (wi + 1) + '</th>';
-    });
-    hHtml += '</tr></thead><tbody>';
-    hDishler.forEach(function(d) {
-      hHtml += '<tr><td style="position:sticky;left:0;background:var(--bg-card);z-index:1;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;border:1px solid rgba(128,128,128,0.15);color:var(--text-primary)" title="' + escapeHtml(d) + '">' + escapeHtml(d) + '</td>';
-      hAktifHaftalar.forEach(function(wk) {
-        var v = hMat[d][wk] || 0;
-        var intensity = v > 0 ? (0.25 + 0.75 * (v / hMax)) : 0;
-        var seviye = v > 0 ? (intensity <= 0.4 ? 'low' : (intensity <= 0.7 ? 'mid' : 'high')) : '';
-        var dim = heatmapFiltre && seviye && seviye !== heatmapFiltre;
-        var bg = v > 0 ? 'rgba(37,99,235,' + intensity.toFixed(2) + ')' : 'transparent';
-        var txt = v > 0 ? String(v) : '';
-        if (dim) { bg = 'rgba(128,128,128,0.06)'; txt = ''; }
-        var color = v > 0 && intensity > 0.5 ? '#fff' : 'var(--text-muted)';
-        hHtml += '<td data-seviye="' + seviye + '" style="padding:0;text-align:center;background:' + bg + ';color:' + color + ';font-weight:600;min-width:18px;height:18px;font-size:0.65rem;border:1px solid rgba(128,128,128,0.12)">' + txt + '</td>';
-      });
-      hHtml += '</tr>';
-    });
-    hHtml += '</tbody></table></div>';
-    hHtml += '<div style="padding:0.4rem 0.75rem;font-size:0.72rem;color:var(--text-muted);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">';
-    hHtml += '<span>Yoğunluk (filtrele):</span>';
-    hHtml += '<span style="display:inline-block;width:14px;height:14px;background:rgba(37,99,235,0.25);border-radius:3px;cursor:pointer;border:2px solid ' + (heatmapFiltre==='low'?'#fff':'transparent') + '" onclick="heatmapFiltreDegistir(\'low\')" title="Az (1)"></span><span style="cursor:pointer" onclick="heatmapFiltreDegistir(\'low\')">az</span>';
-    hHtml += '<span style="display:inline-block;width:14px;height:14px;background:rgba(37,99,235,0.6);border-radius:3px;margin-left:0.5rem;cursor:pointer;border:2px solid ' + (heatmapFiltre==='mid'?'#fff':'transparent') + '" onclick="heatmapFiltreDegistir(\'mid\')" title="Orta (2-3)"></span><span style="cursor:pointer" onclick="heatmapFiltreDegistir(\'mid\')">orta</span>';
-    hHtml += '<span style="display:inline-block;width:14px;height:14px;background:rgba(37,99,235,1);border-radius:3px;margin-left:0.5rem;cursor:pointer;border:2px solid ' + (heatmapFiltre==='high'?'#fff':'transparent') + '" onclick="heatmapFiltreDegistir(\'high\')" title="Çok (4+)"></span><span style="cursor:pointer" onclick="heatmapFiltreDegistir(\'high\')">çok</span>';
-    hHtml += '<span style="display:inline-block;margin-left:0.5rem;padding:2px 6px;border-radius:4px;background:var(--bg-hover);cursor:pointer;font-weight:600" onclick="heatmapFiltreDegistir(\'\')">Tümü</span>';
-    hHtml += '<span style="margin-left:1rem">Hücredeki sayı = o haftada yemeğin menüde geçme sayısı</span>';
-    hHtml += '</div></div>';
-    heatmapHtml = hHtml;
+    heatmapHtml = '<div style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid rgba(128,128,128,0.2)">' +
+      '<div class="weekly-total-header" style="margin-bottom:0.5rem">Yemek Tekrar Grafiği (Yatay Çubuk) <span style="margin-left:auto;font-size:0.78rem;opacity:0.8">' + topDishes.length + ' yemek</span></div>' +
+      '<div style="position:relative;height:420px;padding:0.5rem"><canvas id="yemekTekrarBarCanvas"></canvas></div>' +
+      '</div>';
+    window._pendingYemekTekrarBar = { labels: barLabels, data: barData, colors: barColors };
+  } else {
+    window._pendingYemekTekrarBar = null;
   }
 
   container.innerHTML = '<div class="weekly-total-card">' +
@@ -9362,9 +9362,9 @@ function renderYillikPlanIhtiyac(yil) {
     '</div>' +
     '<div class="table-wrapper"><table class="data-table"><thead><tr>' +
     '<th style="width:44px">#</th><th>Malzeme</th><th style="text-align:right">Yıllık Toplam</th><th style="text-align:right">Tutar</th>' +
-    '</tr></thead><tbody>' + satirlar + '</tbody></table></div></div>' + paretoHtml + tekrarHtml + tekrarParetoHtml + heatmapHtml;
+    '</tr></thead><tbody>' + satirlar + '</tbody></table></div></div>' + paretoHtml + tekrarHtml + tekrarParetoHtml;
 
-  renderYillikIhtiyacPareto(topIhtiyac);
+  // grafikler kaldırıldı
 
   // Arama kutusuna odak ve imleç konumunu geri yükle
   if (_ihtHadFocus) {
@@ -9376,11 +9376,6 @@ function renderYillikPlanIhtiyac(yil) {
       }
     }
   }
-  // Kaydırma konumunu koru (filtre tıklamalarında sayfa başa atmasın)
-  (function(sp, ss) {
-    setTimeout(function() { try { if (sp) sp.scrollTop = ss; } catch (_) {} try { window.scrollTo(0, ss); } catch (_) {} }, 0);
-    requestAnimationFrame(function() { try { if (sp) sp.scrollTop = ss; } catch (_) {} });
-  })(_scrollParent, _savedScroll);
 }
 
 
@@ -9485,9 +9480,11 @@ function yillikYemekTekrarTopla(yil) {
         if (/^\d+\s*[\.\-]?\s*çeşit$/i.test(dishName)) continue;
         // Resmi tatil günleri ihtiyaç ve tekrar istatistiğine dahil edilmez
         if (/tatil/i.test(dishName)) continue;
-        if (!counts[dishName]) counts[dishName] = { ad: dishName, count: 0, weeks: {} };
-        counts[dishName].count++;
-        counts[dishName].weeks[wk] = true;
+        var key = normDishKey(dishName);
+        if (!key) continue;
+        if (!counts[key]) counts[key] = { ad: dishName, count: 0, weeks: {} };
+        counts[key].count++;
+        counts[key].weeks[wk] = true;
       }
     });
   });
@@ -16362,7 +16359,7 @@ var I18N = {
     sidebarSpending: "Harcama",
     sidebarUnitPrice: "Ürün ve Fiyatlar",
     sidebarYemekListesi: "Yemek Listesi",
-    sidebarMaliTablo: "Mali Tablolar",
+    sidebarMaliTablo: "Hf. Menü Mali Tablosu",
     sidebarYillikPlan: "Yıllık İhtiyaç Planı",
     sidebarDownload: "Tümünü İndir",
     sidebarBackup: "Supabase'e Yedekle",
@@ -16770,7 +16767,7 @@ var I18N = {
     sidebarYearly: "Yearly Comparison",
     sidebarSpending: "Spending",
     sidebarUnitPrice: "Unit Prices",
-    sidebarMaliTablo: "Financial Tables",
+    sidebarMaliTablo: "Weekly Menu Financial Table",
     sidebarYillikPlan: "Annual Needs Plan",
     sidebarDownload: "Download All",
     sidebarBackup: "Backup to Supabase",
@@ -17178,7 +17175,7 @@ var I18N = {
     sidebarYearly: "İllik Müqayisə",
     sidebarSpending: "Xərclər",
     sidebarUnitPrice: "Vahid Qiymətlər",
-    sidebarMaliTablo: "Mali Cədvəllər",
+    sidebarMaliTablo: "Həftəlik Menyu Mali Cədvəli",
     sidebarYillikPlan: "İllik Tələbat Planı",
     sidebarDownload: "Hamısını Yüklə",
     sidebarBackup: "Supabase-ə Yedeklə",
@@ -17572,7 +17569,7 @@ var I18N = {
     sidebarYearly: "Годовое сравнение",
     sidebarSpending: "Расходы",
     sidebarUnitPrice: "Единичные цены",
-    sidebarMaliTablo: "Финансовые таблицы",
+    sidebarMaliTablo: "Финансовая таблица недельного меню",
     sidebarYillikPlan: "Годовой план потребностей",
     sidebarDownload: "Скачать всё",
     sidebarBackup: "Резервное копирование",
@@ -17966,7 +17963,7 @@ var I18N = {
     sidebarYearly: "Jahresvergleich",
     sidebarSpending: "Ausgaben",
     sidebarUnitPrice: "Stückpreise",
-    sidebarMaliTablo: "Finanztabellen",
+    sidebarMaliTablo: "Wochenmenü-Finanztabelle",
     sidebarYillikPlan: "Jahresbedarfsplan",
     sidebarDownload: "Alle herunterladen",
     sidebarBackup: "Bei Supabase sichern",
@@ -18360,7 +18357,7 @@ var I18N = {
     sidebarYearly: "Comparaison annuelle",
     sidebarSpending: "Dépenses",
     sidebarUnitPrice: "Prix unitaires",
-    sidebarMaliTablo: "Tableaux financiers",
+    sidebarMaliTablo: "Tableau financier du menu hebdomadaire",
     sidebarYillikPlan: "Plan annuel des besoins",
     sidebarDownload: "Tout télécharger",
     sidebarBackup: "Sauvegarder sur Supabase",
@@ -18754,7 +18751,7 @@ var I18N = {
     sidebarYearly: "Comparación anual",
     sidebarSpending: "Gastos",
     sidebarUnitPrice: "Precios unitarios",
-    sidebarMaliTablo: "Tablas financieras",
+    sidebarMaliTablo: "Tabla financiera del menú semanal",
     sidebarYillikPlan: "Plan anual de necesidades",
     sidebarDownload: "Descargar todo",
     sidebarBackup: "Copia de seguridad en Supabase",
@@ -19148,7 +19145,7 @@ var I18N = {
     sidebarYearly: "Comparação anual",
     sidebarSpending: "Despesas",
     sidebarUnitPrice: "Preços unitários",
-    sidebarMaliTablo: "Tabelas financeiras",
+    sidebarMaliTablo: "Tabela financeira do menu semanal",
     sidebarYillikPlan: "Plano anual de necessidades",
     sidebarDownload: "Baixar tudo",
     sidebarBackup: "Backup no Supabase",
@@ -19542,7 +19539,7 @@ var I18N = {
     sidebarYearly: "Yillik taqqoslash",
     sidebarSpending: "Xarajatlar",
     sidebarUnitPrice: "Birlik narxlari",
-    sidebarMaliTablo: "Moliyaviy jadvallar",
+    sidebarMaliTablo: "Haftalik menyu moliyaviy jadvali",
     sidebarYillikPlan: "Yillik ehtiyoj rejasi",
     sidebarDownload: "Hammasini yuklab olish",
     sidebarBackup: "Supabase ga zaxiralash",

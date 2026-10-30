@@ -1252,18 +1252,29 @@ td > .btn-icon + .btn-icon { margin-left: 0.35rem; }
 }
 
 .sidebar-nav .nav-section {
-  padding: 0.75rem 0.9rem 0.4rem;
-  margin-bottom: 0.3rem;
-  font-size: 0.6rem;
-  font-weight: 700;
+  padding: 0.9rem 0.9rem 0.45rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(200,214,229,0.5);
-  border-bottom: 1px solid rgba(200,214,229,0.16);
+  letter-spacing: 0.1em;
+  color: rgba(226,232,240,0.82);
+  border-bottom: 1px solid rgba(200,214,229,0.22);
   user-select: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sidebar-nav .nav-section::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 0.72em;
+  margin-right: 0.5rem;
+  border-radius: 2px;
+  background: var(--accent);
+  vertical-align: -0.04em;
 }
 
 .sidebar-nav .tab-btn,
@@ -5038,6 +5049,69 @@ body.sidebar-open-mobile {
   justify-content: center;
 }
 
+/* Yemek listesi arama kutusu modern stil */
+.yl-search-wrap {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+}
+.yl-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted, #94a3b8);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+.yl-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card, #f8fafc);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+}
+.yl-search-input::placeholder { color: var(--text-muted, #94a3b8); font-style: italic; }
+.yl-search-input:focus {
+  border-color: var(--accent, #3b82f6);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15), 0 2px 6px rgba(15,23,42,0.08);
+}
+.yl-search-wrap:focus-within .yl-search-icon { color: var(--accent, #3b82f6); }
+
+/* Yemek listesi sıralama kutusu modern stil */
+.yl-sort-select {
+  min-width: 110px;
+  padding: 10px 36px 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card, #f8fafc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 12px center;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+.yl-sort-select:hover {
+  border-color: var(--accent, #3b82f6);
+}
+.yl-sort-select:focus {
+  border-color: var(--accent, #3b82f6);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15), 0 2px 6px rgba(15,23,42,0.08);
+}
+
 /* ===== RICH WEEKLY ANALYTIC PANEL ===== */
 .wk-kpi-grid {
   display: grid;
@@ -5103,8 +5177,49 @@ body.sidebar-open-mobile {
 .wk-donut-row { display: flex; align-items: center; gap: 1.5rem; width: 100%; flex-wrap: wrap; justify-content: center; padding: 0.25rem 0.5rem; }
 .wk-donut-wrap { position: relative; flex: 0 0 auto; display: flex; justify-content: center; margin: 0 auto; }
 .wk-donut-side { flex: 0 0 auto; min-width: 140px; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; margin-left: auto; margin-right: 2.4rem; text-align: left; }
-.wk-leaf { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 90px; transition: transform 0.3s ease; }
-.wk-leaf:hover { transform: scale(1.1) rotate(-6deg); }
+.wk-leaf { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 90px; align-self: flex-end; margin-bottom: 4px; }
+.wk-leaf svg { overflow: visible; }
+.wk-leaf svg path[fill="#16a34a"],
+.wk-leaf svg path[fill="#92400e"] {
+  transform-box: fill-box;
+  transform-origin: 100% 100%;
+  animation: wkLeafSwayLeft 4.2s ease-in-out infinite;
+}
+.wk-leaf svg path[fill="#22c55e"],
+.wk-leaf svg path[fill="#b45309"] {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: wkLeafSwayRight 4.2s ease-in-out infinite;
+}
+@keyframes wkLeafSwayLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2.5deg); }
+}
+@keyframes wkLeafSwayRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-2.5deg); }
+}
+.wk-turbine {
+  transform-box: view-box;
+  transform-origin: 85.4167% 98%;
+  transform: scale(2.9);
+}
+.wk-turbine .wk-rotor {
+  transform-box: fill-box;
+  transform-origin: 50% 66.38%;
+  animation: wkTurbineSpin 6s linear infinite;
+}
+@keyframes wkTurbineSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wk-leaf svg path[fill="#16a34a"],
+  .wk-leaf svg path[fill="#92400e"],
+  .wk-leaf svg path[fill="#22c55e"],
+  .wk-leaf svg path[fill="#b45309"] { animation: none; transform: none; }
+  .wk-turbine .wk-rotor { animation: none; }
+}
 .wk-donut-area { height: 200px; max-width: 220px; }
 .wk-donut-wrap { position: relative; }
 .wk-donut-center {
