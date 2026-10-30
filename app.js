@@ -7224,6 +7224,9 @@ function fmtDateShort(d) {
 function changeWeeklyOffset(delta) {
   weeklySummaryOffset += delta;
   renderWeeklySummary();
+  renderWeeklyComparison();
+  renderMonthlyComparison();
+  renderYearlyComparison();
 }
 
 function renderWeeklySummary() {
@@ -7338,6 +7341,7 @@ function renderMenuCesidiKpi() {
 }
 
 function renderKPIs() {
+  if (!document.getElementById('kpiTotalRecords')) return;
   const n = records.length;
   kpiYaz('kpiTotalRecords', n);
   renderMenuCesidiKpi();
@@ -7434,19 +7438,58 @@ function renderKPIs() {
   }
 }
 
+// Grafiklerde değer etiketi (rakam) gösteren yardımcı plugin
+function makeValueLabelsPlugin(fmtFn) {
+  fmtFn = fmtFn || function(v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); };
+  return {
+    id: 'wkValueLabels',
+    afterDatasetsDraw: function(chart) {
+      var ctx = chart.ctx;
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var color = isDark ? '#e2e8f0' : '#1e293b';
+      chart.data.datasets.forEach(function(ds, di) {
+        var meta = chart.getDatasetMeta(di);
+        if (!meta || !meta.data) return;
+        meta.data.forEach(function(el, i) {
+          var val = ds.data[i];
+          if (val === null || val === undefined || isNaN(val)) return;
+          var pos = el.getProps(['x', 'y'], true);
+          if (!pos) return;
+          ctx.save();
+          ctx.font = 'bold 10px Inter, sans-serif';
+          ctx.fillStyle = color;
+          var horizontal = chart.options && chart.options.indexAxis === 'y';
+          if (horizontal) {
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(fmtFn(val), pos.x + 4, pos.y);
+          } else if (chart.config.type === 'line') {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(fmtFn(val), pos.x, pos.y - 4);
+          } else {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(fmtFn(val), pos.x, pos.y - 4);
+          }
+          ctx.restore();
+        });
+      });
+    }
+  };
+}
+
 function renderWeeklyComparison() {
   const card = document.getElementById('weeklyCompCard');
-  const grid = document.getElementById('weeklyCompGrid');
   const badge = document.getElementById('weeklyCompBadge');
   if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
 
-  var now = new Date();
-  var dayOfWeek = now.getDay();
-  var monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  var thisMon = new Date(now); thisMon.setDate(now.getDate() + monOffset);
-  var thisSun = new Date(thisMon); thisSun.setDate(thisMon.getDate() + 6);
-  var lastMon = new Date(thisMon); lastMon.setDate(thisMon.getDate() - 7);
-  var lastSun = new Date(thisMon); lastSun.setDate(thisMon.getDate() - 1);
+  var range = getWeeklyDateRange(typeof weeklySummaryOffset !== 'undefined' ? weeklySummaryOffset : 0);
+  var thisMon = new Date(range.monday);
+  var thisSun = new Date(range.sunday);
+  var prevRange = getWeeklyDateRange((typeof weeklySummaryOffset !== 'undefined' ? weeklySummaryOffset : 0) - 1);
+  var lastMon = new Date(prevRange.monday);
+  var lastSun = new Date(prevRange.sunday);
 
   function fmt(d) { var y = d.getFullYear(); var m = String(d.getMonth()+1).padStart(2,'0'); var day = String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+day; }
   function inRange(r, start, end) { return r.tarih >= fmt(start) && r.tarih <= fmt(end); }
@@ -7467,52 +7510,231 @@ function renderWeeklyComparison() {
   var lastKisi = sum(lastWeek, 'toplam');
   var thisKisiAtik = thisKisi > 0 ? thisAtik / thisKisi : 0;
   var lastKisiAtik = lastKisi > 0 ? lastAtik / lastKisi : 0;
+
   var thisTurnike = sum(thisWeek, 'turnike');
   var lastTurnike = sum(lastWeek, 'turnike');
   var thisOgrenci = sum(thisWeek, 'ogrenci');
   var lastOgrenci = sum(lastWeek, 'ogrenci');
 
-  badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
+  if (badge) badge.textContent = (thisMon.getDate()+'/'+(thisMon.getMonth()+1)) + ' - ' + (thisSun.getDate()+'/'+(thisSun.getMonth()+1)) + ' vs ' + (lastMon.getDate()+'/'+(lastMon.getMonth()+1)) + ' - ' + (lastSun.getDate()+'/'+(lastSun.getMonth()+1));
 
-  var items = [
-    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
-  ];
-
-  grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">' + t('compDataType') + '</span>'
-    + '<span class="comparison-old">' + t('compLastWeek') + '</span>'
-    + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">' + t('compThisWeek') + '</span>'
-    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
-    + '</div>'
-    + items.map(function(it) {
-    var diff = it.val - it.prev;
-    var pct = it.prev ? (diff / it.prev) * 100 : 0;
-    var good = it.lower ? diff < 0 : diff > 0;
-    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+  // --- KPI cards ---
+  function pctBadge(el, val, prev, lowerIsGood) {
+    if (!el) return;
+    var diff = val - prev;
+    var pct = prev ? (diff / prev) * 100 : 0;
+    var good = lowerIsGood ? diff <= 0 : diff >= 0;
+    var cls = Math.abs(pct) < 0.05 ? 'neutral' : (good ? 'positive' : 'negative');
     var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
-    return '<div class="comparison-item">'
-      + '<span class="comparison-label">' + it.label + '</span>'
-      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
-      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
-      + '</div>';
-  }).join('');
+    el.textContent = arrow + ' ' + Math.abs(pct).toFixed(1) + '%';
+    el.className = 'wk-kpi-badge ' + cls;
+  }
+  function fmtNum(n, dec) { return Number(n).toFixed(dec).replace('.', ','); }
+
+  var el;
+  el = document.getElementById('wkKpiWasteVal'); if (el) el.textContent = fmtNum(thisAtik, 1);
+  pctBadge(document.getElementById('wkKpiWasteBadge'), thisAtik, lastAtik, true);
+
+  el = document.getElementById('wkKpiProdVal'); if (el) el.textContent = Math.round(thisYemek).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('wkKpiProdBadge'), thisYemek, lastYemek, false);
+
+  el = document.getElementById('wkKpiTurnikeVal'); if (el) el.textContent = Math.round(thisTurnike).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('wkKpiTurnikeBadge'), thisTurnike, lastTurnike, false);
+
+  el = document.getElementById('wkKpiPerPersonVal'); if (el) el.textContent = fmtNum(thisKisiAtik, 2);
+  pctBadge(document.getElementById('wkKpiPerPersonBadge'), thisKisiAtik, lastKisiAtik, true);
+
+  // --- Horizontal bar chart (last vs this week) ---
+  try {
+    var canvas = document.getElementById('wkHorizBar');
+    if (canvas) {
+      // destroy previous
+      if (window._wkHorizChart) { try { window._wkHorizChart.destroy(); } catch(_){} }
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor = isDark ? '#e2e8f0' : '#475569';
+      var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx = canvas.getContext('2d');
+      var labels = ['Toplam Atık (kg)', 'Toplam Üretim (pors.)', 'Turnike Geçişi', 'Öğrenci Sayısı', 'Kişi Başı Atık (gr)'];
+      var thisVals = [thisAtik, thisYemek, thisTurnike, thisOgrenci, thisKisiAtik];
+      var lastVals = [lastAtik, lastYemek, lastTurnike, lastOgrenci, lastKisiAtik];
+      // scale waste-per-person to gr? original displayed gr with decimals; values are kg/person. Multiply for display? Keep as-is to match.
+      window._wkHorizChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Geçen Hafta', data: lastVals, backgroundColor: 'rgba(99,102,241,0.35)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 },
+            { label: 'Bu Hafta', data: thisVals, backgroundColor: 'rgba(34,197,94,0.75)', borderColor: '#22c55e', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 700, easing: 'easeOutCubic' },
+          layout: { padding: { right: 40 } },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor, boxWidth: 12, font: { size: 11 } } } },
+          scales: {
+            x: { beginAtZero: true, ticks: { color: tickColor, precision: 0 }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false } }
+          }
+        },
+        plugins: [makeValueLabelsPlugin()]
+      });
+    }
+  } catch (e) { console.warn('wk horiz chart:', e); }
+
+  // --- Donut "Atık Azaltma Oranı" ---
+  try {
+    var donutCanvas = document.getElementById('wkDonut');
+    if (donutCanvas) {
+      if (window._wkDonutChart) { try { window._wkDonutChart.destroy(); } catch(_){} }
+      var isDark2 = document.documentElement.getAttribute('data-theme') === 'dark';
+      var ctx2 = donutCanvas.getContext('2d');
+      // reduction ratio: how much waste reduced relative to last week (0-100%)
+      var reduction = lastAtik > 0 ? ((lastAtik - thisAtik) / lastAtik) * 100 : 0;
+      // clamp for display
+      var disp = Math.max(0, Math.min(100, reduction < 0 ? 0 : reduction));
+      // donut shows remaining waste ratio vs last week
+      var remaining = 100 - disp;
+      var color = reduction >= 0 ? '#22c55e' : '#ef4444';
+      window._wkDonutChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Azalma', 'Kalan'],
+          datasets: [{ data: [disp, remaining], backgroundColor: [color, 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 2 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          layout: { padding: 8 },
+          animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+      });
+      // center text via plugin not available; use title
+      var badgeEl = document.getElementById('wkDonutBadge');
+      if (badgeEl) {
+        if (reduction >= 0) {
+          badgeEl.textContent = 'Atık miktarı azalmıştır (' + reduction.toFixed(1).replace('.',',') + '%)';
+          badgeEl.className = 'wk-donut-badge';
+        } else {
+          badgeEl.textContent = 'Atık miktarı artmıştır (' + Math.abs(reduction).toFixed(1).replace('.',',') + '%)';
+          badgeEl.className = 'wk-donut-badge bad';
+        }
+      }
+      var centerEl = document.getElementById('wkDonutCenter');
+      if (centerEl) {
+        centerEl.textContent = (reduction >= 0 ? '↓' : '↑') + ' ' + Math.abs(reduction).toFixed(1).replace('.',',') + '%';
+        centerEl.style.color = reduction >= 0 ? '#16a34a' : '#dc2626';
+      }
+      var leafEl = document.getElementById('wkDonutLeaf');
+      if (leafEl) {
+        if (reduction >= 0) {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+        } else {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
+        }
+      }
+      var thisEl = document.getElementById('wkDonutThis'); if (thisEl) thisEl.textContent = thisAtik.toFixed(1).replace('.',',') + ' kg';
+      var prevEl = document.getElementById('wkDonutPrev'); if (prevEl) prevEl.textContent = lastAtik.toFixed(1).replace('.',',') + ' kg';
+    }
+  } catch (e) { console.warn('wk donut:', e); }
+
+  // --- Daily waste trend line (Mon..Sun) ---
+  try {
+    var lineCanvas = document.getElementById('wkTrendLine');
+    if (lineCanvas) {
+      if (window._wkLineChart) { try { window._wkLineChart.destroy(); } catch(_){} }
+      var isDark3 = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor3 = isDark3 ? '#e2e8f0' : '#475569';
+      var gridColor3 = isDark3 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx3 = lineCanvas.getContext('2d');
+      var dayLabels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+      function dailyAtik(weekStart, recordsArr) {
+        var out = [0,0,0,0,0,0,0];
+        recordsArr.forEach(function(r) {
+          // parse date
+          var d = new Date(r.tarih);
+          if (isNaN(d.getTime())) return;
+          var idx = d.getDay(); // 0 Sun..6 Sat
+          // convert to Mon-based: Mon=0..Sun=6
+          var monIdx = (idx === 0) ? 6 : idx - 1;
+          // ensure within this week range
+          if (r.tarih >= fmt(weekStart) && r.tarih <= fmt(new Date(weekStart.getTime() + 6*86400000))) {
+            out[monIdx] += (r.atik || 0);
+          }
+        });
+        return out;
+      }
+      var thisDaily = dailyAtik(thisMon, records);
+      var lastDaily = dailyAtik(lastMon, records);
+      window._wkLineChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+          labels: dayLabels,
+          datasets: [
+            { label: 'Geçen Hafta', data: lastDaily, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', tension: 0.35, fill: true, pointRadius: 4 },
+            { label: 'Bu Hafta', data: thisDaily, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', tension: 0.35, fill: true, pointRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor3, boxWidth: 12, font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: tickColor3 }, grid: { color: gridColor3 } },
+            y: { beginAtZero: true, ticks: { color: tickColor3, precision: 1 }, grid: { color: gridColor3 } }
+          }
+        }
+      });
+    }
+  } catch (e) { console.warn('wk line:', e); }
+
+  // --- Summary table ---
+  try {
+    var tbody = document.getElementById('wkSummaryTbody');
+    if (tbody) {
+      var rows = [
+        { label: 'Toplam Atık (kg)', thisV: thisAtik, prevV: lastAtik, dec: 1, unit: ' kg', lower: true },
+        { label: 'Toplam Üretim (porsiyon)', thisV: thisYemek, prevV: lastYemek, dec: 0, unit: '', lower: false },
+        { label: 'Turnike Geçiş Sayısı', thisV: thisTurnike, prevV: lastTurnike, dec: 0, unit: '', lower: false },
+        { label: 'Öğrenci Sayısı', thisV: thisOgrenci, prevV: lastOgrenci, dec: 0, unit: '', lower: false },
+        { label: 'Kişi Başı Atık (gr)', thisV: thisKisiAtik, prevV: lastKisiAtik, dec: 2, unit: ' gr', lower: true },
+      ];
+      tbody.innerHTML = rows.map(function(rw) {
+        var diff = rw.thisV - rw.prevV;
+        var pct = rw.prevV ? (diff / rw.prevV) * 100 : 0;
+        var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+        var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+        return '<tr>'
+          + '<td>' + rw.label + '</td>'
+          + '<td class="num">' + rw.prevV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + rw.thisV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + (diff >= 0 ? '+' : '') + diff.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num"><span class="comparison-badge ' + cls + '">' + arrow + ' ' + Math.abs(pct).toFixed(1) + '%</span></td>'
+          + '</tr>';
+      }).join('');
+    }
+  } catch (e) { console.warn('wk table:', e); }
 }
 
 function renderMonthlyComparison() {
   const card = document.getElementById('monthlyCompCard');
-  const grid = document.getElementById('monthlyCompGrid');
   const badge = document.getElementById('monthlyCompBadge');
   if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
 
-  var now = new Date();
+  // Haftalık gezinme (weeklySummaryOffset) ile uyumlu ay: seçili haftanın ait olduğu ay
+  var refDate = new Date();
+  try {
+    if (typeof weeklySummaryOffset !== 'undefined' && weeklySummaryOffset !== 0) {
+      var rr = getWeeklyDateRange(weeklySummaryOffset);
+      refDate = new Date(rr.monday);
+    }
+  } catch (e) {}
+  var now = refDate;
   var thisStart = new Date(now.getFullYear(), now.getMonth(), 1);
   var thisEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   var lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -7543,47 +7765,174 @@ function renderMonthlyComparison() {
   var lastOgrenci = sum(lastMonth, 'ogrenci');
 
   var months = t('monthNames');
-  badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
+  if (badge) badge.textContent = months[thisStart.getMonth()] + ' vs ' + months[lastStart.getMonth()];
 
-  var items = [
-    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
-  ];
-
-  grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">' + t('compDataType') + '</span>'
-    + '<span class="comparison-old">' + t('compLastMonth') + '</span>'
-    + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">' + t('compThisMonth') + '</span>'
-    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
-    + '</div>'
-    + items.map(function(it) {
-    var diff = it.val - it.prev;
-    var pct = it.prev ? (diff / it.prev) * 100 : 0;
-    var good = it.lower ? diff < 0 : diff > 0;
-    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+  // KPI
+  function pctBadge(el, val, prev, lowerIsGood) {
+    if (!el) return;
+    var diff = val - prev;
+    var pct = prev ? (diff / prev) * 100 : 0;
+    var good = lowerIsGood ? diff <= 0 : diff >= 0;
+    var cls = Math.abs(pct) < 0.05 ? 'neutral' : (good ? 'positive' : 'negative');
     var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
-    return '<div class="comparison-item">'
-      + '<span class="comparison-label">' + it.label + '</span>'
-      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
-      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
-      + '</div>';
-  }).join('');
+    el.textContent = arrow + ' ' + Math.abs(pct).toFixed(1) + '%';
+    el.className = 'wk-kpi-badge ' + cls;
+  }
+  function fmtNum(n, dec) { return Number(n).toFixed(dec).replace('.', ','); }
+  var el;
+  el = document.getElementById('moKpiWasteVal'); if (el) el.textContent = fmtNum(thisAtik, 1);
+  pctBadge(document.getElementById('moKpiWasteBadge'), thisAtik, lastAtik, true);
+  el = document.getElementById('moKpiProdVal'); if (el) el.textContent = Math.round(thisYemek).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('moKpiProdBadge'), thisYemek, lastYemek, false);
+  el = document.getElementById('moKpiTurnikeVal'); if (el) el.textContent = Math.round(thisTurnike).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('moKpiTurnikeBadge'), thisTurnike, lastTurnike, false);
+  el = document.getElementById('moKpiPerPersonVal'); if (el) el.textContent = fmtNum(thisKisiAtik, 2);
+  pctBadge(document.getElementById('moKpiPerPersonBadge'), thisKisiAtik, lastKisiAtik, true);
+
+  // Horizontal bar
+  try {
+    var canvas = document.getElementById('moHorizBar');
+    if (canvas) {
+      if (window._moHorizChart) { try { window._moHorizChart.destroy(); } catch(_){} }
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor = isDark ? '#e2e8f0' : '#475569';
+      var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx = canvas.getContext('2d');
+      var labels = ['Toplam Atık (kg)', 'Toplam Üretim (pors.)', 'Turnike Geçişi', 'Öğrenci Sayısı', 'Kişi Başı Atık (gr)'];
+      var thisVals = [thisAtik, thisYemek, thisTurnike, thisOgrenci, thisKisiAtik];
+      var lastVals = [lastAtik, lastYemek, lastTurnike, lastOgrenci, lastKisiAtik];
+      window._moHorizChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: [
+          { label: 'Geçen Ay', data: lastVals, backgroundColor: 'rgba(99,102,241,0.35)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 },
+          { label: 'Bu Ay', data: thisVals, backgroundColor: 'rgba(34,197,94,0.75)', borderColor: '#22c55e', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 }
+        ]},
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 40 } }, animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor, boxWidth: 12, font: { size: 11 } } } },
+          scales: { x: { beginAtZero: true, ticks: { color: tickColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false } } }
+        },
+        plugins: [makeValueLabelsPlugin()]
+      });
+    }
+  } catch (e) { console.warn('mo horiz:', e); }
+
+  // Donut
+  try {
+    var donutCanvas = document.getElementById('moDonut');
+    if (donutCanvas) {
+      if (window._moDonutChart) { try { window._moDonutChart.destroy(); } catch(_){} }
+      var ctx2 = donutCanvas.getContext('2d');
+      var reduction = lastAtik > 0 ? ((lastAtik - thisAtik) / lastAtik) * 100 : 0;
+      var disp = Math.max(0, Math.min(100, reduction < 0 ? 0 : reduction));
+      var remaining = 100 - disp;
+      var color = reduction >= 0 ? '#22c55e' : '#ef4444';
+      window._moDonutChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: { labels: ['Azalma', 'Kalan'], datasets: [{ data: [disp, remaining], backgroundColor: [color, 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
+      var badgeEl = document.getElementById('moDonutBadge');
+      if (badgeEl) {
+        if (reduction >= 0) { badgeEl.textContent = 'Atık miktarı azalmıştır (' + reduction.toFixed(1).replace('.',',') + '%)'; badgeEl.className = 'wk-donut-badge'; }
+        else { badgeEl.textContent = 'Atık miktarı artmıştır (' + Math.abs(reduction).toFixed(1).replace('.',',') + '%)'; badgeEl.className = 'wk-donut-badge bad'; }
+      }
+      var centerEl = document.getElementById('moDonutCenter');
+      if (centerEl) { centerEl.textContent = (reduction >= 0 ? '↓' : '↑') + ' ' + Math.abs(reduction).toFixed(1).replace('.',',') + '%'; centerEl.style.color = reduction >= 0 ? '#16a34a' : '#dc2626'; }
+      var leafEl = document.getElementById('moDonutLeaf');
+      if (leafEl) {
+        if (reduction >= 0) {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+        } else {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
+        }
+      }
+      var thisEl = document.getElementById('moDonutThis'); if (thisEl) thisEl.textContent = thisAtik.toFixed(1).replace('.',',') + ' kg';
+      var prevEl = document.getElementById('moDonutPrev'); if (prevEl) prevEl.textContent = lastAtik.toFixed(1).replace('.',',') + ' kg';
+    }
+  } catch (e) { console.warn('mo donut:', e); }
+
+  // Trend: daily by day-of-month (1..31) this month vs last month
+  try {
+    var lineCanvas = document.getElementById('moTrendLine');
+    if (lineCanvas) {
+      if (window._moLineChart) { try { window._moLineChart.destroy(); } catch(_){} }
+      var isDark3 = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor3 = isDark3 ? '#e2e8f0' : '#475569';
+      var gridColor3 = isDark3 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx3 = lineCanvas.getContext('2d');
+      function dailyByDay(recordsArr, year, month) {
+        var daysInMonth = new Date(year, month + 1, 0).getDate();
+        var out = new Array(daysInMonth).fill(0);
+        recordsArr.forEach(function(r) {
+          var d = new Date(r.tarih);
+          if (isNaN(d.getTime())) return;
+          if (d.getFullYear() !== year || d.getMonth() !== month) return;
+          var idx = d.getDate() - 1;
+          if (idx >= 0 && idx < out.length) out[idx] += (r.atik || 0);
+        });
+        return out;
+      }
+      var thisDaily = dailyByDay(records, now.getFullYear(), now.getMonth());
+      var lastDaily = dailyByDay(records, lastStart.getFullYear(), lastStart.getMonth());
+      // align lengths
+      var maxLen = Math.max(thisDaily.length, lastDaily.length);
+      while (thisDaily.length < maxLen) thisDaily.push(0);
+      while (lastDaily.length < maxLen) lastDaily.push(0);
+      var dayLabels = [];
+      for (var i = 1; i <= maxLen; i++) dayLabels.push(String(i));
+      window._moLineChart = new Chart(ctx3, {
+        type: 'line',
+        data: { labels: dayLabels, datasets: [
+          { label: 'Geçen Ay', data: lastDaily, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', tension: 0.3, fill: true, pointRadius: 2 },
+          { label: 'Bu Ay', data: thisDaily, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', tension: 0.3, fill: true, pointRadius: 2 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor3, boxWidth: 12, font: { size: 11 } } } },
+          scales: { x: { ticks: { color: tickColor3, maxTicksLimit: 12 }, grid: { color: gridColor3 } }, y: { beginAtZero: true, ticks: { color: tickColor3, precision: 1 }, grid: { color: gridColor3 } } }
+        }
+      });
+    }
+  } catch (e) { console.warn('mo line:', e); }
+
+  // Summary table
+  try {
+    var tbody = document.getElementById('moSummaryTbody');
+    if (tbody) {
+      var rows = [
+        { label: 'Toplam Atık (kg)', thisV: thisAtik, prevV: lastAtik, dec: 1, unit: ' kg', lower: true },
+        { label: 'Toplam Üretim (porsiyon)', thisV: thisYemek, prevV: lastYemek, dec: 0, unit: '', lower: false },
+        { label: 'Turnike Geçiş Sayısı', thisV: thisTurnike, prevV: lastTurnike, dec: 0, unit: '', lower: false },
+        { label: 'Öğrenci Sayısı', thisV: thisOgrenci, prevV: lastOgrenci, dec: 0, unit: '', lower: false },
+        { label: 'Kişi Başı Atık (gr)', thisV: thisKisiAtik, prevV: lastKisiAtik, dec: 2, unit: ' gr', lower: true },
+      ];
+      tbody.innerHTML = rows.map(function(rw) {
+        var diff = rw.thisV - rw.prevV;
+        var pct = rw.prevV ? (diff / rw.prevV) * 100 : 0;
+        var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+        var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+        return '<tr><td>' + rw.label + '</td>'
+          + '<td class="num">' + rw.prevV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + rw.thisV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + (diff >= 0 ? '+' : '') + diff.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num"><span class="comparison-badge ' + cls + '">' + arrow + ' ' + Math.abs(pct).toFixed(1) + '%</span></td></tr>';
+      }).join('');
+    }
+  } catch (e) { console.warn('mo table:', e); }
 }
 
 function renderYearlyComparison() {
   const card = document.getElementById('yearlyCompCard');
-  const grid = document.getElementById('yearlyCompGrid');
   const badge = document.getElementById('yearlyCompBadge');
   if (!card || records.length < 2) { if (card) card.style.display = 'none'; return; }
 
-  var now = new Date();
+  var refDate = new Date();
+  try {
+    if (typeof weeklySummaryOffset !== 'undefined' && weeklySummaryOffset !== 0) {
+      var rr = getWeeklyDateRange(weeklySummaryOffset);
+      refDate = new Date(rr.monday);
+    }
+  } catch (e) {}
+  var now = refDate;
   var thisStart = new Date(now.getFullYear(), 0, 1);
   var thisEnd = now;
   var lastStart = new Date(now.getFullYear() - 1, 0, 1);
@@ -7613,37 +7962,172 @@ function renderYearlyComparison() {
   var thisOgrenci = sum(thisYear, 'ogrenci');
   var lastOgrenci = sum(lastYear, 'ogrenci');
 
-  badge.textContent = now.getFullYear() + ' vs ' + (now.getFullYear() - 1);
+  if (badge) badge.textContent = now.getFullYear() + ' vs ' + (now.getFullYear() - 1);
 
-  var items = [
-    { label: t('compTotalWaste'), val: thisAtik, prev: lastAtik, unit: ' kg', lower: true, decimals: 1 },
-    { label: t('compTotalProduction'), val: thisYemek, prev: lastYemek, unit: ' porsiyon', lower: false, decimals: 0 },
-    { label: t('compTurnstilePasses'), val: thisTurnike, prev: lastTurnike, unit: '', lower: false, decimals: 0 },
-    { label: t('compStudentCount'), val: thisOgrenci, prev: lastOgrenci, unit: '', lower: false, decimals: 0 },
-    { label: t('compWastePerPerson'), val: thisKisiAtik, prev: lastKisiAtik, unit: ' gr', lower: true, decimals: 2 },
-  ];
-
-  grid.innerHTML = '<div class="comparison-header-row">'
-    + '<span class="comparison-label">' + t('compDataType') + '</span>'
-    + '<span class="comparison-old">' + t('compLastMonth') + '</span>'
-    + '<span class="comparison-arrow"></span>'
-    + '<span class="comparison-new">' + t('compThisMonth') + '</span>'
-    + '<span class="comparison-diff">' + t('compDiff') + '</span>'
-    + '</div>'
-    + items.map(function(it) {
-    var diff = it.val - it.prev;
-    var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+  // KPI
+  function pctBadge(el, val, prev, lowerIsGood) {
+    if (!el) return;
+    var diff = val - prev;
+    var pct = prev ? (diff / prev) * 100 : 0;
+    var good = lowerIsGood ? diff <= 0 : diff >= 0;
+    var cls = Math.abs(pct) < 0.05 ? 'neutral' : (good ? 'positive' : 'negative');
     var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
-    var label = arrow + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(it.decimals) + it.unit;
-    return '<div class="comparison-item">'
-      + '<span class="comparison-label">' + it.label + '</span>'
-      + '<span class="comparison-old">' + it.prev.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-arrow">→</span>'
-      + '<span class="comparison-new">' + it.val.toFixed(it.decimals) + it.unit + '</span>'
-      + '<span class="comparison-diff"><span class="comparison-badge ' + cls + '">' + label + '</span></span>'
-      + '</div>';
-  }).join('');
+    el.textContent = arrow + ' ' + Math.abs(pct).toFixed(1) + '%';
+    el.className = 'wk-kpi-badge ' + cls;
+  }
+  function fmtNum(n, dec) { return Number(n).toFixed(dec).replace('.', ','); }
+  var el;
+  el = document.getElementById('yrKpiWasteVal'); if (el) el.textContent = fmtNum(thisAtik, 1);
+  pctBadge(document.getElementById('yrKpiWasteBadge'), thisAtik, lastAtik, true);
+  el = document.getElementById('yrKpiProdVal'); if (el) el.textContent = Math.round(thisYemek).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('yrKpiProdBadge'), thisYemek, lastYemek, false);
+  el = document.getElementById('yrKpiTurnikeVal'); if (el) el.textContent = Math.round(thisTurnike).toLocaleString('tr-TR');
+  pctBadge(document.getElementById('yrKpiTurnikeBadge'), thisTurnike, lastTurnike, false);
+  el = document.getElementById('yrKpiPerPersonVal'); if (el) el.textContent = fmtNum(thisKisiAtik, 2);
+  pctBadge(document.getElementById('yrKpiPerPersonBadge'), thisKisiAtik, lastKisiAtik, true);
+
+  // Horizontal bar
+  try {
+    var canvas = document.getElementById('yrHorizBar');
+    if (canvas) {
+      if (window._yrHorizChart) { try { window._yrHorizChart.destroy(); } catch(_){} }
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor = isDark ? '#e2e8f0' : '#475569';
+      var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx = canvas.getContext('2d');
+      var labels = ['Toplam Atık (kg)', 'Toplam Üretim (pors.)', 'Turnike Geçişi', 'Öğrenci Sayısı', 'Kişi Başı Atık (gr)'];
+      var thisVals = [thisAtik, thisYemek, thisTurnike, thisOgrenci, thisKisiAtik];
+      var lastVals = [lastAtik, lastYemek, lastTurnike, lastOgrenci, lastKisiAtik];
+      window._yrHorizChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: [
+          { label: 'Geçen Yıl', data: lastVals, backgroundColor: 'rgba(99,102,241,0.35)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 },
+          { label: 'Bu Yıl', data: thisVals, backgroundColor: 'rgba(34,197,94,0.75)', borderColor: '#22c55e', borderWidth: 1, borderRadius: 6, barPercentage: 0.7 }
+        ]},
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 40 } }, animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor, boxWidth: 12, font: { size: 11 } } } },
+          scales: { x: { beginAtZero: true, ticks: { color: tickColor, precision: 0 }, grid: { color: gridColor } }, y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false } } }
+        },
+        plugins: [makeValueLabelsPlugin()]
+      });
+    }
+  } catch (e) { console.warn('yr horiz:', e); }
+
+  // Donut
+  try {
+    var donutCanvas = document.getElementById('yrDonut');
+    if (donutCanvas) {
+      if (window._yrDonutChart) { try { window._yrDonutChart.destroy(); } catch(_){} }
+      var ctx2 = donutCanvas.getContext('2d');
+      var reduction = lastAtik > 0 ? ((lastAtik - thisAtik) / lastAtik) * 100 : 0;
+      var disp = Math.max(0, Math.min(100, reduction < 0 ? 0 : reduction));
+      var remaining = 100 - disp;
+      var color = reduction >= 0 ? '#22c55e' : '#ef4444';
+      window._yrDonutChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: { labels: ['Azalma', 'Kalan'], datasets: [{ data: [disp, remaining], backgroundColor: [color, 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
+      var badgeEl = document.getElementById('yrDonutBadge');
+      if (badgeEl) {
+        if (reduction >= 0) { badgeEl.textContent = 'Atık miktarı azalmıştır (' + reduction.toFixed(1).replace('.',',') + '%)'; badgeEl.className = 'wk-donut-badge'; }
+        else { badgeEl.textContent = 'Atık miktarı artmıştır (' + Math.abs(reduction).toFixed(1).replace('.',',') + '%)'; badgeEl.className = 'wk-donut-badge bad'; }
+      }
+      var centerEl = document.getElementById('yrDonutCenter');
+      if (centerEl) { centerEl.textContent = (reduction >= 0 ? '↓' : '↑') + ' ' + Math.abs(reduction).toFixed(1).replace('.',',') + '%'; centerEl.style.color = reduction >= 0 ? '#16a34a' : '#dc2626'; }
+      var leafEl = document.getElementById('yrDonutLeaf');
+      if (leafEl) {
+        if (reduction >= 0) {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 19 6 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 18.5 10 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 18.5 16 20.5\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M18 21 Q19 19 20 21\" stroke=\"#22c55e\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 15c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><path d=\"M12 12c-4-1-6-4.5-4.5-8.5 4 1 6 4.5 4.5 8.5z\" fill=\"#16a34a\" stroke=\"none\"/><path d=\"M12 9c4-1 6-4.5 4.5-8.5-4 1-6 4.5-4.5 8.5z\" fill=\"#22c55e\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.6\" fill=\"#22c55e\" stroke=\"none\"/></svg>';
+        } else {
+          leafEl.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"80\" height=\"80\" fill=\"none\" stroke=\"#92400e\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"opacity:0.9\"><path d=\"M2 22 Q12 17 22 22 Z\" fill=\"#78350f\" stroke=\"none\"/><path d=\"M4 21 Q5 20 6 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M8 20.5 Q9 19.5 10 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M14 20.5 Q15 19.5 16 20.5\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M18 21 Q19 20 20 21\" stroke=\"#b45309\" stroke-width=\"1\"/><path d=\"M12 21V4\"/><path d=\"M12 18c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 15c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><path d=\"M12 12c-4-1.5-5-5-3-8.5 3 1.5 4 5 3 8.5z\" fill=\"#92400e\" stroke=\"none\"/><path d=\"M12 9c4-1.5 5-5 3-8.5-3 1.5-4 5-3 8.5z\" fill=\"#b45309\" stroke=\"none\"/><circle cx=\"12\" cy=\"4\" r=\"1.4\" fill=\"#b45309\" stroke=\"none\"/></svg>';
+        }
+      }
+      var thisEl = document.getElementById('yrDonutThis'); if (thisEl) thisEl.textContent = thisAtik.toFixed(1).replace('.',',') + ' kg';
+      var prevEl = document.getElementById('yrDonutPrev'); if (prevEl) prevEl.textContent = lastAtik.toFixed(1).replace('.',',') + ' kg';
+    }
+  } catch (e) { console.warn('yr donut:', e); }
+
+  // Trend: monthly atik by month (Jan..Dec) this year vs last year
+  try {
+    var lineCanvas = document.getElementById('yrTrendLine');
+    if (lineCanvas) {
+      if (window._yrLineChart) { try { window._yrLineChart.destroy(); } catch(_){} }
+      var isDark3 = document.documentElement.getAttribute('data-theme') === 'dark';
+      var tickColor3 = isDark3 ? '#e2e8f0' : '#475569';
+      var gridColor3 = isDark3 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var ctx3 = lineCanvas.getContext('2d');
+      function monthlyByMonth(recordsArr, year) {
+        var out = new Array(12).fill(0);
+        recordsArr.forEach(function(r) {
+          var d = new Date(r.tarih);
+          if (isNaN(d.getTime())) return;
+          if (d.getFullYear() !== year) return;
+          var idx = d.getMonth();
+          if (idx >= 0 && idx < 12) out[idx] += (r.atik || 0);
+        });
+        return out;
+      }
+      var thisMonthly = monthlyByMonth(records, now.getFullYear());
+      var lastMonthly = monthlyByMonth(records, now.getFullYear() - 1);
+      var monthLabels = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+      // only show up to current month for this year? keep all 12
+      window._yrLineChart = new Chart(ctx3, {
+        type: 'line',
+        data: { labels: monthLabels, datasets: [
+          { label: 'Geçen Yıl', data: lastMonthly, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', tension: 0.3, fill: true, pointRadius: 3 },
+          { label: 'Bu Yıl', data: thisMonthly, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', tension: 0.3, fill: true, pointRadius: 3 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, animation: { duration: 700, easing: 'easeOutCubic' },
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor3, boxWidth: 12, font: { size: 11 } } } },
+          scales: { x: { ticks: { color: tickColor3 }, grid: { color: gridColor3 } }, y: { beginAtZero: true, ticks: { color: tickColor3, precision: 1 }, grid: { color: gridColor3 } } }
+        }
+      });
+    }
+  } catch (e) { console.warn('yr line:', e); }
+
+  // Summary table
+  try {
+    var tbody = document.getElementById('yrSummaryTbody');
+    if (tbody) {
+      var rows = [
+        { label: 'Toplam Atık (kg)', thisV: thisAtik, prevV: lastAtik, dec: 1, unit: ' kg', lower: true },
+        { label: 'Toplam Üretim (porsiyon)', thisV: thisYemek, prevV: lastYemek, dec: 0, unit: '', lower: false },
+        { label: 'Turnike Geçiş Sayısı', thisV: thisTurnike, prevV: lastTurnike, dec: 0, unit: '', lower: false },
+        { label: 'Öğrenci Sayısı', thisV: thisOgrenci, prevV: lastOgrenci, dec: 0, unit: '', lower: false },
+        { label: 'Kişi Başı Atık (gr)', thisV: thisKisiAtik, prevV: lastKisiAtik, dec: 2, unit: ' gr', lower: true },
+      ];
+      tbody.innerHTML = rows.map(function(rw) {
+        var diff = rw.thisV - rw.prevV;
+        var pct = rw.prevV ? (diff / rw.prevV) * 100 : 0;
+        var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+        var arrow = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+        return '<tr><td>' + rw.label + '</td>'
+          + '<td class="num">' + rw.prevV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + rw.thisV.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num">' + (diff >= 0 ? '+' : '') + diff.toFixed(rw.dec) + rw.unit + '</td>'
+          + '<td class="num"><span class="comparison-badge ' + cls + '">' + arrow + ' ' + Math.abs(pct).toFixed(1) + '%</span></td></tr>';
+      }).join('');
+    }
+  } catch (e) { console.warn('yr table:', e); }
 }
+
+// Yeniden boyutlandırma (zoom in/out) sonrası grafiklerin taşmasını önle
+(function() {
+  var resizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      try {
+        if (typeof isTabActive === 'function' && isTabActive('dashboard')) {
+          if (typeof renderWeeklyComparison === 'function') renderWeeklyComparison();
+          if (typeof renderMonthlyComparison === 'function') renderMonthlyComparison();
+          if (typeof renderYearlyComparison === 'function') renderYearlyComparison();
+        }
+      } catch (e) {}
+    }, 250);
+  });
+})();
 
 var anomalyPage = 0;
 var ANOMALY_PAGE_SIZE = 5;

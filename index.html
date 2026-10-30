@@ -278,76 +278,7 @@
 
     <!-- ===== DASHBOARD TAB ===== -->
     <div class="tab-content active" id="content-dashboard">
-      <div class="kpi-grid" id="kpiGrid">
-        <div class="kpi-card" id="kpi-toplam-kayit">
-          <div class="kpi-icon kpi-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiTotalRecords">Toplam Üretim Günü</span>
-            <span class="kpi-value" id="kpiTotalRecords">0</span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-hafta-uretim">
-          <div class="kpi-icon kpi-cyan">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/><path d="M8 15h8"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiWeekProduction">Bu Haftaki Üretim</span>
-            <span class="kpi-value" id="kpiHaftaYemek">—</span>
-            <span class="kpi-trend" id="kpiHaftaYemekSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-ort-atik">
-          <div class="kpi-icon kpi-orange">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiAvgWaste">Ort. Atık (kg)</span>
-            <span class="kpi-value" id="kpiAvgAtik">0.00</span>
-            <span class="kpi-trend" id="trendAvgAtik"></span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-toplam-gecis">
-          <div class="kpi-icon kpi-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiTotalPasses">Turnikeden Toplam Geçiş Rakamı</span>
-            <span class="kpi-value" id="kpiLastGecis">0</span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-menu-cesit">
-          <div class="kpi-icon kpi-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M7 3v18M17 3v18"/><path d="M3 9h18M3 15h18"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiMenuVariety">Toplam Menü Çeşidi Sayısı</span>
-            <span class="kpi-value" id="kpiMenuCesit">0</span>
-            <span class="kpi-trend" id="kpiMenuCesitSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-haccp-alarm">
-          <div class="kpi-icon kpi-red">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiHaccpAlarm">Soğuk Hava Depo Sıcaklık Alarmı</span>
-            <span class="kpi-value" id="kpiHaccpAlarm">0</span>
-            <span class="kpi-trend" id="kpiHaccpAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
-          </div>
-        </div>
-        <div class="kpi-card" id="kpi-kalibrasyon-alarm">
-          <div class="kpi-icon kpi-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          </div>
-          <div class="kpi-body">
-            <span class="kpi-label" data-i18n="kpiCalibrationAlarm">Kalibrasyon Alarmı</span>
-            <span class="kpi-value" id="kpiKalibrasyonAlarm">0</span>
-            <span class="kpi-trend" id="kpiKalibrasyonAlarmSub" style="font-size:0.72rem;color:var(--text-muted)"></span>
-          </div>
-        </div>
-      </div>
+      <!-- KPI grid removed -->
       <!-- Weekly Summary -->
       <div class="weekly-summary" id="weeklySummary">
         <div class="weekly-summary-header">
@@ -388,39 +319,277 @@
         </div>
       </div>
 
-      <!-- Data Info -->
-      <div class="data-info" id="dataInfo" style="display:none">
-        <span id="dataInfoRange"></span>
-      </div>
+      <!-- Data Info removed -->
 
-      <!-- Weekly Comparison -->
-      <div class="section-card" id="weeklyCompCard" style="display:none">
+      <!-- Weekly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="weeklyCompCard" style="display:none">
         <div class="section-header">
           <h2 data-i18n="weeklyCompTitle">Haftalık Karşılaştırma</h2>
           <span class="badge" id="weeklyCompBadge" data-i18n="weeklyBadge"></span>
         </div>
         <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7">Bu hafta (Pzt–Paz) ile geçen hafta karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
-        <div class="comparison-grid" id="weeklyCompGrid"></div>
+
+        <!-- 1. KPI Cards -->
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="wkKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="wkKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="wkKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="wkKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="wkKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="wkKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="wkKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="wkKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Middle Row -->
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Haftalık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="wkHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="wkDonut"></canvas></div>
+                <div class="wk-donut-center" id="wkDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="wkDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="wkDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Hafta: <strong id="wkDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Hafta: <strong id="wkDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Bottom Row -->
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Günlük Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="wkTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="wkSummaryTable">
+                <thead>
+                  <tr>
+                    <th>Veri Türü</th>
+                    <th>Geçen Hafta</th>
+                    <th>Bu Hafta</th>
+                    <th>Fark</th>
+                    <th>Değişim %</th>
+                  </tr>
+                </thead>
+                <tbody id="wkSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Monthly Comparison -->
-      <div class="section-card" id="monthlyCompCard" style="display:none">
+      <!-- Monthly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="monthlyCompCard" style="display:none">
         <div class="section-header">
           <h2 data-i18n="monthlyCompTitle">Aylık Karşılaştırma</h2>
           <span class="badge" id="monthlyCompBadge" data-i18n="monthlyBadge"></span>
         </div>
         <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7" data-i18n="monthlyCompDesc">Bu ay ile geçen ay karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
-        <div class="comparison-grid" id="monthlyCompGrid"></div>
+
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="moKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="moKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="moKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="moKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="moKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="moKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="moKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="moKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Aylık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="moHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="moDonut"></canvas></div>
+                <div class="wk-donut-center" id="moDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="moDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="moDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Ay: <strong id="moDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Ay: <strong id="moDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Günlük Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="moTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="moSummaryTable">
+                <thead><tr><th>Veri Türü</th><th>Geçen Ay</th><th>Bu Ay</th><th>Fark</th><th>Değişim %</th></tr></thead>
+                <tbody id="moSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Yearly Comparison -->
-      <div class="section-card" id="yearlyCompCard" style="display:none">
+      <!-- Yearly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="yearlyCompCard" style="display:none">
         <div class="section-header">
           <h2 data-i18n="yearlyCompTitle">Yıllık Karşılaştırma</h2>
           <span class="badge" id="yearlyCompBadge" data-i18n="yearlyBadge"></span>
         </div>
         <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7" data-i18n="yearlyCompDesc">Bu yıl (yılbaşından bugüne) ile geçen yılın aynı dönemi karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
-        <div class="comparison-grid" id="yearlyCompGrid"></div>
+
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="yrKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="yrKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="yrKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="yrKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="yrKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="yrKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="yrKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="yrKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Yıllık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="yrHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="yrDonut"></canvas></div>
+                <div class="wk-donut-center" id="yrDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="yrDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="yrDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Yıl: <strong id="yrDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Yıl: <strong id="yrDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Aylık Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="yrTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="yrSummaryTable">
+                <thead><tr><th>Veri Türü</th><th>Geçen Yıl</th><th>Bu Yıl</th><th>Fark</th><th>Değişim %</th></tr></thead>
+                <tbody id="yrSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Anomalies -->
