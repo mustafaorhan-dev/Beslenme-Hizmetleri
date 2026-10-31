@@ -10152,7 +10152,7 @@ function exportYemekCSV() {
   const list = loadYemekler();
   if (!list || !list.length) { showToast('Dışa aktarılacak yemek yok.', 'error'); return; }
   const maxUrun = list.reduce((m, y) => Math.max(m, (y.tarif || []).length), 0);
-  const headers = ['Yemek Adı', 'Kalori', 'Alerjen'];
+  const headers = [t('thMealName'), t('thCalories'), t('thAllergen')];
   for (let i = 1; i <= maxUrun; i++) {
     headers.push('Ürün ' + i, 'Miktar ' + i, 'Birim ' + i);
   }
@@ -10643,12 +10643,12 @@ async function saveMenuData(allData) {
     });
     if (upserts.length > 0) {
       var { error } = await supabaseClient.from('weekly_menu').upsert(upserts, { onConflict: 'week_key' });
-      if (error) showToast('Menü kaydedilemedi: ' + error.message, 'error');
+      if (error) showToast(t('menuSaveFailed') + ': ' + error.message, 'error');
     }
     // Yerel cache + yillik maliyet cache'ini tazele
     menuAllDataCache = allData;
     _yillikCache = null;
-  } catch (_) { showToast('Menü kaydedilemedi (bağlantı hatası).', 'error'); }
+  } catch (_) { showToast(t('menuSaveConnErr'), 'error'); }
 }
 
 // -- Live production refresh --
@@ -13525,7 +13525,7 @@ async function menuOnayaGonder() {
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_onaya_gonder', oturumGet('atik_kontrol_display_name') + ' ' + ctx.weekKey + ' menüsünü onaya gönderdi');
-  showToast('Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.', 'success');
+  showToast(t('menuApprovalSent'), 'success');
   await renderMenu();
 }
 
@@ -13542,7 +13542,7 @@ async function menuOnayla() {
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_onayla', displayName + ' ' + ctx.weekKey + ' menüsünü onayladı');
-  showToast('Menü onaylandı.', 'success');
+  showToast(t('menuApproved'), 'success');
   await renderMenu();
 }
 
@@ -13564,7 +13564,7 @@ async function menuReddetApply(not) {
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (meta.durum !== MENU_DURUMLAR.ONAY_BEKLIYOR) {
-    showToast('Menü bekleyen durumda değil.', 'error');
+    showToast(t('menuNotPending'), 'error');
     return;
   }
   const displayName = oturumGet('atik_kontrol_display_name') || getRole();
@@ -13572,7 +13572,7 @@ async function menuReddetApply(not) {
   ctx.allData[ctx.weekKey] = ctx.weekData;
   await saveMenuData(ctx.allData);
   logIslem('menu_reddet', displayName + ' ' + ctx.weekKey + ' menüsünü reddetti: ' + not);
-  showToast('Menü gerekçeli olarak reddedildi.', 'success');
+  showToast(t('menuRejected'), 'success');
   await renderMenu();
 }
 
@@ -14009,7 +14009,7 @@ async function saveWeeklyMenu() {
   const ctx = await getCurrentWeekContext();
   const meta = getMenuDurumMeta(ctx.weekData);
   if (!canMenuDuzenle(meta.durum)) {
-    showToast('Menü onay sürecinde; düzenlemek için önce onayı kaldırın.', 'error');
+    showToast(t('menuEditingLocked'), 'error');
     return;
   }
   const weekData = collectMenuWeekFromDOM();
@@ -14019,7 +14019,7 @@ async function saveWeeklyMenu() {
     : { durum: MENU_DURUMLAR.TASLAK, onaylayan: '', onay_tarihi: '', onay_notu: '' };
   ctx.allData[ctx.weekKey] = weekData;
   await saveMenuData(ctx.allData);
-  showToast('Menü taslak olarak kaydedildi.', 'success');
+  showToast(t('menuDraftSaved'), 'success');
   await renderMenu();
 }
 
@@ -14092,7 +14092,7 @@ function clearWeeklyMenu() { if (!canEditMenuRecords()) { showToast('Bu işlem i
     if (el) el.value = '0';
   });
   refreshMenuProduction();
-  showToast('Menü temizlendi.', 'success');
+  showToast(t('menuCleared'), 'success');
 }
 
 async function exportMenuJSON() {
@@ -14105,7 +14105,7 @@ async function exportMenuJSON() {
   link.download = `menu_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Menü JSON olarak indirildi.', 'success');
+  showToast(t('menuJsonDownloaded'), 'success');
 }
 
 function importMenuJSON(event) { if (!requireAdmin()) return;
@@ -14117,9 +14117,9 @@ function importMenuJSON(event) { if (!requireAdmin()) return;
       const data = JSON.parse(ev.target.result);
       await saveMenuData(data);
       await renderMenu();
-      showToast('Menü yüklendi.', 'success');
+      showToast(t('menuLoaded'), 'success');
     } catch (err) {
-      showToast('Menü yükleme hatası: ' + err.message, 'error');
+      showToast(t('menuLoadError') + err.message, 'error');
     }
   };
   reader.readAsText(file, 'UTF-8');
@@ -16441,6 +16441,20 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    thCalories: "Kalori",
+    thAllergen: "Alerjen",
+    menuSaveFailed: "Menü kaydedilemedi",
+    menuSaveConnErr: "Menü kaydedilemedi (bağlantı hatası).",
+    menuApprovalSent: "Menü onaya gönderildi. Gıda Mühendisi/Admin onayı bekleniyor.",
+    menuApproved: "Menü onaylandı.",
+    menuRejected: "Menü gerekçeli olarak reddedildi.",
+    menuNotPending: "Menü bekleyen durumda değil.",
+    menuDraftSaved: "Menü taslak olarak kaydedildi.",
+    menuEditingLocked: "Menü onay sürecinde; düzenlemek için önce onayı kaldırın.",
+    menuCleared: "Menü temizlendi.",
+    menuJsonDownloaded: "Menü JSON olarak indirildi.",
+    menuLoaded: "Menü yüklendi.",
+    menuLoadError: "Menü yükleme hatası: ",
     recProducedNegative: "Üretilen yemek sayısı negatif olamaz.",
     recTurnstileNegative: "Turnike geçiş sayısı negatif olamaz.",
     recStaffNegative: "Personel sayısı negatif olamaz.",
@@ -16867,6 +16881,20 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    thCalories: "Calories",
+    thAllergen: "Allergen",
+    menuSaveFailed: "Menu could not be saved",
+    menuSaveConnErr: "Menu could not be saved (connection error).",
+    menuApprovalSent: "Menu sent for approval. Awaiting Food Engineer/Admin approval.",
+    menuApproved: "Menu approved.",
+    menuRejected: "Menu rejected with reason.",
+    menuNotPending: "Menu is not pending.",
+    menuDraftSaved: "Menu saved as draft.",
+    menuEditingLocked: "Menu is in approval process; remove approval to edit.",
+    menuCleared: "Menu cleared.",
+    menuJsonDownloaded: "Menu downloaded as JSON.",
+    menuLoaded: "Menu loaded.",
+    menuLoadError: "Menu load error: ",
     recProducedNegative: "Produced meal count cannot be negative.",
     recTurnstileNegative: "Turnstile pass count cannot be negative.",
     recStaffNegative: "Staff count cannot be negative.",
