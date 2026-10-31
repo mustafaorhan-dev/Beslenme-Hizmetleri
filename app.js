@@ -3882,7 +3882,7 @@ function printBirimFiyatlar() {
   win.document.write('.footer{text-align:center;font-size:0.75rem;color:#999;margin-top:2rem;border-top:1px solid #ddd;padding-top:0.5rem}');
   win.document.write('</style></head><body>');
   win.document.write('<h1>Ürün ve Birim Fiyat Listesi</h1>');
-  win.document.write('<div class="sub">' + birimFiyatSeciliYil + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
+  win.document.write('<div class="sub">' + escapeHtml(birimFiyatSeciliYil) + ' Yılı \u2014 ' + filtered.length + ' \u00fcr\u00fcn</div>');
   win.document.write('<table><thead><tr><th style="width:30px">#</th><th style="text-align:left">\u00dcr\u00fcn Ad\u0131</th><th>Birim</th><th>Birim Fiyat (\u20BA)</th><th>Y\u0131l</th></tr></thead><tbody>' + rows + '</tbody></table>');
   win.document.write('<div class="footer">K\u0131r\u015fehir Ahi Evran \u00dcniversitesi &bull; Beslenme Hizmetleri &bull; ' + new Date().toLocaleDateString('tr-TR') + '</div>');
   win.document.write('</body></html>');
@@ -4643,7 +4643,7 @@ function printQr() {
   var img = document.getElementById('qrImage');
   var printWin = window.open('', '_blank', 'width=400,height=500');
   if (!printWin) { showToast('Pop-up engelleyiciyi kapat' + String.fromCharCode(305) + 'n.', 'error'); return; }
-  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Kod - ' + depoAdi + '</title>' +
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR Kod - ' + escapeHtml(depoAdi) + '</title>' +
     '<style>body{text-align:center;font-family:Arial,sans-serif;padding:20px;margin:0}' +
     'h1{font-size:1.2rem;margin-bottom:0.3rem}' +
     '.sub{font-size:0.85rem;color:#666;margin-bottom:1.5rem}' +

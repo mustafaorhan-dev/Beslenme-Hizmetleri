@@ -7,6 +7,7 @@
   <meta name="description" content="Kırşehir Ahi Evran Üniversitesi yemekhane beslenme ve atık yönetim sistemi - günlük yemek üretimi, fire ve atık miktarlarının izlenmesi" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://fonts.googleapis.com; frame-ancestors 'none'; base-uri 'self';" />
   <meta http-equiv="Expires" content="0" />
   <script>
     (function(){var s=localStorage.getItem('atik_kontrol_theme');if(s==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches){document.documentElement.setAttribute('data-theme','dark')};var a=localStorage.getItem('atik_kontrol_accent')||'blue';document.documentElement.setAttribute('data-accent',a)})();
@@ -2848,6 +2849,7 @@
       } catch (_) {}
     })();
   </script>
+  <script src="security.js"></script>
   <script src="app.js"></script>
   <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="18 15 12 9 6 15"/></svg>
