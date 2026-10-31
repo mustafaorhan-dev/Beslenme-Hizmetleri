@@ -26,7 +26,10 @@ const APP_CONFIG = {
   users: [],
   // Bu e-postalarla giriş yapan kişiler her zaman admin olur.
   // GÜVENLİK: Production'da BOŞ bırakın; admin yetkisi Supabase user_roles/app_users üzerinden verilir.
-  bootstrapAdmins: [],
+  // Geçici: ilk girişte admin kaydı oluşturmak için kullanılır; ilk girişten sonra boşaltın.
+  bootstrapAdmins: [
+    'tugce.muslu@ahievran.edu.tr'
+  ],
   supabaseUrl: 'https://ydbeltktutcxfeosqmai.supabase.co',
   supabaseAnonKey: 'sb_publishable_tUj9gU4n1VKLgwJZw5FmDQ_9W1E2nmA'
 };
