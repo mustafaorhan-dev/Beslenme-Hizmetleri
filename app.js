@@ -6484,12 +6484,12 @@ function openModal(id = null) {
   if (id !== null) {
     const rec = records.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Kaydı Düzenle';
-    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Güncelle`;
+    title.textContent = t('recEditTitle');
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' + t('btnUpdate') + '`;
     populateForm(rec);
   } else {
-    title.textContent = 'Yeni Kayıt Ekle';
-    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Kaydet`;
+    title.textContent = t('recNewTitle');
+    submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' + t('btnSave') + '`;
     document.getElementById('fTarih').value = formatLocalDate(new Date());
     // Yemekhanede Çalışan Personel Sayısı: son kayıtta kullanılan değer otomatik dolar, elle değiştirilebilir
     const fPersonelEl = document.getElementById('fPersonel');
@@ -16441,6 +16441,10 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    recEditTitle: "Kaydı Düzenle",
+    recNewTitle: "Yeni Kayıt Ekle",
+    btnUpdate: "Güncelle",
+    btnSave: "Kaydet",
     dupRecordsCleaned: "Duplike kayıtlar temizlendi. En yüksek fiyat korundu.",
     validPrice: "Geçerli bir fiyat girin.",
     yemekListesiCsvDownloaded: "Yemek listesi CSV olarak indirildi.",
@@ -16903,6 +16907,10 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    recEditTitle: "Edit Record",
+    recNewTitle: "New Record",
+    btnUpdate: "Update",
+    btnSave: "Save",
     dupRecordsCleaned: "Duplicate records cleaned. Highest price kept.",
     validPrice: "Enter a valid price.",
     yemekListesiCsvDownloaded: "Meal list exported as CSV.",
