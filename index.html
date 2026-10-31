@@ -1,0 +1,2871 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kırşehir Ahi Evran Üniversitesi - BHYS | Nutrition Services Management System (NSMS)</title>
+  <meta name="description" content="Kırşehir Ahi Evran Üniversitesi yemekhane beslenme ve atık yönetim sistemi - günlük yemek üretimi, fire ve atık miktarlarının izlenmesi" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    (function(){var s=localStorage.getItem('atik_kontrol_theme');if(s==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(s!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches){document.documentElement.setAttribute('data-theme','dark')};var a=localStorage.getItem('atik_kontrol_accent')||'blue';document.documentElement.setAttribute('data-accent',a)})();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='48'%20y2='48'%3E%3Cstop%20offset='0%25'%20stop-color='%2322d3ee'/%3E%3Cstop%20offset='100%25'%20stop-color='%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx='32'%20cy='32'%20r='32'%20fill='%230a0f1e'/%3E%3Ccircle%20cx='32'%20cy='32'%20r='29.5'%20fill='none'%20stroke='url(%23g)'%20stroke-width='1'%20opacity='0.35'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='12'%20fill='none'%20stroke='url(%23g)'%20stroke-width='2.8'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='7.2'%20fill='none'%20stroke='url(%23g)'%20stroke-width='1.6'%20opacity='0.5'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='1.8'%20fill='url(%23g)'/%3E%3Cg%20fill='url(%23g)'%3E%3Crect%20x='9.5'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Crect%20x='12.15'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Crect%20x='14.8'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Cpath%20d='M9.1%2018.5h10c0%203.1-1.6%204.9-3.85%205.75V46a2.15%202.15%200%200%201-4.3%200V24.25C9.55%2023.4%209.1%2021.6%209.1%2018.5z'/%3E%3C/g%3E%3Cg%20fill='url(%23g)'%3E%3Cpath%20d='M52.5%2013c-4%205.5-5%2013-1.8%2019h4.3c1-6.4.2-13.3-2.5-19z'/%3E%3Crect%20x='50.75'%20y='31'%20width='3.5'%20height='17'%20rx='1.75'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='48'%20y2='48'%3E%3Cstop%20offset='0%25'%20stop-color='%2322d3ee'/%3E%3Cstop%20offset='100%25'%20stop-color='%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx='32'%20cy='32'%20r='32'%20fill='%230a0f1e'/%3E%3Ccircle%20cx='32'%20cy='32'%20r='29.5'%20fill='none'%20stroke='url(%23g)'%20stroke-width='1'%20opacity='0.35'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='12'%20fill='none'%20stroke='url(%23g)'%20stroke-width='2.8'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='7.2'%20fill='none'%20stroke='url(%23g)'%20stroke-width='1.6'%20opacity='0.5'/%3E%3Ccircle%20cx='33.5'%20cy='32'%20r='1.8'%20fill='url(%23g)'/%3E%3Cg%20fill='url(%23g)'%3E%3Crect%20x='9.5'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Crect%20x='12.15'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Crect%20x='14.8'%20y='13'%20width='1.7'%20height='8.5'%20rx='0.85'/%3E%3Cpath%20d='M9.1%2018.5h10c0%203.1-1.6%204.9-3.85%205.75V46a2.15%202.15%200%200%201-4.3%200V24.25C9.55%2023.4%209.1%2021.6%209.1%2018.5z'/%3E%3C/g%3E%3Cg%20fill='url(%23g)'%3E%3Cpath%20d='M52.5%2013c-4%205.5-5%2013-1.8%2019h4.3c1-6.4.2-13.3-2.5-19z'/%3E%3Crect%20x='50.75'%20y='31'%20width='3.5'%20height='17'%20rx='1.75'/%3E%3C/g%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+<body>
+  <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <defs>
+      <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+        <stop offset="0%" stop-color="#22d3ee"/>
+        <stop offset="100%" stop-color="#4f46e5"/>
+      </linearGradient>
+      <linearGradient id="cutleryGrad" x1="0" y1="0" x2="220" y2="112" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#60a5fa"/>
+        <stop offset="45%" stop-color="#3b82f6"/>
+        <stop offset="100%" stop-color="#22d3ee"/>
+      </linearGradient>
+      <radialGradient id="plateGlow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="65%" stop-color="#3b82f6" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      </radialGradient>
+      <linearGradient id="wkTurbineFade" x1="0" y1="4" x2="0" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#94a3b8" stop-opacity="1"/>
+        <stop offset="55%" stop-color="#94a3b8" stop-opacity="0.7"/>
+        <stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- LOGIN OVERLAY -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-shell">
+      <section class="login-form-panel">
+        <div class="login-form-head">
+          <div class="login-logo-wrap">
+            <img src="logo.png" alt="Logo" class="login-logo-img-sm" />
+          </div>
+        </div>
+        <form class="login-form" onsubmit="event.preventDefault();doLogin()">
+          <div class="login-field-wrap">
+            <span class="login-field-icon login-icon-user">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <input type="email" id="loginEmail" class="login-field has-icon" placeholder="E-posta adresiniz" autocomplete="username" autocapitalize="none" spellcheck="false" aria-label="E-posta" />
+          </div>
+          <div class="login-field-wrap">
+            <span class="login-field-icon login-icon-lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="password" id="loginPassword" class="login-field has-icon" placeholder="••••••••" autocomplete="current-password" aria-label="Şifre" />
+            <button type="button" class="login-pw-toggle" id="pwToggle" aria-label="Şifreyi göster/gizle" onclick="togglePwVisibility()">
+              <svg class="pw-eye pw-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="pw-eye pw-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <button type="submit" class="btn login-submit">
+            <span class="login-submit-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M4 12h16M13 5l7 7-7 7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="login-submit-text" data-i18n="loginBtn">Giriş Yap</span>
+          </button>
+          <div id="loginError" class="login-error"></div>
+        </form>
+        <div class="login-inst-footer">
+          <div class="login-inst-text">© 2026 Kırşehir Ahi Evran Üniversitesi Sağlık Kültür ve Spor Daire Başkanlığı</div>
+          <div class="login-inst-text">NUTRITION SERVICES MANAGEMENT SYSTEM</div>
+          <span class="login-inst-version">Versiyon: v1.5.0</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay" onclick="this.classList.add('hidden')" style="cursor:pointer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText" data-i18n="loadingText">Veriler senkronize ediliyor...</div>
+    <div class="loading-sub" id="loadingSub" data-i18n="loadingSub">Supabase bağlantısı kontrol ediliyor</div>
+    <div style="margin-top:20px;font-size:12px;opacity:0.5" data-i18n="loadingSkip">Tıklayarak geç</div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Menüyü aç/kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span data-i18n="menuLabel">Menü</span>
+        </button>
+      </div>
+      <div class="header-logo">
+        <span>Nutrition Services Management System</span>
+      </div>
+      <div class="header-right">
+        <div class="conn-status" id="connStatus" title="Bağlantı durumu">
+          <span class="conn-dot" id="connDot"></span>
+          <span class="conn-sync-time" id="connSyncTime" style="font-size:0.75rem;color:var(--text-secondary);margin-left:6px;font-weight:500"></span>
+        </div>
+        <span class="page-title" id="pageTitle">Panel</span>
+        <div class="current-date" id="currentDate"></div>
+        <span class="role-badge" id="roleBadge"></span>
+        <div class="lang-selector" id="langSelector">
+          <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown()" title="Dil Seçimi / Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            <span class="lang-current" id="langCurrentFlag">TR</span>
+          </button>
+          <div class="lang-dropdown" id="langDropdown">
+            <button class="lang-option active" data-lang="tr" onclick="setLanguage('tr')"><span class="lang-flag">&#127481;&#127479;</span> Türkçe</button>
+            <button class="lang-option" data-lang="en" onclick="setLanguage('en')"><span class="lang-flag">&#127468;&#127463;</span> English</button>
+             <button class="lang-option" data-lang="az" onclick="setLanguage('az')"><span class="lang-flag">&#127462;&#127487;</span> Azərbaycanca</button>
+            <button class="lang-option" data-lang="ru" onclick="setLanguage('ru')"><span class="lang-flag">&#127479;&#127482;</span> Русский</button>
+            <button class="lang-option" data-lang="de" onclick="setLanguage('de')"><span class="lang-flag">&#127465;&#127466;</span> Deutsch</button>
+            <button class="lang-option" data-lang="fr" onclick="setLanguage('fr')"><span class="lang-flag">&#127467;&#127479;</span> Français</button>
+            <button class="lang-option" data-lang="es" onclick="setLanguage('es')"><span class="lang-flag">&#127466;&#127480;</span> Español</button>
+            <button class="lang-option" data-lang="pt" onclick="setLanguage('pt')"><span class="lang-flag">&#127463;&#127479;</span> Português</button>
+            <button class="lang-option" data-lang="uz" onclick="setLanguage('uz')"><span class="lang-flag">&#127482;&#127462;</span> O'zbek</button>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="openChangePw()" title="Şifremi Değiştir" aria-label="Şifremi Değiştir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </button>
+        <button class="btn-logout" onclick="doLogout()" title="Çıkış">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ŞİFRE DEĞİŞTİR MODALI -->
+  <div class="modal-overlay" id="changePwModal" onclick="if(event.target===this)closeChangePw()">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <h2>Şifremi Değiştir</h2>
+        <button class="modal-close" onclick="closeChangePw()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <div style="margin-bottom:0.6rem">
+          <label for="cpCurrent" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Mevcut Şifre</label>
+          <input type="password" id="cpCurrent" autocomplete="current-password" placeholder="Mevcut şifreniz" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div style="margin-bottom:0.6rem">
+          <label for="cpNew" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Yeni Şifre</label>
+          <input type="password" id="cpNew" autocomplete="new-password" placeholder="En az 6 karakter" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div style="margin-bottom:0.6rem">
+          <label for="cpNew2" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">Yeni Şifre (tekrar)</label>
+          <input type="password" id="cpNew2" autocomplete="new-password" placeholder="Yeni şifreyi tekrar girin" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
+        </div>
+        <div id="cpError" style="display:none;color:var(--danger,#ef4444);font-size:0.8rem;margin-top:0.35rem"></div>
+        <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.85rem">
+          <button class="btn btn-ghost btn-sm" onclick="closeChangePw()">İptal</button>
+          <button class="btn btn-primary btn-sm" onclick="changePassword()">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <div class="nav-indicator" id="navIndicator" aria-hidden="true"></div>
+        <div class="nav-section">Genel</div>
+        <button class="tab-btn active" id="tab-dashboard" onclick="switchTab('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span data-i18n="sidebarPanel">Panel</span>
+        </button>
+        <div class="nav-section">Kayıtlar</div>
+        <button class="tab-btn" id="tab-menu" onclick="switchTab('menu')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="4.5"/><circle cx="12" cy="10" r="2.5" opacity="0.5" stroke-width="1.5"/><path d="M2 3v5a3 3 0 006 0V3"/><path d="M4 3v2.5M6 3v2.5"/><path d="M3 8v9a1.5 1.5 0 001.5 1.5h2A1.5 1.5 0 008 17V8"/><path d="M21 5l-5 5v7a1.5 1.5 0 001.5 1.5h2A1.5 1.5 0 0022 17V5"/></svg>
+          <span data-i18n="sidebarMenu">Haftalık Menü</span>
+        </button>
+        <button class="tab-btn" id="tab-malitablo" onclick="switchTab('malitablo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          <span data-i18n="sidebarMaliTablo">Hf. Menü Mali Tablosu</span>
+        </button>
+        <button class="tab-btn" id="tab-records" onclick="switchTab('records')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span data-i18n="sidebarRecords">Kayıtlar</span>
+        </button>
+        <button class="tab-btn" id="tab-report" onclick="switchTab('report')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span data-i18n="sidebarReport">Rapor</span>
+        </button>
+        <div class="nav-section">Gıda Güvenliği</div>
+        <button class="tab-btn" id="tab-haccp" onclick="switchTab('haccp')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span data-i18n="sidebarHaccp">Gıda Güvenliği</span>
+        </button>
+        <button class="tab-btn" id="tab-kalibrasyon" onclick="switchTab('kalibrasyon')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <span data-i18n="sidebarCalibration">Kalibrasyon</span>
+        </button>
+        <div class="nav-section">Atık Yönetimi</div>
+        <button class="tab-btn" id="tab-yag" onclick="switchTab('yag')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2.5S6 10 6 15a6 6 0 0012 0C18 10 12 2.5 12 2.5z"/></svg>
+          <span data-i18n="sidebarOil">Atık Yağ</span>
+        </button>
+        <button class="tab-btn" id="tab-ambalaj" onclick="switchTab('ambalaj')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span data-i18n="sidebarPackaging">Ambalaj Atıkları</span>
+        </button>
+        <div class="nav-section">Analiz</div>
+        <button class="tab-btn" id="tab-charts" onclick="switchTab('charts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span data-i18n="sidebarCharts">Grafikler</span>
+        </button>
+        <button class="tab-btn" id="tab-yillik" onclick="switchTab('yillik')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="14" x2="11" y2="14"/><line x1="7" y1="17" x2="13" y2="17"/></svg>
+          <span data-i18n="sidebarYearly">Yıllık Karşılaştırma</span>
+        </button>
+        <button class="tab-btn" id="tab-harcama" onclick="switchTab('harcama')">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-size="16" font-weight="700" fill="#14b8a6" font-family="Inter,sans-serif">₺</text></svg>
+          <span data-i18n="sidebarSpending">Harcama</span>
+        </button>
+        <div class="nav-section">Tanımlama</div>
+        <button class="tab-btn" id="tab-yillikplan" onclick="switchTab('yillikplan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><path d="M9 14l2 2 4-4"/></svg>
+          <span data-i18n="sidebarYillikPlan">Yıllık İhtiyaç Planı</span>
+        </button>
+        <button class="tab-btn" id="tab-birimfiyat" onclick="switchTab('birimfiyat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span data-i18n="sidebarUnitPrice">Ürün ve Fiyatlar</span>
+        </button>
+        <button class="tab-btn" id="tab-yemeklistesi" onclick="switchTab('yemeklistesi')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span data-i18n="sidebarYemekListesi">Yemek Listesi</span>
+        </button>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="tab-btn" onclick="exportEverything()" title="Tüm verileri tek seferde indir (kayıt CSV, HACCP CSV, yemek listesi CSV, kalibrasyon CSV, menü ve yedek JSON)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="sidebarDownload">Tümünü İndir</span>
+        </button>
+        <button class="tab-btn" id="adminPanelBtn" onclick="openAdminPanel()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span data-i18n="sidebarAdmin">Yönetim</span>
+        </button>
+        <button class="tab-btn" id="logPanelBtn" onclick="switchTab('logs')" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span data-i18n="sidebarLogs">Log Kayıtları</span>
+        </button>
+        <button class="tab-btn theme-toggle" id="themeToggle" onclick="toggleTheme()">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <span data-i18n="sidebarTheme">Tema</span>
+        </button>
+        <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          <span data-i18n="sidebarManual">Kullanım Kılavuzu</span>
+        </button>
+      </div>
+      <div class="sidebar-version" id="appVersionLabel" title="Uygulama Sürümü">v1.5.0</div>
+    </aside>
+
+    <main class="main-content">
+
+    <!-- ===== DASHBOARD TAB ===== -->
+    <div class="tab-content active" id="content-dashboard">
+      <!-- KPI grid removed -->
+      <!-- Weekly Summary -->
+      <div class="weekly-summary" id="weeklySummary">
+        <div class="weekly-summary-header">
+          <button class="weekly-nav-btn" id="weeklyPrev" onclick="changeWeeklyOffset(-1)" title="Önceki Hafta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="weekly-summary-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="weeklySummaryLabel" data-i18n="weeklySummary">Haftalık Özet</span>
+            <span class="badge" id="weeklySummaryBadge"></span>
+          </div>
+          <button class="weekly-nav-btn" id="weeklyNext" onclick="changeWeeklyOffset(1)" title="Sonraki Hafta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="weekly-summary-body" id="weeklySummaryBody">
+          <div class="today-summary-loading" data-i18n="loading">Yükleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Daily Detail Panel -->
+      <div class="weekly-summary" id="dailySummary">
+        <div class="weekly-summary-header">
+          <button class="weekly-nav-btn" id="dailyPrev" onclick="changeDailyOffset(-1)" title="Önceki Gün">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="weekly-summary-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span id="dailySummaryLabel" data-i18n="dailySummary">Günlük Detay</span>
+            <span class="badge" id="dailySummaryBadge"></span>
+          </div>
+          <button class="weekly-nav-btn" id="dailyNext" onclick="changeDailyOffset(1)" title="Sonraki Gün">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="weekly-summary-body" id="dailySummaryBody">
+          <div class="today-summary-loading" data-i18n="loadingText">Yükleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Data Info removed -->
+
+      <!-- Weekly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="weeklyCompCard" style="display:none">
+        <div class="section-header">
+          <h2 data-i18n="weeklyCompTitle">Haftalık Karşılaştırma</h2>
+          <span class="badge" id="weeklyCompBadge" data-i18n="weeklyBadge"></span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7">Bu hafta (Pzt–Paz) ile geçen hafta karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
+
+        <!-- 1. KPI Cards -->
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="wkKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="wkKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="wkKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="wkKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="wkKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="wkKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="wkKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="wkKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Middle Row -->
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Haftalık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="wkHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="wkDonut"></canvas></div>
+                <div class="wk-donut-center" id="wkDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="wkDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="wkDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Hafta: <strong id="wkDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Hafta: <strong id="wkDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Bottom Row -->
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Günlük Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="wkTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="wkSummaryTable">
+                <thead>
+                  <tr>
+                    <th>Veri Türü</th>
+                    <th>Geçen Hafta</th>
+                    <th>Bu Hafta</th>
+                    <th>Fark</th>
+                    <th>Değişim %</th>
+                  </tr>
+                </thead>
+                <tbody id="wkSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="monthlyCompCard" style="display:none">
+        <div class="section-header">
+          <h2 data-i18n="monthlyCompTitle">Aylık Karşılaştırma</h2>
+          <span class="badge" id="monthlyCompBadge" data-i18n="monthlyBadge"></span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7" data-i18n="monthlyCompDesc">Bu ay ile geçen ay karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
+
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="moKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="moKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="moKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="moKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="moKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="moKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="moKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="moKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Aylık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="moHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="moDonut"></canvas></div>
+                <div class="wk-donut-center" id="moDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="moDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="moDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Ay: <strong id="moDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Ay: <strong id="moDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Günlük Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="moTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="moSummaryTable">
+                <thead><tr><th>Veri Türü</th><th>Geçen Ay</th><th>Bu Ay</th><th>Fark</th><th>Değişim %</th></tr></thead>
+                <tbody id="moSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yearly Comparison (Rich Analytic Panel) -->
+      <div class="section-card wk-panel" id="yearlyCompCard" style="display:none">
+        <div class="section-header">
+          <h2 data-i18n="yearlyCompTitle">Yıllık Karşılaştırma</h2>
+          <span class="badge" id="yearlyCompBadge" data-i18n="yearlyBadge"></span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7" data-i18n="yearlyCompDesc">Bu yıl (yılbaşından bugüne) ile geçen yılın aynı dönemi karşılaştırılır. ↑ artış, ↓ azalış. Atık ve kişi başı atıkta düşüş (↓) iyidir.</div>
+
+        <div class="wk-kpi-grid">
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Atık (kg)</span>
+              <span class="wk-kpi-value" id="yrKpiWasteVal">0.0</span>
+              <span class="wk-kpi-badge" id="yrKpiWasteBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4"/><path d="M3 10h18"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Toplam Üretim (porsiyon)</span>
+              <span class="wk-kpi-value" id="yrKpiProdVal">0</span>
+              <span class="wk-kpi-badge" id="yrKpiProdBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Turnike Geçiş Sayısı</span>
+              <span class="wk-kpi-value" id="yrKpiTurnikeVal">0</span>
+              <span class="wk-kpi-badge" id="yrKpiTurnikeBadge">0%</span>
+            </div>
+          </div>
+          <div class="wk-kpi-card">
+            <div class="wk-kpi-icon wk-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="wk-kpi-body">
+              <span class="wk-kpi-label">Kişi Başı Atık (gr)</span>
+              <span class="wk-kpi-value" id="yrKpiPerPersonVal">0.00</span>
+              <span class="wk-kpi-badge" id="yrKpiPerPersonBadge">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-mid-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Yıllık Karşılaştırma</div>
+            <div class="wk-chart-area"><canvas id="yrHorizBar"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-donut-card">
+            <div class="wk-chart-title">Atık Azaltma Oranı</div>
+            <div class="wk-donut-row">
+              <div class="wk-donut-wrap">
+                <div class="wk-chart-area wk-donut-area"><canvas id="yrDonut"></canvas></div>
+                <div class="wk-donut-center" id="yrDonutCenter">0%</div>
+              </div>
+              <div class="wk-leaf" id="yrDonutLeaf"></div>
+              <div class="wk-donut-side">
+                <div class="wk-donut-badge" id="yrDonutBadge">Atık miktarı azalmıştır</div>
+                <div class="wk-donut-info">
+                  <span>Bu Yıl: <strong id="yrDonutThis">0.0 kg</strong></span>
+                  <span>Geçen Yıl: <strong id="yrDonutPrev">0.0 kg</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wk-bot-grid">
+          <div class="wk-chart-card">
+            <div class="wk-chart-title">Aylık Atık Trendi</div>
+            <div class="wk-chart-area"><canvas id="yrTrendLine"></canvas></div>
+          </div>
+          <div class="wk-chart-card wk-table-card">
+            <div class="wk-chart-title">Özet Karşılaştırma Tablosu</div>
+            <div class="wk-table-wrap">
+              <table class="wk-summary-table" id="yrSummaryTable">
+                <thead><tr><th>Veri Türü</th><th>Geçen Yıl</th><th>Bu Yıl</th><th>Fark</th><th>Değişim %</th></tr></thead>
+                <tbody id="yrSummaryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Anomalies -->
+        <div class="section-card" id="anomalyCard" style="display:none">
+        <div class="section-header">
+          <h2 data-i18n="anomalyTitle">Anomali Tespiti</h2>
+          <span class="badge" id="anomalyBadge" data-i18n="anomalyBadge">Anormal Atık Günleri</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin:0 0 1rem;padding:0 0.5rem;line-height:1.7">Atık ortalamanın çok üstünde olan günler. Eşik: ortalama + 1.5×standart sapma (1.5 = hassas eşik, normalden sapan günleri yakalar).</div>
+        <div class="table-wrapper" id="anomalyTableWrapper">
+          <table class="data-table" id="anomalyTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Atık (kg)</th>
+                <th>Porsiyon</th>
+                <th>Ortalama (kg)</th>
+                <th>Fark (%)</th>
+                <th>Yemek Türü</th>
+              </tr>
+            </thead>
+            <tbody id="anomalyTbody"></tbody>
+          </table>
+          <div class="pagination" id="anomalyPagination" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Last Records Preview -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="lastRecordsTitle">Son Kayıtlar</h2>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span class="badge" id="lastRecordsBadge">0 kayıt</span>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('records')" title="Tüm kayıtları görüntüle" data-i18n="dashboardGoToRecords">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              Kayıtlara Git
+            </button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateDashboard">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p data-i18n="emptyDashboard">Henüz kayıt yok. "Yeni Kayıt" butonuna tıklayarak başlayın.</p>
+          </div>
+          <table class="data-table" id="lastRecordsTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Üretilen Yemek</th>
+                <th>%10 Fire</th>
+                <th style="color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem">Yemek Hiz. Yararlanan</th>
+                <th>Porsiyon (gr)</th>
+                <th>Atık (kg)</th>
+                <th>Atık Porsiyon Adedi</th>
+              </tr>
+            </thead>
+            <tbody id="lastRecordsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== RECORDS TAB ===== -->
+    <div class="tab-content" id="content-records">
+      <div class="toolbar" style="flex-direction:column;gap:0.75rem">
+        <div class="formula-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0.85rem 1.25rem;text-align:center;width:100%;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--accent-cyan);margin-bottom:0.5rem;letter-spacing:0.5px;text-transform:uppercase" data-i18n="formulaTitle">ATIK HESAPLAMA FORMÜLÜ</div>
+          <div style="font-size:0.85rem;line-height:1.8;color:var(--text-primary)">
+            <span style="background:rgba(99,102,241,0.1);padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;color:var(--accent-purple)">Fire</span> = Üretilen Yemek × %10 &nbsp;|&nbsp;
+            <span style="background:rgba(34,211,238,0.1);padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;color:var(--accent-cyan)">Yemek Hiz. Yararlanan Toplam Kişi</span> = Turnike Geçişi + SKS Yemek Hiz. Personeli &nbsp;|&nbsp;
+            <span style="background:rgba(249,115,22,0.1);padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;color:#f97316">Atık (kg)</span> = (Üretilen Yemek − Fire − Yemek Hiz. Yararlanan Toplam Kişi) × Porsiyon ÷ 1000
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.35rem">
+            <span style="font-weight:800;font-size:0.9rem;color:var(--accent-purple)">Örnek:</span> 230 kişilik üretimden %10 fire (23 kişi) düşülünce 207 kişilik Yemek Üretilir. Yemekten yararlanan 169 kişi düşülür: 207 − 169 = 38 kişilik artan yemek → 38 × 400 ÷ 1000 = <strong style="color:var(--accent-purple)">15,20 kg</strong>
+          </div>
+        </div>
+        <div class="toolbar-actions">
+          <div id="recordsYearFilter" style="display:flex;gap:6px;align-items:center"></div>
+          <button class="btn btn-primary btn-sm" id="recordsEntryBtn" onclick="openModal()" title="Yeni üretim/tüketim kaydı ekle" data-i18n="recordsEntryBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20V8l4 4V8l4 4V8l4 4V3l6 6v11"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+            Üretim Tüketim Gir
+          </button>
+          <button class="btn btn-secondary btn-sm" id="recordsImportBtn" onclick="triggerImport()" title="CSV veya JSON içe aktar" data-i18n="recordsImportBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            İçe Aktar
+          </button>
+          <input type="file" id="importInput" accept=".csv,.json" style="display:none" onchange="handleImport(event)" />
+          <button class="btn btn-outline" onclick="exportRecordsPDF()" title="TÜM kayıtları PDF olarak yazdır" data-i18n="recordsPrintPdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF
+          </button>
+          <button class="btn btn-outline" onclick="exportDataCSV()" title="CSV indir" data-i18n="recordsCsvBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV İndir
+          </button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateRecords">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p id="emptyRecordsMsg" data-i18n="emptyRecords">Gösterilecek kayıt bulunamadı.</p>
+          </div>
+          <div class="bulk-bar" id="bulkBar" style="display:none">
+            <span id="bulkCount">0 seçili</span>
+            <button class="btn btn-danger btn-sm" onclick="deleteSelected()" data-i18n="recordsDeleteBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Seçilileri Sil
+            </button>
+          </div>
+          <table class="data-table" id="recordsTable" style="display:none">
+            <thead>
+              <tr>
+                <th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" title="Tümünü seç/kaldır" /></th>
+                <th data-field="tarih" onclick="toggleSort('tarih')" style="cursor:pointer" data-i18n="thDate">Tarih</th>
+                <th data-field="yemek" onclick="toggleSort('yemek')" style="cursor:pointer" data-i18n="thProducedPerson">Üretilen Yemek (Kişi)</th>
+                <th data-field="fire" onclick="toggleSort('fire')" style="cursor:pointer" data-i18n="thWaste10">%10 Fire</th>
+                <th data-field="turnike" onclick="toggleSort('turnike')" style="cursor:pointer;color:#22c55e;white-space:normal;text-align:center;letter-spacing:normal;line-height:1.3;font-size:0.66rem" data-i18n="thBeneficiary">Yemek Hiz. Yararlanan</th>
+                <th data-field="porsiyon" onclick="toggleSort('porsiyon')" style="cursor:pointer" data-i18n="thPortionGr">Porsiyon (gr)</th>
+                <th data-field="atik" onclick="toggleSort('atik')" style="cursor:pointer" data-i18n="thWasteKg">Atık (kg)</th>
+                <th style="cursor:pointer;color:var(--accent-orange)" data-i18n="thWastedPortion">Çöpe Giden (pors.)</th>
+                <th data-field="yemek_adi" onclick="toggleSort('yemek_adi')" style="cursor:pointer" data-i18n="thFoodType">Yemek Türü</th>
+                <th data-i18n="thAction">İşlem</th>
+              </tr>
+
+            </thead>
+            <tbody id="recordsTbody"></tbody>
+          </table>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== REPORT TAB ===== -->
+    <div class="tab-content" id="content-report">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="summaryReport">Özet Rapor</h2>
+          <div id="reportYearFilter" style="display:flex;gap:6px;align-items:center;margin-left:auto"></div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="exportPDF()" data-i18n="reportPdfBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF Aç
+            </button>
+          </div>
+        </div>
+        <div class="report-grid" id="reportGrid">
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalRecords">Toplam Kayıt Sayısı</span>
+            <span class="report-value" id="rTotalKayit">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalMeals">Toplam Üretilen Yemek</span>
+            <span class="report-value" id="rTotalYemek">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalWaste10">Toplam %10 Fire</span>
+            <span class="report-value" id="rTotalFireKar">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalAfterWaste">Toplam %10 Fire Sonrası Yemk.</span>
+            <span class="report-value" id="rTotalYemekSonrasi">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalTurnstile">Toplam Turnike Geçişi</span>
+            <span class="report-value" id="rTotalTurnike">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalBeneficiary">Yemek Hiz. Yararlanan Toplam Kişi</span>
+            <span class="report-value" id="rTotalGecis">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalStaff">Yemek Hiz. Yararlanan Toplam SKS Yemek Hiz. Personeli</span>
+            <span class="report-value" id="rTotalPersonel" style="color:var(--accent-purple)">—</span>
+          </div>
+          <div class="report-item" id="rAvgPorsiyonItem">
+            <span class="report-label" data-i18n="rPortionSize">Porsiyon Miktarı (gr)</span>
+            <span class="report-value" id="rAvgPorsiyon">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25);">
+            <span class="report-label" data-i18n="rTotalPortion">Toplam Porsiyon (gr)</span>
+            <span class="report-value" id="rTotalPorsiyon" style="color:#f59e0b">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25);">
+            <span class="report-label" data-i18n="rWastedPortion">Çöpe Giden Porsiyon</span>
+            <span class="report-value" id="rCopPorsiyon" style="color:#ef4444">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.3);">
+            <span class="report-label" data-i18n="rMaxWeeklyBeneficiary">En Yüksek Haftalık Yararlanan Kişi</span>
+            <span class="report-value" id="rMaxWeekGecis" style="color: #22d3ee; font-size: 1.1rem">—</span>
+          </div>
+          <div class="report-item report-item-highlight">
+            <span class="report-label" data-i18n="rTotalWasteKg">Toplam Atık Miktarı (kg)</span>
+            <span class="report-value" id="rTotalAtik">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rAvgWasteKg">Ort. Atık Miktarı (kg)</span>
+            <span class="report-value" id="rAvgAtik">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rTotalStudents">Toplam Öğrenci Sayısı</span>
+            <span class="report-value" id="rTotalOgrenci">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rMaxWaste">En Yüksek Atık (kg)</span>
+            <span class="report-value" id="rMaxAtik">—</span>
+          </div>
+          <div class="report-item">
+            <span class="report-label" data-i18n="rMinWaste">En Düşük Atık (kg)</span>
+            <span class="report-value" id="rMinAtik">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25);">
+            <span class="report-label" data-i18n="rWasteTrend">Atık Trendi (son 7 gün)</span>
+            <span class="report-value" id="rTrendAtik" style="color:#f59e0b;font-size:1.1rem">—</span>
+          </div>
+          <div class="report-item report-item-highlight" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25);">
+            <span class="report-label" data-i18n="rBeneficiaryTrend">Yemek Hiz. Yararlanan Trendi (son 7 gün)</span>
+            <span class="report-value" id="rTrendGecis" style="color:#10b981;font-size:1.1rem">—</span>
+          </div>
+        </div>
+
+        <div class="section-card" id="wasteByFoodType" style="margin-top:2rem;display:none">
+          <div class="section-header">
+            <h2 data-i18n="wasteByFoodTitle">Yemek Türü Bazında Atık Analizi</h2>
+          </div>
+          <div id="wasteByFoodTypeBody" style="overflow-x:auto">
+            <div class="empty-state" style="padding:1rem">
+              <p data-i18n="wasteByFoodEmpty">Yemek türü verisi girilen kayıt bulunamadı.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:2rem">
+          <h2 data-i18n="allRecordsPrint">Tüm Kayıtlar (Yazdırma Görünümü)</h2>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table print-table" id="reportTable">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Üretilen Yemek</th>
+                <th>%10 Fire</th>
+                <th style="color:#22c55e">Turnike Geçişi</th>
+                <th data-i18n="thAcademicStaff">Turnikeden Geçen Akademik ve İdari Personel</th>
+                <th data-i18n="thStudentCount">Turnikeden Geçen Öğrenci Sayısı</th>
+                <th data-i18n="sksStaff">SKS Yemek Hizmeti Personeli (Turnikeden Geçmeden Yemekten Yararlanan)</th>
+                <th data-i18n="thBeneficiaryTotal" style="color:#22c55e">Yemek Hiz. Yararlanan Toplam Kişi</th>
+                <th>Porsiyon (gr)</th>
+                <th>Atık (kg)</th>
+                <th>Atık Porsiyon Adedi</th>
+              </tr>
+            </thead>
+            <tbody id="reportTbody"></tbody>
+          </table>
+        </div>
+        <div id="reportPagination" class="pagination"></div>
+      </div>
+    </div>
+
+    <!-- ===== MENU TAB ===== -->
+    <div class="tab-content" id="content-menu">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 id="menuTitle" data-i18n="menuTitle">Haftalık Menü Listesi</h2>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+            <span id="menuDurumBadge" data-i18n="menuStatusBadge" class="badge" style="display:none"></span>
+            <button class="btn btn-primary btn-sm" id="menuSaveBtn" onclick="saveWeeklyMenu()" data-i18n="menuSaveBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Kaydet
+            </button>
+            <button class="btn btn-outline btn-sm" id="menuSendBtn" onclick="menuOnayaGonder()" title="Menüyü gıda mühendisi onayına gönder" data-i18n="menuSendBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              Onaya Gönder
+            </button>
+            <button class="btn btn-success btn-sm" id="menuApproveBtn" onclick="menuOnayla()" title="Menüyü onayla" data-i18n="menuApproveBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+              Onayla
+            </button>
+            <button class="btn btn-danger btn-sm" id="menuRejectBtn" onclick="menuReddet()" title="Menüyü gerekçeli olarak reddet" data-i18n="menuRejectBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reddet
+            </button>
+            <button class="btn btn-ghost btn-sm" id="menuWithdrawBtn" onclick="menuOnayGeriCek()" title="Onayı kaldır, menüyü tekrar düzenlemeye aç" style="display:none" data-i18n="menuWithdrawBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 010 8h-1"/></svg>
+              Onayı Kaldır
+            </button>
+            <button class="btn btn-danger btn-sm" id="menuClearBtn" onclick="clearWeeklyMenu()" title="Bu haftanın tablosunu temizle" data-i18n="menuClearBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Tabloyu Temizle
+            </button>
+            <button class="btn btn-ghost btn-sm btn-always" onclick="printMenu()" data-i18n="menuPrintBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              Yazdır
+            </button>
+          </div>
+        </div>
+        <div id="menuOnayUyari" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:8px;font-size:0.8rem;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+          <strong data-i18n="menuWarningPrefix">⚠ Onaysız Menü:</strong> <span id="menuOnayUyariMetin" data-i18n="menuWarningText">Bu haftanın menüsü henüz gıda mühendisi tarafından onaylanmadı.</span>
+          <button class="btn btn-outline btn-sm" id="menuPendingGoBtn" onclick="menuGecBekleyenHafta()" style="display:none;margin-left:auto">Bekleyen Haftaya Git →</button>
+        </div>
+        <div class="menu-date-nav">
+          <button class="btn btn-ghost btn-sm" onclick="shiftMenuWeek(-1)" data-i18n="btnPrev">◀ Önceki</button>
+          <span id="menuWeekLabel">15.06.2026 - 19.06.2026</span>
+          <button class="btn btn-ghost btn-sm" onclick="shiftMenuWeek(1)" data-i18n="btnNext">Sonraki ▶</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table menu-table" id="menuTable">
+            <thead id="menuThead">
+            </thead>
+            <tbody id="menuTbody"></tbody>
+          </table>
+        </div>
+        <div class="menu-hint" data-i18n="menuHintText">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Yemek isimlerini yazın. "Kaydet" taslak olarak kaydeder; "Onaya Gönder" ile gıda mühendisi onayına sunulur, onaylanmadan menü "onaysız" sayılır.
+        </div>
+        <div id="productionSection" style="margin-top:1.5rem;display:none">
+          <h3 class="section-title" data-i18n="productNeedsTitle">Ürün İhtiyaç Listesi</h3>
+          <div class="table-wrapper">
+            <table class="data-table" id="productionTable">
+              <thead id="productionThead"></thead>
+              <tbody id="productionTbody"></tbody>
+            </table>
+          </div>
+          <div id="weeklyTotalSection" style="margin-top:1.5rem;display:none">
+            <h3 style="font-size:0.9rem;margin-bottom:0.75rem" data-i18n="weeklyNeedsTitle">Haftalık Toplam İhtiyaç Listesi</h3>
+            <div class="table-wrapper">
+              <table class="data-table" id="weeklyTotalTable">
+                <thead id="weeklyTotalThead"></thead>
+                <tbody id="weeklyTotalTbody"></tbody>
+              </table>
+            </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ===== HACCP TAB ===== -->
+    <div class="tab-content" id="content-haccp">
+      <div class="toolbar">
+        <div class="section-header" style="margin-bottom:0;border:none;padding:0">
+          <h2 style="font-size:1rem" data-i18n="haccpTitle">Gıda Güvenliği Yönetimi</h2>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-secondary btn-sm" onclick="dataloggerCekKademeli()" id="haccpCekBtn" style="display:none" title="Cihazdan anlık değer çek ve kaydet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+            <span id="haccpCekBtnText">Çek ve Kaydet</span>
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="openCihazAyarModal()" id="haccpCihazAyarBtn" style="display:none" title="Datalogger API ayarları">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Cihaz Ayarları
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="exportHaccpCSV()" title="CSV olarak indir (ID dahil)" data-i18n="haccpCsvBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV İndir
+          </button>
+          <button class="btn btn-outline btn-sm" id="haccpCsvUploadBtn" onclick="document.getElementById('haccpDosyaYukle').click()" title="Cihazdan gelen CSV/JSON dosyasını toplu yükle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            CSV Yükle
+          </button>
+          <input type="file" id="haccpDosyaYukle" accept=".csv,.json,.txt" style="display:none" onchange="importHaccpFile(event)" />
+        </div>
+      </div>
+
+      <!-- Depo Sıcaklık -->
+      <div class="section-card" id="haccpSicaklikCard">
+        <div class="section-header">
+          <h2 data-i18n="haccpColdStorage">Soğuk Depo Sıcaklık Kayıtları</h2>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-primary btn-sm" onclick="openHaccpModal('sicaklik')" data-i18n="haccpNewBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+              Yeni Kayıt
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="showHaccpDepoYonetim()" title="Depo adlarını düzenle" data-i18n="haccpDepotBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Depo Adları
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="haccpSicaklikPrint()" title="PDF olarak kaydet" data-i18n="btnPdf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              PDF
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted);background:rgba(99,102,241,0.04);padding:0.5rem 0.75rem;border-radius:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span data-i18n="haccpDepoQrNote">Depo adlarını düzenleyip <strong>QR</strong> butonuyla her depo için QR kod oluşturabilir, kapıya asabilirsiniz.</span>
+        </div>
+        <!-- Quick Depo Summary -->
+        <div id="haccpDepoSummary" style="margin-bottom:0.75rem"></div>
+        <!-- Datalogger durum şeridi -->
+        <div id="haccpDataloggerDurum" style="margin-bottom:0.75rem"></div>
+        <!-- Sıcaklık grafiği -->
+        <div id="haccpSicaklikGrafikKutu" style="margin-bottom:0.75rem;display:none">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+            <span style="font-size:0.8rem;font-weight:600;color:var(--text-muted)">Depo Sıcaklık Grafiği</span>
+            <select id="haccpGrafikDepo" onchange="renderHaccpSicaklikGrafik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem"></select>
+            <select id="haccpGrafikGun" onchange="renderHaccpSicaklikGrafik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem">
+              <option value="7">Son 7 gün</option>
+              <option value="30" selected>Son 30 gün</option>
+              <option value="90">Son 90 gün</option>
+              <option value="0">Tüm Zamanlar</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="haccpSicaklikGrafikYazdir()" id="haccpGrafikPdfBtn" title="Grafiği PDF olarak kaydet" style="margin-left:auto">PDF</button>
+          </div>
+          <div id="haccpGrafikBos" style="display:none;padding:1.5rem 0.5rem;text-align:center;font-size:0.8rem;color:var(--text-muted)"></div>
+          <div id="haccpGrafikTuvalKutu" style="height:260px"><canvas id="haccpSicaklikGrafik"></canvas></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
+          <label style="font-size:0.85rem;color:var(--text-muted)" data-i18n="filterDepot">Depo Filtresi:</label>
+          <select id="haccpSicaklikDepoFilter" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+            <option value="" data-i18n="filterAll">Tümü</option>
+          </select>
+          <label style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem" data-i18n="filterDateRange">Tarih Aralığı:</label>
+          <input type="date" id="haccpSicaklikTarihBas" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+          <span style="font-size:0.85rem;color:var(--text-muted)">—</span>
+          <input type="date" id="haccpSicaklikTarihBit" onchange="haccpSicaklikPage=0;haccpSelectedIds.clear();renderHaccpSicaklik()" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem">
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="haccpSicaklikEmpty">
+            <p data-i18n="emptyHaccp">Henüz sıcaklık kaydı girilmemiş.</p>
+          </div>
+          <div class="bulk-bar" id="haccpBatchBar" style="display:none">
+            <span id="haccpBatchCount">0 seçili</span>
+            <button class="btn btn-danger btn-sm" id="haccpBatchDeleteBtn" onclick="haccpDeleteSelected()" data-i18n="btnDeleteSelectedHaccp">Seçili Sil</button>
+          </div>
+          <table class="data-table" id="haccpSicaklikTable" style="display:none">
+            <thead>
+              <tr><th style="width:32px"><input type="checkbox" id="haccpSelectAllChk" onchange="haccpToggleSelectAll(this.checked)" style="cursor:pointer"></th><th data-i18n="haccpColDate">Tarih</th><th data-i18n="haccpColTime">Saat</th><th data-i18n="haccpColDepot">Depo Adı</th><th data-i18n="haccpColTemp">Sıcaklık (°C)</th><th data-i18n="haccpColHumidity">Nem (%)</th><th data-i18n="haccpColNote">Not</th><th style="width:78px">Kaynak</th><th data-i18n="haccpColAction">İşlem</th></tr>
+            </thead>
+            <tbody id="haccpSicaklikTbody"></tbody>
+          </table>
+          <div id="haccpSicaklikNav" style="display:none;text-align:center;padding:8px 0">
+            <button class="btn btn-ghost btn-sm" onclick="haccpSicaklikPagePrev()" id="haccpSicaklikPrevBtn" data-i18n="btnPrev" style="margin-right:8px">‹ Önceki</button>
+            <span id="haccpSicaklikPageInfo" style="font-size:0.85rem;color:var(--text-muted)"></span>
+            <button class="btn btn-ghost btn-sm" onclick="haccpSicaklikPageNext()" id="haccpSicaklikNextBtn" data-i18n="btnNext" style="margin-left:8px">Sonraki ›</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== ATIK YAG TAB ===== -->
+    <div class="tab-content" id="content-yag">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openYagModal()" data-i18n="oilNewBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printYagList()" data-i18n="oilListBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            Liste
+          </button>
+        </div>
+      </div>
+
+      <div class="section-card" style="margin-top:0">
+        <div class="section-header">
+          <h2 data-i18n="oilFilterTitle">Atık Yağ Filtreleri</h2>
+          <span class="badge" id="yagFiltreBadge" style="display:none">Filtreli</span>
+        </div>
+        <div class="filter-bar">
+          <span class="filter-label">Tarih:</span>
+          <input type="date" id="yagTarihBas" onchange="yagPage=0;renderYagTable()">
+          <span class="filter-sep">—</span>
+          <input type="date" id="yagTarihBit" onchange="yagPage=0;renderYagTable()">
+          <span class="filter-label" data-i18n="filterOilType">Yağ Türü:</span>
+          <select id="yagTurFilter" onchange="yagPage=0;renderYagTable()">
+            <option value="">Tümü</option>
+            <option value="Ayçiçek Yağı">Ayçiçek Yağı</option>
+            <option value="Mısırözü Yağı">Mısırözü Yağı</option>
+            <option value="Zeytinyağı">Zeytinyağı</option>
+            <option value="Kanola Yağı">Kanola Yağı</option>
+            <option value="Pamuk Yağı">Pamuk Yağı</option>
+            <option value="Soya Yağı">Soya Yağı</option>
+            <option value="Hindistan Cevizi Yağı">Hindistan Cevizi Yağı</option>
+            <option value="Kızartma Atık Yağı">Kızartma Atık Yağı</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+          <span class="filter-label">Yıl:</span>
+          <select id="yagYilFilter" onchange="yagPage=0;yagYilDegistir(this.value)"></select>
+          <button class="btn btn-ghost btn-sm" onclick="yagSifirla()" data-i18n="btnReset">Sıfırla</button>
+        </div>
+        <div id="yagFiltreOzet" style="font-size:0.75rem;color:var(--text-muted);padding-top:0.25rem"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="oilSummaryTitle">Atık Yağ Özeti</h2>
+        </div>
+        <div class="report-grid" id="yagOzetGrid"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="oilChartTitle">Atık Yağ Grafikleri</h2>
+        </div>
+        <div class="chart-subheader">
+          <h3 data-i18n="oilChartSubtitle">Aylık Atık Yağ Miktarı (lt)</h3>
+          <span class="chart-subhint">Yıl seçilince bir önceki yılla karşılaştırılır · Çubuğa tıklayınca o ayın detayı açılır</span>
+        </div>
+        <div class="chart-area" id="chartYag" style="height:270px">
+          <canvas id="canvasYag"></canvas>
+          <div class="chart-empty" id="chartYagEmpty" style="font-size:0.8rem;padding:20px" data-i18n="oilChartEmpty">Atık yağ kaydı girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note" data-i18n="oilChartNote">Tarih, yağ türü ve yıl filtrelerine göre aylık atık yağ toplamları</div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="oilRecordsTitle">Atık Yağ Kayıtları</h2>
+          <span class="badge" id="yagBadge">0 kayıt</span>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateYag">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p data-i18n="emptyOil">Henüz atık yağ kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="yagTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Makbuz No</th>
+                <th>Yağ Türü</th>
+                <th>Miktar (lt)</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="yagTbody"></tbody>
+          </table>
+          <div id="yagPagination" class="pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AMBALAJ ATIKLARI TAB ===== -->
+    <div class="tab-content" id="content-ambalaj">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAmbalajModal()" data-i18n="ambalajNewBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni Kayıt
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printAmbalajList()" data-i18n="ambalajListBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            Liste
+          </button>
+        </div>
+      </div>
+
+      <div class="section-card" style="margin-top:0">
+        <div class="section-header">
+          <h2 data-i18n="packagingFilterTitle">Ambalaj Atığı Filtreleri</h2>
+          <span class="badge" id="ambalajFiltreBadge" style="display:none">Filtreli</span>
+        </div>
+        <div class="filter-bar">
+          <span class="filter-label">Tarih:</span>
+          <input type="date" id="ambalajTarihBas" onchange="ambalajPage=0;renderAmbalajTable()">
+          <span class="filter-sep">—</span>
+          <input type="date" id="ambalajTarihBit" onchange="ambalajPage=0;renderAmbalajTable()">
+          <span class="filter-label" data-i18n="filterWasteType">Atık Türü:</span>
+          <select id="ambalajTurFilter" onchange="ambalajPage=0;renderAmbalajTable()">
+            <option value="">Tümü</option>
+            <option value="Metal">Metal</option>
+            <option value="Plastik">Plastik</option>
+            <option value="Kağıt/Karton">Kağıt/Karton</option>
+            <option value="Cam">Cam</option>
+            <option value="Karışık">Karışık</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+          <span class="filter-label">Yıl:</span>
+          <select id="ambalajYilFilter" onchange="ambalajPage=0;ambalajYilDegistir(this.value)"></select>
+          <button class="btn btn-ghost btn-sm" onclick="ambalajSifirla()" data-i18n="btnReset">Sıfırla</button>
+        </div>
+        <div id="ambalajFiltreOzet" style="font-size:0.75rem;color:var(--text-muted);padding-top:0.25rem"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="packagingSummaryTitle">Ambalaj Atığı Özeti</h2>
+        </div>
+        <div class="report-grid" id="ambalajOzetGrid"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="packagingChartTitle">Ambalaj Atığı Grafikleri</h2>
+        </div>
+        <div class="chart-subheader">
+          <h3 data-i18n="packagingChartSubtitle">Aylık Ambalaj Atığı Miktarı (kg)</h3>
+          <span class="chart-subhint">Yıl seçilince bir önceki yılla karşılaştırılır · Çubuğa tıklayınca o ayın detayı açılır</span>
+        </div>
+        <div class="chart-area" id="chartAmbalaj" style="height:270px">
+          <canvas id="canvasAmbalaj"></canvas>
+          <div class="chart-empty" id="chartAmbalajEmpty" style="font-size:0.8rem;padding:20px" data-i18n="packagingChartEmpty">Ambalaj atığı kaydı girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note" data-i18n="packagingChartNote">Tarih, atık türü ve yıl filtrelerine göre aylık ambalaj atığı toplamları (kg)</div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="packagingRecordsTitle">Ambalaj Atıkları Kayıtları</h2>
+          <span class="badge" id="ambalajBadge">0 kayıt</span>
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="emptyStateAmbalaj">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <path d="M24 28h32M24 40h32M24 52h20" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p data-i18n="emptyPackaging">Henüz ambalaj atığı kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="ambalajTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Atık Türü</th>
+                <th>Miktar (kg)</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="ambalajTbody"></tbody>
+          </table>
+          <div id="ambalajPagination" class="pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== KALİBRASYON TAB ===== -->
+    <div class="tab-content" id="content-kalibrasyon">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div style="flex:1"></div>
+          <div class="toolbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="openKalibrasyonModal()" data-i18n="kalibrasyonNewBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Yeni Cihaz
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="printKalibrasyonList()" data-i18n="kalibrasyonListBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+              Liste
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportKalibrasyonCSV()" title="CSV olarak indir (ID dahil)" data-i18n="kalibrasyonCsvBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV İndir
+            </button>
+          </div>
+        </div>
+        <div class="section-card" style="margin-top:0">
+          <div class="section-header">
+            <h2 data-i18n="calibrationSummary">Kalibrasyon Özeti</h2>
+          </div>
+          <div class="report-grid" id="kalibrasyonOzetGrid"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-header">
+            <h2 data-i18n="calibrationDevices">Kalibrasyona Tabi Cihazlar</h2>
+          <span class="badge" id="kalibrasyonBadge">0 cihaz</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted);background:rgba(59,130,246,0.06);padding:0.5rem 0.75rem;border-radius:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <span>Cihaz durumu rozeti (<strong>Çalışır Durumda</strong>/Arızalı/Bakım/Hurda) ve kalibrasyon rozeti (<strong>Geçerli</strong>/Yaklaşıyor/<strong>Süresi Doldu</strong>) ayrı ayrı gösterilir.</span>
+        </div>
+        <div class="filter-bar">
+          <span class="filter-label" data-i18n="filterStatus">Durum:</span>
+          <select id="kalibrasyonDurumFilter" onchange="kalibrasyonPage=0;renderKalibrasyon()">
+            <option value="">Tümü</option>
+            <option value="calisir">Çalışır Durumda</option>
+            <option value="arizali">Arızalı</option>
+            <option value="bakim">Bakım Yapılacak</option>
+            <option value="hurda">Hurdaya Ayrılacak</option>
+          </select>
+          <span class="filter-label" data-i18n="filterDepartment">Bölüm:</span>
+          <input type="text" id="kalibrasyonKonumFilter" placeholder="Bölüm ara..." style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.85rem;width:150px" oninput="kalibrasyonPage=0;renderKalibrasyon()">
+        </div>
+        <div class="table-wrapper">
+          <div class="empty-state" id="kalibrasyonEmpty">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-opacity="0.1" stroke-width="2"/>
+              <circle cx="40" cy="40" r="24" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-dasharray="4 4"/>
+              <path d="M40 24v16l10 10" stroke="currentColor" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>Henüz kalibrasyona tabi cihaz kaydı girilmemiş.</p>
+          </div>
+          <table class="data-table" id="kalibrasyonTable" style="display:none">
+            <thead>
+              <tr>
+                <th>Cihaz Adı</th>
+                <th>Marka-Model</th>
+                <th>Sicil No</th>
+                <th>Cihaz Durumu</th>
+                <th>Kalibrasyon</th>
+                <th>Son Kalibrasyon</th>
+                <th>Bir Sonraki</th>
+                <th>Bölüm</th>
+                <th>Sorumlu</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="kalibrasyonTbody"></tbody>
+          </table>
+          <div id="kalibrasyonPagination" class="pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS TAB ===== -->
+    <div class="tab-content" id="content-charts">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div class="chart-year-filter" id="chartYearFilter" style="flex:1"></div>
+        <div class="toolbar-actions">
+          <button class="btn btn-outline" onclick="exportChartsWord()" title="Tüm dolu grafikleri tek Word belgesi (.doc) olarak indir" data-i18n="btnWordExport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+            Word'e Aktar
+          </button>
+          <button class="btn btn-outline" onclick="exportChartsPDF()" title="Grafikleri PDF olarak yazdır" data-i18n="btnPrint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012-2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF Yazdır
+          </button>
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">Yıl ve ay filtresi, aşağıdaki tüm grafikleri (Üretim, Turnike, Atık, Harcama vb.) birlikte filtreler.</div>
+      <div class="charts-grid">
+
+        <!-- ÜRETİM - GEÇİŞ - ATIK KARŞILAŞTIRMASI -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartProdWaste">Üretim - Geçiş - Atık Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartAylik">
+            <canvas id="canvasAylik"></canvas>
+            <div class="chart-empty" id="chartAylikEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartProdWasteNote">Üretim, turnike geçişi ve çöpe giden porsiyonun aylık karşılaştırması</div>
+          <div id="chartAylikUyari" style="display:none;font-size:0.72rem;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:0.4rem 0.6rem;margin-top:0.5rem"></div>
+          <div class="formula-box">
+            <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ 400 gr
+          </div>
+        </div>
+
+        <!-- ÖĞRENCİ -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartStudentCount">Beslenme Hizmetlerinden Yararlanan Öğrenci Sayısı</h2>
+            <span class="chart-total" id="chartTotalOgrenci">0<small data-i18n="yearTotal">Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartOgrenci">
+            <canvas id="canvasOgrenci"></canvas>
+            <div class="chart-empty" id="chartOgrenciEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartStudentNote">Günlük öğrenci geçişlerinin aylık toplamı</div>
+        </div>
+
+        <!-- İDARİ AKADEMİK + SKS PERSONELİ -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartStaffTotal">Akademik ve İdari + SKS Personeli Toplamı</h2>
+            <span class="chart-total" id="chartTotalIdariPersonel">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartIdariPersonel">
+            <canvas id="canvasIdariPersonel"></canvas>
+            <div class="chart-empty" id="chartIdariPersonelEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartStaffNote">Akademik ve İdari (Turnike − Öğrenci) ile SKS Yemek Hizmeti Personeli toplamı</div>
+        </div>
+
+        <!-- ÜRETİM & GEÇİŞ -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="chartMonthlyProd">Aylık Yemek Üretimi</h2>
+            <span class="chart-total" id="chartTotalYemek">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartYemek">
+            <canvas id="canvasYemek"></canvas>
+            <div class="chart-empty" id="chartYemekEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartMonthlyProdNote">Günlük üretilen yemek sayılarının aylık toplamı</div>
+        </div>
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="chartMonthlyTurnstile">Aylık Turnike Geçiş Sayıları</h2>
+            <span class="chart-total" id="chartTotalTurnike">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartTurnike">
+            <canvas id="canvasTurnike"></canvas>
+            <div class="chart-empty" id="chartTurnikeEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartTurnstileNote">Öğrenci + personel + dış geçiş toplamı</div>
+        </div>
+
+        <!-- ATIK -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartMonthlyWaste">Aylık Atık Miktarı (kg)</h2>
+            <span class="chart-total" id="chartTotalAtik">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartAtik">
+            <canvas id="canvasAtik"></canvas>
+            <div class="chart-empty" id="chartAtikEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartMonthlyWasteNote">Günlük atıkların aylık toplamı (kg)</div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartMonthlyWastePortion">Aylık Atık Miktarı (porsiyon)</h2>
+            <span class="chart-total" id="chartTotalAtikPorsiyon">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartAtikPorsiyon">
+            <canvas id="canvasAtikPorsiyon"></canvas>
+            <div class="chart-empty" id="chartAtikPorsiyonEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartWastePortionNote">Günlük çöpe giden porsiyonların aylık toplamı (Atık kg × 1000 ÷ Porsiyon gr)</div>
+          <div class="formula-box">
+            <strong>Formül:</strong> Çöpe Giden Porsiyon = (Atık kg × 1000) ÷ Porsiyon gr
+          </div>
+        </div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartDiff">Üretim ile Geçiş Arasındaki Fark</h2>
+            <span class="chart-total" id="chartTotalFark">0<small>Yıl Toplamı</small></span>
+          </div>
+          <div class="chart-area" id="chartFark">
+            <canvas id="canvasFark"></canvas>
+            <div class="chart-empty" id="chartFarkEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartDiffNote">Üretilen yemek sayısı ile turnike geçişi arasındaki fark (Üretim − Geçiş)</div>
+        </div>
+
+        <!-- ORAN & ÇEVRE -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartWasteRatio">Üretilen Yemeğe Oranla Atık %</h2>
+            <span class="chart-total" id="chartTotalAtikOran">0<small data-i18n="yearAverage">Yıl Ortalaması</small></span>
+          </div>
+          <div class="chart-area" id="chartAtikOran">
+            <canvas id="canvasAtikOran"></canvas>
+            <div class="chart-empty" id="chartAtikOranEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartWasteRatioNote">Üretilen yemeğin yüzde kaçı atık oluyor</div>
+          <div class="formula-box">
+            <strong>Formül:</strong> (Atık kg × 1000 ÷ Porsiyon gr) ÷ Üretim × 100 &nbsp;=&nbsp; (Atık × 250) ÷ Üretim
+          </div>
+        </div>
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="chartWastePerPerson">Kişi Başı Atık (kg/kişi)</h2>
+            <span class="chart-total" id="chartTotalAtikPerKisi">0<small>Yıl Ortalaması</small></span>
+          </div>
+          <div class="chart-area" id="chartAtikPerKisi">
+            <canvas id="canvasAtikPerKisi"></canvas>
+            <div class="chart-empty" id="chartAtikPerKisiEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartWastePerPersonNote">Yemekhaneye giren kişi başına düşen ortalama atık</div>
+          <div class="formula-box">
+            <strong>Formül:</strong> Atık (kg) ÷ Toplam Geçiş (kişi)
+          </div>
+        </div>
+        <!-- DİĞER -->
+        <div id="haccpSicaklikChartContainer"></div>
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="chartMonthlyTemp">Aylık Ortalama Depo Sıcaklıkları (°C)</h2>
+          </div>
+          <div class="chart-area" id="chartHaccpAylik">
+            <canvas id="canvasHaccpAylik"></canvas>
+            <div class="chart-empty" id="chartHaccpAylikEmpty" data-i18n="chartTempEmpty">Sıcaklık kaydı girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="chartTempNote">Her deponun aylık ortalama sıcaklığı — aylara göre gruplandırılmış çubuk grafiği</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== YILLIK KARŞILAŞTIRMA TAB ===== -->
+    <div class="tab-content" id="content-yillik">
+      <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div class="chart-year-filter" id="yillikYearFilter" style="flex:1"></div>
+  <div class="toolbar-actions">
+  <button class="btn btn-outline" onclick="exportYillikPDF()" title="Yıllık karşılaştırmayı PDF olarak yazdır" data-i18n="yearlyPdfBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF Yazdır
+          </button>
+        </div>
+      </div>
+      <div class="donut-grid">
+
+        <!-- TOPLAM BAR: ÜRETİM -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="yearlyTotalProd">Toplam Üretim Karşılaştırması</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutUretim">
+            <canvas id="canvasDonutUretim"></canvas>
+            <div class="chart-empty" id="chartDonutUretimEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="donut-legend" id="donutLegendUretim"></div>
+          <div class="chart-note" data-i18n="yearlyTotalProdNote">Yıl toplamı - 1. yıl vs 2. yıl (porsiyon)</div>
+        </div>
+
+        <!-- TOPLAM BAR: YARARLANAN TOPLAM KİŞİ -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="yearlyTotalBen">Yemek Hiz. Yararlanan Toplam Kişi</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutTurnike">
+            <canvas id="canvasDonutTurnike"></canvas>
+            <div class="chart-empty" id="chartDonutTurnikeEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="donut-legend" id="donutLegendTurnike"></div>
+          <div class="chart-note" data-i18n="yearlyTotalBenNote">Yıl toplamı - 1. yıl vs 2. yıl (toplam kişi)</div>
+        </div>
+
+        <!-- TOPLAM BAR: ÖĞRENCİ -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="yearlyStudentComp">Yemek Hizmetinden Yararlanan Öğrenci Karşılaştırması</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutOgrenci">
+            <canvas id="canvasDonutOgrenci"></canvas>
+            <div class="chart-empty" id="chartDonutOgrenciEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="donut-legend" id="donutLegendOgrenci"></div>
+          <div class="chart-note" data-i18n="yearlyStudentNote">Yıl toplamı - 1. yıl vs 2. yıl (öğrenci)</div>
+        </div>
+
+        <!-- TOPLAM BAR: ATIK -->
+        <div class="section-card chart-card">
+          <div class="section-header">
+            <h2 data-i18n="yearlyWasteComp">Atık Karşılaştırması (kg)</h2>
+          </div>
+          <div class="chart-area chart-area-pie" id="chartDonutAtik">
+            <canvas id="canvasDonutAtik"></canvas>
+            <div class="chart-empty" id="chartDonutAtikEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="donut-legend" id="donutLegendAtik"></div>
+          <div class="chart-note" data-i18n="yearlyWasteNote">Yıl toplamı - 1. yıl vs 2. yıl (kg)</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.72rem;color:var(--text-muted);padding:0.15rem 0.5rem 0.4rem">İki yıl serbestçe seçilebilir. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. Bar'a tıklayınca o ayın kayıtları açılır.</div>
+
+      <div class="charts-grid">
+
+        <!-- ÜRETİM -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="yearlyMonthlyProd">Aylık Üretim Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartYillikUretim">
+            <canvas id="canvasYillikUretim"></canvas>
+            <div class="chart-empty" id="chartYillikUretimEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctUretim">
+            <canvas id="canvasYillikPctUretim"></canvas>
+            <div class="chart-empty" id="chartYillikPctUretimEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
+          <div class="chart-note" data-i18n="yearlyMonthlyProdNote">1. yıl vs 2. yıl - üretilen yemek sayısı (porsiyon)</div>
+        </div>
+
+        <!-- TURNIKE -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="yearlyMonthlyTurnstile">Aylık Turnike Geçiş Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartYillikTurnike">
+            <canvas id="canvasYillikTurnike"></canvas>
+            <div class="chart-empty" id="chartYillikTurnikeEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctTurnike">
+            <canvas id="canvasYillikPctTurnike"></canvas>
+            <div class="chart-empty" id="chartYillikPctTurnikeEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
+          <div class="chart-note" data-i18n="yearlyMonthlyTurnstileNote">1. yıl vs 2. yıl - turnike geçiş sayısı</div>
+        </div>
+
+        <!-- ÖĞRENCİ -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="yearlyMonthlyStudent">Aylık Öğrenci Turnike Geçişi Karşılaştırması</h2>
+          </div>
+          <div class="chart-area" id="chartYillikOgrenci">
+            <canvas id="canvasYillikOgrenci"></canvas>
+            <div class="chart-empty" id="chartYillikOgrenciEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctOgrenci">
+            <canvas id="canvasYillikPctOgrenci"></canvas>
+            <div class="chart-empty" id="chartYillikPctOgrenciEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
+          <div class="chart-note" data-i18n="yearlyMonthlyStudentNote">1. yıl vs 2. yıl - öğrenci turnike geçiş sayısı</div>
+        </div>
+
+        <!-- ATIK -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="yearlyMonthlyWaste">Aylık Atık Karşılaştırması (kg)</h2>
+          </div>
+          <div class="chart-area" id="chartYillikAtik">
+            <canvas id="canvasYillikAtik"></canvas>
+            <div class="chart-empty" id="chartYillikAtikEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-subhead" data-i18n="yearlyPctLineTitle">Aylık Yüzde Değişim</div>
+          <div class="chart-area chart-area-compact" id="chartYillikPctAtik">
+            <canvas id="canvasYillikPctAtik"></canvas>
+            <div class="chart-empty" id="chartYillikPctAtikEmpty" data-i18n="yearlyPctNoPrev">Karşılaştırma için 2. yıl seçiniz</div>
+          </div>
+          <div class="chart-note" data-i18n="yearlyMonthlyWasteNote">1. yıl vs 2. yıl - atık miktarı (kg)</div>
+        </div>
+
+        <!-- ATIK VERİMLİLİĞİ (%) -->
+        <div class="section-card chart-card chart-card-full">
+          <div class="section-header">
+            <h2 data-i18n="yearlyMonthlyWasteRate">Aylık Atık Verimliliği (%)</h2>
+            <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.8rem;font-weight:600;color:var(--text-dim);white-space:nowrap">
+              <span data-i18n="yearlyRateTarget">Hedef</span>
+              <input type="number" id="yillikVerimHedef" value="5" min="0" max="100" step="0.5" onchange="yillikVerimHedefKaydet()" style="width:64px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:0.82rem" />
+              %
+            </label>
+          </div>
+          <div class="chart-area" id="chartYillikVerim">
+            <canvas id="canvasYillikVerim"></canvas>
+            <div class="chart-empty" id="chartYillikVerimEmpty" data-i18n="chartEmpty">Veri girildiğinde grafik gösterilecek</div>
+          </div>
+          <div class="chart-note" data-i18n="yearlyMonthlyWasteRateNote">Atık porsiyon ÷ üretilen porsiyon × 100 · kırmızı kesikli çizgi = hedef</div>
+        </div>
+      </div>
+
+      <!-- YILLIK ATIK LİSTESİ TABLOSU -->
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2 data-i18n="yearlyWasteListTitle">Yıllık Atık Listesi</h2>
+          <button type="button" class="btn btn-outline btn-sm" id="yillikYemekAdiBtn" onclick="yillikYemekAdiPanelToggle()">Yemek Türü Eksikleri</button>
+        </div>
+        <div id="yillikYemekAdiPanel" style="display:none;margin-bottom:0.75rem;padding:0.85rem;border:1px solid var(--border);border-radius:10px;background:var(--bg-card)"></div>
+        <div style="overflow-x:auto">
+          <div id="yillikWasteTableContainer" style="padding:0.5rem;color:var(--text-muted);font-size:0.85rem">Yıl seçildiğinde atık listesi burada gösterilecek.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HARCAMA TAB ===== -->
+    <div class="tab-content" id="content-harcama">
+      <div class="toolbar" style="margin-bottom:0.5rem;display:flex;justify-content:flex-end;gap:0.5rem">
+        <button class="btn btn-outline btn-sm" onclick="printHarcama()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Yazdır
+        </button>
+      </div>
+      <div class="kpi-grid hc-kpis" id="hcKpis"></div>
+      <div class="hc-controls" id="hcControls"></div>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="spendingRatesTitle">Kişi Başı Harcama Oranları (Öğrenci, Personel &amp; Yemek)</h2>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-bottom:0.5rem">
+          <div>
+            <label for="hcOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem" data-i18n="spendingStudentRate">Öğrenci Başı Harcama Tutarı (₺)</label>
+            <input type="number" id="hcOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetOran()" data-i18n="btnSaveStudentRate">Öğr. Tutar Kaydet</button>
+          <span id="hcOranStatus" style="font-size:0.85rem"></span>
+          <div>
+            <label for="hcPersonelOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem" data-i18n="spendingStaffRate">Personel Başı Harcama Tutarı (₺)</label>
+            <input type="number" id="hcPersonelOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetPersonelOran()" data-i18n="btnSaveStaffRate">Pers. Tutar Kaydet</button>
+          <span id="hcPersonelOranStatus" style="font-size:0.85rem"></span>
+          <div>
+            <label for="hcYemekOran" style="display:block;font-size:0.8rem;font-weight:600;color:var(--text-dim);margin-bottom:0.3rem" data-i18n="spendingMealRate">Yemek Başı Harcama Tutarı (₺)</label>
+            <input type="number" id="hcYemekOran" step="0.01" min="0" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;min-width:160px" oninput="renderHarcamaMenu()" />
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="hcKaydetYemekOran()" data-i18n="btnSaveMealRate">Yemek Tutar Kaydet</button>
+          <span id="hcYemekOranStatus" style="font-size:0.85rem"></span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted)" data-i18n="spendingDesc">Öğrenci Harcama = Öğrenci Sayısı × Öğrenci Başı Tutar; Personel Harcama = Personel Sayısı × Personel Başı Tutar; Yemek Harcama = Üretilen Yemek × Yemek Başı Tutar. Tutar değiştiğinde tablo ve grafikler anında yeniden hesaplanır.</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2 data-i18n="spendingStudentTitle">Öğrenci Harcama Tutarı (₺)</h2>
+          <span class="badge" id="hcChartBadge" style="display:none"></span>
+        </div>
+        <div class="chart-area" id="hcChartArea">
+          <canvas id="canvasHarcamaMenu"></canvas>
+          <div class="chart-empty" id="hcChartEmpty" data-i18n="spendingChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note" data-i18n="spendingStudentNote">Öğrenci Harcama (₺) = Öğrenci Sayısı × Öğrenci Başı Harcama Tutarı</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2 data-i18n="spendingStaffTitle">Personel Harcama Tutarı (₺)</h2>
+          <span class="badge" id="hcPersonelChartBadge" style="display:none"></span>
+        </div>
+        <div class="chart-area" id="hcPersonelChartArea">
+          <canvas id="canvasHarcamaPersonel"></canvas>
+          <div class="chart-empty" id="hcPersonelChartEmpty" data-i18n="spendingChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note" data-i18n="spendingStaffNote">Personel Harcama (₺) = Personel Sayısı × Personel Başı Harcama Tutarı</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-header">
+          <h2 data-i18n="spendingMealTitle">Yemek Harcama Tutarı (₺)</h2>
+          <span class="badge" id="hcYemekChartBadge" style="display:none"></span>
+        </div>
+        <div class="chart-area" id="hcYemekChartArea">
+          <canvas id="canvasHarcamaYemek"></canvas>
+          <div class="chart-empty" id="hcYemekChartEmpty" data-i18n="spendingChartEmpty">Kayıt girildiğinde grafik gösterilecek</div>
+        </div>
+        <div class="chart-note" data-i18n="spendingMealNote">Yemek Harcama (₺) = Üretilen Yemek Sayısı × Yemek Başı Harcama Tutarı</div>
+      </div>
+
+      <div class="section-card" style="margin-top:1rem" id="hcTableArea">
+        <div class="section-header">
+          <h2 data-i18n="spendingTableTitle">Harcama Hesaplama Tablosu</h2>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" style="min-width:1100px;text-align:center">
+            <thead>
+              <tr>
+                <th style="text-align:center">Tarih</th>
+                <th style="text-align:center">Öğrenci Sayısı</th>
+                <th style="text-align:center">Öğr. Oranı (₺)</th>
+                <th style="text-align:center">Öğrenci Harcama (₺)</th>
+                <th style="text-align:center">Personel Sayısı</th>
+                <th style="text-align:center">Pers. Oranı (₺)</th>
+                <th style="text-align:center">Personel Harcama (₺)</th>
+                <th style="text-align:center">Üretilen Yemek</th>
+                <th style="text-align:center">Yemek Harcama (₺)</th>
+              </tr>
+            </thead>
+            <tbody id="hcTbody"></tbody>
+          </table>
+        </div>
+        <div class="hc-pagination" id="hcPagination"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="content-birimfiyat"></div>
+
+    <div class="tab-content" id="content-yemeklistesi">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="foodListTitle">Yemek Listesi</h2>
+        </div>
+        <div style="padding:1rem">
+          <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+            <div class="yl-search-wrap">
+              <svg class="yl-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="yemekSearchInput" class="yl-search-input" placeholder="Yemek adı ile ara..." oninput="renderYemekListesi()" />
+            </div>
+            <select id="yemekSortSelect" class="yl-sort-select" onchange="renderYemekListesi()" title="Sıralama">
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="showYemekForm()">+ Yeni Yemek</button>
+            <button class="btn btn-ghost btn-sm" id="yemekCsvUploadBtn" onclick="document.getElementById('yemekCSVUpload').click()" data-i18n="menuFoodListUploadBtn">CSV Yükle</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportYemekCSV()" title="Yemek listesini CSV olarak indir" data-i18n="menuFoodListCsvBtn">CSV İndir</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportYemekListesiPDF()">Tüm Yemekler PDF</button>
+            <input type="file" id="yemekCSVUpload" accept=".csv,.txt" style="display:none" onchange="importYemekCSV(event)" />
+          </div>
+          <div id="yemekFormContainer" style="display:none;margin-bottom:1rem"></div>
+          <div id="yemekListesiContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="content-malitablo">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="sidebarMaliTablo">Hf. Menü Mali Tablosu</h2>
+        </div>
+        <div class="menu-date-nav">
+          <button class="btn btn-ghost btn-sm" onclick="shiftMaliWeek(-1)" data-i18n="btnPrev">◀ Önceki</button>
+          <span id="maliWeekLabel">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="shiftMaliWeek(1)" data-i18n="btnNext">Sonraki ▶</button>
+        </div>
+        <div id="menuMaliTablo" style="margin-top:1.5rem;display:none"></div>
+        <div id="yillikMaliyetSection" style="margin-top:1.5rem;display:none"></div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="content-yillikplan">
+      <div class="section-card">
+        <div class="section-header">
+          <h2 data-i18n="sidebarYillikPlan">Yıllık İhtiyaç Planı</h2>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input type="number" id="yillikPlanYilSec" class="yillik-yil-sec" style="width:92px;text-align:center" step="1" list="yillikPlanYillar" onchange="yillikPlanYilDegistir(this.value)" />
+             <datalist id="yillikPlanYillar"></datalist>
+          </div>
+        </div>
+        <div id="yillikPlanHaftaTablo" style="margin-top:1rem"></div>
+        <div id="yillikPlanIhtiyacTablo" style="margin-top:1.5rem"></div>
+      </div>
+    </div>
+
+    <!-- ===== YÖNETİM PANELİ TAB ===== -->
+    <div class="tab-content" id="content-admin">
+      <div class="section-card">
+        <div class="section-header" style="flex-wrap:wrap;gap:0.75rem">
+          <h2 data-i18n="adminTitle">Yönetim Paneli</h2>
+          <div class="ap-subtabs">
+            <button class="ap-subtab active" data-aptab="users" onclick="apSwitchTab('users')">Kullanıcılar</button>
+            <button class="ap-subtab" data-aptab="roles" onclick="apSwitchTab('roles')">Roller ve İzinler</button>
+            <button class="ap-subtab" data-aptab="system" onclick="apSwitchTab('system')">Oturum ve Sürüm</button>
+          </div>
+        </div>
+
+        <div id="apError" style="display:none;color:#ef4444;font-size:0.85rem;margin:0.5rem 0"></div>
+        <div id="apSuccess" style="display:none;color:#22c55e;font-size:0.85rem;margin:0.5rem 0"></div>
+
+        <!-- KULLANICILAR -->
+        <div class="ap-tab-content active" id="ap-tab-users">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Kullanıcılar</h3>
+              <span id="apUserCount" style="font-size:0.75rem;color:var(--text-muted)"></span>
+            </div>
+            <div class="ap-card-body" id="apUserList"></div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Yeni Kullanıcı Ekle</h3>
+            </div>
+            <div class="ap-card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+                <div>
+                  <label for="apNewDisplayName" class="ap-field-label" data-i18n="adminDisplayName">Adı Soyadı</label>
+                  <input type="text" id="apNewDisplayName" class="ap-field" placeholder="ör: Fatma Mine ORHAN" />
+                </div>
+                <div>
+                  <label for="apNewEmail" class="ap-field-label">E-posta</label>
+                  <input type="email" id="apNewEmail" class="ap-field" placeholder="ör: mehmet.orhan@ahievran.edu.tr" autocomplete="off" spellcheck="false" />
+                </div>
+              </div>
+              <div style="margin-top:0.6rem">
+                <label for="apNewRole" class="ap-field-label" data-i18n="adminRole">Rol</label>
+                <select id="apNewRole" class="ap-field" onchange="apRenderNewUserPerms()">
+                  <option value="diyetisyen" selected>Diyetisyen</option>
+                  <option value="admin">Admin</option>
+                  <option value="depo">Depo Sorumlusu</option>
+                  <option value="asci">Aşçı</option>
+                  <option value="gida_muhendisi">Gıda Mühendisi</option>
+                  <option value="temizlikci">Temizlikçi</option>
+                  <option value="sadece_gorme">Sadece Görme</option>
+                </select>
+              </div>
+              <div class="ap-note">
+                Şifre burada belirlenmez. Kişiyi önce <strong>Supabase &gt; Authentication &gt; Users</strong> bölümünde aynı e-posta ve şifre ile oluşturun. Kullanıcı giriş yaptıktan sonra sağ üstteki anahtar simgesinden kendi şifresini değiştirebilir.
+              </div>
+              <div id="apNewUserPerms"></div>
+              <button class="btn btn-primary" onclick="apAddUser()" style="margin-top:0.85rem" data-i18n="adminAddUserBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+                Kullanıcı Ekle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLLER VE İZİNLER -->
+        <div class="ap-tab-content" id="ap-tab-roles">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title" data-i18n="adminRolePerms">Rol Bazlı İzin Ayarları</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.85rem" data-i18n="adminRolePermsDesc">Her rol için hangi sekmeleri görebileceğini ve ne yapabileceğini ayarlayın.</p>
+              <div id="apRolePermissions"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTURUM VE SÜRÜM -->
+        <div class="ap-tab-content" id="ap-tab-system">
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Oturum Bilgileri</h3>
+            </div>
+            <div class="ap-card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.75rem">
+                <div>
+                  <div class="ap-field-label" data-i18n="adminSessionRole">Oturum Rolü</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apSessionRole">Yönetici</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminLastLogin">Son Giriş</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apLastLogin">-</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminAuthMethod">Auth Yöntemi</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--accent)" id="apAuthMode">Supabase Auth</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminStorage">Şifre Deposu</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--success)" id="apStorageInfo">Bulut + Yerel</div>
+                </div>
+                <div>
+                  <div class="ap-field-label" data-i18n="adminDataSource">Veri Kaynağı</div>
+                  <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary)" id="apDataSource">Supabase + Yerel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title" data-i18n="adminSecurity">Oturum Güvenliği</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.75rem" data-i18n="adminSecurityDesc">Belirtilen süre boyunca hiçbir işlem yapılmazsa oturum otomatik olarak kapanır.</p>
+              <label for="apInactivityTimeout" class="ap-field-label" data-i18n="adminInactivityTimeout">Hareketsizlik Kapanma Süresi</label>
+              <select id="apInactivityTimeout" class="ap-field" style="max-width:320px">
+                <option value="120000">2 dakika</option>
+                <option value="300000">5 dakika (varsayılan)</option>
+                <option value="600000">10 dakika</option>
+                <option value="900000">15 dakika</option>
+                <option value="1800000">30 dakika</option>
+                <option value="0">Kapalı (oturum kapanmaz)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ap-card">
+            <div class="ap-card-head">
+              <h3 class="ap-card-title">Sürüm Güncelleme</h3>
+            </div>
+            <div class="ap-card-body">
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 0.85rem;line-height:1.6">Sürüm tek yerden yönetilir: giriş ekranı, yan menü ve kılavuzdaki versiyon yazısı ile önbellek (service worker) bu değerden güncellenir. <strong>"Sürümü Yayınla"</strong> dediğinizde değer Supabase'e yazılır ve bağlı olan <strong>tüm cihazlar</strong> bir sonraki açılışta otomatik güncellenir.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.75rem">
+                <div>
+                  <label for="apVersionInput" class="ap-field-label">Sürüm (görünen)</label>
+                  <input type="text" id="apVersionInput" class="ap-field" placeholder="ör: 1.4.1" />
+                </div>
+                <div>
+                  <label for="apBuildInput" class="ap-field-label">Build No (güncelleme no)</label>
+                  <input type="number" id="apBuildInput" class="ap-field" min="1" />
+                </div>
+              </div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-outline btn-sm" onclick="apBumpBuild()" title="Build numarasını 1 artırır">Build +1</button>
+                <button class="btn btn-primary btn-sm" onclick="apPublishVersion()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
+                  Sürümü Yayınla
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:1rem 1.25rem;border-top:1px solid var(--border)">
+          <button class="btn btn-primary" onclick="saveAdminSettings()" style="min-width:180px" data-i18n="adminSaveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+            Ayarları Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ===== LOG KAYITLARI TAB ===== -->
+    <div class="tab-content" id="content-logs">
+      <div class="section-card">
+        <div class="section-header" style="flex-wrap:wrap;gap:0.75rem">
+          <h2>İşlem Log Kayıtları</h2>
+          <button class="btn btn-ghost btn-sm" onclick="apLoadLogs()" data-i18n="btnRefresh">Yenile</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <select id="logFilterIslem" onchange="apLoadLogs(true)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text)">
+          <option value="">Tüm İşlemler</option>
+          <option value="login">Giriş</option>
+          <option value="logout">Çıkış</option>
+          <option value="yeni_kayit">Yeni Kayıt</option>
+          <option value="kayit_duzenle">Düzenleme</option>
+          <option value="kayit_sil" data-i18n="logFilterDelete">Silme</option>
+          <option value="kullanici_ekle" data-i18n="logFilterAddUser">Kullanıcı Ekle</option>
+          <option value="kullanici_duzenle">Kullanıcı Düzenle</option>
+          <option value="kullanici_sil" data-i18n="logFilterDeleteUser">Kullanıcı Sil</option>
+        </select>
+        <input type="text" id="logFilterKullanici" placeholder="Kullanıcı ara..." oninput="apLoadLogs(true)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:var(--bg-card);color:var(--text);width:140px" />
+        </div>
+        <div id="apLogList" style="overflow-x:auto;font-size:0.8rem"></div>
+      </div>
+    </div>
+
+    <!-- ===== KULLANIM KILAVUZU TAB ===== -->
+    <div class="tab-content" id="content-manual">
+      <div class="section-card" style="padding:0">
+        <div class="section-header" style="margin:0;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+          <h2 data-i18n="manualTitle">Kullanım Kılavuzu</h2>
+          <button class="btn btn-primary btn-sm" onclick="exportManualPDF()" title="Kılavuzu PDF olarak yazdır/kaydet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF İndir
+          </button>
+        </div>
+        <div class="manual-body">
+        <div class="manual-hero">
+          <div class="manual-hero-badge" id="manualVersion">v1.5.0</div>
+          <h3>KIRŞEHİR AHİ EVRAN ÜNİVERSİTESİ<br>Beslenme Hizmetleri Yönetim Sistemi</h3>
+          <p data-i18n="manualSubtitle">Yemekhane Üretim, Tüketim ve Atık Kontrol Sistemi</p>
+        </div>
+
+        <div class="manual-toc">
+          <strong>İçindekiler</strong>
+          <div class="manual-toc-links">
+            <a href="#man-giris">1. Giriş ve Roller</a>
+            <a href="#man-panel">2. Panel</a>
+            <a href="#man-menu">3. Haftalık Menü</a>
+            <a href="#man-kayit">4. Kayıtlar</a>
+            <a href="#man-rapor">5. Rapor</a>
+            <a href="#man-gida">6. Gıda Güvenliği (HACCP)</a>
+            <a href="#man-yag">7. Atık Yağ</a>
+            <a href="#man-ambalaj">8. Ambalaj Atıkları</a>
+            <a href="#man-kalibrasyon">9. Kalibrasyona Tabi Cihazlar</a>
+            <a href="#man-grafik">10. Grafikler</a>
+            <a href="#man-yillik">11. Yıllık Karşılaştırma</a>
+            <a href="#man-harcama">12. Harcama</a>
+            <a href="#man-malitablo">13. Hf. Menü Mali Tablosu</a>
+            <a href="#man-yillikplan">14. Yıllık İhtiyaç Planı</a>
+            <a href="#man-birimfiyat">15. Birim Fiyatlar ve Maliyet Hesabı</a>
+            <a href="#man-dil">16. Çok Dilli Destek (9 Dil)</a>
+            <a href="#man-yedek">17. Veri Yedekleme ve Senkronizasyon</a>
+            <a href="#man-sistem">18. Tema ve Görünüm</a>
+            <a href="#man-yonetim">19. Yönetim, İzinler ve Log Kayıtları</a>
+            <a href="#man-ipucu">20. İpuçları</a>
+          </div>
+        </div>
+
+        <div class="manual-section" id="man-giris">
+          <h3>1. Giriş ve Roller</h3>
+          <p>Sistem, yemekhane üretim süreçlerinin dijital ortamda takip edilmesini sağlar. Her kullanıcı rolü, yalnızca kendi yetkisindeki bölümleri görür ve kullanır:</p>
+          <ul>
+            <li><strong>Admin:</strong> Tüm bölümler + Yönetim (kullanıcı ekleme/silme) ve Log Kayıtları.</li>
+            <li><strong>Diyetisyen:</strong> Haftalık menü oluşturma, onaylama ve raporlar.</li>
+            <li><strong>Depo Sorumlusu:</strong> Gıda güvenliği kontrolleri ve depo sıcaklık takibi.</li>
+            <li><strong>Aşçı:</strong> Üretim/tüketim/atık kayıtları girişi.</li>
+            <li><strong>Gıda Mühendisi:</strong> Gıda güvenliği ve kalite takibi.</li>
+          </ul>
+        <p>Giriş ekranında kullanıcı adınızı seçip şifrenizi girerek oturum açın. Sağ üstteki rozet, hangi rol ile giriş yaptığınızı gösterir.</p>
+        <p><strong>Oturum kalıcıdır:</strong> Giriş yaptığınızda oturumunuz tarayıcı belleğine kaydedilir. Sekmeyi kapatıp yeniden açtığınızda veya tarayıcıyı tamamen kapattığınızda tekrar şifre girmenize gerek kalmaz.</p>
+        <p><strong>Hareketsizlik kilidi (varsayılan 5 dakika):</strong> Belirtilen süre boyunca işlem yapılmazsa giriş ekranı açılır ve şifre istenir. <strong>Bu kilit oturumu silmez</strong>, yalnızca giriş ekranını kapatmanız yeterlidir. Sayfayı yenilediğinizde de şifre istenir; ancak tarayıcıyı kapatıp açtığınızda oturumunuz kendiliğinden geri gelir. Süreyi <em>Yönetim &rsaquo; Hareketsizlik Kapanma Süresi</em> ayarından değiştirebilirsiniz.</p>
+        <p><strong>Çıkış yapmak</strong> için <em>Yönetim</em> sekmesindeki "Çıkış Yap" butonunu kullanın. Çıkış yaptığınızda oturum kalıcı olarak silinir ve bir sonraki açılışta şifre yeniden gerekir. Ortak kullanılan bilgisayarlarda çıkış yapmayı unutmayın.</p>
+        </div>
+
+        <div class="manual-section" id="man-panel">
+          <h3>2. Panel</h3>
+          <p>Açılış ekranıdır. Sistemin genel durumunu özet kartlar halinde gösterir:</p>
+          <ul>
+            <li><strong>Toplam Üretim Günü:</strong> Sistemdeki tüm üretim/tüketim/atık kayıtlarının sayısı.</li>
+            <li><strong>Bugünkü Üretim:</strong> Bugün üretilen yemek miktarı; altında yemekten yararlanan kişi sayısı görünür.</li>
+            <li><strong>Soğuk Hava Depo Sıcaklık Alarmı:</strong> Limit dışı depo sıcaklığı uyarılarının sayısı.</li>
+            <li><strong>Logo:</strong> Soğuk Hava Depo Sıcaklık Alarmı ile Kalibrasyon Alarmı arasında, kart olmadan yalnızca uygulama logosu görünür.</li>
+            <li><strong>Kalibrasyon Alarmı:</strong> Kalibrasyonu süresi dolan veya yapılmayan cihaz sayısı.</li>
+            <li><strong>Ort. Atık (kg):</strong> Ortalama günlük atık miktarı ve eğilim grafiği.</li>
+            <li><strong>Turnikeden Toplam Geçiş Rakamı:</strong> Turnike geçiş toplamı ve eğilim grafiği.</li>
+          </ul>
+          <p>"Bu Hafta" bölümünde haftanın özeti, "Bugünün Detayı" bölümünde ise bugünün öğün bazlı detayı görüntülenir. Sağdaki <strong>ok butonları</strong> ile önceki/sonraki hafta ve gün arasında gezinebilirsiniz.</p>
+          <p><strong>Karşılaştırma Bölümü:</strong> Panelde <strong>Haftalık</strong>, <strong>Aylık</strong> ve <strong>Yıllık</strong> karşılaştırma kartları bulunur. Her biri belirli bir dönem ile bir önceki dönemi karşılaştırır; <strong>↑ artış</strong>, <strong>↓ azalış</strong> yön göstergeleriyle değişimi gösterir. Atık ve kişi başı atıkta düşüş (↓) iyi bir sonuçtur. Veri türü, dönem adı ve fark sütunları dillé desteklidir.</p>
+        </div>
+
+        <div class="manual-section" id="man-menu">
+          <h3>3. Haftalık Menü</h3>
+          <ul>
+            <li>Haftanın her günü için <strong>Pazartesi'den Cuma'ya</strong> yemek listesi oluşturulur. Gün isimleri, çeşit adları (1. Çeşit...5. Çeşit) ve "Kişi Sayısı" satırı seçilen dile göre çevrilir.</li>
+            <li>Yemek adını yazmaya başlayınca otomatik tamamlama önerileri çıkar; listeden seçebilirsiniz.</li>
+            <li>Menü <strong>Diyetisyen</strong> tarafından hazırlanıp <em>Onaya Gönder</em> ile gönderilir; onaylanmadan kayıt aşamasına geçilmez.</li>
+            <li>Onay bekleyen menüler "Reddet" butonu ile diyetisyene geri gönderilebilir; gerekçe yazılması zorunludur.</li>
+            <li>Kaydedilen menü daha sonra <strong>Düzenle</strong> butonuyla değiştirilebilir.</li>
+            <li><strong>Üretim Görünümü:</strong> Onaylı menü, her gün için kişi sayısıyla birlikte malzeme miktarlarını gösterir. Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> yer alır: her malzemenin toplam miktarı ve (birim fiyat girilmişse) para tutarı yazar; listenin başında günün <strong>Toplam</strong> maliyeti görünür. Dillé desteklidir.</li>
+            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; haftalık toplam tüketim ve maliyet hesaplanır. Tüm başlıklar seçilen dile göre çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-kayit">
+          <h3>4. Kayıtlar</h3>
+          <ul>
+            <li>Tüm üretim, tüketim ve atık kayıtlarının listelendiği bölümdür.</li>
+            <li>Her kayıt <strong>Üretilen Yemek</strong>, <strong>%10 Fire</strong>, <strong>Turnike Geçişi</strong>, <strong>SKS Yemek Hiz. Personeli</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + personel) ve <strong>Atık</strong> bilgilerini içerir; Toplam değeri otomatik hesaplanır.</li>
+            <li>Üstteki arama kutusu ve tarih filtresiyle kayıtları daraltabilirsiniz.</li>
+            <li>Her kayıt için <strong>Düzenle</strong> (kalem) ve <strong>Sil</strong> (çöp kutusu) butonları bulunur.</li>
+            <li>Sayfalama alttadır: <strong>« ‹ 1/2 › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; "N kayıt" bilgisi toplam kayıt sayısını gösterir.</li>
+            <li>Her tablo için <strong>Excel/CSV</strong> dışa aktarma butonları mevcuttur.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-rapor">
+          <h3>5. Rapor</h3>
+          <ul>
+            <li>Belirli bir tarih aralığında üretim, tüketim ve atık miktarlarını gösterir.</li>
+            <li>Rapor, <strong>günlük</strong> ve <strong>aylık</strong> bazda derlenir.</li>
+            <li>Üstteki özet kartları: <strong>Toplam Turnike Geçişi</strong>, <strong>Yemek Hiz. Yararlanan Toplam Kişi</strong> (turnike + SKS personeli), <strong>SKS Yemek Hiz. Personeli</strong>, <strong>En Yüksek Haftalık Yararlanan Kişi</strong> ve <strong>Yemek Hiz. Yararlanan Trendi (son 7 gün)</strong>.</li>
+            <li>Üstteki butonlarla raporu <strong>yazdırabilir</strong> veya <strong>Excel</strong> olarak dışa aktarabilirsiniz.</li>
+            <li>Rapor sonuçları otomatik olarak <strong>atık oranı</strong> hesaplar ve çeşit kırılımını gösterir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-gida">
+          <h3>6. Gıda Güvenliği (HACCP)</h3>
+          <ul>
+            <li>HACCP kontrol noktalarının (soğuk oda, derin dondurucu, üretim alanı vb.) sıcaklık takibini sağlar.</li>
+            <li><strong>Yeni Kontrol</strong> butonu ile tarih, alan, sıcaklık ve kontrol eden bilgisi girilir.</li>
+            <li>Limit dışı değerler otomatik olarak kırmızı ile işaretlenir ve uyarı verilir.</li>
+            <li>Kontroller ayrıca <strong>Depo Sıcaklıkları</strong> sekmesinde kaydedilebilir.</li>
+            <li>Tablo başlıkları (Tarih, Saat, Depo Adı, Sıcaklık, Nem, Not, İşlem) seçilen dile göre çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yag">
+          <h3>7. Atık Yağ</h3>
+          <ul>
+            <li>Bitkisel atık yağ toplama ve tahliye kayıtlarının tutulduğu bölümdür.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, yağ türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ambalaj">
+          <h3>8. Ambalaj Atıkları</h3>
+          <ul>
+            <li>Plastik, kağıt, cam ve metal ambalaj atıklarının kayıtlarının tutulduğu bölümdür.</li>
+            <li><strong>Filtreler</strong> bölümünden tarih aralığı, atık türü ve yıl seçilir; özet kartları, grafikler ve tablo <strong>birlikte</strong> bu filtreye göre güncellenir.</li>
+            <li>Yıl seçildiğinde aylık grafikte bir önceki yılın verisi çizgi ile karşılaştırma olarak gösterilir.</li>
+            <li>Aylık grafikte bir çubuğa tıklanınca o ayın kayıt listesi açılır.</li>
+            <li><strong>Sıfırla</strong> butonu tüm filtreleri temizler.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-kalibrasyon">
+          <h3>9. Kalibrasyona Tabi Cihazlar</h3>
+          <ul>
+            <li>Gıda güvenliği denetimlerinde kullanılan ölçüm cihazlarının (dijital termometre, baskül, fırın termometresi vb.) kalibrasyon takibi yapılır.</li>
+            <li><strong>Yeni Cihaz</strong> butonu ile cihaz adı, marka-model, sicil no, <strong>Durum</strong> (Çalışır Durumda / Arızalı / Bakım Yapılacak / Hurdaya Ayrılacak), doğrulama, son/bir sonraki kalibrasyon tarihi, bulunduğu bölüm, sorumlu kişi ve isteğe bağlı <strong>Not</strong> (açıklama) bilgisi girilir.</li>
+            <li>Tablo iki rozet gösterir: <strong>Cihaz Durumu</strong> (elle seçilir) ve <strong>Kalibrasyon</strong> (tarihlere göre otomatik hesaplanır: <strong>Geçerli</strong> yeşil, <strong>Yaklaşıyor</strong> sarı - sonraki kalibrasyona 30 günden az, <strong>Süresi Doldu</strong> kırmızı, <strong>Yapılmadı</strong> kırmızı). Girdiğiniz <strong>Not</strong> bilgisi listenin <strong>Not</strong> sütununda gösterilir.</li>
+            <li>Liste <strong>cihaz adına göre alfabetik</strong> sıralanır; üstteki <strong>Durum</strong> filtresi ve <strong>Bölüm</strong> arama kutusu ile kayıtlar daraltılabilir.</li>
+            <li>Sayfalama alttadır: <strong>« ‹ 1/N › »</strong> butonlarıyla sayfalar arasında geçiş yapılır; liste uzunsa kaydırma çubuğuyla aşağı inilebilir.</li>
+            <li>Üstteki özet kartları cihaz durumunu (çalışır/arızalı/bakım/hurda) ve kalibrasyon durumunu (<strong>Kalibrasyonu Geçerli</strong>, <strong>Kalibrasyonu Yaklaşan (30 Gün)</strong>, <strong>Farklı Bölüm</strong>) ayrı ayrı özetler. Paneldeki <strong>Kalibrasyon Alarmı</strong> süresi dolan ve yapılmayan cihazları sayar.</li>
+            <li><strong>Liste</strong> butonu ile yazdırılabilir liste, <strong>CSV İndir</strong> ile Excel uyumlu dosya alınır (Not bilgisi dahil).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-grafik">
+          <h3>10. Grafikler</h3>
+          <ul>
+            <li>Üretim, tüketim, atık ve harcama grafikleri burada toplanır.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ile verilerin yılı değiştirilir.</li>
+            <li><strong>"Tümü | Ocak | Şubat ... Aralık"</strong> butonları ile görünüm tek aya veya tüm yıla göre ayarlanır.</li>
+            <li>Çubukların üzerindeki sayılar değeri gösterir; uzun grafiklerde yatay kaydırma çubuğu kullanılır.</li>
+            <li><strong>"Word'e Aktar"</strong> butonu ile grafikler Word belgesine aktarılabilir.; <strong>"PDF Yazdır"</strong> ile yazdırılabilir.</li>
+            <li>Seçili dile göre grafik etiketleri ve başlıklar otomatik çevrilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yillik">
+        <h3>11. Yıllık Karşılaştırma</h3>
+        <p>Bu sekme, <strong>1. yıl</strong> ile <strong>2. yılı</strong> yan yana karşılaştırır ve yıllık değişimi gösterir.</p>
+        <ul>
+          <li><strong>Yıl seçicileri:</strong> Üstte <strong>"1. Yıl"</strong> ve <strong>"2. Yıl"</strong> açılır kutuları vardır; aynı yıl her ikisinde birden seçilemez. Düz çubuk = 1. yıl, kesikli çubuk = 2. yıl. 2. yıl boş bırakılırsa yalnızca 1. yıl verileri gösterilir.</li>
+          <li>Herhangi bir <strong>çubuğa tıklamak</strong>, o ayın kayıtlarını açan <em>Kayıtlar</em> ekranında gösterir.</li>
+          <li><strong>Yıllık toplam halka grafikleri:</strong> Toplam Üretim, Toplam Turnike Geçişi, Öğrenci (1. yıl ve 2. yıl) ve Atık (kg).</li>
+          <li><strong>Aylık karşılaştırma çubuk grafikleri:</strong> Üretim, Turnike Geçişi, Öğrenci, Atık (kg) ve Atık Verimliliği (%).</li>
+          <li><strong>Aylık Yüzde Değişim çizgileri:</strong> Üretim, Turnike, Öğrenci ve Atık kartlarının altında yer alır; 1. yıla göre 2. yıldaki aylık yüzde değişimi gösterir. <strong>%0</strong> referans kesikli çizgisi "değişim yok" satırını belirtir; fare ile üzerine gelindiğinde mutlak değişim değeri de görülür. Verimlilik kartında bu çizgi bulunmaz.</li>
+          <li><strong>Atık Verimliliği:</strong> <em>Atık porsiyon ÷ üretilen porsiyon × 100</em> olarak hesaplanır. <strong>Hedef</strong> kutusundan hedef değer (varsayılan %5) girilir ve grafikte kırmızı kesikli çizgi olarak gösterilir.</li>
+          <li><strong>Yıllık Atık Listesi</strong> tablosunda her yemek türü için 1. yıl üretim ve atık, 2. yıl seçiliyse 2. yıl üretim ve atık ile <em>Fark (kg)</em> sütunları yer alır; en altta toplam satırı bulunur.</li>
+          <li><strong>"Yemek Türü Eksikleri"</strong> butonu, yemek türü boş bırakılmış kayıtları yıla göre listeler; tek tek veya <em>"Tümünü Doldur"</em> ile topluca doldurulabilir. Bu tablo doldurulduğunda yıllık atık listesi ve verim grafiği daha doğru sonuç verir.</li>
+          <li><strong>"PDF Yazdır"</strong> butonu ile tüm yıllık karşılaştırma yazdırılabilir.</li>
+          <li>Seçili dile göre tüm başlıklar, etiketler ve boş durumlar otomatik çevrilir.</li>
+        </ul>
+        </div>
+
+        <div class="manual-section" id="man-harcama">
+          <h3>12. Harcama</h3>
+          <ul>
+            <li>Öğrenci başına günlük harcama hesabı yapılır: <em>Toplam Maliyet / Öğrenci Sayısı</em>.</li>
+            <li><strong>"Başı Harcama Oranları"</strong> kutusuna öğrenci ve personel başı harcama oranını girip ayrı ayrı kaydedebilirsiniz.</li>
+            <li>Üstteki <strong>Yıl seçici</strong> ve <strong>ay butonları</strong> ile harcama grafikleri filtrelenir.</li>
+            <li><strong>Öğrenci Harcama Tutarı</strong> grafiği öğrenci sayısından, <strong>Personel Harcama Tutarı</strong> grafiği personel sayısından ayrı ayrı hesaplanır.</li>
+            <li>En üstteki <strong>4 kart</strong>: <strong>Toplam Öğrenci Harcama</strong>, <strong>Toplam Personel Harcama</strong>, <strong>Toplam Yemek Harcama</strong> ve bu üçünün toplamı olan <strong>Genel Toplam Harcama</strong> tutarını gösterir.</li>
+            <li>Harcama tablosu sayfa başına 10 kayıt gösterir; alttaki <strong>« ‹ 1/N › »</strong> butonları ile gezinilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-malitablo">
+          <h3>13. Hf. Menü Mali Tablosu</h3>
+          <p>Haftalık menünün <strong>para karşılığını</strong> gösteren bölümdür. Menü sekmesinde yer alan maliyet tabloları bu sekmeye taşınmıştır.</p>
+          <ul>
+            <li><strong>Hafta gezinme:</strong> Üstteki <strong>◀ ▶</strong> butonları ve hafta etiketiyle haftalar arasında geçiş yapılır.</li>
+            <li><strong>Haftalık Mali Tablo:</strong> Seçili haftanın her günü için o günün yemeklerinin tarif malzemeleri, kişi sayısıyla çarpılarak <strong>birim fiyatlarla</strong> hesaplanır; günün toplam tutarı görünür.</li>
+            <li><strong>Yıllık Maliyet kartı:</strong> Seçili haftanın takvim yılına göre <strong>yıllık toplam</strong>, aylık ve günlük ortalama, kişi başı maliyet ve toplam kişi-gün ile aylık dağılım çubukları gösterilir. <strong>Yıl seçici</strong> yalnızca menü verisi olan yılları listeler; <strong>"Bu Hafta"</strong> butonu güncel haftaya döner.</li>
+            <li>Yalnızca <strong>birim fiyatı girilmiş</strong> malzemeler tutara katılır; fiyatı olmayan kalemler miktar olarak görünür ama toplama eklenmez.</li>
+            <li>Hesaplar <strong>günün takvim yılına</strong> göre yapılır (2027 menüsü 2027 fiyatını kullanır).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yillikplan">
+          <h3>14. Yıllık İhtiyaç Planı</h3>
+          <p>Yılı bütün olarak planlamanızı sağlar: 52 haftanın durumunu gösterir ve o yılın <strong>toplam malzeme ihtiyacını</strong> çıkarır.</p>
+          <ul>
+            <li><strong>Yıl seçici:</strong> Sağ üstteki kutuya istediğiniz yılı yazıp <strong>Enter</strong>'a basın (ör. 2026, 2027, 2030...). Yıl <strong>sınırsızdır</strong>; henüz menü girilmemiş gelecek yıllar da seçilebilir.</li>
+            <li><strong>Hafta planı tablosu:</strong> Yılın 52 haftası; her satırda <strong>Hafta №</strong>, <strong>Tarih aralığı</strong>, <strong>Menülü Gün (x/5)</strong> ve <strong>Durum</strong> görünür. Satırdaki <strong>"Menü Gir / Görüntüle"</strong> butonu o haftayı <strong>Menü sekmesinde</strong> açar.</li>
+            <li><strong>Toplam Yıllık İhtiyaç Listesi:</strong> Yıl içindeki tüm menülerdeki malzemeler kategori kategori toplanır; her kalemin <strong>yıllık toplam miktarı</strong> ve (fiyatı girilmişse) <strong>tutarı</strong> ile en altta <strong>genel toplam maliyet</strong> gösterilir.</li>
+            <li><strong>Menüler Menü sekmesinde</strong> hafta hafta girilir; bu sekme yalnızca planı ve toplamı gösterir (salt görüntü). Menü girildikçe ihtiyaç listesi otomatik güncellenir.</li>
+            <li>Seçili yıl için menü yoksa listede "menü verisi bulunamadı" yazar; menü girdikçe dolar.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-birimfiyat">
+          <h3>15. Birim Fiyatlar ve Maliyet Hesabı</h3>
+          <p>Bu bölüm, yemek tariflerindeki malzemelerin <strong>para karşılığını</strong> hesaplar. Haftalık menüdeki her yemeğin tarifi, kişi sayısıyla çarpılır ve malzeme fiyatlarıyla <strong>Stok Düşüm Listesi</strong> maliyeti oluşturulur. Fiyat girişi yetkili roller tarafından yapılır.</p>
+          <p><strong>Fiyat Nasıl Girilir?</strong> Birim Fiyatlar sekmesindeki formda 4 alan vardır:</p>
+          <ul>
+            <li><strong>Ürün Adı:</strong> Tarifteki malzeme adıyla <em>birebir aynı</em> yazılmalıdır (örn. tarifte "Ayçiçek Yağı" yazıyorsa fiyatta da "Ayçiçek Yağı" yazmalı). Ad eşleşmezse fiyat hesaba katılmaz.</li>
+            <li><strong>Birim:</strong> Fiyatı hangi pakette/büyüklükte aldığınızı gösterir: KG, KOLİ, LİTRE, ADET veya TENEKE.</li>
+            <li><strong>Birim Fiyat (₺):</strong> O birim için ödediğiniz para.</li>
+            <li><strong>1 Birim = X (alt birim) / Çarpan:</strong> Paketin alt birim karşılığı. Sistem bunu kullanarak tarifteki gr/ml/lt miktarını otomatik çevirir.</li>
+          </ul>
+          <p><strong>Birimler ve Anlamları:</strong></p>
+          <ul>
+            <li><strong>KG:</strong> Kilogram başı fiyat. Tarifte <em>gr</em> kullanılıyorsa otomatik dönüşür (1 kg = 1000 gr).</li>
+            <li><strong>LİTRE:</strong> Litre başı fiyat. Tarifte <em>ml</em> kullanılıyorsa otomatik dönüşür (1 lt = 1000 ml).</li>
+            <li><strong>ADET:</strong> Tane başı fiyat (yumurta, ekmek, limon gibi). Tarifteki adetle doğrudan çarpılır; dönüşüm gerekmez, çarpan boş kalır.</li>
+            <li><strong>TENEKE:</strong> Sıvı yağ gibi ürünlerin teneke ambalajı. Varsayılan <strong>18 litredir</strong>; farklı boy ise çarpan alanına gerçek litre değerini yazın (örn. 5'lik teneke için 5).</li>
+            <li><strong>KOLİ:</strong> Kolide satılan ürünler. Kaydederken <em>Koli içeriği</em> seçilir:
+              <ul>
+                <li><em>KG (ağırlık):</em> Kolinin ağırlığı. Varsayılan <strong>10 kg</strong>; farklı ise çarpan alanına gerçek kg değerini yazın (örn. 20'lik koli için 20).</li>
+                <li><em>ADET (parça):</em> Kolide kaç adet var. Çarpan alanına adet sayısını yazın (örn. yumurta: 30).</li>
+              </ul>
+            </li>
+          </ul>
+          <p><strong>Örnek Girişler:</strong></p>
+          <ul>
+            <li><strong>Yumurta – 30'luk koli 195 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>ADET (parça)</em>, Fiyat: <em>195</em>, Çarpan: <em>30</em>. Bu kayıt adet fiyatı 6,50 ₺ olarak kullanılır; tarifte 30 adet yumurta 195,00 ₺, 40 adet 260,00 ₺ eder.</li>
+            <li><strong>Yumurta – adet fiyatı 6,50 ₺:</strong> Birim: <em>ADET</em>, Fiyat: <em>6,50</em>, Çarpan: boş. Yalnızca adetle fiyatlandırılan ürünlerde kullanın.</li>
+            <li><strong>Domates Salçası – 10 kg koli 340 ₺:</strong> Birim: <em>KOLİ</em>, Koli içeriği: <em>KG (ağırlık)</em>, Fiyat: <em>340</em>, Çarpan: <em>10</em>. Tarifte gr veya kg kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Ayçiçek Yağı – 18 lt teneke 1.950 ₺:</strong> Birim: <em>TENEKE</em>, Fiyat: <em>1950</em>, Çarpan: <em>18</em>. Tarifte ml/lt kullanılıyorsa otomatik çevrilir.</li>
+            <li><strong>Pirinç – kilosu 42 ₺:</strong> Birim: <em>KG</em>, Fiyat: <em>42</em>, Çarpan: boş.</li>
+          </ul>
+          <p><strong>Fiyatlar Nerede Görünür?</strong></p>
+          <ul>
+            <li><strong>Haftalık Menü → Üretim görünümü:</strong> Her günün altında numaralı <strong>"Stok Düşüm Listesi"</strong> açılır (örn. <em>1. Yeşil Mercimek — 2,3 kg — 148,35 ₺</em>). Miktarın yanında o kalemin tutarı, listenin başında günün <strong>Toplam</strong> tutarı görünür. Dillé desteklidir.</li>
+            <li><strong>Haftalık Toplam İhtiyaç Listesi:</strong> Malzemeler kategorilere göre gruplanır; her kategorinin toplamı ve haftanın <strong>Genel Toplam Maliyeti</strong> gösterilir. Tüm başlıklar seçilen dile göre çevrilir.</li>
+            <li>Fiyatı girilmemiş malzemeler listede fiyat olmadan yalnızca miktar olarak görünür ve toplama katılmaz.</li>
+          </ul>
+          <p><strong>Hesap Kuralları:</strong> Her malzemenin tutarı <em>miktar × birim fiyat</em> ile bulunur, kuruş bazında iki haneye yuvarlanır ve toplanır. Böylece ekranda gördüğünüz kalem fiyatlarını elle topladığınızda günün toplamıyla birebir aynı çıkar. "Adet" birimli malzemelerde kırık hesap olmaması için miktar üst tam sayıya yuvarlanır (örn. 40,2 yumurta → 41). Tüm bu değerler seçilen dile göre çevrilir.</p>
+        </div>
+
+        <div class="manual-section" id="man-dil">
+          <h3>16. Çok Dilli Destek (9 Dil)</h3>
+          <p>Sistem 9 dilde tam destek sağlar: <strong>Türkçe (TR)</strong>, <strong>İngilizce (EN)</strong>, <strong>Azerice (AZ)</strong>, <strong>Rusça (RU)</strong>, <strong>Almanca (DE)</strong>, <strong>Fransızca (FR)</strong>, <strong>İspanyolca (ES)</strong>, <strong>Portekizce (PT)</strong> ve <strong>Özbekçe (UZ)</strong>.</p>
+          <ul>
+            <li>Sayfanın sağ üstündeki <strong>globe (🌍) butonu</strong> ile dil seçilir. Seçilen dil tüm sayfalarda anında geçerli olur.</li>
+            <li>Dil tercihi otomatik olarak hatırlanır; bir sonraki açılışta aynı dil yüklenir.</li>
+            <li>Tüm menü başlıkları, tablolar, grafik etiketleri, rapor başlıkları, form etiketleri ve karşılaştırma bölümleri seçilen dile göre çevrilir.</li>
+            <li>Üniversite adı (<em>Kırşehir Ahi Evran Üniversitesi</em>) ve NSMS/FMG/Supabase kısaltmaları tüm dillerde aynı kalır.</li>
+          </ul>
+          <p><strong>Desteklenen Bölümler:</strong> Panel (özet kartlar, karşılaştırma), Haftalık Menü (gün isimleri, çeşitler, stok düşüm listesi), Kayıtlar, Rapor, Gıda Güvenliği tabloları, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler (etiketler), Harcama, Birim Fiyatlar, Yönetim ve Log Kayıtları.</p>
+        </div>
+
+        <div class="manual-section" id="man-yedek">
+          <h3>17. Veri Yedekleme ve Senkronizasyon</h3>
+          <ul>
+            <li><strong>Tümünü İndir:</strong> Kayıt, HACCP, yemek listesi, menü ve yedek dosyalarını tek seferde bilgisayara indirir.</li>
+            <li><strong>Tam Yedek (Veri):</strong> Tüm kayıtları tek JSON dosyası olarak indirir.</li>
+            <li><strong>Yedek Yükle:</strong> Daha önce indirilen JSON yedeğini geri yükler.</li>
+            <li>Düzenli olarak <strong>Tam Yedek (Veri)</strong> almanız önerilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-sistem">
+          <h3>18. Tema ve Görünüm</h3>
+          <ul>
+            <li>Sol menüdeki <strong>Tema</strong> butonu ile Açık / Koyu tema arasında geçiş yapılır.</li>
+            <li>Tema tercihi otomatik olarak hatırlanır.</li>
+            <li>Mobil ve tablette sol menü, üstteki menü ikonu ile açılıp kapatılır.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-yonetim">
+          <h3>19. Yönetim, İzinler ve Log Kayıtları</h3>
+          <p><strong>Yönetim Paneli</strong> (yalnızca Admin) butonuyla açılır; güvenlik için panel her açılışında admin şifresi istenir. Panelde üç bölüm vardır:</p>
+          <ul>
+            <li><strong>Kullanıcı Yönetimi:</strong> Kullanıcı ekleme (kullanıcı adı, görünen ad, şifre, rol), düzenleme ve silme. Değişiklikler buluta kaydedilir ve tüm cihazlara yansır.</li>
+            <li><strong>Rol Bazlı İzin Ayarları:</strong> Her rol için iki grup tik alanı vardır:
+              <ul>
+                <li><em>Görünen Sekmeler:</em> Panel, Menü, Kayıtlar, Rapor, Gıda Güvenliği, Kalibrasyon, Atık Yağ, Ambalaj Atıkları, Grafikler, Yıllık, Harcama ve Birim Fiyatlar sekmelerinin o role görünür olup olmayacağı buradan tiklenir. Tikli olmayan sekme o rolün ekranında hiç gösterilmez.</li>
+                <li><em>İzinler:</em> Menü düzenleyebilir, kayıt ekleyebilir, dışa aktarabilir, birim fiyat listesini düzenleyebilir, menüyü onaylayabilir/reddedebilir gibi yetkiler.</li>
+              </ul>
+              Roller için "Sıfırla" varsayılana döndürür; özel roller silinebilir ve yenisi eklenebilir. Değişiklikler "Ayarları Kaydet" ile buluta gönderilir ve tüm cihazlara otomatik yansır.</li>
+            <li><strong>Oturum Güvenliği:</strong> "Hareketsizlik Kapanma Süresi" seçilir: 2 / 5 / 10 / 15 / 30 dakika veya Kapalı. Belirtilen süre boyunca ekranda hiçbir işlem yapılmazsa oturum otomatik kapanır ve giriş ekranı gelir. Bu ayarı yalnızca Admin değiştirebilir; seçim tüm cihazlarda geçerli olur. Fare/klavye hareketi olduğunda süre sayacı kendiliğinden yenilenir.</li>
+            <li><strong>Log Kayıtları:</strong> Tüm giriş/çıkış, kayıt ekleme, düzenleme ve silme işlemlerinin geçmişi; işlem türüne ve kullanıcıya göre filtrelenebilir.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section" id="man-ipucu">
+          <h3>20. İpuçları</h3>
+          <ul>
+            <li>Veri girişi sonrası <strong>Panel</strong> sekmesi her zaman güncel bilgiyi gösterir.</li>
+            <li>Yanlış girilen kayıtları silmek yerine <strong>düzenleyerek</strong> düzeltmeniz log takibi açısından daha sağlıklıdır.</li>
+            <li>Grafik ve tablolarda <strong>yıl filtresi</strong> kullanarak geçmiş yılları karşılaştırabilirsiniz.</li>
+            <li>Birim fiyatları yıl bazında girin; yeni yılda fiyatlar değişince o yılın fiyatlarını ayrıca ekleyin. Sistem maliyeti <strong>günün takvim yılına</strong> göre hesaplar: 2026 menüsü 2026 fiyatını, 2027 menüsü 2027 fiyatını kullanır. Yıl bölünmüş haftalarda (ör. 28.12.2026–01.01.2027) her gün kendi yılının fiyatıyla değerlendirilir. İlgili yılın fiyatı girilmemişse tutar o kalem için hesaplanmaz ve “birim fiyat tanımlı değil” uyarısı çıkar; diğer yıllara sessizce geçilmez.</li>
+            <li>Tarif malzeme adları ile birim fiyat ürün adlarını aynı şekilde yazın; en güvenlisi tariften kopyalayıp fiyata yapıştırmaktır.</li>
+            <li>Şifreler bulutta şifreli olarak saklanır; kimseyle paylaşmayın.</li>
+            <li>Tarayıcınızın çevrimdışı çalışması için uygulama otomatik güncellenir; güncel sürümü görmek için sayfayı yenileyin.</li>
+          </ul>
+        </div>
+      </div>
+      </div>
+    </div>
+
+  </main>
+
+    </div><!-- /.app-layout -->
+
+
+
+  <!-- ===== MENÜ REDDET MODAL ===== -->
+  <div class="modal-overlay" id="menuRedModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header">
+        <h2 data-i18n="modalRejectMenu">Menüyü Reddet</h2>
+        <button class="modal-close" onclick="document.getElementById('menuRedModal').classList.remove('open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <p data-i18n="modalRejectDesc" style="font-size:0.82rem;color:var(--text-muted);margin:0 0 0.5rem">Red gerekçesi zorunludur. Diyetisyen bu gerekçeyi görerek menüyü düzeltip yeniden onaya gönderebilir.</p>
+        <textarea id="menuRedNotu" rows="4" placeholder="Red gerekçesi..." style="width:100%;box-sizing:border-box"></textarea>
+        <div id="menuRedError" style="display:none;color:var(--danger, #ef4444);font-size:0.78rem;margin-top:0.35rem">Lütfen red gerekçesini yazın.</div>
+        <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.75rem">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('menuRedModal').classList.remove('open')">İptal</button>
+          <button class="btn btn-danger btn-sm" onclick="menuRedOnayla()" data-i18n="menuRejectConfirm">Reddet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SYNC PANEL ===== -->
+  <div class="modal-overlay" id="syncOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="modal sync-panel" id="syncPanel">
+      <div class="modal-header">
+        <h2 data-i18n="syncTitle">Veri Yönetimi</h2>
+        <button class="modal-close" onclick="document.getElementById('syncOverlay').classList.remove('open')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sync-body">
+        <div class="sync-config">
+          <label>Veri Yönetimi</label>
+          <div class="data-mgmt-actions">
+            <button class="btn btn-secondary btn-sm" onclick="exportDataJSON()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              JSON Dışa Aktar
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="exportDataSettings()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              Tam Yedek (Veri)
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="importFullBackup()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Yedek Yükle
+            </button>
+            <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="handleFullBackupImport(event)" />
+            <button class="btn btn-danger btn-sm" onclick="clearAllData()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Tüm Verileri Sil
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="document.getElementById('syncOverlay').classList.remove('open')" data-i18n="syncCloseBtn">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SHORTCUTS HELP ===== -->
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle" data-i18n="modalNewRecord">Yeni Kayıt Ekle</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="entryForm" onsubmit="saveRecord(event)">
+        <div class="form-grid">
+          <div class="form-left">
+            <div class="form-group form-group-full">
+              <label for="fTarih" data-i18n="formDate">Tarih <span class="required">*</span></label>
+              <input type="date" id="fTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="fYemek" data-i18n="formProducedCount">Üretilen Yemek Sayısı <span class="required">*</span></label>
+              <input type="number" id="fYemek" min="0" step="1" placeholder="0" required oninput="autoCalc()" class="production-input" />
+            </div>
+            <div class="form-group">
+              <label for="fTurnike" data-i18n="formTurnstileCount">Turnike Geçiş Sayısı <span class="required">*</span></label>
+              <input type="number" id="fTurnike" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" class="person-input" />
+            </div>
+            <div class="form-group">
+              <label for="fOgrenci" data-i18n="formStudentCount">Yemek Hiz. Yar. Öğr. Sayısı <span class="required">*</span></label>
+              <input type="number" id="fOgrenci" min="0" step="1" placeholder="0" required class="person-input" oninput="autoCalcHarcama()" />
+            </div>
+            <div class="form-group form-group-full">
+              <label for="fYemekAdi" data-i18n="formFoodType">Yemek Türü</label>
+              <select id="fYemekAdi">
+                <option value="">— Seçiniz (isteğe bağlı) —</option>
+                <option value="Çorba">Çorba</option>
+                <option value="Ana Yemek">Ana Yemek</option>
+                <option value="Yardımcı Yemek">Yardımcı Yemek</option>
+                <option value="Tatlı">Tatlı</option>
+                <option value="Ekmek">Ekmek</option>
+                <option value="Salata">Salata</option>
+                <option value="İçecek">İçecek</option>
+                <option value="Genel">Genel</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-right">
+            <div class="form-section-label" data-i18n="formAutoCalc">Otomatik Hesaplamalar</div>
+            <div class="form-group">
+              <label for="fFire">
+                %10 Fire
+                <span class="auto-badge" data-i18n="badgeAutomatic">Otomatik</span>
+              </label>
+              <input type="number" id="fFire" min="0" step="0.01" placeholder="0" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fToplam">
+                Yemek Hiz. Yararlanan Toplam Kişi
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fToplam" min="0" step="1" placeholder="0" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fAtik">
+                Atık Miktarı (kg)
+                <span class="auto-badge">Otomatik</span>
+              </label>
+              <input type="number" id="fAtik" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fPorsiyon">
+                Porsiyon Miktarı (gr)
+                <span class="auto-badge" id="fPorsiyonBadge" data-i18n="badgeFixed">Sabit</span>
+              </label>
+              <input type="number" id="fPorsiyon" value="400" min="0" step="1" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label for="fPersonel">
+                Yemekhanede Çalışan Personel Sayısı
+                <span class="auto-badge" data-i18n="badgeAutoEditable">Otomatik + Düzenlenebilir</span>
+              </label>
+              <input type="number" id="fPersonel" min="0" step="1" placeholder="0" required oninput="autoCalcGecis()" class="person-input" />
+            </div>
+        </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()" data-i18n="btnCancel">İptal</button>
+          <button type="submit" class="btn btn-primary" id="formSubmitBtn" data-i18n="entryFormSubmit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Kaydet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== HACCP MODAL ===== -->
+  <div class="modal-overlay" id="haccpModal" onclick="if(event.target===this)closeHaccpModal()">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h2 id="haccpModalTitle" data-i18n="haccpModalTitle">Yeni Kayıt</h2>
+        <button class="modal-close" onclick="closeHaccpModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="haccpForm" onsubmit="saveHaccpRecord(event)">
+        <div id="haccpFormBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeHaccpModal()" data-i18n="btnCancel">İptal</button>
+          <button type="submit" class="btn btn-primary" id="haccpFormSubmitBtn" data-i18n="btnSave">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== HACCP DEPO YONETIM MODAL ===== -->
+  <div class="modal-overlay" id="haccpDepoModal" onclick="if(event.target===this)closeHaccpDepoModal()">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h2 data-i18n="depoNamesTitle">Depo Adları</h2>
+        <button class="modal-close" onclick="closeHaccpDepoModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="haccpYeniDepoInput" placeholder="Yeni depo adı..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px" />
+          <button class="btn btn-primary btn-sm" onclick="addHaccpDepoAdiFromInput()" data-i18n="btnAdd">Ekle</button>
+        </div>
+        <div id="haccpDepoListesi"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeHaccpDepoModal()" data-i18n="btnClose">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DATALOGGER CIHAZ AYARLARI MODAL ===== -->
+  <div class="modal-overlay" id="cihazAyarModal" onclick="if(event.target===this)closeCihazAyarModal()">
+    <div class="modal" style="max-width:660px">
+      <div class="modal-header">
+        <h2>Datalogger Cihaz Ayarları</h2>
+        <button class="modal-close" onclick="closeCihazAyarModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1rem" id="cihazAyarBody">
+        <div style="display:flex;align-items:flex-start;gap:0.5rem;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);padding:0.6rem 0.75rem;border-radius:8px;font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span><strong>5 cihaz, her depoya bir tane.</strong> Cihazlar gelene kadar bu ekranda hiçbir şey yapmanız gerekmez — <strong>elle kayıt yapmaya devam edebilirsiniz.</strong> Alttaki saatleri değiştirmek yeterli; API bilgileri cihaz kutularından okununca eklenir.</span>
+        </div>
+
+        <!-- ===== SEVİYE 1: Her gün lazım olanlar ===== -->
+        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;margin-bottom:1rem">
+          <label style="display:flex;align-items:center;gap:0.45rem;font-size:0.85rem;font-weight:600;cursor:pointer">
+            <input type="checkbox" id="caAktif" style="width:16px;height:16px;cursor:pointer">
+            Otomatik kayıt aktif
+          </label>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto" id="caAktifNot">Kapalıyken yalnızca "Çek" butonu çalışır</span>
+        </div>
+
+        <h3 style="font-size:0.85rem;font-weight:600;margin:0 0 0.5rem">Günlük Otomatik Kayıt Saatleri</h3>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="form-group"><label>Sabah</label><input type="time" id="caSaatSabah" value="08:00" /></div>
+          <div class="form-group"><label>Öğle</label><input type="time" id="caSaatOgle" value="12:30" /></div>
+          <div class="form-group"><label>Akşam</label><input type="time" id="caSaatAksam" value="18:00" /></div>
+        </div>
+
+        <h3 style="font-size:0.85rem;font-weight:600;margin:1.25rem 0 0.25rem">Cihazlar</h3>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.4rem">
+          Her cihaz bir depoyu ölçer. Cihazın üzerindeki <strong>seri numarasını</strong> (veya yerel IP adresini) yazmanız yeterli; depoyu seçin. Boş bırakılan cihaz kayıt yapmaz.
+        </p>
+        <div id="caCihazListesi" style="font-size:0.8rem;color:var(--text-muted);padding:0.25rem 0"></div>
+
+        <!-- ===== SEVİYE 2: Teknik ayarlar (cihaz gelince gerekir) ===== -->
+        <details style="margin-top:1.25rem;border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem">
+          <summary style="cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--text-muted)">
+            Gelişmiş — API bağlantısı
+          </summary>
+
+          <p style="font-size:0.75rem;color:var(--text-muted);margin:0.6rem 0 0">
+            Aşağıdaki iki bilgi <strong>cihazın üreticisinden</strong> alınır (cihazın kutusunda veya telefon uygulamasında yazar).
+            <strong>API Adresi</strong> = sıcaklığı nereden isteyeceğimiz. <strong>API Anahtarı</strong> = o adrese girmemizi sağlayan şifre.
+          </p>
+
+          <div class="form-group" style="margin-top:0.75rem">
+            <label>API Adresi</label>
+            <input type="url" id="caApiUrl" placeholder="Cihaz gelince buraya yazılacak" />
+          </div>
+          <div class="form-group">
+            <label>API Anahtarı</label>
+            <div style="display:flex;gap:0.4rem">
+              <input type="password" id="caApiKey" placeholder="Cihaz gelince buraya yazılacak" autocomplete="off" style="flex:1" />
+              <button class="btn btn-ghost btn-sm" type="button" onclick="caAnahtarGoster()" id="caAnahtarGosterBtn" title="Göster / gizle">Göster</button>
+            </div>
+            <div id="caApiKeyNot" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem"></div>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="form-group"><label>İstek Yöntemi</label>
+              <select id="caApiYontem" style="width:100%"><option value="GET">GET</option><option value="POST">POST</option></select>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Cihazın dokümanına bakarız; şimdilik GET bırakın.</div>
+            </div>
+            <div class="form-group"><label>Saat Dilimi</label>
+              <select id="caSaatDilimi" style="width:100%">
+                <option value="Europe/Istanbul">Europe/Istanbul</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="border-top:1px dashed var(--border);margin-top:0.75rem;padding-top:0.75rem">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Sistem bağlantısı (siz girmeyeceksiniz)</div>
+            <div class="form-group">
+              <label>Otomatik Kayıt Adresi</label>
+              <input type="text" id="caEdgeUrl" readonly placeholder="Kaydet dediğinizde otomatik dolar" style="opacity:0.7" />
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Veritabanının saati, günlük kayıtları buraya kendisi çağırır.</div>
+            </div>
+            <div class="form-group">
+              <label>Güvenlik Anahtarı</label>
+              <input type="text" id="caCronSecretGoster" readonly value="Otomatik oluşturulur" style="opacity:0.7" />
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">Yabancıların bu adrese sahte kayıt yaptırmasını engeller. Sizin bilmenize gerek yok.</div>
+            </div>
+          </div>
+        </details>
+
+        <div id="caTestSonuc" style="margin-top:1rem;font-size:0.8rem"></div>
+
+        <details style="margin-top:1rem">
+          <summary style="cursor:pointer;font-size:0.8rem;color:var(--text-muted);font-weight:600">Son Senkron Kayıtları</summary>
+          <div id="caLog" style="margin-top:0.5rem;max-height:180px;overflow:auto;font-size:0.72rem"></div>
+        </details>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeCihazAyarModal()">Kapat</button>
+        <button type="button" class="btn btn-outline" onclick="caBaglantiTest()">Bağlantı Testi</button>
+        <button type="button" class="btn btn-primary" onclick="caAyarlarKaydet()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QR KOD MODAL ===== -->
+  <div class="modal-overlay" id="qrModal" onclick="if(event.target===this)closeQrModal()">
+    <div class="modal" style="max-width:420px;text-align:center">
+      <div class="modal-header">
+        <h2 data-i18n="qrTitle">QR Kod</h2>
+        <button class="modal-close" onclick="closeQrModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem">
+        <p id="qrDepoAdi" style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text-primary)"></p>
+        <div id="qrContainer" style="background:#fff;border-radius:12px;padding:1rem;display:inline-block;margin-bottom:0.75rem">
+          <img id="qrImage" src="" alt="QR Kod" style="width:220px;height:220px;display:block" />
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem" id="qrUrlDisplay"></p>
+        <p style="font-size:0.72rem;color:var(--text-muted)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span data-i18n="qrHint">QR kodu depo kapısına asmak için yazdırın.</span>
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="btn btn-primary" onclick="printQr()" data-i18n="btnPrint">Yazdır</button>
+        <button class="btn btn-ghost" onclick="closeQrModal()" data-i18n="btnClose">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ATIK YAG MODAL ===== -->
+  <div class="modal-overlay" id="yagModal" onclick="if(event.target===this)closeYagModal()">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h2 id="yagModalTitle" data-i18n="oilModalTitle">Atık Yağ Kaydı</h2>
+        <button class="modal-close" onclick="closeYagModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="yagForm" onsubmit="saveYagRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="yfTarih" data-i18n="formDate">Tarih <span class="required">*</span></label>
+              <input type="date" id="yfTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="yfMakbuz" data-i18n="formReceiptNo">Makbuz No</label>
+              <input type="text" id="yfMakbuz" placeholder="Örn: 001234" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="yfTur" data-i18n="formOilType">Yağ Türü <span class="required">*</span></label>
+              <select id="yfTur" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="">Seçiniz</option>
+                <option value="Ayçiçek Yağı">Ayçiçek Yağı</option>
+                <option value="Mısırözü Yağı">Mısırözü Yağı</option>
+                <option value="Zeytinyağı">Zeytinyağı</option>
+                <option value="Kanola Yağı">Kanola Yağı</option>
+                <option value="Pamuk Yağı">Pamuk Yağı</option>
+                <option value="Soya Yağı">Soya Yağı</option>
+                <option value="Hindistan Cevizi Yağı">Hindistan Cevizi Yağı</option>
+                <option value="Kızartma Atık Yağı">Kızartma Atık Yağı</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="yfMiktar" data-i18n="formAmountLt">Miktar (lt) <span class="required">*</span></label>
+              <input type="number" id="yfMiktar" min="0" step="0.1" placeholder="0.0" required />
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="yfNot" data-i18n="formNote">Not</label>
+              <input type="text" id="yfNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeYagModal()" data-i18n="btnCancel">İptal</button>
+          <button type="submit" class="btn btn-primary" id="yagFormSubmitBtn" data-i18n="btnSave">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== AMBALAJ MODAL ===== -->
+  <div class="modal-overlay" id="ambalajModal" onclick="if(event.target===this)closeAmbalajModal()">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h2 id="ambalajModalTitle" data-i18n="packagingModalTitle">Ambalaj Atığı Kaydı</h2>
+        <button class="modal-close" onclick="closeAmbalajModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="ambalajForm" onsubmit="saveAmbalajRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="afTarih" data-i18n="formDate">Tarih <span class="required">*</span></label>
+              <input type="date" id="afTarih" required />
+            </div>
+            <div class="form-group">
+              <label for="afTur" data-i18n="formWasteType">Atık Türü <span class="required">*</span></label>
+              <select id="afTur" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="">Seçiniz</option>
+                <option value="Metal">Metal</option>
+                <option value="Plastik">Plastik</option>
+                <option value="Kağıt/Karton">Kağıt/Karton</option>
+                <option value="Cam">Cam</option>
+                <option value="Karışık">Karışık</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="afMiktar" data-i18n="formAmount">Miktar <span class="required">*</span></label>
+              <div style="display:flex;gap:4px">
+                <input type="number" id="afMiktar" min="0" step="0.001" placeholder="0.000" style="flex:1" required />
+                <button type="button" id="afBirimToggle" onclick="toggleAmbalajBirim()" style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem;cursor:pointer;white-space:nowrap">kg</button>
+              </div>
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="afNot">Not</label>
+              <input type="text" id="afNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeAmbalajModal()" data-i18n="btnCancel">İptal</button>
+          <button type="submit" class="btn btn-primary" id="ambalajFormSubmitBtn" data-i18n="btnSave">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== KALİBRASYON MODAL ===== -->
+  <div class="modal-overlay" id="kalibrasyonModal" onclick="if(event.target===this)closeKalibrasyonModal()">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <h2 id="kalibrasyonModalTitle" data-i18n="calibrationModalTitle">Kalibrasyona Tabi Cihaz</h2>
+        <button class="modal-close" onclick="closeKalibrasyonModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="kalibrasyonForm" onsubmit="saveKalibrasyonRecord(event)">
+        <div class="modal-body" style="padding:1rem">
+          <div class="form-grid">
+            <div class="form-group" style="grid-column:span 2">
+              <label for="kfCihazAdi" data-i18n="formDeviceName">Cihaz Adı <span class="required">*</span></label>
+              <input type="text" id="kfCihazAdi" required placeholder="Örn: Dijital Gıda Termometresi" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfMarkaModel" data-i18n="formBrandModel">Marka-Model</label>
+              <input type="text" id="kfMarkaModel" placeholder="Örn: Testo 106" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSicilNo" data-i18n="formSerialNo">Sicil No</label>
+              <input type="text" id="kfSicilNo" placeholder="Örn: SN-2026-001" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfDurum" data-i18n="formStatus">Durum <span class="required">*</span></label>
+              <select id="kfDurum" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-input);color:var(--text-primary)">
+                <option value="calisir">Çalışır Durumda / Kullanılıyor</option>
+                <option value="arizali">Arızalı</option>
+                <option value="bakim">Bakım Yapılacak</option>
+                <option value="hurda">Hurdaya Ayrılacak</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="kfDogrulama" data-i18n="formVerification">Doğrulama</label>
+              <input type="text" id="kfDogrulama" placeholder="Örn: Sertifika ile doğrulandı" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSonKalibrasyon" data-i18n="formLastCalibration">Son Kalibrasyon</label>
+              <input type="date" id="kfSonKalibrasyon" />
+            </div>
+            <div class="form-group">
+              <label for="kfSonrakiKalibrasyon" data-i18n="formNextCalibration">Bir Sonraki Kalibrasyon</label>
+              <input type="date" id="kfSonrakiKalibrasyon" />
+            </div>
+            <div class="form-group">
+              <label for="kfKonum" data-i18n="formLocation">Bulunduğu Yer/Bölüm</label>
+              <input type="text" id="kfKonum" placeholder="Örn: Soğuk Hava Deposu 5" style="width:100%" />
+            </div>
+            <div class="form-group">
+              <label for="kfSorumlu" data-i18n="formResponsible">Sorumlu Kişi</label>
+              <input type="text" id="kfSorumlu" placeholder="Örn: Adı Soyadı" style="width:100%" />
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label for="kfNot">Not</label>
+              <input type="text" id="kfNot" placeholder="İsteğe bağlı" style="width:100%" />
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeKalibrasyonModal()" data-i18n="btnCancel">İptal</button>
+          <button type="submit" class="btn btn-primary" id="kalibrasyonFormSubmitBtn" data-i18n="btnSave">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="config.js"></script>
+  <script>
+    // Sürüm etiketlerini İLK BOYAMADAN ÖNCE, bilinen en yeni değerle yaz.
+    // Böylece açılışta "v1.4.0 → v1.5.0" titremesi olmaz; app.js ve uzak
+    // (Supabase) çekmesi beklenmeden doğru değer görünür.
+    (function () {
+      try {
+        if (typeof APP_CONFIG === 'undefined') return;
+        var vv = null;
+        try { vv = localStorage.getItem('atik_kontrol_version'); } catch (_) {}
+        var v = 'v' + (vv || APP_CONFIG.version || '');
+        var login = document.querySelector('.login-inst-version');
+        if (login) login.textContent = 'Versiyon: ' + v;
+        var sidebar = document.getElementById('appVersionLabel');
+        if (sidebar) sidebar.textContent = v;
+        var manual = document.getElementById('manualVersion');
+        if (manual) manual.textContent = v;
+      } catch (_) {}
+    })();
+  </script>
+  <script src="app.js"></script>
+  <button id="scrollTopBtn" onclick="scrollToTopApp()" title="Yukarı çık" aria-label="Yukarı çık">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+  <script>
+    // Service worker, build no ile kaydedilir: config.js'te (veya Supabase
+    // config tablosunda) build değişince yeni SW kurulur ve önbellek tazeleneir.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const reg = b => navigator.serviceWorker.register('sw.js?b=' + (parseInt(b, 10) || 1)).catch(() => {});
+        reg(typeof APP_CONFIG !== 'undefined' && APP_CONFIG.build);
+        if (typeof resolveAppVersion === 'function') {
+          resolveAppVersion().then(reg).catch(() => {});
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
+
