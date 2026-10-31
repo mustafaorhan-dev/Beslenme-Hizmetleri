@@ -1490,7 +1490,7 @@ function apRenderRolePermissions() {
   var container = document.getElementById('apRolePermissions');
   if (!container) return;
   var roles = Object.keys(rolePermissions);
-  var tabLabels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
+  var tabLabels = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
   var html = '';
   roles.forEach(function(role) {
     var perm = rolePermissions[role] || {};
