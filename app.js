@@ -2199,7 +2199,7 @@ function applyRolePermissions() {
   document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = ''; });
   // Tümünü İndir butonu
   document.querySelectorAll('button[onclick*="exportEverything"]').forEach(function(btn) {
-    btn.style.display = (perm.canExportAll) ? '' : 'none';
+    btn.style.display = (perm && perm.canExportAll) ? '' : 'none';
   });
   if (role === ROLE_ADMIN) return;
   applyViewerRestrictions();
