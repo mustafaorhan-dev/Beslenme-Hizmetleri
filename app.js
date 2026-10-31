@@ -2423,27 +2423,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   (async function bgSync() {
     if (!supabaseClient) return;
     try {
-      await syncRolePermissionsFromSupabase().catch(function(){});
-      await syncHarcamaOranlariFromSupabase().catch(function(){});
-      await syncUnitPricesFromSupabase().catch(function(){});
-      await syncYagFromSupabase();
+      await Promise.allSettled([
+        syncRolePermissionsFromSupabase().catch(function(){}),
+        syncHarcamaOranlariFromSupabase().catch(function(){}),
+        syncUnitPricesFromSupabase().catch(function(){})
+      ]);
+      await Promise.allSettled([
+        syncYagFromSupabase(),
+        syncAmbalajFromSupabase(),
+        syncKalibrasyonFromSupabase(),
+        syncDishesFromSupabase(),
+        syncHaccpFromSupabase()
+      ]);
       if (yagRecords.length > 0) {
         try { sessionStorage.setItem(YAG_STORAGE_KEY, JSON.stringify(yagRecords)); } catch (_) {}
         try { localStorage.removeItem(YAG_STORAGE_KEY); } catch (_) {}
       }
-      await syncAmbalajFromSupabase();
       if (ambalajRecords.length > 0) {
         try { sessionStorage.setItem(AMBALAJ_STORAGE_KEY, JSON.stringify(ambalajRecords)); } catch (_) {}
         try { localStorage.removeItem(AMBALAJ_STORAGE_KEY); } catch (_) {}
       }
-      await syncKalibrasyonFromSupabase();
       if (kalibrasyonCihazlari.length > 0) {
         try { sessionStorage.setItem(KALIBRASYON_STORAGE_KEY, JSON.stringify(kalibrasyonCihazlari)); } catch (_) {}
         try { localStorage.removeItem(KALIBRASYON_STORAGE_KEY); } catch (_) {}
       }
-      await syncDishesFromSupabase();
       if (!yemeklerCache.length) await syncDishesFromSupabase();
-      await syncHaccpFromSupabase();
       if (haccpRecords.length > 0) {
         try { sessionStorage.setItem(HACCP_STORAGE_KEY, JSON.stringify(haccpRecords)); } catch (_) {}
         try { localStorage.removeItem(HACCP_STORAGE_KEY); } catch (_) {}
