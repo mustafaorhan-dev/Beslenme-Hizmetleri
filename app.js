@@ -14525,11 +14525,11 @@ function saveYagRecord(e) {
   if (editingYagId) {
     const idx = yagRecords.findIndex(r => r.id === editingYagId);
     if (idx !== -1) yagRecords[idx] = rec;
-    showToast('Atık yağ kaydı güncellendi.', 'success');
+    showToast(t('yagUpdated'), 'success');
     logIslem('kayit_duzenle', 'yag #' + editingYagId + ' güncellendi');
   } else {
     yagRecords.push(rec);
-    showToast('Atık yağ kaydı eklendi.', 'success');
+    showToast(t('yagAdded'), 'success');
     logIslem('yeni_kayit', 'yag ' + (rec.tur || '') + ' ' + rec.miktar + ' lt eklendi');
   }
 
@@ -14551,7 +14551,7 @@ async function deleteYagRecord(id) {
   }
   renderYagTable();
   syncYagSilent();
-  showToast('Atık yağ kaydı silindi.', 'success');
+  showToast(t('yagDeleted'), 'success');
   logIslem('kayit_sil', 'yag #' + id + ' silindi');
 }
 
@@ -15143,11 +15143,11 @@ function saveAmbalajRecord(e) {
   if (editingAmbalajId) {
     const idx = ambalajRecords.findIndex(r => r.id === editingAmbalajId);
     if (idx !== -1) ambalajRecords[idx] = rec;
-    showToast('Ambalaj atığı kaydı güncellendi.', 'success');
+    showToast(t('ambalajUpdated'), 'success');
     logIslem('kayit_duzenle', 'ambalaj #' + editingAmbalajId + ' güncellendi');
   } else {
     ambalajRecords.push(rec);
-    showToast('Ambalaj atığı kaydı eklendi.', 'success');
+    showToast(t('ambalajAdded'), 'success');
     logIslem('yeni_kayit', 'ambalaj ' + (rec.tur || '') + ' ' + rec.miktar + ' ' + (rec.birim || 'kg'));
   }
 
@@ -15169,7 +15169,7 @@ async function deleteAmbalajRecord(id) {
   }
   renderAmbalajTable();
   syncAmbalajSilent();
-  showToast('Ambalaj atığı kaydı silindi.', 'success');
+  showToast(t('ambalajDeleted'), 'success');
   logIslem('kayit_sil', 'ambalaj #' + id + ' silindi');
 }
 
@@ -16260,7 +16260,7 @@ function exportKalibrasyonCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast(kalibrasyonCihazlari.length + ' kayıt CSV olarak indirildi.', 'success');
+  showToast(kalibrasyonCihazlari.length + ' ' + t('kalibrasyonCsvDownloaded'), 'success');
 }
 
 function printKalibrasyonList() {
@@ -16441,6 +16441,16 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    yagSynced: "Yağ verileri Supabase'e senkronize edildi.",
+    ambalajSynced: "Ambalaj verileri Supabase'e senkronize edildi.",
+    kalibrasyonSynced: "Kalibrasyon verileri Supabase'e senkronize edildi.",
+    yagUpdated: "Atık yağ kaydı güncellendi.",
+    yagAdded: "Atık yağ kaydı eklendi.",
+    yagDeleted: "Atık yağ kaydı silindi.",
+    ambalajUpdated: "Ambalaj atığı kaydı güncellendi.",
+    ambalajAdded: "Ambalaj atığı kaydı eklendi.",
+    ambalajDeleted: "Ambalaj atığı kaydı silindi.",
+    kalibrasyonCsvDownloaded: "kayıt CSV olarak indirildi.",
     haccpSynced: "HACCP verileri Supabase'e senkronize edildi.",
     haccpSyncErr: "Supabase HACCP hatası: ",
     haccpCsvDownloaded: "kayıt CSV olarak indirildi.",
@@ -16885,6 +16895,16 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    yagSynced: "Oil data synchronized to Supabase.",
+    ambalajSynced: "Packaging data synchronized to Supabase.",
+    kalibrasyonSynced: "Calibration data synchronized to Supabase.",
+    yagUpdated: "Waste oil record updated.",
+    yagAdded: "Waste oil record added.",
+    yagDeleted: "Waste oil record deleted.",
+    ambalajUpdated: "Packaging waste record updated.",
+    ambalajAdded: "Packaging waste record added.",
+    ambalajDeleted: "Packaging waste record deleted.",
+    kalibrasyonCsvDownloaded: "records exported as CSV.",
     haccpSynced: "HACCP data synchronized to Supabase.",
     haccpSyncErr: "Supabase HACCP error: ",
     haccpCsvDownloaded: "records exported as CSV.",
