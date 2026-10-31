@@ -2906,7 +2906,7 @@ async function bfTemizleDuplike(grup) {
     }
   }
   renderBirimFiyatlar();
-  showToast('Duplike kayıtlar temizlendi. En yüksek fiyat korundu.', 'success');
+  showToast(t('dupRecordsCleaned'), 'success');
 }
 
 async function bfTumDuplariTemizle() {
@@ -3709,7 +3709,7 @@ async function bfKaydet() {
   var altSec = document.getElementById('bf_birim_alt');
   var birimAlt = normBirimGlobal(birim) === 'koli' && altSec ? normBirimAlt(altSec.value) : 'kg';
   if (!ad) { showToast('Ürün adı zorunludur.', 'error'); return; }
-  if (fiyat <= 0) { showToast('Geçerli bir fiyat girin.', 'error'); return; }
+  if (fiyat <= 0) { showToast(t('validPrice'), 'error'); return; }
   if (normBirimGlobal(birim) === 'koli' && birimAlt === 'adet' && carpan <= 0) {
     showToast('1 koli kaç adet? Çarpan alanına koli içindeki adet sayısını yazın.', 'error');
     return;
@@ -10176,7 +10176,7 @@ function exportYemekCSV() {
   link.download = 'yemek_listesi_' + new Date().toISOString().split('T')[0] + '.csv';
   link.click();
   URL.revokeObjectURL(url);
-  showToast('Yemek listesi CSV olarak indirildi.', 'success');
+  showToast(t('yemekListesiCsvDownloaded'), 'success');
 }
 
 // ─── YEMEK LISTESI (DISH POOL) ─────────────────────────────────────────────────
@@ -13861,7 +13861,7 @@ async function openMealPicker() {
     await syncDishesFromSupabase();
     list = loadYemekler();
   }
-  if (!list.length) { showToast('Yemek listesi boş. Önce Yemek Listesi\'ne CSV yükleyin.', 'warning'); return; }
+  if (!list.length) { showToast(t('yemekListesiEmpty'), 'warning'); return; }
   const cell = document.getElementById('m' + _pickerCi + '_' + _pickerDi);
   const mevcut = cell ? cell.textContent.trim().split('\n')[0] : '';
   // picker overlay
@@ -16441,6 +16441,10 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    dupRecordsCleaned: "Duplike kayıtlar temizlendi. En yüksek fiyat korundu.",
+    validPrice: "Geçerli bir fiyat girin.",
+    yemekListesiCsvDownloaded: "Yemek listesi CSV olarak indirildi.",
+    yemekListesiEmpty: "Yemek listesi boş. Önce Yemek Listesi'ne CSV yükleyin.",
     validRate: "Geçerli bir oran girin!",
     noRecordsThisPeriod: "Bu dönem için kayıt bulunamadı.",
     noFullChart: "Dışa aktarılacak dolu grafik bulunamadı.",
@@ -16899,6 +16903,10 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    dupRecordsCleaned: "Duplicate records cleaned. Highest price kept.",
+    validPrice: "Enter a valid price.",
+    yemekListesiCsvDownloaded: "Meal list exported as CSV.",
+    yemekListesiEmpty: "Meal list is empty. Upload CSV to Meal List first.",
     validRate: "Enter a valid rate!",
     noRecordsThisPeriod: "No records for this period.",
     noFullChart: "No full chart to export.",
