@@ -5248,13 +5248,14 @@ body.sidebar-open-mobile {
 .wk-donut-info strong { color: var(--text-primary); font-weight: 700; }
 
 .wk-table-wrap { overflow-x: auto; }
-.wk-summary-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.wk-summary-table { width: 100%; min-width: 460px; border-collapse: collapse; font-size: 0.82rem; }
 .wk-summary-table th, .wk-summary-table td {
   padding: 0.5rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 .wk-summary-table th { font-weight: 700; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .wk-summary-table tbody tr:hover { background: var(--bg-card-hover, rgba(0,0,0,0.03)); }
-.wk-summary-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.wk-summary-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 @media (max-width: 900px) {
   .wk-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
