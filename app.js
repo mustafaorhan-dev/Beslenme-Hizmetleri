@@ -13233,7 +13233,7 @@ function hcKaydetOran() {
   const status = document.getElementById('hcOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('validRate');
     status.style.color = '#ef4444';
     return;
   }
@@ -13250,7 +13250,7 @@ function hcKaydetPersonelOran() {
   const status = document.getElementById('hcPersonelOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('validRate');
     status.style.color = '#ef4444';
     return;
   }
@@ -13267,7 +13267,7 @@ function hcKaydetYemekOran() {
   const status = document.getElementById('hcYemekOranStatus');
   if (!status) return;
   if (!val || isNaN(val) || val <= 0) {
-    status.textContent = 'Geçerli bir oran girin!';
+    status.textContent = t('validRate');
     status.style.color = '#ef4444';
     return;
   }
@@ -13413,7 +13413,7 @@ function showChartDetailModal(title, records) {
   const body = modal.querySelector('.form-grid');
   if (!body) return;
   if (records.length === 0) {
-    body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-dim)">Bu dönem için kayıt bulunamadı.</div>';
+    body.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-dim)">' + t('noRecordsThisPeriod') + '</div>';
   } else {
     body.innerHTML = `<div style="overflow-x:auto;max-height:400px;overflow-y:auto">
       <table class="data-table" style="min-width:400px">
@@ -16441,6 +16441,8 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    validRate: "Geçerli bir oran girin!",
+    noRecordsThisPeriod: "Bu dönem için kayıt bulunamadı.",
     noFullChart: "Dışa aktarılacak dolu grafik bulunamadı.",
     chartsExportedWord: "grafik Word belgesine aktarıldı.",
     yagSynced: "Yağ verileri Supabase'e senkronize edildi.",
@@ -16897,6 +16899,8 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    validRate: "Enter a valid rate!",
+    noRecordsThisPeriod: "No records for this period.",
     noFullChart: "No full chart to export.",
     chartsExportedWord: "charts exported to Word document.",
     yagSynced: "Oil data synchronized to Supabase.",
