@@ -19940,6 +19940,8 @@ function setLanguage(lang) {
     var dd = document.getElementById('langDropdown');
     if (dd) dd.classList.remove('open');
     applyTranslations();
+    try { renderAll(); } catch (e) { console.error(e); }
+    if (isTabActive('menu')) { try { renderMenu(); } catch (e) {} }
   }
 
 function t(key) {
