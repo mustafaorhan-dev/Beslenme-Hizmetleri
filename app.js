@@ -770,6 +770,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: false,
     canAddKalibrasyon: false,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
@@ -797,6 +798,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: true,
     canAddKalibrasyon: true,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: true,
@@ -824,6 +826,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: false,
     canAddKalibrasyon: false,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
@@ -851,6 +854,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: false,
     canAddKalibrasyon: true,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
@@ -878,6 +882,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: false,
     canAddKalibrasyon: false,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
@@ -905,6 +910,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     canAddAmbalaj: false,
     canAddKalibrasyon: false,
     canExport: false,
+    canExportAll: false,
     canSync: false,
     canSeeAdminPanel: false,
     canEditHaccp: false,
@@ -1658,6 +1664,7 @@ var PERM_GROUPS = [
   ]},
   { title: 'Genel', keys: [
     { key: 'canExport', label: 'Dışa aktarabilir (CSV / PDF)' },
+  { key: 'canExportAll', label: 'Tümünü İndir (tam yedek)' },
     { key: 'canSync', label: 'Supabase senkronizasyonu yapabilir' },
     { key: 'canSeeAdminPanel', label: 'Yönetim panelini görebilir' },
     { key: 'canEditHarcamaOran', label: 'Harcama oranını / tutarını değiştirebilir' }
@@ -2190,6 +2197,10 @@ function applyRolePermissions() {
   document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.style.display = ''; });
   document.getElementById('adminPanelBtn').style.display = 'none';
   document.querySelectorAll('.sidebar-actions .tab-btn').forEach(function(btn) { btn.style.display = ''; });
+  // Tümünü İndir butonu
+  document.querySelectorAll('button[onclick*="exportEverything"]').forEach(function(btn) {
+    btn.style.display = (perm.canExportAll) ? '' : 'none';
+  });
   if (role === ROLE_ADMIN) return;
   applyViewerRestrictions();
   var perm = getRolePermissions(role);
@@ -7040,6 +7051,7 @@ var exportRunning = false;
 function exportDelay(ms) { return new Promise(function(res) { setTimeout(res, ms); }); }
 
 async function exportEverything() {
+  if (!hasPerm('canExportAll')) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (exportRunning) return;
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   exportRunning = true;
