@@ -7569,7 +7569,7 @@ function renderWeeklyComparison() {
       var tickColor = isDark ? '#e2e8f0' : '#475569';
       var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
       var ctx = canvas.getContext('2d');
-      var labels = ['Toplam Atık (kg)', 'Toplam Üretim (pors.)', 'Turnike Geçişi', 'Öğrenci Sayısı', 'Kişi Başı Atık (gr)'];
+      var labels = [t('chartTotalWaste'), t('chartTotalProd'), t('chartTurnstile'), t('chartStudent'), t('chartPerPerson')];
       var thisVals = [thisAtik, thisYemek, thisTurnike, thisOgrenci, thisKisiAtik];
       var lastVals = [lastAtik, lastYemek, lastTurnike, lastOgrenci, lastKisiAtik];
       // scale waste-per-person to gr? original displayed gr with decimals; values are kg/person. Multiply for display? Keep as-is to match.
@@ -16441,6 +16441,11 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    chartTotalWaste: "Toplam Atık (kg)",
+    chartTotalProd: "Toplam Üretim (pors.)",
+    chartTurnstile: "Turnike Geçişi",
+    chartStudent: "Öğrenci Sayısı",
+    chartPerPerson: "Kişi Başı Atık (gr)",
     haccpDepoTitle: "Depo Sıcaklık Kaydı",
     yagEditTitle: "Atık Yağ Kaydını Düzenle",
     yagNewTitle: "Yeni Atık Yağ Kaydı",
@@ -16914,6 +16919,11 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    chartTotalWaste: "Total Waste (kg)",
+    chartTotalProd: "Total Production (port.)",
+    chartTurnstile: "Turnstile Passage",
+    chartStudent: "Student Count",
+    chartPerPerson: "Waste per Person (gr)",
     haccpDepoTitle: "Cold Storage Record",
     yagEditTitle: "Edit Waste Oil Record",
     yagNewTitle: "New Waste Oil Record",
