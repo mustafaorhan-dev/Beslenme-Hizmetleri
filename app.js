@@ -5155,7 +5155,7 @@ function openHaccpModal(type, id) {
   const title = document.getElementById('haccpModalTitle');
   const body = document.getElementById('haccpFormBody');
 
-  title.textContent = 'Depo Sıcaklık Kaydı';
+  title.textContent = t('haccpDepoTitle');
 
   let rec = null;
   if (id) rec = haccpRecords.find(r => r.id === id && r.type === type);
@@ -14485,14 +14485,14 @@ function openYagModal(id) {
   if (id) {
     const rec = yagRecords.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Atık Yağ Kaydını Düzenle';
+    title.textContent = t('yagEditTitle');
     document.getElementById('yfTarih').value = rec.tarih;
     document.getElementById('yfMakbuz').value = rec.makbuzNo || '';
     document.getElementById('yfTur').value = rec.tur || '';
     document.getElementById('yfMiktar').value = rec.miktar || '';
     document.getElementById('yfNot').value = rec.not || '';
   } else {
-    title.textContent = 'Yeni Atık Yağ Kaydı';
+    title.textContent = t('yagNewTitle');
   }
 
   overlay.classList.add('open');
@@ -15092,7 +15092,7 @@ function openAmbalajModal(id) {
   if (id) {
     const rec = ambalajRecords.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Ambalaj Atığı Kaydını Düzenle';
+    title.textContent = t('ambalajEditTitle');
     document.getElementById('afTarih').value = rec.tarih;
     document.getElementById('afTur').value = rec.tur || '';
     document.getElementById('afNot').value = rec.not || '';
@@ -15107,7 +15107,7 @@ function openAmbalajModal(id) {
     }
     document.getElementById('afMiktar').value = rec.miktar || '';
   } else {
-    title.textContent = 'Yeni Ambalaj Atığı Kaydı';
+    title.textContent = t('ambalajNewTitle');
     document.getElementById('afTur').value = '';
   }
 
@@ -16147,7 +16147,7 @@ function openKalibrasyonModal(id) {
   if (id) {
     const rec = kalibrasyonCihazlari.find(r => r.id === id);
     if (!rec) return;
-    title.textContent = 'Kalibrasyona Tabi Cihazı Düzenle';
+    title.textContent = t('kalibrasyonEditTitle');
     document.getElementById('kfCihazAdi').value = rec.cihazAdi || '';
     document.getElementById('kfMarkaModel').value = rec.markaModel || '';
     document.getElementById('kfSicilNo').value = rec.sicilNo || '';
@@ -16159,7 +16159,7 @@ function openKalibrasyonModal(id) {
     document.getElementById('kfSorumlu').value = rec.sorumlu || '';
     document.getElementById('kfNot').value = rec.not || '';
   } else {
-    title.textContent = 'Yeni Kalibrasyona Tabi Cihaz';
+    title.textContent = t('kalibrasyonNewTitle');
   }
 
   overlay.classList.add('open');
@@ -16441,6 +16441,13 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    haccpDepoTitle: "Depo Sıcaklık Kaydı",
+    yagEditTitle: "Atık Yağ Kaydını Düzenle",
+    yagNewTitle: "Yeni Atık Yağ Kaydı",
+    ambalajEditTitle: "Ambalaj Atığı Kaydını Düzenle",
+    ambalajNewTitle: "Yeni Ambalaj Atığı Kaydı",
+    kalibrasyonEditTitle: "Kalibrasyona Tabi Cihazı Düzenle",
+    kalibrasyonNewTitle: "Yeni Kalibrasyona Tabi Cihaz",
     recEditTitle: "Kaydı Düzenle",
     recNewTitle: "Yeni Kayıt Ekle",
     btnUpdate: "Güncelle",
@@ -16907,6 +16914,13 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    haccpDepoTitle: "Cold Storage Record",
+    yagEditTitle: "Edit Waste Oil Record",
+    yagNewTitle: "New Waste Oil Record",
+    ambalajEditTitle: "Edit Packaging Waste Record",
+    ambalajNewTitle: "New Packaging Waste Record",
+    kalibrasyonEditTitle: "Edit Calibration Device",
+    kalibrasyonNewTitle: "New Calibration Device",
     recEditTitle: "Edit Record",
     recNewTitle: "New Record",
     btnUpdate: "Update",
