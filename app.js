@@ -5991,7 +5991,7 @@ function exportChartsWord() {
     });
     if (cards.length) blocks.push('<h1>' + escapeHtml(sec.label) + '</h1>' + cards.join(''));
   });
-  if (!hadAny) { showToast('Dışa aktarılacak dolu grafik bulunamadı.', 'error'); return; }
+  if (!hadAny) { showToast(t('noFullChart'), 'error'); return; }
 
   const bugun = new Date().toLocaleDateString('tr-TR');
   const html =
@@ -6044,7 +6044,7 @@ function exportChartsWord() {
   a.click();
   a.remove();
   setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
-  showToast(idx + ' grafik Word belgesine aktarıldı.', 'success');
+  showToast(idx + ' ' + t('chartsExportedWord'), 'success');
 }
 
 function exportYillikPDF() {
@@ -16441,6 +16441,8 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    noFullChart: "Dışa aktarılacak dolu grafik bulunamadı.",
+    chartsExportedWord: "grafik Word belgesine aktarıldı.",
     yagSynced: "Yağ verileri Supabase'e senkronize edildi.",
     ambalajSynced: "Ambalaj verileri Supabase'e senkronize edildi.",
     kalibrasyonSynced: "Kalibrasyon verileri Supabase'e senkronize edildi.",
@@ -16895,6 +16897,8 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    noFullChart: "No full chart to export.",
+    chartsExportedWord: "charts exported to Word document.",
     yagSynced: "Oil data synchronized to Supabase.",
     ambalajSynced: "Packaging data synchronized to Supabase.",
     kalibrasyonSynced: "Calibration data synchronized to Supabase.",
