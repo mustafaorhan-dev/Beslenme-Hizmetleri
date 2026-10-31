@@ -10196,6 +10196,11 @@ function yemekSirala(liste, mod) {
 
 function renderYemekListesi() {
   const container = document.getElementById('yemekListesiContainer');
+  // Yetki bazlı buton görünürlüğü
+  var yeniBtn = document.querySelector('button[onclick="showYemekForm()"]');
+  if (yeniBtn) yeniBtn.style.display = canEditYemekListesi() ? '' : 'none';
+  var csvBtn = document.getElementById('yemekCsvUploadBtn');
+  if (csvBtn) csvBtn.style.display = canImportYemekListesi() ? '' : 'none';
   const list = loadYemekler();
   const query = (document.getElementById('yemekSearchInput').value || '').toLowerCase();
   const mod = (document.getElementById('yemekSortSelect') || {}).value || 'az';
