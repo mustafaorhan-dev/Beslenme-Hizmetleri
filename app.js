@@ -3958,7 +3958,7 @@ function syncHaccpSilent(forceDepoOnly) {
       if (haccpRecords.length > 0) {
         var dbRows = haccpRecords.map(haccpRecordToDB);
         var { error } = await supabaseClient.from('haccp_records').upsert(dbRows, { onConflict: 'id' });
-        if (error) showToast('Supabase HACCP hatası: ' + error.message, 'error');
+        if (error) showToast(t('haccpSyncErr') + error.message, 'error');
       }
       var depoAdlari = loadHaccpDepoAdlari();
       var depoLimitleri = depoLimitleriCache;
@@ -4081,7 +4081,7 @@ function exportHaccpCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast(haccpRecords.length + ' kayıt CSV olarak indirildi.', 'success');
+  showToast(haccpRecords.length + ' ' + t('haccpCsvDownloaded'), 'success');
 }
 
 // ─── HACCP DOSYA YÜKLE ──────────────────────────────────────────────────────
@@ -5838,7 +5838,7 @@ function renderHaccpSicaklikGrafik() {
 function haccpSicaklikGrafikYazdir() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   var tuval = document.getElementById('haccpSicaklikGrafik');
-  if (!tuval || !_haccpGrafik) { showToast('Grafik yok.', 'error'); return; }
+  if (!tuval || !_haccpGrafik) { showToast(t('haccpNoChart'), 'error'); return; }
   var win = window.open('', '_blank', 'width=1000,height=700');
   if (!win) { showToast('Pop-up engelleyiciyi kapatın.', 'error'); return; }
   var depo = document.getElementById('haccpGrafikDepo').value || 'Tüm Depolar';
@@ -16441,6 +16441,10 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    haccpSynced: "HACCP verileri Supabase'e senkronize edildi.",
+    haccpSyncErr: "Supabase HACCP hatası: ",
+    haccpCsvDownloaded: "kayıt CSV olarak indirildi.",
+    haccpNoChart: "Grafik yok.",
     thCalories: "Kalori",
     thAllergen: "Alerjen",
     menuSaveFailed: "Menü kaydedilemedi",
@@ -16881,6 +16885,10 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    haccpSynced: "HACCP data synchronized to Supabase.",
+    haccpSyncErr: "Supabase HACCP error: ",
+    haccpCsvDownloaded: "records exported as CSV.",
+    haccpNoChart: "No chart.",
     thCalories: "Calories",
     thAllergen: "Allergen",
     menuSaveFailed: "Menu could not be saved",
