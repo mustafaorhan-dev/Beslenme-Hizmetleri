@@ -1606,7 +1606,7 @@ function loadUsersFromStorage() {
   } catch (_) {}
 }
 
-var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
+var USER_TAB_LABELS = { dashboard: 'Panel', menu: 'Haftalık Menü', records: 'Kayıtlar', report: 'Rapor', haccp: 'Gıda Güvenliği', kalibrasyon: 'Kalibrasyon', yag: 'Atık Yağ', ambalaj: 'Ambalaj Atıkları', charts: 'Grafikler', yillik: 'Yıllık Karşılaştırma', harcama: 'Harcama', malitablo: 'Hf. Menü Mali Tablosu', yillikplan: 'Yıllık İhtiyaç Planı', birimfiyat: 'Ürün ve Fiyatlar', yemeklistesi: 'Yemek Listesi' };
 var PERM_GROUPS = [
   { title: 'Haftalık Menü', keys: [
     { key: 'canEditMenu', label: 'Menüyü düzenleyebilir' },
