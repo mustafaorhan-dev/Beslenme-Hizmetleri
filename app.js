@@ -2461,7 +2461,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 10000);
 
   setLoadingSub('Uygulama başlatılıyor...');
-  clearTimeout(forceHideTimer);
 
   refreshMenuProduction();
   initDishAutocomplete();
