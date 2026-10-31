@@ -5223,10 +5223,10 @@ function saveHaccpRecord(e) {
   if (editingHaccpId) {
     const idx = haccpRecords.findIndex(r => r.id === editingHaccpId);
     if (idx !== -1) haccpRecords[idx] = rec;
-    showToast('Kayıt güncellendi.', 'success');
+    showToast(t('recUpdated'), 'success');
   } else {
     haccpRecords.push(rec);
-    showToast('Kayıt eklendi.', 'success');
+    showToast(t('recAdded'), 'success');
   }
 
   saveHaccpData();
@@ -5254,7 +5254,7 @@ async function deleteHaccpRecord(type, id) {
   haccpSelectedIds.delete(id);
   saveHaccpData();
   renderHaccp();
-  showToast('Kayıt silindi.', 'success');
+  showToast(t('recDeleted'), 'success');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -6611,11 +6611,11 @@ function saveRecord(e) {
   const fPorsiyon = document.getElementById('fPorsiyon');
   const fOgrenci = document.getElementById('fOgrenci');
   const errors = [];
-  if (parseFloat(fYemek.value) < 0) errors.push('Üretilen yemek sayısı negatif olamaz.');
-  if (parseInt(fTurnike.value) < 0) errors.push('Turnike geçiş sayısı negatif olamaz.');
-  if (parseInt(fPersonel.value) < 0) errors.push('Personel sayısı negatif olamaz.');
-  if (parseInt(fPorsiyon.value) < 0) errors.push('Porsiyon miktarı negatif olamaz.');
-  if (parseInt(fOgrenci.value) < 0) errors.push('Öğrenci sayısı negatif olamaz.');
+  if (parseFloat(fYemek.value) < 0) errors.push(t('recProducedNegative'));
+  if (parseInt(fTurnike.value) < 0) errors.push(t('recTurnstileNegative'));
+  if (parseInt(fPersonel.value) < 0) errors.push(t('recStaffNegative'));
+  if (parseInt(fPorsiyon.value) < 0) errors.push(t('recPortionNegative'));
+  if (parseInt(fOgrenci.value) < 0) errors.push(t('recStudentNegative'));
   if (errors.length > 0) {
     showToast(errors.join(' '), 'error');
     return;
@@ -16441,6 +16441,14 @@ var I18N = {
     thTotalPassage: "Toplam Geçiş",
     thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
     thMealName: "Yemek Adı",
+    recProducedNegative: "Üretilen yemek sayısı negatif olamaz.",
+    recTurnstileNegative: "Turnike geçiş sayısı negatif olamaz.",
+    recStaffNegative: "Personel sayısı negatif olamaz.",
+    recPortionNegative: "Porsiyon miktarı negatif olamaz.",
+    recStudentNegative: "Öğrenci sayısı negatif olamaz.",
+    recUpdated: "Kayıt güncellendi.",
+    recAdded: "Kayıt eklendi.",
+    recDeleted: "Kayıt silindi.",
     thAction: "İşlem",
     thAcademicStaff: "Turnikeden Geçen Akademik ve İdari Personel",
     thStudentCount: "Turnikeden Geçen Öğrenci Sayısı",
@@ -16859,6 +16867,14 @@ var I18N = {
     thTotalPassage: "Total Passage",
     thBeneficiaryStudent: "Beneficiary Student Count",
     thMealName: "Meal Name",
+    recProducedNegative: "Produced meal count cannot be negative.",
+    recTurnstileNegative: "Turnstile pass count cannot be negative.",
+    recStaffNegative: "Staff count cannot be negative.",
+    recPortionNegative: "Portion amount cannot be negative.",
+    recStudentNegative: "Student count cannot be negative.",
+    recUpdated: "Record updated.",
+    recAdded: "Record added.",
+    recDeleted: "Record deleted.",
     thAction: "Action",
     thAcademicStaff: "Academic & Administrative Staff via Turnstile",
     thStudentCount: "Students via Turnstile",
