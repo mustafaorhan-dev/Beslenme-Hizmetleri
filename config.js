@@ -33,7 +33,9 @@ const APP_CONFIG = {
   // Bu e-postalarla giriş yapan kişiler her zaman admin olur.
   // İlk kurulumda kilitlenmeyi önler; admin panelinden sonra yönetilebilir.
   bootstrapAdmins: [
-    'mehmet.orhan@ahievran.edu.tr'
+    // GÜVENLİK: Bootstrap admin e-postaları istemci tarafında tutulmaz.
+    // Roller Supabase Dashboard > Authentication > Users ve user_roles tablosundan yönetilir.
+    // Geçici bootstrap ihtiyacı varsa Supabase Edge Function (admin-bootstrap) üzerinden yapılmalıdır.
   ],
   supabaseUrl: 'https://ydbeltktutcxfeosqmai.supabase.co',
   supabaseAnonKey: 'sb_publishable_tUj9gU4n1VKLgwJZw5FmDQ_9W1E2nmA'
