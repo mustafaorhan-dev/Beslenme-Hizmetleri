@@ -7013,7 +7013,7 @@ function exportDataCSV() {
   if (!canExport()) { showToast('Bu işlem için yetkiniz yok.', 'error'); return; }
   if (records.length === 0) { showToast('Dışa aktarılacak kayıt yok.', 'error'); return; }
   var showHarcama = canSeeHarcama();
-  var headers = ['Tarih','Üretilen Yemek Sayısı','%10 Fire','Turnike Geçiş Sayısı','Yemekhanede Çalışan Personel Sayısı','Toplam Geçiş','Porsiyon Miktarı (gr)','Atık Miktarı (kg)','Yemek Hiz. Yar. Öğr. Sayısı','Yemek Adı'];
+  var headers = [t('thDate'),t('thProducedPerson'),t('thWaste10'),t('thTurnstileCount'),t('thStaffCount'),t('thTotalPassage'),t('thPortionGr'),t('thWasteKg'),t('thBeneficiaryStudent'),t('thMealName')];
   if (showHarcama) headers.splice(9, 0, 'Harcama Tutarı (₺)');
   var rows = records.map(function(r) {
     var row = [r.tarih || '', r.yemek || 0, r.fire || 0, r.turnike || 0, r.personel || 0,
@@ -16436,6 +16436,11 @@ var I18N = {
     thWasteKg: "Atık (kg)",
     thWastedPortion: "Çöpe Giden (pors.)",
     thFoodType: "Yemek Türü",
+    thTurnstileCount: "Turnike Geçiş Sayısı",
+    thStaffCount: "Yemekhanede Çalışan Personel Sayısı",
+    thTotalPassage: "Toplam Geçiş",
+    thBeneficiaryStudent: "Yemek Hiz. Yar. Öğr. Sayısı",
+    thMealName: "Yemek Adı",
     thAction: "İşlem",
     thAcademicStaff: "Turnikeden Geçen Akademik ve İdari Personel",
     thStudentCount: "Turnikeden Geçen Öğrenci Sayısı",
@@ -16849,6 +16854,11 @@ var I18N = {
     thWasteKg: "Waste (kg)",
     thWastedPortion: "Discarded (portion)",
     thFoodType: "Food Type",
+    thTurnstileCount: "Turnstile Pass Count",
+    thStaffCount: "Cafeteria Staff Count",
+    thTotalPassage: "Total Passage",
+    thBeneficiaryStudent: "Beneficiary Student Count",
+    thMealName: "Meal Name",
     thAction: "Action",
     thAcademicStaff: "Academic & Administrative Staff via Turnstile",
     thStudentCount: "Students via Turnstile",
