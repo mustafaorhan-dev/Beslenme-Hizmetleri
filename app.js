@@ -2415,9 +2415,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyVersionLabels();
   renderAll();
   if (isTabActive('charts')) drawAllCharts();
-  await restoreActiveTab();
+  try { await restoreActiveTab(); } catch (e) { console.error(e); }
   updateNavIndicator();
-  menuOnayBildirim();
+  try { menuOnayBildirim(); } catch (e) { console.error(e); }
 
   // Arka plan senkronu: arayüz açıldıktan sonra devam eder, bitince görünümler tazelenir
   (async function bgSync() {
