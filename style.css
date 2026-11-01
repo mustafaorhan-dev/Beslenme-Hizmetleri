@@ -5281,3 +5281,14 @@ body.sidebar-open-mobile {
 .header-datetime { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--text-secondary); }
 .header-weather { font-size:1.1rem; line-height:1; }
 .header-time { font-weight:600; color:var(--text-primary); }
+
+/* Today weather card */
+.today-weather-card { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; margin-bottom:1rem; background:linear-gradient(135deg, rgba(34,211,238,0.08), rgba(99,102,241,0.08)); border:1px solid var(--border); border-radius:12px; }
+.twc-left { display:flex; align-items:center; gap:0.85rem; }
+.twc-icon { font-size:2.2rem; line-height:1; }
+.twc-text { display:flex; flex-direction:column; }
+.twc-date { font-size:1rem; font-weight:700; color:var(--text-primary); }
+.twc-time { font-size:1.4rem; font-weight:800; color:var(--accent-cyan, #22d3ee); font-variant-numeric:tabular-nums; }
+.twc-right { text-align:right; }
+.twc-label { display:block; font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.twc-desc { display:block; font-size:0.95rem; font-weight:600; color:var(--text-primary); }

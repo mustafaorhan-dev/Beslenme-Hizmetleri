@@ -123,11 +123,7 @@
           <span class="conn-sync-time" id="connSyncTime" style="font-size:0.75rem;color:var(--text-secondary);margin-left:6px;font-weight:500"></span>
         </div>
         <span class="page-title" id="pageTitle">Panel</span>
-        <div class="header-datetime" id="headerDateTime">
-          <span class="header-weather" id="headerWeather" title="Hava durumu">☀️</span>
-          <span class="current-date" id="currentDate"></span>
-          <span class="header-time" id="headerTime"></span>
-        </div>
+        <div class="current-date" id="currentDate"></div>
         <span class="role-badge" id="roleBadge"></span>
         <div class="lang-selector" id="langSelector">
           <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown()" title="Dil Seçimi / Language">
@@ -291,6 +287,21 @@
     <!-- ===== DASHBOARD TAB ===== -->
     <div class="tab-content active" id="content-dashboard">
       <!-- KPI grid removed -->
+      <!-- Bugünün Özeti Kartı -->
+      <div class="section-card today-weather-card" id="todayWeatherCard">
+        <div class="twc-left">
+          <span class="twc-icon" id="todayWeatherIcon">☀️</span>
+          <div class="twc-text">
+            <span class="twc-date" id="todayWeatherDate"></span>
+            <span class="twc-time" id="todayWeatherTime"></span>
+          </div>
+        </div>
+        <div class="twc-right">
+          <span class="twc-label">Anlık Hava Durumu</span>
+          <span class="twc-desc" id="todayWeatherDesc">Kırşehir</span>
+        </div>
+      </div>
+
       <!-- Daily Detail Panel -->
       <div class="weekly-summary" id="dailySummary">
         <div class="weekly-summary-header">

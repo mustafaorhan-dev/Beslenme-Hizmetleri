@@ -2605,12 +2605,13 @@ function normalizeSaat(v) {
 
 function setCurrentDate() {
   const el = document.getElementById('currentDate');
+  const cardDate = document.getElementById('todayWeatherDate');
   const now = new Date();
-  if (el) {
-    el.textContent = now.toLocaleDateString('tr-TR', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-    });
-  }
+  var dateText = now.toLocaleDateString('tr-TR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  if (el) el.textContent = dateText;
+  if (cardDate) cardDate.textContent = dateText;
   tickClock();
   // Set default date for form
   var fTarih = document.getElementById('fTarih');
@@ -2618,10 +2619,43 @@ function setCurrentDate() {
 }
 
 function tickClock() {
-  var el = document.getElementById('headerTime');
+  var el = document.getElementById('todayWeatherTime');
   if (!el) return;
   var now = new Date();
-  el.textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  el.textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function weatherIconFromCode(code) {
+  if (code === 0) return '☀️';
+  if (code >= 1 && code <= 3) return '⛅';
+  if (code === 45 || code === 48) return '🌫️';
+  if ((code >= 51 && code <= 57) || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return '🌧️';
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return '🌨️';
+  if (code >= 95) return '⛈️';
+  return '☁️';
+}
+
+function weatherDescFromCode(code) {
+  if (code === 0) return 'Açık';
+  if (code >= 1 && code <= 3) return 'Parçalı bulutlu';
+  if (code === 45 || code === 48) return 'Sisli';
+  if ((code >= 51 && code <= 57) || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return 'Yağmurlu';
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return 'Karlı';
+  if (code >= 95) return 'Gök gürültülü';
+  return 'Bulutlu';
+}
+
+async function updateWeather() {
+  try {
+    var res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.1458&longitude=34.1639&current_weather=true');
+    if (!res.ok) return;
+    var data = await res.json();
+    var code = data && data.current_weather ? data.current_weather.weathercode : null;
+    var icon = document.getElementById('todayWeatherIcon');
+    var desc = document.getElementById('todayWeatherDesc');
+    if (icon && code !== null) icon.textContent = weatherIconFromCode(code);
+    if (desc && code !== null) desc.textContent = weatherDescFromCode(code) + ' · Kırşehir';
+  } catch (_) {}
 }
 
 function weatherIconFromCode(code) {
