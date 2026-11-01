@@ -7190,7 +7190,10 @@ function renderDailySummary() {
 
   if (records.length === 0) {
     body.innerHTML = '<div class="ts-item"><span class="ts-label">' + t('wsNoRecordsYet') + '</span></div>';
-    el.style.display = 'none';
+    if (badge) badge.textContent = '';
+    document.getElementById('dailyPrev').disabled = true;
+    document.getElementById('dailyNext').disabled = true;
+    el.style.display = '';
     return;
   }
 
