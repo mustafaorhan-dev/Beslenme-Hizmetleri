@@ -2405,6 +2405,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAll();
   if (isTabActive('charts')) drawAllCharts();
   try { await restoreActiveTab(); } catch (e) { console.error(e); }
+  // Üst başlıkta aktif sayfa adını göster (sol menü etiketiyle senkron)
+  try {
+    var _at = document.querySelector('.tab-btn.active');
+    var _pt = document.getElementById('pageTitle');
+    if (_at && _pt) {
+      var _sp = _at.querySelector('span');
+      if (_sp && _sp.textContent) _pt.textContent = _sp.textContent;
+    }
+  } catch (_) {}
   updateNavIndicator();
   try { menuOnayBildirim(); } catch (e) { console.error(e); }
 
@@ -6523,6 +6532,7 @@ function toggleSidebar() {
     document.body.classList.toggle('sidebar-open-mobile');
   }
   updateNavIndicator();
+  try { syncSidebarWidth(); } catch (_) {}
 }
 function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
@@ -16951,6 +16961,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Spending",
     sidebarUnitPrice: "Unit Prices",
+    sidebarYemekListesi: "Dish List",
     sidebarMaliTablo: "Weekly Menu Financial Table",
     sidebarYillikPlan: "Annual Needs Plan",
     sidebarDownload: "Download All",
@@ -17429,6 +17440,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Xərclər",
     sidebarUnitPrice: "Vahid Qiymətlər",
+    sidebarYemekListesi: "Yemək Siyahısı",
     sidebarMaliTablo: "Həftəlik Menyu Mali Cədvəli",
     sidebarYillikPlan: "İllik Tələbat Planı",
     sidebarDownload: "Hamısını Yüklə",
@@ -17828,6 +17840,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Расходы",
     sidebarUnitPrice: "Единичные цены",
+    sidebarYemekListesi: "Список блюд",
     sidebarMaliTablo: "Финансовая таблица недельного меню",
     sidebarYillikPlan: "Годовой план потребностей",
     sidebarDownload: "Скачать всё",
@@ -18227,6 +18240,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Ausgaben",
     sidebarUnitPrice: "Stückpreise",
+    sidebarYemekListesi: "Speisenliste",
     sidebarMaliTablo: "Wochenmenü-Finanztabelle",
     sidebarYillikPlan: "Jahresbedarfsplan",
     sidebarDownload: "Alle herunterladen",
@@ -18626,6 +18640,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Dépenses",
     sidebarUnitPrice: "Prix unitaires",
+    sidebarYemekListesi: "Liste des plats",
     sidebarMaliTablo: "Tableau financier du menu hebdomadaire",
     sidebarYillikPlan: "Plan annuel des besoins",
     sidebarDownload: "Tout télécharger",
@@ -19025,6 +19040,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Gastos",
     sidebarUnitPrice: "Precios unitarios",
+    sidebarYemekListesi: "Lista de platos",
     sidebarMaliTablo: "Tabla financiera del menú semanal",
     sidebarYillikPlan: "Plan anual de necesidades",
     sidebarDownload: "Descargar todo",
@@ -19424,6 +19440,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Despesas",
     sidebarUnitPrice: "Preços unitários",
+    sidebarYemekListesi: "Lista de pratos",
     sidebarMaliTablo: "Tabela financeira do menu semanal",
     sidebarYillikPlan: "Plano anual de necessidades",
     sidebarDownload: "Baixar tudo",
@@ -19823,6 +19840,7 @@ var I18N = {
     cmpPerPerson: 'Waste per Person (gr)',
     sidebarSpending: "Xarajatlar",
     sidebarUnitPrice: "Birlik narxlari",
+    sidebarYemekListesi: "Taomlar ro'yxati",
     sidebarMaliTablo: "Haftalik menyu moliyaviy jadvali",
     sidebarYillikPlan: "Yillik ehtiyoj rejasi",
     sidebarDownload: "Hammasini yuklab olish",
@@ -20237,20 +20255,24 @@ function applyTranslations() {
   });
 
   var pageTitles = {
-    'tab-dashboard': dict.sidebarPanel,
-    'tab-menu': dict.sidebarMenu,
-    'tab-records': dict.sidebarRecords,
-    'tab-report': dict.sidebarReport,
-    'tab-haccp': dict.sidebarHaccp,
-    'tab-kalibrasyon': dict.sidebarCalibration,
-    'tab-yag': dict.sidebarOil,
-    'tab-ambalaj': dict.sidebarPackaging,
-    'tab-charts': dict.sidebarCharts,
-    'tab-yillik': dict.sidebarYearly,
-    'tab-harcama': dict.sidebarSpending,
-    'tab-malitablo': dict.sidebarMaliTablo,
-    'tab-yillikplan': dict.sidebarYillikPlan,
-    'tab-birimfiyat': dict.sidebarUnitPrice,
+    'tab-dashboard': dict.sidebarPanel || 'Panel',
+    'tab-menu': dict.sidebarMenu || 'Haftalık Menü',
+    'tab-records': dict.sidebarRecords || 'Kayıtlar',
+    'tab-report': dict.sidebarReport || 'Rapor',
+    'tab-haccp': dict.sidebarHaccp || 'Gıda Güvenliği',
+    'tab-kalibrasyon': dict.sidebarCalibration || 'Kalibrasyon',
+    'tab-yag': dict.sidebarOil || 'Atık Yağ',
+    'tab-ambalaj': dict.sidebarPackaging || 'Ambalaj Atıkları',
+    'tab-charts': dict.sidebarCharts || 'Grafikler',
+    'tab-yillik': dict.sidebarYearly || 'Yıllık',
+    'tab-harcama': dict.sidebarSpending || 'Harcama',
+    'tab-malitablo': dict.sidebarMaliTablo || 'Hf. Menü Mali Tablosu',
+    'tab-yillikplan': dict.sidebarYillikPlan || 'Yıllık İhtiyaç Planı',
+    'tab-birimfiyat': dict.sidebarUnitPrice || 'Ürün ve Fiyatlar',
+    'tab-yemeklistesi': dict.sidebarYemekListesi || 'Yemek Listesi',
+    'tab-admin': 'Yönetim Paneli',
+    'tab-logs': 'Log Kayıtları',
+    'tab-manual': 'Kullanım Kılavuzu'
   };
 
   var pageTitleEl = document.getElementById('pageTitle');
