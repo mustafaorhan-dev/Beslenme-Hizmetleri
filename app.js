@@ -2398,6 +2398,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // yemekler, HACCP) sayfa AÇILIMINI BEKLETMEZ — aşağıda arka planda çalışır.
 
   setCurrentDate();
+  setInterval(tickClock, 1000);
+  updateWeather();
+  setInterval(updateWeather, 10 * 60 * 1000);
   applyVersionLabels();
   renderAll();
   if (isTabActive('charts')) drawAllCharts();
@@ -2603,11 +2606,43 @@ function normalizeSaat(v) {
 function setCurrentDate() {
   const el = document.getElementById('currentDate');
   const now = new Date();
-  el.textContent = now.toLocaleDateString('tr-TR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  });
+  if (el) {
+    el.textContent = now.toLocaleDateString('tr-TR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+  tickClock();
   // Set default date for form
-  document.getElementById('fTarih').value = formatLocalDate(now);
+  var fTarih = document.getElementById('fTarih');
+  if (fTarih) fTarih.value = formatLocalDate(now);
+}
+
+function tickClock() {
+  var el = document.getElementById('headerTime');
+  if (!el) return;
+  var now = new Date();
+  el.textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function weatherIconFromCode(code) {
+  if (code === 0) return '☀️';
+  if (code >= 1 && code <= 3) return '⛅';
+  if (code === 45 || code === 48) return '🌫️';
+  if ((code >= 51 && code <= 57) || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return '🌧️';
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return '🌨️';
+  if (code >= 95) return '⛈️';
+  return '☁️';
+}
+
+async function updateWeather() {
+  try {
+    var res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.1458&longitude=34.1639&current_weather=true');
+    if (!res.ok) return;
+    var data = await res.json();
+    var code = data && data.current_weather ? data.current_weather.weathercode : null;
+    var el = document.getElementById('headerWeather');
+    if (el && code !== null) el.textContent = weatherIconFromCode(code);
+  } catch (_) {}
 }
 
 // ─── STORAGE ───────────────────────────────────────────────────────────────────
