@@ -3318,6 +3318,7 @@ function renderBirimFiyatlar() {
           </div>
            <input type="text" id="bfAramaInput" placeholder="Ürün ara..." value="${escapeHtml(birimFiyatArama)}" oninput="birimFiyatArama=this.value;bfTabloGuncelle()" style="min-width:140px;max-width:220px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:0.85rem" />
            ${bfPerms ? '<button class="btn btn-primary btn-sm" onclick="bfYeniUrun()">+ Yeni Ürün</button>' : ''}
+           ${bfPerms ? '<button class="btn btn-ghost btn-sm" onclick="bfKopyalaOncekiYil()" title="Önceki yılın birim fiyatlarını seçili yıla kopyalar (eksik olanlar)">Önceki Yılı Kopyala</button>' : ''}
           <button class="btn btn-ghost btn-sm" onclick="bfExportCSV()">CSV İndir</button>
           <button class="btn btn-ghost btn-sm" onclick="printBirimFiyatlar()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -3436,6 +3437,35 @@ function bfYilDegistir(delta) {
   birimFiyatSeciliYil += delta;
   window._bfPage = 1;
   renderBirimFiyatlar();
+}
+
+async function bfKopyalaOncekiYil() {
+  var hedef = birimFiyatSeciliYil;
+  var kaynak = hedef - 1;
+  var kaynakItems = unitPricesCache.filter(function(p) { return p.yil === kaynak; });
+  if (!kaynakItems.length) {
+    showToast(kaynak + ' yılında fiyat kaydı yok.', 'warning');
+    return;
+  }
+  var hedefSet = {};
+  unitPricesCache.filter(function(p) { return p.yil === hedef; }).forEach(function(p) {
+    hedefSet[normIsim(p.urun_adi) + '|' + normBirimGlobal(p.birim)] = true;
+  });
+  var eklenecek = kaynakItems.filter(function(p) {
+    return !hedefSet[normIsim(p.urun_adi) + '|' + normBirimGlobal(p.birim)];
+  });
+  if (!eklenecek.length) {
+    showToast(hedef + ' yılında tüm ürünler zaten mevcut.', 'info');
+    return;
+  }
+  for (var i = 0; i < eklenecek.length; i++) {
+    var p = eklenecek[i];
+    await addUnitPrice(p.urun_adi, p.birim, p.birim_fiyat, hedef, p.birim_carpan, p.birim_alt);
+  }
+  invalidatePriceMap();
+  _yillikCache = null;
+  renderBirimFiyatlar();
+  showToast(eklenecek.length + ' ürün ' + kaynak + ' → ' + hedef + ' kopyalandı.', 'success');
 }
 
 function bfYilSeciciAc() {
