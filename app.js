@@ -2606,12 +2606,19 @@ function normalizeSaat(v) {
 function setCurrentDate() {
   const el = document.getElementById('currentDate');
   const cardDate = document.getElementById('todayWeatherDate');
+  const detailDate = document.getElementById('todayBandDetailDate');
   const now = new Date();
   var dateText = now.toLocaleDateString('tr-TR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
   if (el) el.textContent = dateText;
   if (cardDate) cardDate.textContent = dateText;
+  if (detailDate) {
+    var dd = String(now.getDate()).padStart(2, '0');
+    var mm = String(now.getMonth() + 1).padStart(2, '0');
+    var yyyy = now.getFullYear();
+    detailDate.textContent = dd + '.' + mm + '.' + yyyy;
+  }
   tickClock();
   // Set default date for form
   var fTarih = document.getElementById('fTarih');
@@ -2650,11 +2657,11 @@ async function updateWeather() {
     var res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.1458&longitude=34.1639&current_weather=true');
     if (!res.ok) return;
     var data = await res.json();
-    var code = data && data.current_weather ? data.current_weather.weathercode : null;
-    var icon = document.getElementById('todayWeatherIcon');
-    var desc = document.getElementById('todayWeatherDesc');
-    if (icon && code !== null) icon.textContent = weatherIconFromCode(code);
-    if (desc && code !== null) desc.textContent = weatherDescFromCode(code) + ' · Kırşehir';
+    var cw = data && data.current_weather ? data.current_weather : null;
+    var tempEl = document.getElementById('todayBandTemp');
+    if (tempEl && cw && typeof cw.temperature === 'number') {
+      tempEl.textContent = Math.round(cw.temperature) + '°C';
+    }
   } catch (_) {}
 }
 
