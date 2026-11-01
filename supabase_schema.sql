@@ -17,6 +17,19 @@ DROP POLICY IF EXISTS "anon_all_user_logs" ON user_logs;
 DROP POLICY IF EXISTS "auth_all_user_logs" ON user_logs;
 DROP POLICY IF EXISTS "service_role_all_config" ON config;
 
+-- Helper used by RLS policies
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $
+  SELECT EXISTS (
+    SELECT 1 FROM public.app_users
+    WHERE username = auth.jwt() ->> 'email' AND role = 'admin'
+  );
+$;
+
 -- 1. ANA KAYITLAR (Atık Kontrol Sistemi)
 CREATE TABLE IF NOT EXISTS records (
   id BIGINT PRIMARY KEY,
@@ -39,6 +52,7 @@ ALTER TABLE records ENABLE ROW LEVEL SECURITY;
 
 -- Tüm kullanıcılar (anon + authenticated) görebilir, ekleyebilir, güncelleyebilir, silebilir
 CREATE POLICY "records_all" ON records FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 3. HACCP KAYITLARI (Gıda Güvenliği)
@@ -57,6 +71,7 @@ CREATE TABLE IF NOT EXISTS haccp_records (
 ALTER TABLE haccp_records ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "haccp_records_all" ON haccp_records FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 4. DEPO ADLARI
@@ -70,6 +85,7 @@ CREATE TABLE IF NOT EXISTS haccp_depo_adlari (
 ALTER TABLE haccp_depo_adlari ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "haccp_depo_all" ON haccp_depo_adlari FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 5. ATIK YAĞ KAYITLARI
@@ -86,6 +102,7 @@ CREATE TABLE IF NOT EXISTS yag_records (
 ALTER TABLE yag_records ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "yag_records_all" ON yag_records FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 6. AMBALAJ ATIKLARI KAYITLARI
@@ -102,6 +119,7 @@ CREATE TABLE IF NOT EXISTS ambalaj_records (
 ALTER TABLE ambalaj_records ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "ambalaj_records_all" ON ambalaj_records FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 6b. KALİBRASYONA TABİ CİHAZLAR
@@ -123,6 +141,7 @@ CREATE TABLE IF NOT EXISTS kalibrasyon_cihazlari (
 ALTER TABLE kalibrasyon_cihazlari ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "kalibrasyon_cihazlari_all" ON kalibrasyon_cihazlari FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 7. YEMEK LİSTESİ (Dish Pool)
@@ -138,6 +157,7 @@ CREATE TABLE IF NOT EXISTS dishes (
 ALTER TABLE dishes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "dishes_all" ON dishes FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 8. HAFTALIK MENÜ
@@ -150,6 +170,7 @@ CREATE TABLE IF NOT EXISTS weekly_menu (
 ALTER TABLE weekly_menu ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "weekly_menu_all" ON weekly_menu FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 9. YAPILANDIRMA (sadece service_role ile erişilebilir)
@@ -166,9 +187,23 @@ ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 -- NOT: Yalnızca 'role_permissions' ve 'harcama_oranlari' satırlarına anon erişim izni verilir.
 -- Böylece yönetim panelindeki rol izin kutucukları ve harcama oranları tüm cihazlara senkronize
 -- olur, diğer config satırları (örn. legacy user hash'leri) korunur.
-CREATE POLICY "anon_role_permissions" ON config FOR ALL
-  USING (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'))
-  WITH CHECK (key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
+-- Authenticated users may read config; only admins may write the allowed keys.
+CREATE POLICY "config_read_authenticated" ON config FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "config_write_admin" ON config FOR INSERT
+  TO authenticated
+  WITH CHECK (public.is_admin() AND key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
+
+CREATE POLICY "config_update_admin" ON config FOR UPDATE
+  TO authenticated
+  USING (public.is_admin() AND key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'))
+  WITH CHECK (public.is_admin() AND key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
+
+CREATE POLICY "config_delete_admin" ON config FOR DELETE
+  TO authenticated
+  USING (public.is_admin() AND key IN ('role_permissions', 'harcama_oranlari', 'app_version', 'app_build'));
 
 -- Varsayılan config değerleri (Service Role ile çalıştırılmalı)
 -- Aşağıdaki INSERT'ler service_role ile çalıştırılmalıdır, anon ile çalışmaz.
@@ -210,6 +245,7 @@ CREATE TABLE IF NOT EXISTS user_logs (
 ALTER TABLE user_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "user_logs_all" ON user_logs FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- 11. KULLANICI ROLLERİ (Supabase Auth'a geçildiğinde kullanılır)
@@ -227,6 +263,7 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Geçiş döneminde herkes görebilir; Supabase Auth aktifleşince kısıtlanır
 CREATE POLICY "user_roles_all" ON user_roles FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- Her auth kullanıcısına en fazla bir rol satırı (assign_user_role ve
@@ -259,6 +296,7 @@ ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 
 -- Geçiş döneminde herkes görebilir/yazabilir; ileride sadece authenticated'e kısıtlanır
 CREATE POLICY "app_users_all" ON app_users FOR ALL
+  TO authenticated
   USING (true) WITH CHECK (true);
 
 -- ============================================

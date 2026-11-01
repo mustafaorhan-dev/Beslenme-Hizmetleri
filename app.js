@@ -313,18 +313,9 @@ async function handleSupabaseLogin(session) {
       role = roleRow.role || 'asci';
       displayName = roleRow.display_name || email || 'Kullanıcı';
     } else {
-      // 3) Yoksa legacy listeye bak (e-posta veya e-posta ön eki ile eşleşme)
-      var username = email.split('@')[0].toLowerCase();
-      var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-      var legacyUser = null;
-      if (cfg.users && Array.isArray(cfg.users)) {
-        legacyUser = cfg.users.find(function(u) {
-          var un = (u.username || '').toLowerCase();
-          return un === email || un === username;
-        }) || null;
-      }
-      role = legacyUser ? (legacyUser.role || 'asci') : 'asci';
-      displayName = legacyUser ? (legacyUser.displayName || username) : (email || 'Kullanıcı');
+      // Legacy kullanıcı listesi güvenlik nedeniyle devre dışı; varsayılan rol asci
+      role = 'asci';
+      displayName = email || 'Kullanıcı';
     }
 
     // Bootstrap admin: app_users kaydı yoksa oluştur, rolü admin yap.
@@ -1127,42 +1118,21 @@ function isUsingSupabaseAuth() {
 function isAdminSessionValid() {
   if (getRole() !== ROLE_ADMIN) return false;
 
-  // Supabase Auth ile giriş yapıldıysa cache'lenmiş session'ı kontrol et
-  if (isUsingSupabaseAuth()) {
-    return !!supabaseSession;
-  }
-
-  // Legacy: client-side hash kontrolü
-  const storedHash = oturumGet('atik_kontrol_admin_hash_proof');
-  if (!storedHash) return false;
-  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-
-  if (cfg.users && Array.isArray(cfg.users)) {
-    const adminHashes = cfg.users.filter(u => u.role === ROLE_ADMIN).map(u => u.passwordHash);
-    if (adminHashes.includes(storedHash)) return true;
-  }
-  return false;
+  // Yalnızca Supabase Auth oturumu geçerlidir
+  if (!isUsingSupabaseAuth()) return false;
+  return !!supabaseSession;
 }
 
 function requireAdmin() {
   var role = getRole();
   if (!role) { showToast('Oturum bulunamadı. Lütfen giriş yapın.', 'error'); return false; }
   
-  // Supabase Auth kullanılıyorsa session varlığını kontrol et
-  if (isUsingSupabaseAuth() && supabaseClient) {
-    if (!supabaseSession) {
-      showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
-      oturumSil('atik_kontrol_role');
-      location.reload();
-      return false;
-    }
-  } else if (role === ROLE_ADMIN) {
-    // Legacy admin: hash proof kontrolü
-    var storedHash = oturumGet('atik_kontrol_admin_hash_proof');
-    if (!storedHash) {
-      showToast('Bu işlem için admin yetkisi gerekli.', 'error');
-      return false;
-    }
+  // Supabase Auth oturumu zorunlu
+  if (!isUsingSupabaseAuth() || !supabaseClient || !supabaseSession) {
+    showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'error');
+    oturumSil('atik_kontrol_role');
+    location.reload();
+    return false;
   }
   
   return true;
@@ -1210,34 +1180,11 @@ async function doLogin() {
     }
   }
 
-  // 2. Legacy yedek (e-posta = kullanıcı adı veya e-posta ön eki)
-  const inputHash = await sha256(password);
-  let role = null;
-  let displayName = '';
-  const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-  const username = email.split('@')[0];
+  // 2. Legacy auth devre dışı bırakıldı (güvenlik): yalnızca Supabase Auth kullanılır.
+  // Supabase Auth başarısız olduysa giriş reddedilir.
 
-  if (cfg.users && Array.isArray(cfg.users)) {
-    const user = cfg.users.find(u => {
-      const un = (u.username || '').toLowerCase();
-      return (un === email || un === username) && u.passwordHash === inputHash;
-    });
-    if (user) {
-      role = user.role;
-      displayName = user.displayName;
-    }
-  }
+  // 3. Giriş başarısız
 
-  if (role) {
-    applyLoginState(role, displayName, false, email, null);
-    if (role === ROLE_ADMIN) oturumSet('atik_kontrol_admin_hash_proof', inputHash);
-    try { localStorage.setItem('atik_kontrol_last_email', email); } catch (_) {}
-    if (window._loginResolve) { window._loginResolve(); window._loginResolve = null; }
-    logIslem('login', displayName + ' (legacy) sisteme giriş yaptı');
-    return;
-  }
-
-  // 3. Her ikisi de başarısız
   window._loginAttempts = (window._loginAttempts || 0) + 1;
   error.textContent = 'Hatalı e-posta veya şifre!';
   error.style.display = 'block';
