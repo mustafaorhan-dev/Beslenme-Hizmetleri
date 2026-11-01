@@ -113,8 +113,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span data-i18n="menuLabel">Menü</span>
         </button>
+        <span class="page-title" id="pageTitle">Panel</span>
       </div>
-      <div class="header-logo">
+      <div class="header-logo" style="display:none">
         <span>Nutrition Services Management System</span>
       </div>
       <div class="header-right">
@@ -122,7 +123,6 @@
           <span class="conn-dot" id="connDot"></span>
           <span class="conn-sync-time" id="connSyncTime" style="font-size:0.75rem;color:var(--text-secondary);margin-left:6px;font-weight:500"></span>
         </div>
-        <span class="page-title" id="pageTitle">Panel</span>
         <div class="current-date" id="currentDate"></div>
         <span class="role-badge" id="roleBadge"></span>
         <div class="lang-selector" id="langSelector">
@@ -180,6 +180,16 @@
           <button class="btn btn-primary btn-sm" onclick="changePassword()">Kaydet</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Sabit Üst Bilgi Bandı -->
+  <div class="nsms-top-band">
+    <div class="nsms-top-left"></div>
+    <div class="nsms-top-center">Nutrition Services Management System</div>
+    <div class="nsms-top-right">
+      <span class="nsms-top-date" id="topBandDate"></span>
+      <span class="nsms-top-time" id="topBandTime"></span>
     </div>
   </div>
 
@@ -287,63 +297,6 @@
     <!-- ===== DASHBOARD TAB ===== -->
     <div class="tab-content active" id="content-dashboard">
       <!-- KPI grid removed -->
-      <!-- Tarih, Gün ve Hava Durumu Bilgi Bandı -->
-      <div class="nsms-info-band" id="todayWeatherCard">
-        <div class="nsms-band-wave" aria-hidden="true">
-          <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0,70 C240,110 480,30 720,70 C960,110 1200,30 1440,70 L1440,120 L0,120 Z" fill="#E5F0FF" opacity="0.45"/>
-            <path d="M0,85 C200,50 440,100 720,75 C1000,50 1240,100 1440,80 L1440,120 L0,120 Z" fill="#DCEBFF" opacity="0.40"/>
-            <path d="M0,95 C300,70 600,110 900,85 C1100,65 1300,100 1440,90 L1440,120 L0,120 Z" fill="#EAF3FF" opacity="0.35"/>
-          </svg>
-          <div class="nsms-band-glow"></div>
-        </div>
-
-        <div class="nsms-band-left">
-          <div class="nsms-band-date" id="todayWeatherDate"></div>
-          <div class="nsms-band-time" id="todayWeatherTime"></div>
-        </div>
-
-        <div class="nsms-band-divider"></div>
-
-        <div class="nsms-band-middle">
-          <svg class="nsms-band-cal" viewBox="0 0 24 24" fill="none" stroke="#6254FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
-          </svg>
-          <div class="nsms-band-middle-text">
-            <div class="nsms-band-middle-title">Günün Detayı</div>
-            <div class="nsms-band-middle-sub" id="todayBandDetailDate"></div>
-          </div>
-        </div>
-
-        <div class="nsms-band-divider"></div>
-
-        <div class="nsms-band-right">
-          <svg class="nsms-band-weather" viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <!-- stars -->
-            <circle cx="18" cy="16" r="1.6" fill="#FFD45A"/>
-            <circle cx="26" cy="10" r="1.2" fill="#FFD45A"/>
-            <circle cx="34" cy="18" r="1.4" fill="#FFD45A"/>
-            <!-- moon -->
-            <path d="M46,14 A16,16 0 1,0 46,46 A12,12 0 1,1 46,14 Z" fill="#FFC83D"/>
-            <!-- cloud -->
-            <g>
-              <ellipse cx="44" cy="52" rx="20" ry="12" fill="#48B9F5"/>
-              <ellipse cx="30" cy="50" rx="14" ry="10" fill="#48B9F5"/>
-              <ellipse cx="56" cy="50" rx="12" ry="9" fill="#48B9F5"/>
-              <ellipse cx="44" cy="56" rx="22" ry="8" fill="#269CEB"/>
-            </g>
-          </svg>
-          <div class="nsms-band-right-text">
-            <div class="nsms-band-city">Kırşehir</div>
-            <div class="nsms-band-temp" id="todayBandTemp">--°C</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Daily Detail Panel -->
       <div class="weekly-summary" id="dailySummary">
         <div class="weekly-summary-header">

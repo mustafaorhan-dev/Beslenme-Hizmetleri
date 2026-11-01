@@ -2605,20 +2605,13 @@ function normalizeSaat(v) {
 
 function setCurrentDate() {
   const el = document.getElementById('currentDate');
-  const cardDate = document.getElementById('todayWeatherDate');
-  const detailDate = document.getElementById('todayBandDetailDate');
+  const topDate = document.getElementById('topBandDate');
   const now = new Date();
   var dateText = now.toLocaleDateString('tr-TR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
   if (el) el.textContent = dateText;
-  if (cardDate) cardDate.textContent = dateText;
-  if (detailDate) {
-    var dd = String(now.getDate()).padStart(2, '0');
-    var mm = String(now.getMonth() + 1).padStart(2, '0');
-    var yyyy = now.getFullYear();
-    detailDate.textContent = dd + '.' + mm + '.' + yyyy;
-  }
+  if (topDate) topDate.textContent = dateText;
   tickClock();
   // Set default date for form
   var fTarih = document.getElementById('fTarih');
@@ -2626,7 +2619,7 @@ function setCurrentDate() {
 }
 
 function tickClock() {
-  var el = document.getElementById('todayWeatherTime');
+  var el = document.getElementById('topBandTime');
   if (!el) return;
   var now = new Date();
   el.textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });

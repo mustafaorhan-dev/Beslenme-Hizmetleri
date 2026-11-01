@@ -5453,3 +5453,53 @@ body.sidebar-open-mobile {
   .nsms-band-city { font-size: 20px; }
   .nsms-band-temp { font-size: 30px; }
 }
+/* NSMS Top Band */
+.nsms-top-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.1rem;
+  margin: 0 0 0.75rem 0;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.nsms-top-left {
+  flex: 1;
+  z-index: 1;
+}
+.nsms-top-center {
+  flex: 2;
+  text-align: center;
+  font-family: 'Orbitron', 'Inter', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #1e3a8a;
+}
+.nsms-top-right {
+  flex: 1;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+}
+.nsms-top-date {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #3a5a6a;
+}
+.nsms-top-time {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0e7490;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+@media (max-width: 768px) {
+  .nsms-top-center { font-size: 1rem; }
+  .nsms-top-time { font-size: 1.1rem; }
+}
