@@ -1191,8 +1191,22 @@ async function doLogin() {
   input.value = '';
   input.focus();
   if (window._loginAttempts >= 5) {
-    error.textContent = 'Çok fazla hatalı giriş! Sayfa yenileniyor...';
-    setTimeout(() => location.reload(), 2000);
+    window._loginAttempts = 0;
+    var submitBtn = document.querySelector('.login-submit');
+    if (submitBtn) submitBtn.disabled = true;
+    var remaining = 30;
+    error.textContent = 'Çok fazla hatalı giriş! ' + remaining + ' saniye bekleyin.';
+    error.style.display = 'block';
+    var lockTimer = setInterval(function () {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(lockTimer);
+        if (submitBtn) submitBtn.disabled = false;
+        error.style.display = 'none';
+      } else {
+        error.textContent = 'Çok fazla hatalı giriş! ' + remaining + ' saniye bekleyin.';
+      }
+    }, 1000);
   }
 }
 
