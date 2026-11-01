@@ -1190,11 +1190,11 @@ async function doLogin() {
   error.style.display = 'block';
   input.value = '';
   input.focus();
-  if (window._loginAttempts >= 5) {
+  if (window._loginAttempts >= 3) {
     window._loginAttempts = 0;
     var submitBtn = document.querySelector('.login-submit');
     if (submitBtn) submitBtn.disabled = true;
-    var remaining = 30;
+    var remaining = 60;
     error.textContent = 'Çok fazla hatalı giriş! ' + remaining + ' saniye bekleyin.';
     error.style.display = 'block';
     var lockTimer = setInterval(function () {
