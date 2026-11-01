@@ -1166,6 +1166,29 @@ async function doLogin() {
     return;
   }
 
+  // Kalıcı kilit: sayfa yenilemeyi atlatmayı engeller
+  var lockUntil = 0;
+  try { lockUntil = parseInt(localStorage.getItem('atik_kontrol_login_lock_until') || '0', 10); } catch (_) {}
+  if (lockUntil > Date.now()) {
+    var rem = Math.ceil((lockUntil - Date.now()) / 1000);
+    var lBtn = document.querySelector('.login-submit');
+    if (lBtn) lBtn.disabled = true;
+    error.textContent = 'Çok fazla hatalı giriş! ' + rem + ' saniye bekleyin.';
+    error.style.display = 'block';
+    var lockIv = setInterval(function () {
+      rem = Math.ceil((lockUntil - Date.now()) / 1000);
+      if (rem <= 0) {
+        clearInterval(lockIv);
+        if (lBtn) lBtn.disabled = false;
+        error.style.display = 'none';
+        try { localStorage.removeItem('atik_kontrol_login_lock_until'); } catch (_) {}
+      } else {
+        error.textContent = 'Çok fazla hatalı giriş! ' + rem + ' saniye bekleyin.';
+      }
+    }, 1000);
+    return;
+  }
+
   // 1. Supabase Auth (asıl yöntem)
   if (supabaseClient) {
     var { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
@@ -1175,6 +1198,7 @@ async function doLogin() {
     if (!signInError && signInData && signInData.session) {
       // Rol ve izinler handleSupabaseLogin() içinde uygulanır (onAuthStateChange).
       try { sessionStorage.removeItem('atik_kontrol_locked'); } catch (_) {}
+      try { localStorage.removeItem('atik_kontrol_login_lock_until'); } catch (_) {}
       try { localStorage.setItem('atik_kontrol_last_email', email); } catch (_) {}
       return;
     }
@@ -1194,6 +1218,7 @@ async function doLogin() {
     window._loginAttempts = 0;
     var submitBtn = document.querySelector('.login-submit');
     if (submitBtn) submitBtn.disabled = true;
+    try { localStorage.setItem('atik_kontrol_login_lock_until', String(Date.now() + 60000)); } catch (_) {}
     var remaining = 60;
     error.textContent = 'Çok fazla hatalı giriş! ' + remaining + ' saniye bekleyin.';
     error.style.display = 'block';
