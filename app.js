@@ -2559,9 +2559,8 @@ function lockScreen() {
 function showSyncTime(msg) {
   const el = document.getElementById('connSyncTime');
   if (!el) return;
-  const now = new Date();
-  const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  el.textContent = msg ? `Bağlı • ${time} (${msg})` : `Bağlı • ${time}`;
+  // Bağlantı durumu yalnızca sol menünün altında, "Bağlı" + daire olarak gösterilir
+  el.textContent = 'Bağlı';
 }
 
 // ─── DATE ──────────────────────────────────────────────────────────────────────

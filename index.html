@@ -115,13 +115,14 @@
         </button>
         <span class="page-title" id="pageTitle">Panel</span>
       </div>
-      <div class="header-logo" style="display:none">
-        <span>Nutrition Services Management System</span>
+      <div class="header-brand">
+        <span class="header-brand-kicker">Kırşehir Ahi Evran Üniversitesi</span>
+        <span class="header-brand-title">Nutrition Services Management System</span>
       </div>
       <div class="header-right">
-        <div class="conn-status" id="connStatus" title="Bağlantı durumu">
-          <span class="conn-dot" id="connDot"></span>
-          <span class="conn-sync-time" id="connSyncTime" style="font-size:0.75rem;color:var(--text-secondary);margin-left:6px;font-weight:500"></span>
+        <div class="header-clock" title="Tarih / Saat">
+          <span class="header-clock-date" id="topBandDate"></span>
+          <span class="header-clock-time" id="topBandTime"></span>
         </div>
         <div class="current-date" id="currentDate"></div>
         <span class="role-badge" id="roleBadge"></span>
@@ -180,16 +181,6 @@
           <button class="btn btn-primary btn-sm" onclick="changePassword()">Kaydet</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Sabit Üst Bilgi Bandı -->
-  <div class="nsms-top-band">
-    <div class="nsms-top-left"></div>
-    <div class="nsms-top-center"><span class="nsms-top-title">Nutrition Services Management System</span></div>
-    <div class="nsms-top-right">
-      <span class="nsms-top-date" id="topBandDate"></span>
-      <span class="nsms-top-time" id="topBandTime"></span>
     </div>
   </div>
 
@@ -288,6 +279,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
           <span data-i18n="sidebarManual">Kullanım Kılavuzu</span>
         </button>
+      </div>
+      <div class="sidebar-conn" id="sidebarConn" title="Bağlantı durumu">
+        <span class="conn-dot" id="connDot"></span>
+        <span class="sidebar-conn-text" id="connSyncTime">Bağlı</span>
       </div>
       <div class="sidebar-version" id="appVersionLabel" title="Uygulama Sürümü">v1.5.0</div>
     </aside>
