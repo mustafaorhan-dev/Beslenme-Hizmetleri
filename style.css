@@ -3732,6 +3732,8 @@ body.sidebar-open-mobile {
   .sidebar-overlay { display: none !important; }
   .sidebar-overlay.show { display: block !important; }
   .app-layout { margin-left: 0; }
+  /* Mobilde yan menu cekmece oldugu icin baslik ortalamasi kaydirilmaz */
+  .nsms-top-center { transform: none; }
 }
 
 /* ---- PRINT ---- */
@@ -5480,7 +5482,11 @@ body.sidebar-open-mobile {
   font-weight: 800;
   letter-spacing: 0.5px;
   color: #1e3a8a;
-  margin-left: 0.5rem;
+  /* Sol menu icerigi saga kaydirdigi icin baslik, "Gunluk Detay" kartiyla
+     ayni merkeze gelsin diye yarim menu genisligi kadar saga alinir.
+     (--sidebar-w app.js:syncSidebarWidth tarafindan guncellenir;
+     -5px dikey kaydirma cubugunun yarim genisligi icindir.) */
+  transform: translateX(calc(var(--sidebar-w, 60px) / 2 - 5px));
 }
 
 .nsms-top-right {
