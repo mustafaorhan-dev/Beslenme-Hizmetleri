@@ -5465,8 +5465,11 @@ body.sidebar-open-mobile {
   gap: 1rem;
   padding: 0.6rem 1.1rem;
   margin: 0 0 0.75rem 0;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  background: linear-gradient(90deg,
+    var(--bg-card) 0%,
+    color-mix(in srgb, var(--accent) 6%, var(--bg-card)) 50%,
+    var(--bg-card) 100%);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
@@ -5475,18 +5478,41 @@ body.sidebar-open-mobile {
   z-index: 1;
 }
 .nsms-top-center {
-  flex: 2;
+  flex: 0 1 auto;
   text-align: center;
   font-family: 'Orbitron', 'Inter', sans-serif;
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: 0.5px;
-  color: #1e3a8a;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 auto;
+  padding: 0.25rem 1.1rem;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--accent) 16%, transparent));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 999px;
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--accent) 8%, transparent);
   /* Sol menu icerigi saga kaydirdigi icin baslik, "Gunluk Detay" kartiyla
      ayni merkeze gelsin diye yarim menu genisligi kadar saga alinir.
      (--sidebar-w app.js:syncSidebarWidth tarafindan guncellenir;
      -5px dikey kaydirma cubugunun yarim genisligi icindir.) */
   transform: translateX(calc(var(--sidebar-w, 60px) / 2 - 5px));
+}
+
+.nsms-top-title {
+  color: var(--text-primary);
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .nsms-top-title {
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .nsms-top-right {
