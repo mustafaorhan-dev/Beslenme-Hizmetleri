@@ -18,7 +18,8 @@ const URLS = [
   'app.js',
   'manifest.json',
   'config.js',
-  'logo.png'
+  'logo.png',
+  'vendor/supabase-js-2.119.0.min.js'
 ];
 
 self.addEventListener('install', e => {
