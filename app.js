@@ -7547,6 +7547,35 @@ function makeValueLabelsPlugin(fmtFn) {
   };
 }
 
+// Donut dilimlerinin içine yüzde rakamı yazar (Atık Azaltma Oranı)
+function makeDonutSliceLabelsPlugin() {
+  return {
+    id: 'donutSliceLabels',
+    afterDatasetsDraw: function(chart) {
+      var ctx = chart.ctx;
+      var meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data) return;
+      meta.data.forEach(function(arc, i) {
+        var val = chart.data.datasets[0].data[i];
+        if (val === null || val === undefined || isNaN(val) || val < 4) return; // çok küçük dilime yazma
+        var midAngle = (arc.startAngle + arc.endAngle) / 2;
+        var r = (arc.outerRadius + arc.innerRadius) / 2;
+        var x = arc.x + Math.cos(midAngle) * r;
+        var y = arc.y + Math.sin(midAngle) * r;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 12px Inter, Arial, sans-serif';
+        ctx.shadowColor = 'rgba(255,255,255,0.65)';
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = '#111827';
+        ctx.fillText(String(Math.round(val * 10) / 10).replace('.', ',') + '%', x, y);
+        ctx.restore();
+      });
+    }
+  };
+}
+
 function renderWeeklyComparison() {
   const card = document.getElementById('weeklyCompCard');
   const badge = document.getElementById('weeklyCompBadge');
@@ -7679,7 +7708,8 @@ function renderWeeklyComparison() {
           layout: { padding: 8 },
           animation: { duration: 700, easing: 'easeOutCubic' },
           plugins: { legend: { display: false }, tooltip: { enabled: false } }
-        }
+        },
+        plugins: [makeDonutSliceLabelsPlugin()]
       });
       // center text via plugin not available; use title
       var badgeEl = document.getElementById('wkDonutBadge');
@@ -7897,7 +7927,8 @@ function renderMonthlyComparison() {
       window._moDonutChart = new Chart(ctx2, {
         type: 'doughnut',
         data: { labels: ['Azalma', 'Kalan'], datasets: [{ data: [disp, remaining], backgroundColor: [color, 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+        plugins: [makeDonutSliceLabelsPlugin()]
       });
       var badgeEl = document.getElementById('moDonutBadge');
       if (badgeEl) {
@@ -8094,7 +8125,8 @@ function renderYearlyComparison() {
       window._yrDonutChart = new Chart(ctx2, {
         type: 'doughnut',
         data: { labels: ['Azalma', 'Kalan'], datasets: [{ data: [disp, remaining], backgroundColor: [color, 'rgba(148,163,184,0.25)'], borderWidth: 0, hoverOffset: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', layout: { padding: 8 }, animation: { duration: 700, easing: 'easeOutCubic' }, plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+        plugins: [makeDonutSliceLabelsPlugin()]
       });
       var badgeEl = document.getElementById('yrDonutBadge');
       if (badgeEl) {
